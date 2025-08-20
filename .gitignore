@@ -140,3 +140,13 @@ vite.config.ts.timestamp-*
 
 # Agentic HQ temporary files
 .agentic-hq/temp/
+
+# macOS system files
+.DS_Store
+
+# Claude settings configuration.
+# NOTE: Need other directories with commands
+# etc to be committed to the repo.
+.claude/settings.local.json
+.claude/settings.json
+
