@@ -1,6 +1,8 @@
 Creates commit message for approval then stages, commit and pushes changes.
 When I run this "commit" command I would like you to please:
-- Check if I passed in any additional info on the /commit command.  If I did: you must STILL RUN THROUGH THIS ENTIRE PROCESS INCLUDING APPROVAL ETC - the additional info will just help you craft the commit message I will be approving.
+- Present the following menu options to the user in a list format (1) Continue (2) Provide additional info to help with creating the Commit message - (user can append to the (2) option).  
+- STOP and wait for answer.
+- Once you have the answer you can continue, but be sure to *remember* any additional info about the commit message they want you to consider when you create the commit message later.
 - Run in bash: date "+%Y-%m-%d_%H-%M-%S"
 - Use the output of the bash command as the TIMESTAMP field in the following file names.
 - Run the git status command to list all changed files and all unstaged and send the output to .agentic-hq/temp/git-statuses/git-status-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
