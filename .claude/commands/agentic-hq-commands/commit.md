@@ -1,8 +1,11 @@
 Creates commit message for approval then stages, commit and pushes changes.
 When I run this "commit" command I would like you to please:
-- Run the git status command to list all changed files and all unstaged and send the output to .agentic-hq/temp/git-statuses/git-status-<YYYY-MM-DD_hh-mm-ss>.txt where you update the timestamp based on the current date and time.
-- Run the "git diff origin/main" command to show detailed diff of any modified tracked files and send the output to .agentic-hq/temp/git-diffs/git-diff-<YYYY-MM-DD_hh-mm-ss>.txt where you update the timestamp based on the current date and time.
-- Run the "git ls-files --others --exclude-standard" to show the full list of all new files and send the output to .agentic-hq/temp/git-new-files-list/git-new-files-list-<YYYY-MM-DD_hh-mm-ss>.txt where you update the timestamp based on the current date and time.
+- Check if I passed in any additional info on the /commit command.  If I did: you must STILL RUN THROUGH THIS ENTIRE PROCESS INCLUDING APPROVAL ETC - the additional info will just help you craft the commit message I will be approving.
+- Run in bash: date "+%Y-%m-%d_%H-%M-%S"
+- Use the output of the bash command as the TIMESTAMP field in the following file names.
+- Run the git status command to list all changed files and all unstaged and send the output to .agentic-hq/temp/git-statuses/git-status-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
+- Run the "git diff origin/main" command to show detailed diff of any modified tracked files and send the output to .agentic-hq/temp/git-diffs/git-diff-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
+- Run the "git ls-files --others --exclude-standard" to show the full list of all new files and send the output to .agentic-hq/temp/git-new-files-list/git-new-files-list-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
 - Tell the human the filenames so they can check them themselves
 - Analyse the files to work out what will be in the commit 
 - Analyse the files to determine whether some files should not be committed and so should be in the .gitignore file.  If there are any then STOP and ask the human for approval for adding those recommended files or directories to .gitignore.  If approved - add them and continue.
