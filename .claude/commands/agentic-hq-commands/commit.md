@@ -15,10 +15,9 @@ When I run this "commit" command I would like you to please:
 - Use the conversation history and the context from the project to work out a really nice, comprehensive commit *message body* that is a detailed, well formatted description of what is being committed.  NOTE:  If the change in the commit is small (e.g. a small addition to some documentation) please don't write a full detailed, description of that one change, as the human will only want a summary of the change, and they can read the code/doc themselves if they need the full detail.  If there are lots of changes though - then obviously the human will want a detailed breakdown of what was done. Please group these into titled sections of related change descriptions, each with the list of changes.  You are already very good at this - so please continue to do it :-)
 - Only if the changes done were related to Linear Issues: please add a section at the top listing them all.
 - Then present a Menu to me, with 3 choices:
-    1. Approve
-    2. Edit commit message
-    3. Abandon commit    
-
+    1. Approve - Stage, commit and push changes
+    2. Edit commit message - Modify the commit message
+    3. Abandon commit - Cancel this commit process
 - If I select Edit and explain what I want changed, please just do that.  If I just select Edit without specifying then please ask me what I want changed and I will tell you, then please update the commit message and present to me for approval again and present the above Menu to me again.
 
 - If I select Approve please
@@ -31,3 +30,17 @@ When I run this "commit" command I would like you to please:
 
 CHECKLIST:
     - If the commit is small, double check the bit above about: "If the change in the commit is small..."
+
+
+## ⚠️ CRITICAL: DO NOT STAGE FILES BEFORE APPROVAL ⚠️
+
+  **IMPORTANT**: Files must ONLY be staged AFTER the user approves the commit message (selects option 1).
+
+  The correct sequence is:
+  1. Analyze changes (git status, git diff, etc.)
+  2. Create and present commit message
+  3. Get user approval via menu
+  4. **ONLY THEN** stage files (git add)
+  5. Commit and push
+
+One time the AI Agent staged the files before the Approval, which breaks the whole workflow.  Please don't do this.
