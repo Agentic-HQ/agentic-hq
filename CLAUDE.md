@@ -63,6 +63,9 @@ Slash commands use prefix: `BMad`
 ## Development Notes
 
 - Documents should be sharded before development begins
-- The framework emphasizes Test Driven Development (TDD)
+- **TDD MANDATORY**: All code must follow Red-Green-Refactor cycle - write failing test first, verify it fails correctly, then implement, then refactor
+- Story acceptance criteria must include "TDD Methodology Followed"
+- **Everything automated: ONE COMMAND RULE**: Everything must run in 1 command - if it takes 2+ commands, create a script
+- **DOCUMENTATION REQUIRED**: Every script needs usage comments, every folder needs README, update docs with code changes
 - All validation and linting must pass before story completion
 - The workflow is designed for AI agent orchestration with human oversight
