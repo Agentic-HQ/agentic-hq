@@ -6,7 +6,7 @@ When I run this "commit" command I would like you to please:
 - Run in bash: date "+%Y-%m-%d_%H-%M-%S"
 - Use the output of the bash command as the TIMESTAMP field in the following file names.
 - Run the git status command to list all changed files and all unstaged and send the output to .agentic-hq/temp/git-statuses/git-status-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
-- Run the "git diff origin/main" command to show detailed diff of any modified tracked files and send the output to .agentic-hq/temp/git-diffs/git-diff-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
+- Run the "git diff HEAD" command to show detailed diff of any modified tracked files (uncommitted changes) and send the output to .agentic-hq/temp/git-diffs/git-diff-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
 - Run the "git ls-files --others --exclude-standard" to show the full list of all new files and send the output to .agentic-hq/temp/git-new-files-list/git-new-files-list-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
 - Tell the human the filenames so they can check them themselves
 - Analyse the files to work out what will be in the commit 
