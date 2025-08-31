@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Agentic HQ is a modular open source framework for orchestrating agentic software development teams. This repository contains the core BMAD (Breakthrough Method of Agile AI-driven Development) framework installation that provides structured workflows for agile AI-driven planning and development.
+Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It is being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework which has been installed in .bmad-core and also in .claude/commands/BMad.  These are the files that provide structured workflows for agile AI-driven planning and development, but they are not part of the project that is being worked on.
 
 ## BMAD Framework Architecture
 
