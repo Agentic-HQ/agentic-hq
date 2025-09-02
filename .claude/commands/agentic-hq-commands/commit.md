@@ -11,8 +11,10 @@ When I run this "commit" command I would like you to please:
 - Tell the human the filenames so they can check them themselves
 - Analyse the files to work out what will be in the commit 
 - Analyse the files to determine whether some files should not be committed and so should be in the .gitignore file.  If there are any then STOP and ask the human for approval for adding those recommended files or directories to .gitignore.  If approved - add them and continue.
+- Before working out a commit title and message body - think hard about what are the *main* things that were done in this commit. The most *important* things. They will need to be mentioned first in the commit title and the message body, and have the main focus.
 - Use the file info, the recent AI conversation history and the context from the project to work out a really nice commit *title* for the commit, that summarises in one sentence all the main things included in the commit, e.g. bug fixes, UI changes, documentation updates, script updates - whatever the main things were.
 - Use the conversation history and the context from the project to work out a really nice, comprehensive commit *message body* that is a detailed, well formatted description of what is being committed.  NOTE:  If the change in the commit is small (e.g. a small addition to some documentation) please don't write a full detailed, description of that one change, as the human will only want a summary of the change, and they can read the code/doc themselves if they need the full detail.  If there are lots of changes though - then obviously the human will want a detailed breakdown of what was done. Please group these into titled sections of related change descriptions, each with the list of changes.  You are already very good at this - so please continue to do it :-)
+- End the commit *message body* section with a one or two sentence summary of what is in the commit and it's relevance/effect on the whole system.
 - Only if the changes done were related to Linear Issues: please add a section at the top listing them all.
 - Then present a Menu to me, with 3 choices:
     1. Approve - Stage, commit and push changes
