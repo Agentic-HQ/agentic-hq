@@ -69,3 +69,4 @@ Slash commands use prefix: `BMad`
 - **DOCUMENTATION REQUIRED**: Every script needs usage comments, every folder needs README, update docs with code changes
 - All validation and linting must pass before story completion
 - The workflow is designed for AI agent orchestration with human oversight
+- **WATCH MODE BANNED**: NEVER create `test:watch` scripts or use `--watch` flags - they hang AI test execution. Always use `vitest run` (never `vitest` alone), `jest --no-watch` (never `jest --watch`)
