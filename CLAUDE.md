@@ -71,6 +71,77 @@ Slash commands use prefix: `BMad`
 - The workflow is designed for AI agent orchestration with human oversight
 - **WATCH MODE BANNED**: NEVER create `test:watch` scripts or use `--watch` flags - they hang AI test execution. Always use `vitest run` (never `vitest` alone), `jest --no-watch` (never `jest --watch`)
 
+## CRITICAL: Never Update Code Without Running Tests First
+
+**RULE: ALWAYS run tests BEFORE making changes to "fix" them.**
+
+This is fundamental to Test-Driven Development but easily violated when making "obvious" fixes:
+
+### ❌ WRONG Approach:
+1. See code that "looks wrong"
+2. Decide to "fix" it
+3. Make changes
+4. Run tests to verify
+
+### ✅ CORRECT Approach:
+1. See code that "looks wrong"
+2. **RUN THE TEST FIRST** to confirm it actually fails
+3. ONLY IF IT FAILS, then make changes
+4. Run tests again to verify the fix
+
+### Real Example (2025-10-22):
+
+While working on fixing unit test failures, AI identified that `infrastructure.integration.test.ts` was using `process.cwd()` at line 156 for accessing `docs/mission-docs/`. AI thought this was wrong and should use `ConfigManager.getAgenticHqProjectRoot()` instead.
+
+**What AI Almost Did:**
+- Add `import { ConfigManager } from '@spike-00/config-manager'`
+- Change `process.cwd()` to `configManager.getAgenticHqProjectRoot()`
+- Break a working test
+
+**What Actually Happened:**
+- User asked: "Can you run it to make sure it fails first?"
+- AI ran the test: **11/11 tests PASSED**
+- The test was **CORRECT** - it was testing spike project infrastructure, not repo root infrastructure
+- AI's "fix" would have **BROKEN** a working test
+
+**Key Lesson:**
+Even when you're "sure" something is wrong, **RUN THE TEST FIRST**. The test might be correct, and your "fix" might break it.
+
+**This applies to:**
+- Bug fixes
+- Refactoring
+- Code cleanup
+- "Obvious" corrections
+- Everything
+
+**No exceptions.**
+
+## Before Deleting/Renaming/Moving Files: Search for References First
+
+**RULE: Use Grep to search for references BEFORE deleting, renaming, or moving files.** Even files named `.BACKUP`, `DELME`, or `test-*` may be active test fixtures. Grep is faster than running tests and prevents breakage.
+
+## Notes On Refactoring Stage Of Test Driven Development
+
+Perplexity says REFACTOR phase of TDD means:
+    - Improving code structure (modularity, readability, removing duplication) - not just of the code written, but of the whole code base that relates to and includes the code written.
+    - Optimizing performance (less important unless we know it's very slow)
+    - Applying design patterns (only if we know they are relevant and important for the code written)
+    - Updating internal documentation (inline comments, TSDoc)
+
+If you write a bunch of code and then do proper Refactoring, your output at the end of the Refactor stage should be something like the following, which shows that it did improve the code after doing it:
+
+⏺ Excellent! All 14 tests still pass. The REFACTOR phase is complete with significant improvements:
+
+  Refactoring Summary:
+  1. CRITICAL: Replaced all synchronous file operations with async (coding standards compliance)
+  2. Extracted constants for magic numbers and directory names
+  3. Created helper methods to eliminate code duplication
+  4. Added UnknownTaskTypeError for better error handling
+  5. Added comprehensive TSDoc documentation
+  6. Improved overall code structure and readability
+
+
+
 ## Please Don't Rush Things - Do Them Well (Quality Over Speed)
 
 - You will be given comprehensive instructions which involve comprehensive reading.  Please **do not skip anything** to save time or speed things up. We have almost unlimited time and unlimited token use.  The priority here is **quality** and **instruction following** and **not** speed.  An example of where this was not followed was when the Agent said "This is taking a while, so let me speed things up by focusing on what's actually relevant" at which point I interrupted and said "Don't speed up.  Do it properly please.".  
@@ -78,3 +149,9 @@ Slash commands use prefix: `BMad`
 ## Don't Invent Things That Aren't In The Spec
 
 If something critical isn't defined in the spec: Stop, Ask The Human.  Don't just make stuff up.  Example: while doing a story to create and End To End test the output directory wasn't defined in the spec, so AI decided to make it "docs/mission-docs/<missionId>/project-output/".   In a later story for implemnting the Agents as it wasn't in the spec a new AI decided to just use "current working directory".  This made the system have a bug where the test would check in one directory and the code would write it to a different directory.  (NOTE: I'm not sure how to enforce this - maybe by having a Story Checking Agent that checks that everything before implementation in a Story Definition has a reference to the original spec where that thing was defined - and if the reference isn't there - FAILS the review???  I doubt that this rule will actually stop this happening...)
+
+
+
+## Always Make Sure Modules And Tools Version Are NOT Outdated
+
+When starting (or continuing) a project you MUST make sure you are not using outdated libraries, modules or tool version (e.g. Node.js).  Usually the aim is to be running the latest Long Term Support version of what is available, and to avoid bleeding edge, new versions that may be unstable.  Running with outdated or incompatible libraries has wasted **HUGE** amounts of time on previous projects where bugs caused lots of time to be wasted trying to work round the bugs (when they were fixed in recent versions) and so running things like "pnpm outdated" and checking the output and working with the human to decide whether we should upgrade is *critical* - especially when starting up a new project, or starting a big, new chunk work on an existing project.  Please, as standard, do these checks and let the human know the risks/situation when you start a big, new chunk of work on an existing project - or especially when creating a new project.
