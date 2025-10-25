@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 CRITICAL: NEVER COMMIT WITHOUT EXPLICIT APPROVAL 🚨
+
+**RULE: NEVER run `git add`, `git commit`, or `git push` commands directly!**
+
+- The user has a custom `/commit` command that handles the entire commit workflow
+- The `/commit` command creates commit messages, gets approval, then stages/commits/pushes
+- **ONLY commit when the user explicitly runs the `/commit` command**
+- If you commit without approval, you bypass the review process and may commit unwanted changes
+- **NO EXCEPTIONS** - even for "simple fixes" or "quick cleanups"
+
+If you need to commit something, STOP and tell the user:
+> "These changes are ready to commit. Please run the `/commit` command when you're ready."
+
 ## Project Overview
 
 Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It is being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework which has been installed in .bmad-core and also in .claude/commands/BMad.  These are the files that provide structured workflows for agile AI-driven planning and development, but they are not part of the project that is being worked on.
