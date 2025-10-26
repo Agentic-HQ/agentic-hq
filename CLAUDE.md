@@ -15,6 +15,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 If you need to commit something, STOP and tell the user:
 > "These changes are ready to commit. Please run the `/commit` command when you're ready."
 
+## 🚨 CRITICAL: NEVER RUN FORMATTERS MID-WORK 🚨
+
+**RULE: NEVER run `pnpm format:fix`, `prettier --write`, or any auto-formatters during active work!**
+
+- Running formatters mid-work pollutes the git commit history
+- Makes it IMPOSSIBLE to see what real changes were made vs. formatting changes
+- **BREAKS TRACEABILITY** of actual code changes
+- Formatters should ONLY be run:
+  - At the very beginning of a new story (clean slate)
+  - At the very end before final commit (after ALL work is done)
+  - As a separate, dedicated formatting commit (no code changes mixed in)
+
+**Example of the Problem:**
+- You change 1 line of actual code
+- Formatter touches 44 files with whitespace/formatting changes
+- Git diff shows hundreds of lines changed
+- Impossible to review what actually changed
+- Code review becomes nightmare
+
+**When asked to check linting/formatting:**
+- Run `pnpm lint` (read-only check) ✅
+- Run `pnpm format` (read-only check) ✅
+- Report issues found ✅
+- **NEVER run `pnpm format:fix`** ❌
+
+**NO EXCEPTIONS** - formatting changes must be isolated from functional changes!
+
 ## Project Overview
 
 Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It is being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework which has been installed in .bmad-core and also in .claude/commands/BMad.  These are the files that provide structured workflows for agile AI-driven planning and development, but they are not part of the project that is being worked on.
@@ -137,7 +164,7 @@ Even when you're "sure" something is wrong, **RUN THE TEST FIRST**. The test mig
 
 Perplexity says REFACTOR phase of TDD means:
     - Improving code structure (modularity, readability, removing duplication) - not just of the code written, but of the whole code base that relates to and includes the code written.
-    - Optimizing performance (less important unless we know it's very slow)
+    - **NEVER optimize for performance** unless we *know* things are very slow and need speeding up (premature optimization adds complexity without benefit)
     - Applying design patterns (only if we know they are relevant and important for the code written)
     - Updating internal documentation (inline comments, TSDoc)
 
