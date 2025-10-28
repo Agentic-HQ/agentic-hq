@@ -42,6 +42,136 @@ If you need to commit something, STOP and tell the user:
 
 **NO EXCEPTIONS** - formatting changes must be isolated from functional changes!
 
+## 🚨 CRITICAL: NEVER CATCH ERRORS AND FALL BACK TO DEFAULTS 🚨
+
+**RULE: NEVER catch errors in critical systems (config, logging, etc.) and silently fall back to default values!**
+
+This is a catastrophic anti-pattern that masks failures and allows the system to run with incorrect configuration.
+
+### ❌ WRONG Pattern (Catch-and-Fallback):
+
+```typescript
+// BAD: ConfigManager.ts
+async loadConfig(): Promise<Config> {
+  try {
+    const configModule = await import('../../../../config/config.js');
+    this.config = configModule.config;
+    return this.config;
+  } catch (error) {
+    // TERRIBLE: Silently fall back to defaults
+    this.logger.warn('Failed to load config, using defaults:', error);
+    this.config = DEFAULT_CONFIG;  // ← WRONG!
+    return this.config;
+  }
+}
+
+// BAD: LogLibrary.ts
+private static initialize(): void {
+  try {
+    this.config = this.loadConfigSync();
+    log4js.configure({ /* ... */ });
+    this.isConfigured = true;
+  } catch (error) {
+    // TERRIBLE: Silently fall back to hardcoded config
+    console.error('Failed to load logging configuration, using defaults:', error);
+    log4js.configure({
+      // ← WRONG! Hardcoded fallback config
+      appenders: { /* ... */ },
+      categories: { default: { level: 'info' } }
+    });
+    this.isConfigured = true;
+  }
+}
+```
+
+### ✅ CORRECT Pattern (Fail Fast):
+
+```typescript
+// GOOD: ConfigManager.ts
+async loadConfig(): Promise<Config> {
+  // Dynamically import config file
+  const configModule = await import('../../../../config/config.js');
+  const loadedConfig = configModule.config;
+
+  // Validate loaded config
+  if (!this.validateConfig(loadedConfig)) {
+    throw new Error('Invalid configuration: config file failed validation');
+  }
+
+  this.config = loadedConfig;
+  this.configLoaded = true;
+  return this.config;
+
+  // NO catch block - let errors propagate!
+  // If config loading fails, the ENTIRE PROGRAM should fail
+}
+
+// GOOD: LogLibrary.ts
+private static initialize(): void {
+  // Load configuration synchronously
+  this.config = this.loadConfigSync(); // Will throw if fails
+
+  // Get pattern based on format setting
+  const pattern = this.getPatternForFormat(this.config.format);
+
+  // Configure log4js
+  log4js.configure({
+    appenders: { /* ... */ },
+    categories: { /* ... */ }
+  });
+
+  this.isConfigured = true;
+
+  // NO catch block - let errors propagate!
+  // If logging config fails, the ENTIRE PROGRAM should fail
+}
+```
+
+### Why Fail Fast is Critical:
+
+1. **Visibility**: Errors are immediately obvious, not hidden behind "working" defaults
+2. **Debugging**: You know exactly what failed and when
+3. **Correctness**: System doesn't run with wrong configuration
+4. **Trust**: If it runs, you know it loaded the correct config
+5. **Spec Compliance**: Fallback configs are NEVER in the spec - they're invented
+
+### When This Rule Applies:
+
+**ALWAYS fail fast for:**
+- ✅ Configuration loading (config.ts, logging.config, etc.)
+- ✅ Required dependencies/imports
+- ✅ Database connections
+- ✅ Required environment variables
+- ✅ Critical system initialization
+- ✅ Validation failures
+
+**Only catch and handle when:**
+- ❌ Graceful degradation is EXPLICITLY specified in the requirements
+- ❌ You have EXPLICIT approval from the human to add fallback behavior
+- ❌ It's EXPLICITLY documented in the spec
+
+### Real Example of This Failure (2025-10-28):
+
+**What Happened:**
+- ConfigManager.ts caught config loading errors and fell back to DEFAULT_CONFIG
+- LogLibrary.ts caught errors in TWO places and fell back to hardcoded defaults
+- Neither fallback was in the spec - both were invented by AI
+- System appeared to work but was running with wrong configuration
+
+**Why It's Wrong:**
+- Masks real problems (missing config files, permission errors, syntax errors)
+- System runs with potentially dangerous default settings
+- Violates "fail fast" principle
+- Not in specification - invented by AI without approval
+
+**Correct Behavior:**
+- Remove ALL try-catch blocks from config/logging initialization
+- Let errors propagate to top level
+- Program terminates with clear error message
+- Human fixes the actual problem (missing file, wrong path, etc.)
+
+**NO EXCEPTIONS** - critical systems must fail fast and loudly!
+
 ## Project Overview
 
 Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It is being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework which has been installed in .bmad-core and also in .claude/commands/BMad.  These are the files that provide structured workflows for agile AI-driven planning and development, but they are not part of the project that is being worked on.
