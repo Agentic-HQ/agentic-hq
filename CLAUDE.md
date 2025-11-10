@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL: KEEP CLAUDE.MD CONCISE ⚠️
+
+**RULE: When adding new rules to CLAUDE.md, keep them SHORT (~15-20 lines max, NOT 200+ lines)!**
+
+**Why:**
+- CLAUDE.md is included in EVERY prompt at EVERY session start
+- Long rules fill up context window quickly → reduces tokens available for actual work
+- Long rules get ignored/skipped → defeats the purpose
+- **Example violation**: 200+ line rule about function duplication (2025-11-01) - had to cut to 20 lines
+
+**Format for new rules:**
+- Core rule statement (1-2 lines)
+- Warning signs (3-5 bullets)
+- What to do instead (3-5 bullets)
+- Real example (1 line showing before/after)
+- Total: ~15-20 lines maximum
+
 ## 🚨 CRITICAL: NEVER COMMIT WITHOUT EXPLICIT APPROVAL 🚨
 
 **RULE: NEVER run `git add`, `git commit`, or `git push` commands directly!**
@@ -613,6 +630,28 @@ describe('Process Instance Creation', () => {
 
 **NO EXCEPTIONS** - TDD requires testing actual functionality, not just setup!
 
+## 🚨 CRITICAL: CHECK FOR EXISTING CODE BEFORE CREATING NEW FUNCTIONS 🚨
+
+**RULE: Before creating a new function, search for existing functions that do similar things and modify them instead of duplicating!**
+
+### Warning Signs You're About to Duplicate:
+- 🚩 New function has similar name/parameters to existing function
+- 🚩 New function reuses existing helper functions extensively
+- 🚩 Only difference is a parameter value, timestamp, or simple conditional
+- 🚩 You copy-paste code from existing function to start new function
+
+### What to Do Instead:
+1. **Search first**: Use Grep to find functions with similar names/purposes
+2. **Modify existing**: Add optional parameter with backward-compatible default
+3. **Real Example**: `generateTestMission()` existed but auto-generated timestamped IDs. Instead of creating new `createUnitTestMission(id)` duplicating all the code, we modified existing function to accept optional `{ useTimestamp?: boolean }` parameter
+
+### When NEW Function IS Appropriate:
+- Completely different purpose (not just different parameter)
+- Different abstraction level or domain/context
+- Modifying existing would break single responsibility
+
+**NO EXCEPTIONS** - check for existing code before creating duplicates!
+
 ## Project Overview
 
 Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It is being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework which has been installed in .bmad-core and also in .claude/commands/BMad.  These are the files that provide structured workflows for agile AI-driven planning and development, but they are not part of the project that is being worked on.
@@ -691,6 +730,28 @@ The `validate` command runs three critical checks in sequence:
 2. **Linting** (`pnpm lint`) - catches code quality and style issues
 3. **Unit tests** (`pnpm test:unit`) - verifies runtime behavior
 
+
+WARNING: Be sure to run this in the correct directory (depends on your context).  
+
+cd <directory of project you are working on>; pnpm validate
+
+If you are doing dev in the root directory of the whole project:
+
+cd /Users/stevepersonal/dev/agentic-hq/agentic-hq; pnpm validate
+
+then that's the directory to run this pnpm command in.
+
+If you are executing a mission then your root directory will be something like this:
+
+cd /Users/stevepersonal/dev/agentic-hq/agentic-hq/docs/mission-docs/HelloWorldE2ETest_20251108_173633/project-output/; pnpm validate
+
+and if you are doing coding work within a spike it will be something like this:
+
+cd /Users/stevepersonal/dev/agentic-hq/agentic-hq/docs/project-docs/project-spikes/spike-00-fail-fast-minimal-whole-system/project; pnpm validate
+
+If you run it in the root directory: /Users/stevepersonal/dev/agentic-hq/agentic-hq when it should be the mission directory: /Users/stevepersonal/dev/agentic-hq/agentic-hq/docs/mission-docs/HelloWorldE2ETest_20251108_173633/project-output/ then you may KILL THE CURRENT TEST YOU ARE RUNNING WITHIN - which is bad....!!!
+
+
 ### Why All Three Are Required
 
 **Type checking and tests serve different purposes:**
@@ -711,7 +772,7 @@ pnpm lint       # Check code quality only
 pnpm test:unit  # Run tests only
 
 # Combined validation (run before committing)
-pnpm validate   # Runs all three in sequence
+cd <directory of project you are working on>; pnpm validate   # Runs all three in sequence
 ```
 
 ### When to Run These Commands
@@ -721,7 +782,7 @@ pnpm validate   # Runs all three in sequence
 - Example: `pnpm test:unit` while writing tests
 
 **Before committing:**
-- **ALWAYS run `pnpm validate`** to catch all issues
+- **ALWAYS run `cd <directory of project you are working on>; pnpm validate`** to catch all issues
 - All three checks must pass (typecheck + lint + tests)
 - **100% pass rate required** - NO exceptions
 
@@ -742,7 +803,7 @@ pnpm validate   # Runs all three in sequence
 - Must run BOTH type checking AND tests
 - `pnpm validate` ensures nothing is missed
 
-**NO EXCEPTIONS** - run `pnpm validate` before every commit!
+**NO EXCEPTIONS** - run `cd <directory of project you are working on>; pnpm validate` before every commit!
 
 ## CRITICAL: Never Update Code Without Running Tests First
 
