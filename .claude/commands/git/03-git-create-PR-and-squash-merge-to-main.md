@@ -1,3 +1,11 @@
+# ⚠️ WARNING: USER-ONLY COMMAND ⚠️
+
+**This command should ONLY be run by the USER, not by Claude.**
+
+Claude should NOT invoke this command autonomously. If the user wants to use this command, they should run it themselves by typing the slash command.
+
+---
+
 You are helping the user create a PR and squash merge their feature branch into main.
 
 ## Step 1: Change to Git Root and Run Pre-Merge Checks
