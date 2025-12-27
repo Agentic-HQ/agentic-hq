@@ -155,3 +155,6 @@ temp/
 .claude/settings.local.json
 .claude/settings.json
 
+# Cloned repos from spike testing (embedded git repos)
+**/ACE-Step/
+
