@@ -158,3 +158,6 @@ temp/
 # Cloned repos from spike testing (embedded git repos)
 **/ACE-Step/
 
+
+# Playwright MCP development screenshots
+.playwright-mcp/
