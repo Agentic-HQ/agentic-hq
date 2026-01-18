@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env npx tsx
 
 import { command, run, string, option } from 'cmd-ts';
 import { exec } from 'child_process';

@@ -46,11 +46,12 @@ Use the AskUserQuestion tool to present these branch prefix options:
 **Options:**
 1. `feature/` - New features or functionality
 2. `bugfix/` - Bug fixes
-3. `hotfix/` - Critical production fixes that can't wait
-4. `refactor/` - Code restructuring without changing functionality
-5. `docs/` - Documentation changes
-6. `chore/` - Maintenance tasks (dependencies, build tools, cleanup)
-7. `test/` - Test additions or modifications
+3. `experiment/` - An experiment or spike where you are trying out something that may never get used
+4. `hotfix/` - Critical production fixes that can't wait
+5. `refactor/` - Code restructuring without changing functionality
+6. `docs/` - Documentation changes
+7. `chore/` - Maintenance tasks (dependencies, build tools, cleanup)
+8. `test/` - Test additions or modifications
 
 Note: The user can also select "Supply my own custom branch prefix" to enter a custom prefix.
 

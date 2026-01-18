@@ -333,7 +333,7 @@ Then use the AskUserQuestion tool:
 Once the user has approved the commit message, run the TypeScript script:
 
 ```bash
-src/scripts/git-scripts/branching/03-squash-merge-branch/perform-squash-merge-on-branch.ts \
+npx tsx src/scripts/git-scripts/branching/03-squash-merge-branch/perform-squash-merge-on-branch.ts \
   --branch-name "[current-branch-name]" \
   --commit-body "$(cat <<'EOF'
 [full-commit-body-here]
