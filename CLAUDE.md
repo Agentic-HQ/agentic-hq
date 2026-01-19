@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## If You're Not Sure, Or Need Help/Research - Use Perplexity MCP Before Asking Human
+
+Perplexity MCP is great.  You almost always get really useful answers from it, that help you and the human progress.  Use it whenever you have something that repeatedly isn't working (e.g. a failing test or an error from a tool that you can't work out) or if you're starting something new or the human/command has instructed you do some research.  It's **GREAT** for research.
+
 ## ⚠️ CRITICAL: KEEP CLAUDE.MD CONCISE ⚠️
 
 **RULE: When adding new rules to CLAUDE.md, keep them SHORT (~15-20 lines max, NOT 200+ lines)!**
@@ -34,7 +38,7 @@ If you need to commit something, STOP and tell the user:
 
 ## 🚨 CRITICAL: NEVER RUN FORMATTERS MID-WORK 🚨
 
-**RULE: NEVER run `pnpm format:fix`, `prettier --write`, or any auto-formatters during active work!**
+**RULE: NEVER run `pnpm format:fix`, `prettier --write`, or any auto-formatters during active work (unless you have checked first using pnpm format:check that the formatting changes only apply to the new code you are working on in this commit)!**
 
 - Running formatters mid-work pollutes the git commit history
 - Makes it IMPOSSIBLE to see what real changes were made vs. formatting changes
@@ -52,10 +56,11 @@ If you need to commit something, STOP and tell the user:
 - Code review becomes nightmare
 
 **When asked to check linting/formatting:**
-- Run `pnpm lint` (read-only check) ✅
-- Run `pnpm format` (read-only check) ✅
+- Run `pnpm lint:check` (read-only check) ✅
+- Run `pnpm format:check` (read-only check) ✅
 - Report issues found ✅
-- **NEVER run `pnpm format:fix`** ❌
+- **ONLY run `pnpm format:fix` if the changes will format new code you've written in this commit** ❌
+- **ONLY run `pnpm lint:fix` if the changes will fix new code you've written in this commit** ❌
 
 **NO EXCEPTIONS** - formatting changes must be isolated from functional changes!
 
@@ -632,7 +637,7 @@ describe('Process Instance Creation', () => {
 
 ## 🚨 CRITICAL: CHECK FOR EXISTING CODE BEFORE CREATING NEW FUNCTIONS 🚨
 
-**RULE: Before creating a new function, search for existing functions that do similar things and modify them instead of duplicating!**
+**RULE: Before creating a new function, search for existing functions that do similar things and NOTE DOWN IN YOUR "REFACTOR LIST" that this happened - then in the REFACTOR stage of TDD review that list and decide whether to refactor out the duplication**
 
 ### Warning Signs You're About to Duplicate:
 - 🚩 New function has similar name/parameters to existing function
@@ -642,7 +647,7 @@ describe('Process Instance Creation', () => {
 
 ### What to Do Instead:
 1. **Search first**: Use Grep to find functions with similar names/purposes
-2. **Modify existing**: Add optional parameter with backward-compatible default
+2. **Modify existing**:  NOTE DOWN IN YOUR "REFACTOR LIST": We could add an optional parameter with backward-compatible default
 3. **Real Example**: `generateTestMission()` existed but auto-generated timestamped IDs. Instead of creating new `createUnitTestMission(id)` duplicating all the code, we modified existing function to accept optional `{ useTimestamp?: boolean }` parameter
 
 ### When NEW Function IS Appropriate:
@@ -654,82 +659,26 @@ describe('Process Instance Creation', () => {
 
 ## Project Overview
 
-Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It is being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework which has been installed in .bmad-core and also in .claude/commands/BMad.  These are the files that provide structured workflows for agile AI-driven planning and development, but they are not part of the project that is being worked on.
-
-## BMAD Framework Architecture
-
-The project uses the BMAD methodology which separates development into two phases:
-
-### Planning Phase (Web UI recommended)
-- **Analyst**: Creates project briefs, conducts market research, competitor analysis
-- **Product Manager (PM)**: Creates Product Requirements Documents (PRDs) from briefs
-- **UX Expert**: Creates front-end specifications and optionally generates AI UI prompts
-- **Architect**: Creates technical architecture from PRD and UX specs
-- **Product Owner (PO)**: Runs master checklist to ensure document alignment
-
-### Development Phase (IDE-based)
-- **Scrum Master (SM)**: Reviews previous notes, drafts stories from sharded epics
-- **Quality Assurance (QA)**: Reviews story drafts and performs senior dev reviews
-- **Developer (Dev)**: Sequential task execution, implementation, testing, validation
-
-## Key Configuration Files
-
-- `.bmad-core/core-config.yaml`: Core BMAD configuration
-- `.bmad-core/install-manifest.yaml`: Installation metadata and file tracking
-
-## Document Structure
-
-Based on core configuration:
-- `docs/prd.md`: Product Requirements Document (sharded to `docs/prd/`)
-- `docs/architecture.md`: Technical architecture (sharded to `docs/architecture/`)
-- `docs/stories/`: Story files following pattern `epic-{n}*.md`
-- `.ai/debug-log.md`: Development debug log
-
-### Always Load Files for Development
-- `docs/architecture/coding-standards.md`
-- `docs/architecture/tech-stack.md`
-- `docs/architecture/source-tree.md`
-
-## Workflow Commands
-
-The framework uses YAML-based workflow definitions in `.bmad-core/workflows/`:
-- `greenfield-fullstack.yaml`: New full-stack applications
-- `greenfield-ui.yaml`: New UI-only projects
-- `greenfield-service.yaml`: New service/API projects
-- `brownfield-*.yaml`: Existing project modifications
-
-## Agent Teams
-
-Pre-configured agent teams available in `.bmad-core/agent-teams/`:
-- `team-all.yaml`: Full team including all roles
-- `team-fullstack.yaml`: Full-stack development team
-- `team-no-ui.yaml`: Backend/service-focused team
-- `team-ide-minimal.yaml`: Minimal IDE-focused team
-
-## BMAD Slash Commands
-
-Slash commands use prefix: `BMad`
+Agentic HQ is a modular open source framework for orchestrating agentic software development teams. NOTE: It WAS being developed using the BMAD (Breakthrough Method of Agile AI-driven Development) framework, but we're not using much smaller chunks of work defined entirely in Jiras, and have ditched large specs.
 
 ## Development Notes
 
-- Documents should be sharded before development begins
-- **TDD MANDATORY**: All code must follow Red-Green-Refactor cycle - write failing test first, verify it fails correctly, then implement, then refactor
+- **TDD MANDATORY**: All code will follow Red-Green-Refactor cycle - write failing test first, verify it fails correctly, then implement, then refactor (NOTE: You don't need to "remember" this any more as it will be enforced by the human or the Agentic HQ workflow engine running 3 separate RED, GREEN, REFACTOR commands for each Jira you work on - so you won't have to "remember" to do this any more - after which I'll delete this directive :-)   )
 - Story acceptance criteria must include "TDD Methodology Followed"
-- **Everything automated: ONE COMMAND RULE**: Everything must run in 1 command - if it takes 2+ commands, create a script
-- **DOCUMENTATION REQUIRED**: Every script needs usage comments, every folder needs README, update docs with code changes
-- All validation and linting must pass before story completion
-- The workflow is designed for AI agent orchestration with human oversight
+- **Aiming eventually for "Everything automated"**: We are aiming (post beta / post launch) for everything to be automated (runs by human or AI running 1 command) - if it takes 2+ commands, note this down in the "REFACTOR LIST" and consider in the REFACTOR stage whether to create a script (if you're unlikely to do this again - then you should decide not to bother - speed is as important as quality!!!).  While in Beta though, we are optimising for speed/agility - so not "everything" will be fully automated.
+- All validation and linting must pass before story completion (UPDATE: This will be enforced by the human or the Agentic HQ workflow engine running a new Pre-Commit Quality Checks command, which will run pnpm validate, which runs the unit tests, so you won't have to "remember" to do this any more - after which I'll delete this directive :-)   )
 - **WATCH MODE BANNED**: NEVER create `test:watch` scripts or use `--watch` flags - they hang AI test execution. Always use `vitest run` (never `vitest` alone), `jest --no-watch` (never `jest --watch`)
 
 ## 🚨 CRITICAL: VALIDATION REQUIRED BEFORE COMMITTING 🚨
 
 **RULE: ALWAYS run `pnpm validate` after ANY coding work and before committing!**
 
+(UPDATE: This will be enforced by the human or the Agentic HQ workflow engine running a new Pre-Commit Quality Checks command so you won't have to "remember" to do this any more - after which I'll delete this directive :-)   )
+
 The `validate` command runs three critical checks in sequence:
 1. **Type checking** (`pnpm typecheck` = `tsc --noEmit`) - catches TypeScript type errors
 2. **Linting** (`pnpm lint`) - catches code quality and style issues
 3. **Unit tests** (`pnpm test:unit`) - verifies runtime behavior
-
 
 WARNING: Be sure to run this in the correct directory (depends on your context).  
 
@@ -856,6 +805,8 @@ Even when you're "sure" something is wrong, **RUN THE TEST FIRST**. The test mig
 
 ## Notes On Refactoring Stage Of Test Driven Development
 
+(NOTE: Soon you won't need to "remember" this any more as it will be enforced by the human or the Agentic HQ workflow engine running the REFACTOR command for each Jira you work on - after which I'll delete this directive :-)   )
+
 Perplexity says REFACTOR phase of TDD means:
     - Improving code structure (modularity, readability, removing duplication) - not just of the code written, but of the whole code base that relates to and includes the code written.
     - **NEVER optimize for performance** unless we *know* things are very slow and need speeding up (premature optimization adds complexity without benefit)
@@ -874,16 +825,9 @@ If you write a bunch of code and then do proper Refactoring, your output at the 
   5. Added comprehensive TSDoc documentation
   6. Improved overall code structure and readability
 
-
-
-## Please Don't Rush Things - Do Them Well (Quality Over Speed)
-
-- You will be given comprehensive instructions which involve comprehensive reading.  Please **do not skip anything** to save time or speed things up. We have almost unlimited time and unlimited token use.  The priority here is **quality** and **instruction following** and **not** speed.  An example of where this was not followed was when the Agent said "This is taking a while, so let me speed things up by focusing on what's actually relevant" at which point I interrupted and said "Don't speed up.  Do it properly please.".  
-
 ## Don't Invent Things That Aren't In The Spec
 
-If something critical isn't defined in the spec: Stop, Ask The Human.  Don't just make stuff up.  Example: while doing a story to create and End To End test the output directory wasn't defined in the spec, so AI decided to make it "docs/mission-docs/<missionId>/project-output/".   In a later story for implemnting the Agents as it wasn't in the spec a new AI decided to just use "current working directory".  This made the system have a bug where the test would check in one directory and the code would write it to a different directory.  (NOTE: I'm not sure how to enforce this - maybe by having a Story Checking Agent that checks that everything before implementation in a Story Definition has a reference to the original spec where that thing was defined - and if the reference isn't there - FAILS the review???  I doubt that this rule will actually stop this happening...)
-
+If something critical isn't defined in the Jira (or spec if you've been given one): Stop, Ask The Human.  Don't just make stuff up.  Example: while doing a story to create and End To End test the output directory wasn't defined in the spec, so AI decided to make it "docs/mission-docs/<missionId>/project-output/".   In a later story for implemnting the Agents as it wasn't in the spec a new AI decided to just use "current working directory".  This made the system have a bug where the test would check in one directory and the code would write it to a different directory.  (NOTE: I'm not sure how to enforce this - maybe by having a Story Checking Agent that checks that everything before implementation in a Story Definition has a reference to the original spec where that thing was defined - and if the reference isn't there - FAILS the review???  I doubt that this rule will actually stop this happening...)
 
 
 ## Always Make Sure Modules And Tools Version Are NOT Outdated
