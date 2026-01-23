@@ -1,0 +1,314 @@
+---
+argument-hint: jira-id test-type
+---
+
+You are executing the first part of the REFACTOR phase in the Jira Story Workflow: **Refactor Analysis**.
+
+Your role is to **analyze the code** written in the GREEN phase and **propose refactors** for human review. You will NOT execute any refactors yet - that happens in the next command after human approval.
+
+**Remember**: Refactoring improves code structure WITHOUT changing behavior. Tests must pass before AND after.
+
+## Variables
+
+```
+jira-id = $1
+test-type = $2
+jira-docs-root = docs/jira-docs
+workflow-files = {jira-docs-root}/{jira-id}/workflow-files
+test-type-files = {workflow-files}/{test-type}-test-files
+ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
+green-phase-file = {test-type-files}/03-green-phase-implementation.md
+refactor-analysis-file = {test-type-files}/04a-refactor-phase-proposed-refactors.md
+jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
+```
+
+## Step 1: Validate Input
+
+**Check jira-id:**
+If `{jira-id}` is empty or not provided, STOP and tell the user:
+> "Please provide a Jira ID. Usage: `/jira-story-workflow:04a-jira-refactor-analysis AHQ-123 unit`"
+
+**Check test-type:**
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, or `smoke`.
+>
+> Usage: `/jira-story-workflow:04a-jira-refactor-analysis AHQ-123 unit`"
+
+## Step 2: Check Pre-requisites
+
+**Check GREEN phase file exists:**
+Check that `{green-phase-file}` exists. If it doesn't exist, STOP and tell the user:
+> "The GREEN phase file doesn't exist at `{green-phase-file}`.
+>
+> You need to complete the GREEN phase before refactoring:
+> ```
+> /agentic-hq-commands:workflow:jira-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
+> ```"
+
+## Step 3: Check for Existing Analysis File
+
+Check if the file `{refactor-analysis-file}` already exists.
+
+If it exists, **STOP** and ask the user:
+> "The refactor analysis file already exists at `{refactor-analysis-file}`.
+>
+> This suggests the {test-type} test REFACTOR analysis has been run previously for {jira-id}.
+>
+> What would you like to do?
+> 1. **Overwrite** - Delete the existing file and start fresh
+> 2. **Read existing and continue to execute** - Skip to 04b to execute approved refactors
+> 3. **Abort** - Cancel this command"
+
+Wait for the user's response before continuing.
+
+## Step 4: Verify Tests Pass BEFORE Refactoring
+
+**CRITICAL: Run all tests first to confirm we're starting from GREEN.**
+
+Run:
+- If {test-type} == 'unit': `pnpm test`
+- If {test-type} == 'integration': `pnpm test:integration`
+- If {test-type} == 'smoke': `pnpm test:smoke`
+
+If ANY test fails, **STOP** and tell the user:
+> "Tests are failing BEFORE refactoring. Cannot proceed with REFACTOR phase.
+>
+> The REFACTOR phase requires all tests to pass first. Please fix the failing tests and re-run GREEN phase."
+
+## Step 5: Read Context
+
+Read the following files to understand what was implemented:
+1. `{green-phase-file}` - What was created in GREEN phase
+2. The actual implementation file(s) mentioned in the GREEN phase document
+3. The test file(s) for this test type
+
+## Step 6: Analyze Code for Potential Refactors
+
+Analyze the code created in the GREEN phase looking for:
+
+### Tier 1: Always-Safe Refactors (Auto-approved)
+
+These will be auto-executed without human approval:
+
+| Refactor Type | Description |
+|---------------|-------------|
+| **Naming improvements** | Rename variables/functions for clarity |
+| **Duplication removal (within file)** | Extract repeated code within the same file |
+| **Simplify conditionals** | Reduce nested if/else, simplify boolean logic |
+| **Extract constants** | Replace magic numbers/strings with named constants |
+| **Remove dead code** | Delete unused variables, unreachable code |
+| **Fix obvious code smells** | Long lines, inconsistent formatting |
+
+### Tier 2: Structural Refactors (Require Human Approval)
+
+These need human approval because they may be "gold-plating":
+
+| Refactor Type | Description | Risk |
+|---------------|-------------|------|
+| **Create new abstractions** | New interfaces, abstract classes | May be premature |
+| **Extract to new file/module** | Split code into separate files | May over-modularize |
+| **Introduce design patterns** | Factory, Strategy, Observer, etc. | May over-engineer |
+| **Create helper classes** | New utility classes | May be YAGNI |
+| **Cross-file refactoring** | Changes affecting multiple files | Higher risk |
+| **Add generalization** | Make code more generic "for future use" | Classic gold-plating |
+
+NOTE: Zero refactors is a valid outcome - if the code is minimal, well named, well commented, well structured and doesn't need additional abstractions/deduplication etc.
+
+## Step 7: Create Refactor Analysis Document
+
+Create the file `{refactor-analysis-file}` with the following structure:
+
+```markdown
+# REFACTOR Analysis: {jira-id} ({test-type} test)
+
+**Jira**: [{jira-id}]({jira-url})
+**Test Type**: {test-type}
+**Phase**: REFACTOR (Analysis)
+**Generated**: {current date/time}
+
+---
+
+## Guidance for Human Reviewer
+
+### The "Has It Earned It?" Question
+
+Before approving Tier 2 refactors, ask yourself:
+- **Is this code stable?** Will it change significantly in the next few stories?
+- **Is this pattern repeated?** Rule of Three - only abstract when pattern appears 3+ times
+- **Is this code important?** Is it core functionality or a one-off utility?
+- **Will this abstraction be used?** Or is it speculative "just in case" design?
+
+### Research on Limiting Refactoring (from Perplexity)
+
+**Key principle**: Refactor in small, safe steps. If more than a few minutes since tests passed, revert and try smaller steps.
+
+**Always-safe refactors** (low risk of over-engineering):
+- Removing duplication within a single function or small module
+- Improving variable/function names for clarity
+- Simplifying conditionals or extracting constants
+
+**Requires caution** (prone to gold-plating):
+- Creating new abstractions or interfaces
+- Extracting methods into separate classes
+- Introducing design patterns
+- Building "stepping stones" toward future features
+
+**The anti-pattern to avoid**: "Beware of gold plating" - building intermediate functionality to make future work easier when that future work may never come.
+
+**Rule of Three**: Only create an abstraction when the same pattern appears 3+ times in the codebase, not speculatively.
+
+---
+
+## Pre-Refactor Test Status
+
+**Command**: `{pnpm test command}`
+**Result**: ✅ PASSING (X tests)
+
+---
+
+## Tier 1: Auto-Approved Refactors
+
+These will be executed automatically (low risk, high value):
+
+| # | Type | Description | File(s) |
+|---|------|-------------|---------|
+| 1.1 | {type} | {description} | `{file}` |
+| 1.2 | {type} | {description} | `{file}` |
+| ... | ... | ... | ... |
+
+**Or if none:**
+> No Tier 1 refactors identified. Code is already clean at this level.
+
+---
+
+## Tier 2: Proposed Refactors (Require Approval)
+
+These require your approval before execution:
+
+### Refactor 2.1: {Title}
+
+**Type**: {e.g., "Create new abstraction", "Extract to new file"}
+**Description**: {What the refactor would do}
+**Justification**: {Why AI thinks this is valuable}
+**Risk**: {Why this might be gold-plating}
+**Files affected**: `{file1}`, `{file2}`
+
+**Your Decision**:
+- [ ] **APPROVE** - Yes, do this refactor
+- [ ] **REJECT** - No, code hasn't earned this yet
+- [ ] **DEFER** - Maybe later, not now
+
+**Comments** (optional): _______________
+
+---
+
+### Refactor 2.2: {Title}
+
+{Same structure as above}
+
+---
+
+## Summary
+
+| Category | Count |
+|----------|-------|
+| Tier 1 (Auto-approved) | X |
+| Tier 2 (Pending approval) | Y |
+| **Total proposed** | X+Y |
+
+---
+
+## Next Steps
+
+1. Review the Tier 2 refactors above
+2. Mark each as APPROVE / REJECT / DEFER
+3. Add any comments explaining your decision
+4. Run the execute command:
+```
+/agentic-hq-commands:workflow:jira-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
+```
+```
+
+## Step 8: Handle "No Refactors Needed" Case
+
+If the code is already clean and you find NO refactors (Tier 1 or Tier 2), create a simpler document:
+
+```markdown
+# REFACTOR Analysis: {jira-id} ({test-type} test)
+
+**Jira**: [{jira-id}]({jira-url})
+**Test Type**: {test-type}
+**Phase**: REFACTOR (Analysis)
+**Generated**: {current date/time}
+
+---
+
+## Pre-Refactor Test Status
+
+**Command**: `{pnpm test command}`
+**Result**: ✅ PASSING (X tests)
+
+---
+
+## Analysis Result: No Refactors Needed
+
+The code created in the GREEN phase is already clean:
+- ✅ No duplication detected
+- ✅ Names are clear and descriptive
+- ✅ No obvious code smells
+- ✅ No structural improvements warranted at this stage
+
+**Recommendation**: Skip the refactor execute phase and proceed to VERIFY.
+
+---
+
+## Next Steps
+
+Since no refactors are needed, proceed directly to verification:
+```
+/agentic-hq-commands:workflow:jira-story-workflow:05-jira-verify {jira-id} {test-type}
+```
+
+Or if you want to proceed to the next test type in the TDD cycle.
+```
+
+## Step 9: Add Comment to Jira
+
+Use the Jira MCP tool to add a comment:
+
+> AI Agent has completed REFACTOR analysis for {test-type} test.
+>
+> **Tier 1 refactors (auto-approved)**: {count}
+> **Tier 2 refactors (pending approval)**: {count}
+>
+> Analysis documented at: `{refactor-analysis-file}`
+>
+> Human review required for Tier 2 refactors before execution.
+
+## Step 10: Present to Human
+
+After creating the file, tell the human:
+
+> "I've completed the REFACTOR analysis for {jira-id} ({test-type} test).
+>
+> **Tier 1 (Auto-approved)**: {count} refactors - will execute automatically
+> **Tier 2 (Needs your approval)**: {count} refactors - please review
+>
+> Analysis at: `{refactor-analysis-file}`
+>
+> Please review the Tier 2 refactors and mark each as APPROVE/REJECT/DEFER, then run:
+> ```
+> /agentic-hq-commands:workflow:jira-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
+> ```
+>
+> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR (analysis ✅, execute pending) → VERIFY → (next test type)"
+
+---
+
+## Important Notes
+
+- **Analysis only**: This command does NOT modify any code - it only proposes changes
+- **Tests must pass first**: Never analyze code that has failing tests
+- **Be conservative**: When in doubt, classify as Tier 2 for human review
+- **Rule of Three**: Don't propose abstractions unless a pattern appears 3+ times
+- **No speculation**: Don't propose refactors "for future flexibility" - that's gold-plating
