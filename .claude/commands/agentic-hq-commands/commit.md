@@ -15,11 +15,31 @@ jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 
 When I run this "commit" command I would like you to please:
 
+### Confirm If jira-id Not Provided
+
 **If `{jira-id}` was not provided:**
 STOP and ask the human to confirm whether they intended to commit without providing a Jira ID and give options:
 (1) Continue without Jira ID (commit title and body will be constructed by the AI)
 (2) Provide Jira ID - I will ask you for the Jira ID and then continue
 (3) Abort command
+
+### Pre-Commit Validation
+
+**MANDATORY**: Before creating the commit message, run validation:
+
+1. Run `pnpm validate` to check:
+   - TypeScript types (`pnpm typecheck`)
+   - Linting rules (`pnpm lint:check`)
+   - Unit tests (`pnpm test`)
+
+2. If validation fails:
+   - STOP and report the failures to the human
+   - Do NOT proceed with the commit until validation passes
+   - Help fix the issues if requested
+
+3. Only proceed with commit message creation if `pnpm validate` passes
+
+### After Validation
 
 - Present the following menu options to the user in a list format (1) Continue (2) Provide additional info to help with creating the Commit message - (user can append to the (2) option).  
 - STOP and wait for answer.

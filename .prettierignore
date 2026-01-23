@@ -1,0 +1,32 @@
+# Build output
+dist/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Lock files (auto-generated)
+pnpm-lock.yaml
+
+# Markdown files (prose formatting is subjective)
+*.md
+
+# Spike projects have their own configs
+docs/project-docs/project-spikes/
+
+# Not bothering to check formatting on older, archived work
+docs/ARCHIVED/
+
+# Config files
+*.config.ts
+*.config.mjs
+
+# Old experiments
+src/experiments/
+
+# Don't format markdown command files and agent docs
+.claude/
+.agentic-hq/
+
+# Git
+.git/

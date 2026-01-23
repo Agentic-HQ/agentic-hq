@@ -1,8 +1,9 @@
 #!/usr/bin/env npx tsx
 
-import { command, run, string, option } from 'cmd-ts';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+
+import { command, run, string, option } from 'cmd-ts';
 
 const execAsync = promisify(exec);
 
@@ -45,7 +46,11 @@ async function getPRNumber(branchName: string): Promise<string> {
 /**
  * Squash merge the PR with the given commit body
  */
-async function squashMerge(prNumber: string, branchName: string, commitBody: string): Promise<void> {
+async function squashMerge(
+  prNumber: string,
+  branchName: string,
+  commitBody: string
+): Promise<void> {
   console.log('========================================');
   console.log('SQUASH MERGE');
   console.log('========================================');
@@ -215,7 +220,6 @@ const app = command({
       console.log(`  - Branch archived: ${branchName} → archive/${branchName}`);
       console.log('  - Returned to main branch');
       console.log('');
-
     } catch (error: any) {
       console.error('');
       console.error('╔════════════════════════════════════════════════════════════════╗');
