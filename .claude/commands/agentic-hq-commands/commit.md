@@ -30,12 +30,28 @@ STOP and ask the human to confirm whether they intended to commit without provid
 1. Run `pnpm validate` to check:
    - TypeScript types (`pnpm typecheck`)
    - Linting rules (`pnpm lint:check`)
+   - Formatting rules (`pnpm format:check`)
    - Unit tests (`pnpm test`)
 
 2. If validation fails:
-   - STOP and report the failures to the human
-   - Do NOT proceed with the commit until validation passes
-   - Help fix the issues if requested
+   - **STOP** immediately
+   - **Investigate the failure** before reporting to the human:
+     - For **formatting issues**: Run `pnpm prettier --write <file> --dry-run` to see what would change, or read the file and compare against Prettier rules
+     - For **lint errors**: The error output usually shows the issue; if unclear, run `pnpm eslint <file>` for detailed output
+     - For **type errors**: Read the file at the line number shown to understand the type mismatch
+     - For **test failures**: Read the test output to understand what assertion failed
+   - **Report to the human** with:
+     - Which check failed (typecheck/lint/format/test)
+     - Which file(s) are affected
+     - What specifically is wrong (e.g., "missing semicolon on line 42", "import order incorrect", "unused variable 'foo'")
+     - Whether it's auto-fixable or requires manual intervention
+   - **DO NOT automatically run any fix commands**
+   - Offer options to the human:
+     1. Run the fix command (e.g., `pnpm format:fix <file>` or `pnpm lint:fix <file>`) - explain what it will do
+     2. Let the human fix it manually
+     3. Abort the commit
+   - **Wait for the human's approval** before running any fix command
+   - After fix is applied (if approved), re-run `pnpm validate` to confirm it passes
 
 3. Only proceed with commit message creation if `pnpm validate` passes
 
