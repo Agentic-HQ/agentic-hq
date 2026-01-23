@@ -1,10 +1,36 @@
 {
+  "name": "agentic-hq",
+  "version": "0.1.0",
+  "description": "Agentic HQ - Orchestrating agentic software development teams",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "// VALIDATION": "validate = typecheck (lint added later in AHQ-7)",
+    "validate": "pnpm typecheck",
+    "typecheck": "tsc --noEmit",
+    "// CLI COMMANDS": "hello-world = runs hello-world.ts and prints Hello world",
+    "hello-world": "tsx src/misc/hello-world-cli.ts",
+    "// UNIT TEST COMMANDS": "test = ALL unit tests, test:hello-world = ONLY hello-world unit test",
+    "test": "vitest run --config vitest.unit.config.ts",
+    "test:hello-world": "vitest run --config vitest.unit.config.ts tests/unit/hello-world.unit.test.ts",
+    "// SMOKE TEST COMMANDS": "test:smoke = ALL smoke tests, test:smoke:hello-world = ONLY hello-world smoke test",
+    "test:smoke": "vitest run --config vitest.smoke.config.ts",
+    "test:smoke:hello-world": "vitest run --config vitest.smoke.config.ts tests/smoke/hello-world.smoke.test.ts",
+    "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"
+  },
+  "engines": {
+    "node": ">=22.0.0 <23.0.0",
+    "pnpm": ">=10.0.0"
+  },
   "dependencies": {
     "claude": "^0.1.1",
     "cmd-ts": "^0.14.3",
     "node-pty": "^1.0.0"
   },
   "devDependencies": {
-    "tsx": "^4.20.6"
+    "@types/node": "^25.0.9",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.2"
   }
 }
