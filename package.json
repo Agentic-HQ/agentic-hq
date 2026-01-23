@@ -5,8 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "// VALIDATION": "validate = typecheck + lint + unit tests (REQUIRED before commits)",
-    "validate": "pnpm typecheck && pnpm lint:check && pnpm test",
+    "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
+    "validate": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test",
     "typecheck": "tsc --noEmit",
     "// LINTING": "lint:check = read-only, lint:fix = auto-fix (use carefully)",
     "lint:check": "eslint .",
