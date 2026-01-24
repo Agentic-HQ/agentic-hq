@@ -148,11 +148,22 @@ Create the file `{workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 
 ## Questions for Human
 
-{List any questions you have that need human input before proceeding. These should be things that:
-- Are ambiguous in the Jira
-- Require a decision/preference
-- Need clarification on scope or approach
-- Were discovered during your research}
+{List any questions you have that need human input before proceeding.
+
+**CRITICAL - VALIDATE EACH QUESTION BEFORE INCLUDING IT:**
+Before adding ANY question, explicitly check:
+1. Is this already answered in the Jira description? If yes, DON'T ASK.
+2. Is this already answered in the Confluence/spec pages you read? If yes, DON'T ASK.
+3. Is this already answered in the parent Epic or linked Jiras? If yes, DON'T ASK.
+4. Is this already specified in acceptance criteria? If yes, DON'T ASK.
+
+Only include questions that are GENUINELY not answered in any source material you've read. For each question, you should be able to say "I checked X, Y, and Z and none of them specify this."
+
+Valid questions are things that:
+- Are truly ambiguous (not specified anywhere you've read)
+- Require a decision/preference the spec intentionally left open
+- Involve tradeoffs the human should weigh in on
+- Were discovered during research and aren't covered by existing docs}
 
 ### Question 1: {Brief title}
 
@@ -211,5 +222,5 @@ After creating the file, tell the human:
 - **Jira is source of truth**: Your summary shows YOUR understanding, not a copy of the Jira
 - **Focus on relevance**: Don't read every file or every linked Jira - use judgment
 - **Research is valuable**: If you're unsure about something technical, research it now rather than guessing during implementation
-- **Questions are good**: It's better to ask questions now than to make wrong assumptions during coding
+- **Questions must be validated**: Before asking ANY question, verify it's not already answered in the Jira, Confluence pages, acceptance criteria, or other docs you read. Asking about something that's already specified wastes human time and shows you didn't fully internalize what you read.
 - **TDD applies**: Remember that the next step is writing failing tests first (Red phase of TDD) and the commands after that will guide you through doing the whole Jira using TDD (see your CLAUDE.md for details of TDD)

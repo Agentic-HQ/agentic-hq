@@ -1,6 +1,38 @@
 # agentic-hq
 Agentic HQ: A modular open source framework for orchestrating an agentic software development team
 
+## Prerequisites
+
+### Node.js
+Requires Node.js v22.x (LTS). Check with `node --version`.
+
+### pnpm (Package Manager)
+This project uses pnpm. **You must use pnpm 10.28.1 or later.**
+
+```bash
+# Check your pnpm version
+pnpm --version
+
+# If outdated, update using corepack (built into Node.js 22+):
+corepack use pnpm@10.28.1
+```
+
+**Why pnpm 10.28.1+?** Earlier versions have bugs with peer dependency resolution and build script handling that cause issues with this project's dependencies.
+
+### First-time Setup
+
+```bash
+# Clone the repo
+git clone <repo-url>
+cd agentic-hq
+
+# Install dependencies
+pnpm install
+
+# Verify everything works
+pnpm validate
+```
+
 ## Available Commands
 
 ### Validation

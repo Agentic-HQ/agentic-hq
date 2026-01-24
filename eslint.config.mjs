@@ -18,7 +18,10 @@
 
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
-import vitest from 'eslint-plugin-vitest';
+// NOTE: @vitest/eslint-plugin replaces deprecated eslint-plugin-vitest
+// The old package had peer dependency conflicts with ESLint 9.x
+// See: https://github.com/vitest-dev/eslint-plugin-vitest (now points to @vitest/eslint-plugin)
+import vitest from '@vitest/eslint-plugin';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [

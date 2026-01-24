@@ -1,0 +1,29 @@
+# =============================================================================
+# pnpm Workspace Configuration
+# =============================================================================
+#
+# WORKSPACE PACKAGES:
+# By default pnpm auto-detects all nested package.json files as workspace members.
+# We explicitly define packages to EXCLUDE the legacy spike project which has its
+# own pnpm.overrides that triggers warnings (overrides only work at workspace root).
+#
+# BUILD SCRIPT APPROVALS:
+# pnpm 10.x blocks postinstall/build scripts by default for security.
+# Packages listed in onlyBuiltDependencies are TRUSTED to run their build scripts.
+#
+# Why these packages need build scripts:
+# - node-pty: Compiles native binaries for PTY terminal emulation
+# - esbuild: Compiles native binaries for fast JS/TS bundling (used by tsx, vite, vitest)
+# - unrs-resolver: Native resolver for eslint-import-resolver-typescript
+#
+# See: https://socket.dev/blog/pnpm-10-0-0-blocks-lifecycle-scripts-by-default
+# =============================================================================
+
+packages:
+  # Exclude spike project (has legacy pnpm.overrides that triggers warnings)
+  - '!docs/project-docs/project-spikes/**/project'
+
+onlyBuiltDependencies:
+  - node-pty
+  - esbuild
+  - unrs-resolver

@@ -5,6 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "// POSTINSTALL": "FIX: node-pty posix_spawnp failed on macOS. pnpm extracts spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Known pnpm bug: https://github.com/pnpm/pnpm/issues/7366. Mac-only (darwin-*), fails silently on other platforms.",
+    "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
     "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
     "validate": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test",
     "typecheck": "tsc --noEmit",
@@ -22,6 +24,9 @@
     "// SMOKE TEST COMMANDS": "test:smoke = ALL smoke tests, test:smoke:hello-world = ONLY hello-world smoke test",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
     "test:smoke:hello-world": "vitest run --config vitest.smoke.config.ts tests/smoke/hello-world.smoke.test.ts",
+    "// INTEGRATION TEST COMMANDS": "test:integration = ALL integration tests, test:integration:kill-script = ONLY kill-script test",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:kill-script": "vitest run --config vitest.integration.config.ts tests/integration/process-control/kill-script-terminates-cli-process.integration.test.ts",
     "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"
   },
   "engines": {
@@ -29,23 +34,23 @@
     "pnpm": ">=10.0.0"
   },
   "dependencies": {
-    "claude": "^0.1.1",
     "cmd-ts": "^0.14.3",
-    "node-pty": "^1.0.0"
+    "node-pty": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.0.9",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "@vitest/eslint-plugin": "^1.6.6",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-vitest": "^0.5.0",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.1",
     "vitest": "^4.0.2"
-  }
+  },
+  "packageManager": "pnpm@10.28.1+sha512.7d7dbbca9e99447b7c3bf7a73286afaaf6be99251eb9498baefa7d406892f67b879adb3a1d7e687fc4ccc1a388c7175fbaae567a26ab44d1067b54fcb0d6a316"
 }
