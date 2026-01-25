@@ -15,15 +15,19 @@ jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 
 When I run this "commit" command I would like you to please:
 
-### Confirm If jira-id Not Provided
+### ⚠️ STEP 1: Check Jira ID FIRST (before anything else)
+
+**This is the FIRST thing to check.** The AI previously skipped this step because it wasn't prominent enough - it jumped straight to validation instead.
 
 **If `{jira-id}` was not provided:**
 STOP and ask the human to confirm whether they intended to commit without providing a Jira ID and give options:
 (1) Continue without Jira ID (commit title and body will be constructed by the AI)
-(2) Provide Jira ID - I will ask you for the Jira ID and then continue
+(2) Provide Jira ID - I will ask you for it and then continue
 (3) Abort command
 
-### Pre-Commit Validation
+**Only proceed to validation AFTER this step is complete.**
+
+### STEP 2: Pre-Commit Validation
 
 **MANDATORY**: Before creating the commit message, run validation:
 

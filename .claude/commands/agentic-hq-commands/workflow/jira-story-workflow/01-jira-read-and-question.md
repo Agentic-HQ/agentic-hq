@@ -196,10 +196,10 @@ and summarise the most important things you found.
 
 ## Ready for Next Step
 
-Human: Once you've read this file and answered the questions and completed your discussion with me about the Jira, please run the next command (in this session so context is retained):
-```
-/agentic-hq-commands:workflow:jira-story-workflow:02-jira-write-failing-test {jira-id} unit
-```
+Human, please:
+- Answer the questions
+- Let me know you've answered them and we'll discuss until resolved.
+- Then I'll tell you the next command to run
 ```
 
 ## Step 12: Present to Human
@@ -214,6 +214,20 @@ After creating the file, tell the human:
 > **Questions**: {number} questions need your input before we proceed.
 >
 > Please review the summary file, add your responses to any questions inline, and let me know when you're ready to continue to the next step."
+
+
+## Step 13: Read And Discuss Answers With Human
+
+Read and discuss the answers with the human. 
+
+Once everything is resolved, update the file to clarify what the agreed answers were and move on to step 14.
+
+## Step 14: Instruct Human On Next Step In Workflow
+
+Once all points are cleared up, tell the human to run the next step in the workflow:
+
+/agentic-hq-commands:workflow:jira-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
+
 
 ---
 
