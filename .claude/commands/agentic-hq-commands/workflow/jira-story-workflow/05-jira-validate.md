@@ -36,6 +36,7 @@ Check that at least one of these files exists:
 - `{workflow-files}/unit-test-files/04a-refactor-phase-proposed-refactors.md`
 - `{workflow-files}/integration-test-files/04a-refactor-phase-proposed-refactors.md`
 - `{workflow-files}/smoke-test-files/04a-refactor-phase-proposed-refactors.md`
+- `{workflow-files}/e2e-test-files/04a-refactor-phase-proposed-refactors.md`
 
 If none exist, STOP and tell the user:
 > "No REFACTOR phase files found. You need to complete at least one RED-GREEN-REFACTOR cycle before validation.
@@ -112,7 +113,15 @@ Check if smoke tests exist and run them:
 
 Run: `pnpm test:smoke`
 
-Record whether smoke tests pass. If they fail, report the failure but continue to documentation.
+Record whether smoke tests pass. If they fail, report the failure but continue to the next step.
+
+## Step 8: Run E2E Tests (if they exist)
+
+Check if e2e tests exist and run them:
+
+Run: `pnpm test:e2e`
+
+Record whether e2e tests pass. If they fail, report the failure but continue to documentation.
 
 ## Step 8: Verify Acceptance Criteria
 
@@ -157,6 +166,7 @@ Create the file `{validate-file}` with the following structure:
 | Unit | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
 | Integration | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
 | Smoke | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
+| E2E | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
 
 ---
 
@@ -185,6 +195,12 @@ Create the file `{validate-file}` with the following structure:
 **Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist)
 **Details**: {X/Y passing or N/A}
 
+### E2E Tests
+
+**Command**: `pnpm test:e2e`
+**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist)
+**Details**: {X/Y passing or N/A}
+
 ---
 
 ## Acceptance Criteria Verification
@@ -205,6 +221,7 @@ Create the file `{validate-file}` with the following structure:
 | Full Validation (`pnpm validate`) | ✅/❌ |
 | Integration Tests | ✅/❌/⏭️ |
 | Smoke Tests | ✅/❌/⏭️ |
+| E2E Tests | ✅/❌/⏭️ |
 | Acceptance Criteria | ✅/❌ |
 | **Ready for Commit** | ✅ YES / ❌ NO |
 

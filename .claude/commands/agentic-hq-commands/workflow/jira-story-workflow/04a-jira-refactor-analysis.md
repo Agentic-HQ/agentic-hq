@@ -29,8 +29,8 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:04a-jira-refactor-analysis AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, or `smoke`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
 >
 > Usage: `/jira-story-workflow:04a-jira-refactor-analysis AHQ-123 unit`"
 
@@ -69,6 +69,7 @@ Run:
 - If {test-type} == 'unit': `pnpm test`
 - If {test-type} == 'integration': `pnpm test:integration`
 - If {test-type} == 'smoke': `pnpm test:smoke`
+- If {test-type} == 'e2e': `pnpm test:e2e`
 
 If ANY test fails, **STOP** and tell the user:
 > "Tests are failing BEFORE refactoring. Cannot proceed with REFACTOR phase.

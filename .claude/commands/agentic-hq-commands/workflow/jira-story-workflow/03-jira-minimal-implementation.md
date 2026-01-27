@@ -29,8 +29,8 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:03-jira-minimal-implementation AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, or `smoke`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
 >
 > Usage: `/jira-story-workflow:03-jira-minimal-implementation AHQ-123 unit`"
 
@@ -146,6 +146,7 @@ To make sure your implementation hasn't broken any of the other tests of type: {
 - If {test-type} == 'unit': pnpm test (runs all unit tests)
 - If {test-type} == 'integration': pnpm test:integration (runs all integration tests - NOTE: we may have to change our mind if these tests are slow later...?)
 - If {test-type} == 'smoke': pnpm test:smoke (runs all smoke tests - NOTE: we may have to change our mind if these tests are slow later...?)
+- If {test-type} == 'e2e': pnpm test:e2e (runs all e2e tests - NOTE: we may have to change our mind if these tests are slow later...?)
 
 ## Step 8: Create GREEN Phase Document
 

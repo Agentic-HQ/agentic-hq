@@ -4,7 +4,7 @@ argument-hint: jira-id test-type
 
 You are executing the second step of the Jira Story Workflow: **Write ONE Failing Test (RED Phase)**.
 
-This command writes exactly ONE test - either a unit, integration, or smoke test (specified by the second parameter). Your role is to write that ONE failing test to drive the implementation. This is the RED phase of TDD - the test must fail because the implementation doesn't exist yet, NOT because of bugs in the test code.
+This command writes exactly ONE test - either a unit, integration, smoke, or e2e test (specified by the second parameter). Your role is to write that ONE failing test to drive the implementation. This is the RED phase of TDD - the test must fail because the implementation doesn't exist yet, NOT because of bugs in the test code.
 
 **You will run this command multiple times** - once for each test type needed (e.g., once for unit, once for smoke), completing the full TDD cycle (RED → GREEN → REFACTOR → VERIFY) for each before moving to the next.
 
@@ -28,12 +28,12 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:02-jira-write-failing-test AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, or `smoke`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
 >
 > Usage: `/jira-story-workflow:02-jira-write-failing-test AHQ-123 unit`
 >
-> **Recommended order:** Run unit tests first, then integration, then smoke.
+> **Recommended order:** unit → integration → smoke → e2e.
 > Each test type goes through a full TDD cycle (RED → GREEN → REFACTOR → VERIFY) before moving to the next."
 
 ## Step 2: Check Pre-requisites
@@ -80,12 +80,14 @@ From the acceptance criteria, identify the ONE {test-type} test to write.
 **What each test type drives:**
 - **unit**: Core function/method logic (tested in isolation with mocks)
 - **integration**: Component wiring and interaction (tests real component integration)
-- **smoke**: End-to-end CLI/API entry points (tests the system from the outside)
+- **smoke**: Quick validation that core features work (tests basic functionality post-build)
+- **e2e**: Complete user journeys end-to-end (tests entire application workflow in production-like environment)
 
 **Key principle:** Each test should drive implementation of code that doesn't exist yet:
 - Unit test drives the core logic implementation
 - Integration test drives component wiring
-- Smoke test drives CLI/API entry point implementation
+- Smoke test drives basic functionality validation
+- E2e test drives full user journey validation
 
 If the Jira doesn't require a {test-type} test, tell the user:
 > "The acceptance criteria for {jira-id} don't appear to require a {test-type} test.
@@ -272,7 +274,7 @@ After creating the file, tell the human:
 > /agentic-hq-commands:workflow:jira-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
 > ```
 >
-> **Reminder - TDD order:** unit → integration → smoke (each with full RED → GREEN → REFACTOR → VERIFY cycle)"
+> **Reminder - TDD order:** unit → integration → smoke → e2e (each with full RED → GREEN → REFACTOR → VERIFY cycle)"
 
 ---
 
@@ -283,4 +285,4 @@ After creating the file, tell the human:
 - **NO skeleton in RED phase**: Do not create any production code - that's GREEN phase work
 - **Only fix TEST bugs**: If test has syntax errors or wrong paths, fix those. But "module not found" is correct!
 - **TDD cycle per test type**: Complete full cycle (RED → GREEN → REFACTOR → VERIFY) before next test type
-- **Recommended order**: unit → integration → smoke (each test type drives different code)
+- **Recommended order**: unit → integration → smoke → e2e (each test type drives different code)
