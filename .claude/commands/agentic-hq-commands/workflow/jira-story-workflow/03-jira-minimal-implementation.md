@@ -11,8 +11,8 @@ Your role is to write the **minimum code necessary** to make the failing test pa
 ## Variables
 
 ```
-jira-id = $1
-test-type = $2
+jira-id = $0
+test-type = $1
 jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
@@ -202,7 +202,7 @@ Use the Jira MCP agent to add a comment to the Jira:
 >
 > Next: REFACTOR phase to clean up the implementation.
 
-## Step 10: Present to Human
+## Step 10: Present to Human and STOP
 
 After creating the file, tell the human:
 
@@ -225,6 +225,15 @@ After creating the file, tell the human:
 >
 > **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR → VERIFY → (next test type)"
 
+**🛑 CRITICAL: STOP HERE - DO NOT CONTINUE TO REFACTORING 🛑**
+
+Your work for this command is COMPLETE. Do NOT:
+- Start reviewing code for refactoring opportunities
+- Begin the REFACTOR phase yourself
+- Make any additional code changes
+
+The human will start the REFACTOR phase properly by running the next command. If you start refactoring without that command, you will do it incorrectly because the REFACTOR command has specific instructions and structure that you need to follow.
+
 ---
 
 ## Important Notes
@@ -233,3 +242,4 @@ After creating the file, tell the human:
 - **Hard-coded is OK**: If the test only checks one value, hard-coding that value is fine
 - **Ugly is OK**: Code quality improvements happen in REFACTOR, not GREEN
 - **Use AC commands**: Always run tests with the exact pnpm command from acceptance criteria
+- **🛑 STOP after Step 10**: Do NOT continue to REFACTOR on your own - wait for the human to run the REFACTOR command

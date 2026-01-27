@@ -11,8 +11,8 @@ This command writes exactly ONE test - either a unit, integration, or smoke test
 ## Variables
 
 ```
-jira-id = $1
-test-type = $2
+jira-id = $0
+test-type = $1
 jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
@@ -95,7 +95,13 @@ If the Jira doesn't require a {test-type} test, tell the user:
 > 2. **Create anyway** - Write a {test-type} test based on my understanding
 > 3. **Clarify** - Help me understand what {test-type} test is needed"
 
-## Step 7: Write the ONE Test File
+
+## Step 7a: Instruct The Human To Put You In Plan Mode
+
+Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you, continue with creating the Plan for Step 7b to 7f, then implement it based on their feedback from the Plan (as usual)
+
+
+## Step 7b: Write the ONE Test File (After Plan Is Approved By Human)
 
 **CRITICAL TDD RULES (Per Uncle Bob's Three Laws):**
 - **Law 1**: No production code until a test fails
@@ -108,7 +114,7 @@ This means:
 - A **compilation error IS a valid RED phase failure**
 - The test, once completed, can import non-existent code → compilation fails → RED phase complete ✅
 
-### 7a. Write the Test File
+### 7c. Write the Test File
 
 Create the test file with:
 - **A brief comment above the test** explaining what this test verifies (helps human reviewer understand quickly)
@@ -136,7 +142,7 @@ describe('helloWorld', () => {
 });
 ```
 
-### 7b. Set Up Test Infrastructure to Match Acceptance Criteria
+### 7d. Set Up Test Infrastructure to Match Acceptance Criteria
 
 **CRITICAL: Check the acceptance criteria for the EXACT test commands** (e.g., `pnpm test:hello-world`, `pnpm test`).
 
@@ -148,7 +154,7 @@ Before running the test, you MUST:
 
 **DO NOT use `npx vitest` directly** - the test must run using the EXACT command specified in the acceptance criteria.
 
-### 7c. Run the Test Using the AC Command (Expect Failure)
+### 7e. Run the Test Using the AC Command (Expect Failure)
 
 Run the test **using the exact pnpm command from the acceptance criteria** - it should fail because the implementation is missing or incomplete:
 
@@ -168,7 +174,7 @@ If test fails for wrong reason (test bug), fix the TEST before proceeding.
 
 **Do NOT create or modify implementation files** - that's the GREEN phase's job.
 
-### 7d. Verify TypeScript Compilation
+### 7f. Verify TypeScript Compilation
 
 **CRITICAL: Run `pnpm validate` to verify the test file has no TypeScript errors.**
 

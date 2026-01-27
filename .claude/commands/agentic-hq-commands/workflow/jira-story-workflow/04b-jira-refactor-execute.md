@@ -15,8 +15,8 @@ Your role is to **execute the approved refactors** from the analysis phase. You 
 ## Variables
 
 ```
-jira-id = $1
-test-type = $2
+jira-id = $0
+test-type = $1
 jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files

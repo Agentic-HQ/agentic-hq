@@ -154,6 +154,7 @@ temp/
 # etc to be committed to the repo.
 .claude/settings.local.json
 .claude/settings.json
+.claude/backups/
 
 # Cloned repos from spike testing (embedded git repos)
 **/ACE-Step/

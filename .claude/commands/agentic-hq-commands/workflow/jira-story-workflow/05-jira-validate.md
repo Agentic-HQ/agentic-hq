@@ -15,7 +15,7 @@ Your role is to perform comprehensive validation before the story can be conside
 ## Variables
 
 ```
-jira-id = $1
+jira-id = $0
 jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md

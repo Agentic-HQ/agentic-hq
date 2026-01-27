@@ -9,7 +9,7 @@ Your role is to gain a deep understanding of the Jira, gather relevant context, 
 ## Variables
 
 ```
-jira-id = $1
+jira-id = $0
 jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md

@@ -28,6 +28,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:kill-script": "vitest run --config vitest.integration.config.ts tests/integration/process-control/kill-script-terminates-cli-process.integration.test.ts",
     "test:integration:claude-math": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/claude-executes-math-command.integration.test.ts",
+    "test:integration:real-claude-self-termination": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/real-claude-self-termination.integration.test.ts",
     "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"
   },
   "engines": {
