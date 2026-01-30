@@ -238,3 +238,4 @@ Once all points are cleared up, tell the human to run the next step in the workf
 - **Research is valuable**: If you're unsure about something technical, research it now rather than guessing during implementation
 - **Questions must be validated**: Before asking ANY question, verify it's not already answered in the Jira, Confluence pages, acceptance criteria, or other docs you read. Asking about something that's already specified wastes human time and shows you didn't fully internalize what you read.
 - **TDD applies**: Remember that the next step is writing failing tests first (Red phase of TDD) and the commands after that will guide you through doing the whole Jira using TDD (see your CLAUDE.md for details of TDD)
+- **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e** (each with full RED → GREEN → REFACTOR → VERIFY cycle). Do NOT ask about test ordering - this is standard.

@@ -17,7 +17,8 @@ jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
-green-phase-file = {test-type-files}/03-green-phase-implementation.md
+green-phase-plan-file = {test-type-files}/03-green-phase-implementation-plan.md
+green-phase-file = {test-type-files}/03-green-phase-summary-of-what-was-implemented.md
 refactor-analysis-file = {test-type-files}/04a-refactor-phase-proposed-refactors.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 ```
@@ -78,10 +79,12 @@ If ANY test fails, **STOP** and tell the user:
 
 ## Step 5: Read Context
 
-Read the following files to understand what was implemented:
+Read the following files to understand what was planned and implemented:
+0. `{green-phase-plan-file}` - The plan that was made and then implemented for GREEN phase
 1. `{green-phase-file}` - What was created in GREEN phase
 2. The actual implementation file(s) mentioned in the GREEN phase document
 3. The test file(s) for this test type
+4. Use the jira-verbatim-content-extractor agent to obtain all the details of the Jira you are working on *and* any parent and child Jiras.  Use this information to obtain an understanding of what you are refactoring, what the constraints, requirements and the acceptance criteria were and the EXACT commands that you need to run to make sure the tests stay GREEN when the refactor happens for this test type.
 
 ## Step 6: Analyze Code for Potential Refactors
 
@@ -171,10 +174,10 @@ Before approving Tier 2 refactors, ask yourself:
 
 These will be executed automatically (low risk, high value):
 
-| # | Type | Description | File(s) |
+| # | Type | Description | File(s) & Line Num |
 |---|------|-------------|---------|
-| 1.1 | {type} | {description} | `{file}` |
-| 1.2 | {type} | {description} | `{file}` |
+| 1.1 | {type} | {description} | `{file}` Line: `{lineNum}` |
+| 1.2 | {type} | {description} | `{file}` Line: `{lineNum}`|
 | ... | ... | ... | ... |
 
 **Or if none:**

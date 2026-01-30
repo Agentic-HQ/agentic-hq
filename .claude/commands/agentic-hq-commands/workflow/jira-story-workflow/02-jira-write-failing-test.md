@@ -100,7 +100,10 @@ If the Jira doesn't require a {test-type} test, tell the user:
 
 ## Step 7a: Instruct The Human To Put You In Plan Mode
 
-Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you, continue with creating the Plan for Step 7b to 7f, then implement it based on their feedback from the Plan (as usual)
+Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you:
+- continue with creating the Plan for Step 7b to 7f
+- include in the Plan instructions to come back and re-read this command to complete all the remaining steps (as the Plan mode may have cleared the context - in which case you will forget you were even running this command!)
+- then implement the Plan based on their feedback from the Plan (as usual)
 
 
 ## Step 7b: Write the ONE Test File (After Plan Is Approved By Human)
@@ -282,7 +285,9 @@ After creating the file, tell the human:
 
 - **ONE test only**: This command writes exactly ONE {test-type} test
 - **Compilation error IS valid failure**: Test importing non-existent module → compilation fails → RED complete ✅
-- **NO skeleton in RED phase**: Do not create any production code - that's GREEN phase work
+- **RED phase includes all test scaffolding**: mocks, stubs, fixtures, fake processes, temp file setup, test data generators - these are TEST INFRASTRUCTURE, not implementation. Create whatever test scaffolding is needed to make the test runnable (except for the actual implementation being tested).
+- **NO production code in RED phase**: Do not create or modify the actual implementation code - that's GREEN phase work. Test scaffolding is NOT production code.
 - **Only fix TEST bugs**: If test has syntax errors or wrong paths, fix those. But "module not found" is correct!
 - **TDD cycle per test type**: Complete full cycle (RED → GREEN → REFACTOR → VERIFY) before next test type
 - **Recommended order**: unit → integration → smoke → e2e (each test type drives different code)
+- **Remember to include this command in the Plan**: otherwise you'll forget to do the last steps (e.g. writing the "red phase" summary file)

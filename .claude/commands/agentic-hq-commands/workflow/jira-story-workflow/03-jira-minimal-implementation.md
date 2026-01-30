@@ -18,9 +18,16 @@ workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
-green-phase-file = {test-type-files}/03-green-phase-implementation.md
+green-phase-plan-file = {test-type-files}/03-green-phase-implementation-plan.md
+green-phase-file = {test-type-files}/03-green-phase-summary-of-what-was-implemented.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 ```
+
+## Step 0: Understand Warning About Plan Mode
+
+WARNING: Don't start implementing **any** code changes until Step 6a (Plan Mode) has been successfully completed and the user has approved your planned implementation.  This is a critical part of the Code Review process - as the user finds it much easier to review code when they have read, understood and approved the plan **before** the code is created. Also catches problems/misunderstandings earlier and faster.
+
+Tell the user you have read "Step 0" and won't be doing any code changes with getting approval from them in Plan Mode first.
 
 ## Step 1: Validate Input
 
@@ -85,7 +92,21 @@ From the failing test, determine:
 - Test expects: `'Hello world'`
 - Therefore: Create `src/misc/hello-world.ts` with a `helloWorld()` function that returns `'Hello world'`
 
-## Step 6: Write the Minimal Implementation
+
+## Step 6a: Instruct The Human To Put You In Plan Mode And Create The Implementation Plan
+
+Ask the human to put you in Plan Mode for doing the implementation in steps 6b and 6c and once they have done that and told you they have done it, then do the following:
+- create the plan for the implementation steps 6b and 6c (re-read the instructions in 6b and 6c to be clear)
+- Go through *every* single detail in the Jira the defines something that should affect the implementation plan and list them out (numbered) to the human - and then cross check they are in the plan
+- Update the plan with a new section with the *full* numbered, list of every single detail in the Jira the defines something that should affect the implementation plan (numbered).
+- Update the plan by adding a reference to every part of the plan that maps to one of the above numbered list of requirements from the Jira.  If the plan doesn't contain a reference to where that thing is being implemented it - then you've missed it and must re-work the plan to include it.
+- Add to the end of the Plan an instructions to come back and re-read this command file to get the instructions for testing and documenting after step 6c. IMPORTANT: Do not try to copy those instructions into the Plan - you will miss bits.  Just add a TODO to come back and read this entire command file and follow the rest of the instructions carefully.
+- Copy the entire plan to {green-phase-plan-file} and tell the human where it is, so they can read it in the workspace
+- Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
+- When it's finally approved, re-copy the updated plan to {green-phase-plan-file} so it's up to date
+- Then implement the Plan
+
+## Step 6b: Write the Minimal Implementation
 
 **CRITICAL GREEN PHASE RULES:**
 - Write **only** enough code to make the test pass
@@ -93,9 +114,10 @@ From the failing test, determine:
 - **No premature optimization** - slow and correct is fine
 - **No gold-plating** - ugly but working is acceptable
 - **Hard-coded values are OK** if that's all the test needs
+- **Copy-pasting and duplication are expected and OK** whatever is fastest and easiest (duplication will be removed during REFACTOR stage)
 - You can clean it up in the REFACTOR phase
 
-### 6a. Create the Implementation File(s)
+### 6c. Create the Implementation File(s)
 
 Create the minimum files needed. For example:
 
@@ -109,9 +131,13 @@ export function helloWorld(): string {
   return 'Hello world';
 }
 ```
-An example of Gold Plating here would be to look at the Jira and see that it is talking about a CLI and then making this program work as a CLI.  That is *NOT* permitted since it is *not* the minimum to pass the test.  It will break the flow of the next smoke test, since that smoke test will pass in the RED phase even though it hasn't been implemented.  Again: this is the reason you **must** only do the minimum that will get the pass you have been told about to turn GREEN.
+An example of Gold Plating here would be to look at the Jira and see that it is talking about a CLI and then making this program work as a CLI.  That is *NOT* permitted since it is *not* the minimum to pass the test. If the test doesn't require a CLI - **DON'T CREATE A CLI** (even if the spec says so).  Your **only** goal is to pass the test.  If the test isn't good enough to make the spec be executed - we will have to come back and improve the test, or add more Jiras/tests. Doing more than the test requires **may break the flow of the next** test, since that test may now pass in the RED phase even though it hasn't been implemented.  Again: this is the reason you **must** only do the minimum that will get the pass you have been told to work on to turn GREEN. 
 
-### 6b. Check Acceptance Criteria for Additional Requirements
+Another example of Gold Plating is clearing up temp files.  If you think you should delete temp files after you have created them, but the test would still pass if you didn't then: you **must not clear up the temp files**.  The test is **the** spec - and you must only do the **minimum** necessary to make it pass - nothing more.
+
+Thanks.
+
+### 6d. Check Acceptance Criteria for Additional Requirements
 
 **CRITICAL: Read the acceptance criteria again** to check if this test type requires additional setup beyond just the implementation code.
 
