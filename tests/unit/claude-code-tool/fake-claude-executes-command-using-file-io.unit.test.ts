@@ -17,6 +17,9 @@ import { describe, it, expect } from 'vitest';
 
 import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool.js';
 
+// TypeScript executor for running .ts fixtures directly
+const TSX_EXECUTABLE = 'tsx';
+
 // Path to fake CLI fixture (relative to project root)
 const FAKE_CLI_PATH = path.join(
   process.cwd(),
@@ -27,7 +30,8 @@ describe('ClaudeCodeTool.execute(command, commandInput)', () => {
   it('should reverse a string via file I/O with fake CLI', async () => {
     // Arrange - inject fake CLI instead of real Claude
     const tool = new ClaudeCodeTool({
-      cliExecutable: `tsx ${FAKE_CLI_PATH}`,
+      executable: TSX_EXECUTABLE,
+      args: [FAKE_CLI_PATH],
     });
     const commandInputString = 'this is a test string';
     const expectedCommandOutputString = 'gnirts tset a si siht';

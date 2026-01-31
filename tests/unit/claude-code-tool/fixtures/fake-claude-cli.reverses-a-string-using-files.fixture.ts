@@ -6,12 +6,15 @@
  * command: reading command-input.json, reversing the string, and writing the result to command-output.json.
  * This is TEST SCAFFOLDING - it replaces real Claude in unit tests.
  *
- * USAGE: tsx fake-claude-cli.reverses-a-string-using-files.fixture.ts <command-input-output-files-directory>
+ * USAGE: tsx fake-claude-cli.reverses-a-string-using-files.fixture.ts "<command> <tempDir>"
  *
- * Input file: <command-input-output-files-directory>/command-input.json
+ * NOTE: The command and tempDir are passed as a SINGLE combined string (argv[2]),
+ * NOT as separate arguments. This replicates how real Claude receives its prompt.
+ *
+ * Input file: <tempDir>/command-input.json
  *   { "command-input-string": "hello world" }
  *
- * Output file: <command-input-output-files-directory>/command-output.json
+ * Output file: <tempDir>/command-output.json
  *   { "command-output-string": "dlrow olleh" }
  *
  * Used by: tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts
@@ -21,11 +24,42 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-const commandInputOutputFilesDirectory = process.argv[2];
+/*
+ * ARGV PARSING - REPLICATING REAL CLAUDE CLI BEHAVIOR
+ *
+ * Real Claude CLI receives a single prompt string containing both the slash command
+ * and its arguments. For example:
+ *
+ *   claude --print "/reverse-a-string /path/to/temp/dir"
+ *
+ * Claude internally parses this string to:
+ * - Recognize "/reverse-a-string" as a slash command
+ * - Make "/path/to/temp/dir" available as $0 in the command's markdown file
+ *
+ * This fake CLI replicates that behavior by:
+ * 1. Receiving the combined string as argv[2] (after 'tsx' and 'fixture.ts')
+ * 2. Splitting on space to extract [command, tempDir]
+ * 3. Using tempDir to find command-input.json and write command-output.json
+ *
+ * This ensures ClaudeCodeTool.ts can pass arguments identically to both real Claude
+ * and test fixtures, with no special-case branching in production code.
+ *
+ * See also: src/tools/claude-code/ClaudeCodeTool.ts (ARGV HANDLING comment)
+ */
+const combinedPromptString = process.argv[2];
 
-console.log(`Fake Claude CLI in fake-claude-cli.reverses-a-string-using-files.fixture.ts running 
-  with command-input-output-files-directory: ${commandInputOutputFilesDirectory}`);
-console.log(`And going to pretending to be Claude Code running the "reverse-a-string" command`);
+if (!combinedPromptString) {
+  console.error('ERROR: No prompt string provided. Expected: "<command> <tempDir>"');
+  process.exit(1);
+}
+
+// Parse the combined string like real Claude does
+const [, commandInputOutputFilesDirectory] = combinedPromptString.split(' ');
+
+console.log(`Fake Claude CLI (fake-claude-cli.reverses-a-string-using-files.fixture.ts)`);
+console.log(`  Received combined prompt string: "${combinedPromptString}"`);
+console.log(`  Parsed tempDir: ${commandInputOutputFilesDirectory}`);
+console.log(`  Simulating "reverse-a-string" command...`);
 
 if (!commandInputOutputFilesDirectory) {
   console.error('ERROR: command-input-output-files-directory path not provided');

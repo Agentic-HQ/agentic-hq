@@ -9,6 +9,7 @@
     "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
     "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
     "validate": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test",
+    "validate:all": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test:all",
     "typecheck": "tsc --noEmit",
     "// LINTING": "lint:check = read-only, lint:fix = auto-fix (use carefully)",
     "lint:check": "eslint .",
@@ -18,17 +19,19 @@
     "format:fix": "prettier . --write",
     "// CLI COMMANDS": "hello-world = runs hello-world.ts and prints Hello world",
     "hello-world": "tsx src/misc/hello-world-cli.ts",
-    "// UNIT TEST COMMANDS": "test = ALL unit tests, test:hello-world = ONLY hello-world unit test",
+    "// TEST COMMANDS": "test = unit tests, test:all = unit + smoke + integration",
     "test": "vitest run --config vitest.unit.config.ts",
+    "test:all": "pnpm test && pnpm test:smoke && pnpm test:integration",
     "test:hello-world": "vitest run --config vitest.unit.config.ts tests/unit/hello-world.unit.test.ts",
     "// SMOKE TEST COMMANDS": "test:smoke = ALL smoke tests, test:smoke:hello-world = ONLY hello-world smoke test",
     "test:smoke": "vitest run --config vitest.smoke.config.ts",
     "test:smoke:hello-world": "vitest run --config vitest.smoke.config.ts tests/smoke/hello-world.smoke.test.ts",
-    "// INTEGRATION TEST COMMANDS": "test:integration = ALL integration tests, test:integration:kill-script = ONLY kill-script test, test:integration:claude-math = ONLY claude math test",
+    "// INTEGRATION TEST COMMANDS": "test:integration = ALL integration tests",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:kill-script": "vitest run --config vitest.integration.config.ts tests/integration/process-control/kill-script-terminates-cli-process.integration.test.ts",
-    "test:integration:claude-math": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/claude-executes-math-command.integration.test.ts",
     "test:integration:real-claude-self-termination": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/real-claude-self-termination.integration.test.ts",
+    "test:integration:claude-file-io": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/claude-executes-command-using-file-io.integration.test.ts",
+    "test:unit:fake-claude-file-io": "vitest run --config vitest.unit.config.ts tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts",
     "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"
   },
   "engines": {
@@ -36,7 +39,6 @@
     "pnpm": ">=10.0.0"
   },
   "dependencies": {
-    "cmd-ts": "^0.14.3",
     "node-pty": "^1.1.0"
   },
   "devDependencies": {
