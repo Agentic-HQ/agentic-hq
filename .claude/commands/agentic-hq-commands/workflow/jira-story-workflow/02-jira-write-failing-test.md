@@ -17,6 +17,7 @@ jira-docs-root = docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
+red-phase-plan-file = {test-type-files}/02-red-phase-failing-test-plan.md
 red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 ```
@@ -98,11 +99,14 @@ If the Jira doesn't require a {test-type} test, tell the user:
 > 3. **Clarify** - Help me understand what {test-type} test is needed"
 
 
-## Step 7a: Instruct The Human To Put You In Plan Mode
+## Step 7a: Instruct The Human To Put You In Plan Mode And Create/Copy The Implementation Plan File
 
 Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you:
 - continue with creating the Plan for Step 7b to 7f
 - include in the Plan instructions to come back and re-read this command to complete all the remaining steps (as the Plan mode may have cleared the context - in which case you will forget you were even running this command!)
+- Copy the entire plan to {red-phase-plan-file} and tell the human where it is, so they can read it in the workspace
+- Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
+- When it's finally approved, **re-copy** the updated plan to {red-phase-plan-file} so it's up to date
 - then implement the Plan based on their feedback from the Plan (as usual)
 
 

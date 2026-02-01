@@ -90,16 +90,48 @@ Read the following files to understand what was planned and implemented:
 
 Analyze the code created in the GREEN phase looking for:
 
+### 🔴 CRITICAL: Magic Constants Check (MUST DO FIRST)
+
+**You MUST extract ALL magic constants. No exceptions.**
+
+Magic constants are literal values (numbers, strings) used directly in code without a named constant.
+
+> **Perplexity research**: "Explicit naming improves readability and maintainability for all developers. The most effective way to eliminate magic numbers is to assign them descriptive names and store them in constants. Named constants reduce the risk of accidentally using the wrong value and make code self-documenting."
+
+**Examples of values that MUST be extracted (even if they seem "obvious"):**
+- `0` → `EXIT_CODE_SUCCESS` (what does 0 mean? success? failure? index?)
+- `'temp'` → `TEMP_DIRECTORY_NAME` (is this a temp dir? a temp file? a prefix?)
+- `80` → `DEFAULT_TERMINAL_COLUMNS` (why 80? what is it for?)
+- `2` → `JSON_INDENT_SPACES` (indent? retry count? array index?)
+- `'.agentic-hq'` → `AGENTIC_HQ_WORKING_DIRECTORY` (makes the path structure self-documenting)
+- `'claude'` → `DEFAULT_CLAUDE_EXECUTABLE` (what CLI? documented in JSDoc is NOT an excuse!)
+- `'test input'` → `TEST_INPUT_STRING` (test data needs extraction too!)
+- `'expected output'` → `EXPECTED_OUTPUT_STRING` (makes test assertions self-documenting)
+
+**How to check:**
+1. Read each implementation file line by line
+2. Look for ANY literal number or string that represents a value, path, key, timeout, or identifier
+3. For EACH one found, check if it has a named constant - if not, it's a magic constant
+
+**In your analysis document, you MUST include a Magic Constants Audit table:**
+
+| File | Line | Magic Value | Status | Constant Name |
+|------|------|-------------|--------|---------------|
+| `file.ts` | 85 | `80` | ⚠️ MAGIC | → `DEFAULT_TERMINAL_COLUMNS` |
+| `file.ts` | 32 | `'xterm-256color'` | ✅ EXTRACTED | `PTY_TERMINAL_TYPE` |
+
+**If ANY magic constants are found, add them to Tier 1 refactors.**
+
 ### Tier 1: Always-Safe Refactors (Auto-approved)
 
 These will be auto-executed without human approval:
 
 | Refactor Type | Description |
 |---------------|-------------|
+| **Extract magic constants** | Replace magic numbers/strings with named constants - THIS IS THE MOST COMMON REFACTOR |
 | **Naming improvements** | Rename variables/functions for clarity |
 | **Duplication removal (within file)** | Extract repeated code within the same file |
 | **Simplify conditionals** | Reduce nested if/else, simplify boolean logic |
-| **Extract constants** | Replace magic numbers/strings with named constants |
 | **Remove dead code** | Delete unused variables, unreachable code |
 | **Fix obvious code smells** | Long lines, inconsistent formatting |
 
@@ -254,9 +286,21 @@ If the code is already clean and you find NO refactors (Tier 1 or Tier 2), creat
 
 ---
 
+## Magic Constants Audit
+
+**ZERO magic constants found.** All literal values are extracted to named constants at the top of the file.
+
+| File | Line | Value | Status | Constant Name |
+|------|------|-------|--------|---------------|
+| {file} | {line} | {value} | ✅ EXTRACTED | `{CONSTANT_NAME}` |
+| ... | ... | ... | ... | ... |
+
+---
+
 ## Analysis Result: No Refactors Needed
 
 The code created in the GREEN phase is already clean:
+- ✅ **ZERO magic constants** - all values extracted to named constants
 - ✅ No duplication detected
 - ✅ Names are clear and descriptive
 - ✅ No obvious code smells

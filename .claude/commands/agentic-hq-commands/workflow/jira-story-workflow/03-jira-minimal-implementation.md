@@ -96,15 +96,32 @@ From the failing test, determine:
 ## Step 6a: Instruct The Human To Put You In Plan Mode And Create The Implementation Plan
 
 Ask the human to put you in Plan Mode for doing the implementation in steps 6b and 6c and once they have done that and told you they have done it, then do the following:
-- create the plan for the implementation steps 6b and 6c (re-read the instructions in 6b and 6c to be clear)
-- Go through *every* single detail in the Jira the defines something that should affect the implementation plan and list them out (numbered) to the human - and then cross check they are in the plan
-- Update the plan with a new section with the *full* numbered, list of every single detail in the Jira the defines something that should affect the implementation plan (numbered).
-- Update the plan by adding a reference to every part of the plan that maps to one of the above numbered list of requirements from the Jira.  If the plan doesn't contain a reference to where that thing is being implemented it - then you've missed it and must re-work the plan to include it.
-- Add to the end of the Plan an instructions to come back and re-read this command file to get the instructions for testing and documenting after step 6c. IMPORTANT: Do not try to copy those instructions into the Plan - you will miss bits.  Just add a TODO to come back and read this entire command file and follow the rest of the instructions carefully.
-- Copy the entire plan to {green-phase-plan-file} and tell the human where it is, so they can read it in the workspace
-- Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
-- When it's finally approved, re-copy the updated plan to {green-phase-plan-file} so it's up to date
-- Then implement the Plan
+
+1. Create the plan for the implementation steps 6b and 6c (re-read the instructions in 6b and 6c to be clear)
+
+2. **Create a "Jira Requirements (Numbered)" section** at the top of your plan:
+   - Go through *every* single detail in the Jira that defines something that should affect the implementation
+   - List each requirement with a number (1, 2, 3, etc.)
+   - At the end of each numbered requirement, add an arrow (→) pointing to which section of YOUR plan addresses that requirement
+   - Example format:
+     ```
+     1. CLI location: `src/demo/cli/my-cli.ts` → [Step 3: Create CLI file]
+     2. Uses Commander library → [Step 1: Install Commander]
+     3. **AC1**: E2E test passes → [Verification: Automated]
+     4. Out of scope: error handling → N/A (nothing to implement)
+     ```
+   - If a requirement doesn't point to any section in your plan, you've missed it - rework the plan to include it
+   - Do NOT scatter "Maps to: Req #X" annotations throughout the plan - keep the mapping in ONE place (this section)
+
+3. Add to the end of the Plan a TODO to come back and re-read this command file for testing and documenting instructions after step 6c. IMPORTANT: Do not copy those instructions into the Plan - you will miss bits.
+
+4. Copy the entire plan to {green-phase-plan-file} and tell the human where it is
+
+5. Present the Plan to the user and get their feedback, modify based on feedback
+
+6. When finally approved, re-copy the updated plan to {green-phase-plan-file}
+
+7. Then implement the Plan
 
 ## Step 6b: Write the Minimal Implementation
 
@@ -174,7 +191,30 @@ To make sure your implementation hasn't broken any of the other tests of type: {
 - If {test-type} == 'smoke': pnpm test:smoke (runs all smoke tests - NOTE: we may have to change our mind if these tests are slow later...?)
 - If {test-type} == 'e2e': pnpm test:e2e (runs all e2e tests - NOTE: we may have to change our mind if these tests are slow later...?)
 
-## Step 8: Create GREEN Phase Document
+## Step 7c: Human Verifies Manual Acceptance Tests (if any)
+
+**CRITICAL: GREEN phase is NOT complete until ALL tests pass - including manual tests!**
+
+Check the Jira acceptance criteria for any tests marked as "MANUAL" or "manual test run by the human". If there are manual tests:
+
+1. **Present the manual test instructions to the human** - tell them exactly what commands to run and what to verify
+2. **STOP and wait for the human to confirm** each manual test passes
+3. **Do NOT proceed to Step 8** until the human confirms ALL manual tests pass
+
+Example prompt to human:
+> "The automated tests are passing. Before I can complete GREEN phase, please verify these manual acceptance tests:
+>
+> **AC2 (Manual)**: Run `pnpm demo:string-reversal --string-to-reverse="test"` and verify you can interrupt Claude mid-execution.
+>
+> **AC3 (Manual)**: Run the same command and verify Claude displays full screen and resizes correctly.
+>
+> Please run these tests and let me know the results. GREEN phase cannot be documented as complete until all tests pass."
+
+**If manual tests fail**: Work with the human to fix the implementation, then re-run automated tests and re-verify manual tests.
+
+**If no manual tests exist**: Proceed directly to Step 8.
+
+## Step 8: Create GREEN Phase Document (only after ALL tests pass)
 
 Create the file `{green-phase-file}` with the following structure:
 
