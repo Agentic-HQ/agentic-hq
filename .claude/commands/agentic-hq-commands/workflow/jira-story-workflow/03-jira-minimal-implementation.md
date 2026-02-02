@@ -117,13 +117,17 @@ Ask the human to put you in Plan Mode for doing the implementation in steps 6b a
 
 4. Copy the entire plan to {green-phase-plan-file} and tell the human where it is
 
-5. Present the Plan to the user and get their feedback, modify based on feedback
+5.a. **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{green-phase-plan-file}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
+
+5.b. Present the Plan to the user and get their feedback, modify based on feedback
 
 6. When finally approved, re-copy the updated plan to {green-phase-plan-file}
 
 7. Then implement the Plan
 
 ## Step 6b: Write the Minimal Implementation
+
+**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{green-phase-plan-file}`. If not, do it NOW before continuing.**
 
 **CRITICAL GREEN PHASE RULES:**
 - Write **only** enough code to make the test pass

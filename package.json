@@ -20,6 +20,7 @@
     "// CLI COMMANDS": "hello-world = runs hello-world.ts and prints Hello world",
     "hello-world": "tsx src/misc/hello-world-cli.ts",
     "demo:string-reversal": "tsx src/demo/cli/string-reversal-demo-cli.ts",
+    "demo:math-workflow": "tsx src/demo/cli/math-workflow-demo-cli.ts",
     "// TEST COMMANDS": "test = unit tests, test:all = unit + smoke + integration",
     "test": "vitest run --config vitest.unit.config.ts",
     "test:all": "pnpm test && pnpm test:smoke && pnpm test:integration",
@@ -36,6 +37,7 @@
     "// E2E TEST COMMANDS": "test:e2e = ALL e2e tests, test:e2e:demo-string-reversal = ONLY demo string reversal e2e test",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:e2e:demo-string-reversal": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/demo-string-reversal-cli-reverses-string.e2e.test.ts",
+    "test:e2e:demo-math-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/demo-math-workflow-gives-expected-output-number.e2e.test.ts",
     "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"
   },
   "engines": {

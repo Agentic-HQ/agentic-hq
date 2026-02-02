@@ -104,13 +104,14 @@ If the Jira doesn't require a {test-type} test, tell the user:
 Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you:
 - continue with creating the Plan for Step 7b to 7f
 - include in the Plan instructions to come back and re-read this command to complete all the remaining steps (as the Plan mode may have cleared the context - in which case you will forget you were even running this command!)
-- Copy the entire plan to {red-phase-plan-file} and tell the human where it is, so they can read it in the workspace
+- **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{red-phase-plan-file}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
 - Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
-- When it's finally approved, **re-copy** the updated plan to {red-phase-plan-file} so it's up to date
 - then implement the Plan based on their feedback from the Plan (as usual)
 
 
 ## Step 7b: Write the ONE Test File (After Plan Is Approved By Human)
+
+**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{red-phase-plan-file}`. If not, do it NOW before continuing.**
 
 **CRITICAL TDD RULES (Per Uncle Bob's Three Laws):**
 - **Law 1**: No production code until a test fails

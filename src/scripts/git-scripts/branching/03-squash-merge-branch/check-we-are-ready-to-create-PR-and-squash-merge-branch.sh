@@ -70,15 +70,15 @@ else
 fi
 echo ""
 
-# Check 2: Is the working directory clean?
+# Check 2: Is the working directory clean (including untracked files)?
 echo "Check 2: Working directory status"
-echo "$ git diff-index --quiet HEAD --"
-if git diff-index --quiet HEAD --; then
+echo "$ git status --short"
+GIT_STATUS=$(git status --short)
+if [ -z "$GIT_STATUS" ]; then
     echo "(no output - working directory is clean)"
     echo -e "${GREEN}✓ Working directory: clean${NC}"
 else
-    echo "$ git status --short"
-    git status --short
+    echo "$GIT_STATUS"
     echo -e "${RED}✗ Working directory: has uncommitted changes${NC}"
     ALL_OK=false
 fi
@@ -139,8 +139,8 @@ else
         STEP=$((STEP + 1))
     fi
 
-    # Check if working directory has uncommitted changes
-    if ! git diff-index --quiet HEAD --; then
+    # Check if working directory has uncommitted changes (including untracked files)
+    if [ -n "$(git status --short)" ]; then
         echo "$STEP. Commit all your changes before creating PR:"
         echo "   Use the WIP commit command:"
         echo "     /git:02-git-perform-minor-WIP-commit-on-branch"
