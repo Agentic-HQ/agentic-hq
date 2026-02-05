@@ -18,8 +18,8 @@
 #   0 - Stash created successfully
 #   1 - Aborted by user or error occurred
 #
-# Usage:
-#   ./git-stash-modified-and-untracked.sh
+# Usage (run from repo root):
+#   ./src/scripts/git-scripts/stashing/git-stash-modified-and-untracked.sh
 #
 # To restore stashed changes later:
 #   git stash pop
