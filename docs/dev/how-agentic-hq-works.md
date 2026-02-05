@@ -130,7 +130,7 @@ To create your own workflow:
 
 5. **Run your workflow:**
    ```bash
-   tsx src/demo/cli/my-workflow-cli.ts --your-arg-name=your-arg-value
+   npx tsx src/demo/cli/my-workflow-cli.ts --your-arg-name=your-arg-value
    ```
 
 ---
