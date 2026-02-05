@@ -1,10 +1,26 @@
-# agentic-hq
-Agentic HQ: A modular open source framework for orchestrating an agentic software development team
+# Welcome to the Agentic HQ Project!
+
+Agentic HQ is a thin Typescript wrapper around Claude Code that allows you to chain together your Custom Commands to automate your Claude Code workflows.
+
+The long term aim of Agentic HQ is to provide a powerful toolset that enables developers to collaborate closely, and enjoyably, with LLMS to produce better software faster (as Dave Farley says in https://www.youtube.com/watch?v=eoaDr5PpT2c&t=447s)
+
+The [Roadmap](docs/roadmap.md) contains the following planned enhancements;
+- a Jira Story Workflow that runs all the Commands required to complete a single Jira Story.
+- the ability to compile Commands programatically from a library of Command Fragments
+- the ability to resume long running workflows, so that crashes/failures don't leave you with half completed workflows.
 
 ## Prerequisites
 
+### Mac OS
+
+These instructions have **only** been created for and tested on MacOS 15.5.  Other operating systems aren't yet supported, but may work with small modifications.
+
 ### Node.js
-Requires Node.js v22.x (LTS). Check with `node --version`.
+Requires Node.js v22.x (LTS). 
+
+To install to go https://nodejs.org/en/download and follow the instructions to install nvm (Node Version Manager - recommended) and then version 22, or just download the binary installer.
+
+To confirm version 22 is installed run: `node --version`.
 
 ### pnpm (Package Manager)
 This project uses pnpm. **You must use pnpm 10.28.1 or later.**
@@ -19,74 +35,65 @@ corepack use pnpm@10.28.1
 
 **Why pnpm 10.28.1+?** Earlier versions have bugs with peer dependency resolution and build script handling that cause issues with this project's dependencies.
 
-### First-time Setup
+## Quick Start
 
 ```bash
 # Clone the repo
-git clone <repo-url>
+git clone https://github.com/Agentic-HQ/agentic-hq
 cd agentic-hq
 
 # Install dependencies
 pnpm install
 
-# Verify everything works
+# Verify everything works by running checks and quick unit tests
 pnpm validate
+
+# Run the demo math workflow program at src/demo/cli/math-workflow-demo-cli.ts to 
+# see a simple 3 step workflow that uses output from one custom command as input to the next
+pnpm demo:math-workflow --input-number=11
 ```
 
-## Available Commands
+### Building Your Own Workflow
 
-### Validation
+To create your own workflow:
 
-```bash
-# Run all checks (typecheck + lint + tests) - REQUIRED before commits
-pnpm validate
-```
+1. **Copy the demo program:**
+   ```bash
+   cp src/demo/cli/math-workflow-demo-cli.ts src/demo/cli/my-workflow-cli.ts
+   ```
 
-### Linting (ESLint)
+2. **Copy the demo commands:**
+   ```bash
+   cp -r .claude/commands/agentic-hq-commands/used-in-demos/math-workflow \
+         .claude/commands/my-commands
+   ```
 
-```bash
-# Read-only check - always safe to run
-pnpm lint:check
+3. **Update the command paths** in your CLI to point to your new commands
 
-# Auto-fix linting issues
-# WARNING: Run lint:check first to confirm changes are only for current work
-pnpm lint:fix
-```
+4. **Modify the commands** to do what you need
 
-### Formatting (Prettier)
+5. **Run your workflow:**
+   ```bash
+   tsx src/demo/cli/my-workflow-cli.ts --your-arg-name=your-arg-value
+   ```
 
-```bash
-# Read-only check - always safe to run
-pnpm format:check
 
-# Auto-fix formatting issues
-# WARNING: Run format:check first to confirm changes are only for current work
-pnpm format:fix
-```
 
-### Type Checking
+## Further Documentation
 
-```bash
-# Run TypeScript type checking
-pnpm typecheck
-```
+You can also:
+- Read more about [How Agentic HQ Works](docs/dev/how-agentic-hq-works.md)
+- Check out the [Roadmap](docs/roadmap.md)
+- Refer to the [NPM Commands](docs/dev/npm-commands.md) documentation
 
-### Tests
+## Support
 
-```bash
-# Run all unit tests
-pnpm test
+While this repo is still private please contact Steve (the repo owner) for support using the contact form at https://agentichq.ai/. 
 
-# Run specific unit test
-pnpm test:hello-world
+Support will be provided via Question and Bug Jiras on the Agentic HQ Jira project at https://agentic-hq.atlassian.net/browse/AHQ once the repo is live.
 
-# Run smoke tests
-pnpm test:smoke
-```
+## Developer Documentation
 
-### CLI Programs
+While this repo is still private please contact Steve (the repo owner) using the contact form at https://agentichq.ai/ if you're interested in working on the project.
 
-```bash
-# Run hello world example
-pnpm hello-world
-```
+Before making the repo public we'll be adding a CONTRIBUTING.md file for developers to use.

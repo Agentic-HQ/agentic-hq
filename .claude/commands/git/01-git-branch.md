@@ -35,15 +35,10 @@ Proceed to Step 2.
 
 ## Step 2: Select Branch Prefix
 
-Once the workspace is ready, explain to the user:
+Once the workspace is ready, present the branch prefix options to the user as a text list:
 
-"I'll help you create a namespaced branch. First, let's choose the branch prefix."
+"I'll help you create a namespaced branch. Please tell me which branch prefix you'd like to use:
 
-Use the AskUserQuestion tool to present these branch prefix options:
-
-**Question:** "Which type of branch do you want to create?"
-**Header:** "Branch type"
-**Options:**
 1. `feature/` - New features or functionality
 2. `bugfix/` - Bug fixes
 3. `experiment/` - An experiment or spike where you are trying out something that may never get used
@@ -53,9 +48,9 @@ Use the AskUserQuestion tool to present these branch prefix options:
 7. `chore/` - Maintenance tasks (dependencies, build tools, cleanup)
 8. `test/` - Test additions or modifications
 
-Note: The user can also select "Supply my own custom branch prefix" to enter a custom prefix.
+You can type the number (1-8), the prefix name (e.g., `feature`), or a custom prefix if none of these fit."
 
-Store the selected prefix (including the trailing slash).
+Wait for the user to respond with their choice. Store the selected prefix (including the trailing slash).
 
 ---
 

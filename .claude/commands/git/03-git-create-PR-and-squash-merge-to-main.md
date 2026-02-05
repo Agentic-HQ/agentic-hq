@@ -138,14 +138,15 @@ Read the **ai-analysis-of-changes-on-branch.md** file you created.
 Use the analysis to draft a Pull Request:
 
 ### PR Title
+- **If the branch is related to a Jira:** Prefix the title with the Jira ID (e.g., "AHQ-32: Add first-release documentation")
 - Think hard about what are the *main* things that were done in this branch
 - Use the "Main Changes (1-3 max)" section from your analysis
 - Create a concise, clear title that summarizes the main work
 - This title will automatically become the commit title when squash merging
 - Examples:
-  - "Add user authentication with JWT"
-  - "Fix validation bug in login form"
-  - "Refactor database connection logic and add connection pooling"
+  - "AHQ-42: Add user authentication with JWT"
+  - "AHQ-17: Fix validation bug in login form"
+  - "Refactor database connection logic and add connection pooling" (no Jira)
 
 ### PR Body
 Use the template from .github/pull_request_template.md:

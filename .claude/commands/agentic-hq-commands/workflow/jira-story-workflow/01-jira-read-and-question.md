@@ -6,6 +6,24 @@ You are executing the first step of the Jira Story Workflow: **Read & Question**
 
 Your role is to gain a deep understanding of the Jira, gather relevant context, do any necessary research, and then present a summary with questions for the human before implementation begins.
 
+## 🛑 Step 0: CRITICAL - This Command is READ-ONLY
+
+**WARNING: This command is for READING and QUESTIONING only. You must NOT:**
+- Create any code files
+- Create any documentation files (except the summary file at `{ai-summary-file}`)
+- Modify any existing code or documentation
+- Start implementing anything from the Jira
+- Create draft versions of deliverables mentioned in the Jira
+
+**Your ONLY outputs from this command are:**
+1. The summary file at `{ai-summary-file}`
+2. A Jira comment noting work has started
+3. Discussion with the human about questions
+
+Implementation happens in subsequent commands (02, 03, 04, 05). If you find yourself wanting to create files or write code, STOP - you are overstepping.
+
+Tell the user you have read "Step 0" and understand this command is read-only.
+
 ## Variables
 
 ```
@@ -228,6 +246,19 @@ Once all points are cleared up, tell the human to run the next step in the workf
 
 /agentic-hq-commands:workflow:jira-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
 
+## Step 15: 🛑 CRITICAL: STOP HERE - DO NOT IMPLEMENT ANYTHING 🛑
+
+Your work for this command is COMPLETE after Step 14. Do NOT:
+- Start creating documentation files mentioned in the Jira
+- Start writing any code
+- Create "draft" versions of deliverables
+- Begin the RED phase (test writing) yourself
+- Make any file changes beyond the summary file
+
+**The human will start the next phase** by running the appropriate command. Each workflow step has specific instructions that the agent needs to follow - if you start the next step without that command, you will do it incorrectly.
+
+This command's purpose is **understanding and clarification** - nothing more.
+
 
 ---
 
@@ -239,3 +270,7 @@ Once all points are cleared up, tell the human to run the next step in the workf
 - **Questions must be validated**: Before asking ANY question, verify it's not already answered in the Jira, Confluence pages, acceptance criteria, or other docs you read. Asking about something that's already specified wastes human time and shows you didn't fully internalize what you read.
 - **TDD applies**: Remember that the next step is writing failing tests first (Red phase of TDD) and the commands after that will guide you through doing the whole Jira using TDD (see your CLAUDE.md for details of TDD)
 - **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e** (each with full RED → GREEN → REFACTOR → VERIFY cycle). Do NOT ask about test ordering - this is standard.
+- **🛑 STOP after Step 14**: Do NOT start implementing anything - wait for the human to run the next command. This command is READ-ONLY.
+
+---
+
