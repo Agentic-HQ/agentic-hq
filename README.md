@@ -4,9 +4,9 @@ Agentic HQ is a thin Typescript wrapper around Claude Code that allows you to ch
 
 The long term aim of Agentic HQ is to provide a powerful toolset that enables developers to collaborate closely, and enjoyably, with LLMS to produce better software faster (as Dave Farley says in https://www.youtube.com/watch?v=eoaDr5PpT2c&t=447s)
 
-The [Roadmap](docs/roadmap.md) contains the following planned enhancements;
+The [Roadmap](docs/roadmap.md) contains the following planned enhancements:
 - a Jira Story Workflow that runs all the Commands required to complete a single Jira Story.
-- the ability to compile Commands programatically from a library of Command Fragments
+- the ability to compile Commands programatically from a library of Command Fragments.
 - the ability to resume long running workflows, so that crashes/failures don't leave you with half completed workflows.
 
 ## Prerequisites
@@ -41,12 +41,44 @@ corepack use pnpm@10.28.1
 # Clone the repo
 git clone https://github.com/Agentic-HQ/agentic-hq
 cd agentic-hq
+```
 
+To allow the:
+- integration tests to run
+- the demo CLI programs to run without giving permission to Claude Code to write files and run the kill script
+
+you should now:
+- create a .claude/settings.local.json file with the following contents:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Write",
+      "Bash(./tools/scripts/process-control/unix/kill-current-cli-process.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+```
+This gives Claude Code the permission:
+- to write files *ONLY* into this workspace directory
+- to run the kill-current-cli-process.sh bash script that kills the Claude Code process
+
+**WARNING:** Read the kill-current-cli-process.sh script to confirm you're happy with Claude Code running it. If you're not comfortable with setting these permission straight away, that's fine. It only means the integration tests will time out and error, and you'll be asked for permission by Claude Code when you run the demo programs.  You can still run all the demo programs.
+
+```bash
 # Install dependencies
 pnpm install
 
 # Verify everything works by running checks and quick unit tests
 pnpm validate
+
+# Run the demo string reversal program at src/demo/cli/string-reversal-demo-cli.ts
+# NOTE: The first time you run this Claude Code will ask if you trust this folder and to 
+# continue you will have to choose Yes
+pnpm demo:string-reversal --string-to-reverse="hello there"
 
 # Run the demo math workflow program at src/demo/cli/math-workflow-demo-cli.ts to 
 # see a simple 3 step workflow that uses output from one custom command as input to the next
@@ -69,8 +101,16 @@ To create your own workflow:
    ```
 
 3. **Update the command paths** in your CLI to point to your new commands
+by replacing:
+   ```
+   /agentic-hq-commands:used-in-demos:math-workflow:
+   ```
+   with:
+   ```
+   /my-commands:
+   ```
 
-4. **Modify the commands** to do what you need
+4. **Modify the commands** to do what you need and modify the input arguments to your program
 
 5. **Run your workflow:**
    ```bash

@@ -24,6 +24,6 @@ Write to: $0/command-output.json
 ```
 
 ## Step 4: Self-Terminate
-Run this command immediately:
+Change directory to the root of this project and then run this command immediately:
 
-/Users/stevepersonal/dev/agentic-hq/agentic-hq/tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
+./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID

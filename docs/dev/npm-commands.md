@@ -60,7 +60,7 @@ Programs that demonstrate Agentic HQ capabilities. These are good starting point
 pnpm hello-world
 
 # Single step string reversal demo using Claude Code
-pnpm demo:string-reversal
+pnpm demo:string-reversal --string-to-reverse="hello there"
 
 # 3-step math workflow demonstrating command chaining
 # Takes an input number and runs: (input × 2 + 3) ÷ 5
@@ -129,7 +129,7 @@ End-to-end tests that verify complete workflows from start to finish. These test
 pnpm test:e2e
 
 # Test the string reversal demo CLI end-to-end
-pnpm test:e2e:demo-string-reversal
+pnpm demo:string-reversal --string-to-reverse="hello there"
 
 # Test the math workflow demo CLI end-to-end
 pnpm test:e2e:demo-math-workflow
