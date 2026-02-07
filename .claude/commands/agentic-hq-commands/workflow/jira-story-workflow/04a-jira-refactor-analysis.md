@@ -314,7 +314,7 @@ The code created in the GREEN phase is already clean:
 
 Since no refactors are needed, proceed directly to verification:
 ```
-/agentic-hq-commands:workflow:jira-story-workflow:05-jira-verify {jira-id} {test-type}
+/agentic-hq-commands:workflow:jira-story-workflow:05-jira-validate {jira-id} {test-type}
 ```
 
 Or if you want to proceed to the next test type in the TDD cycle.

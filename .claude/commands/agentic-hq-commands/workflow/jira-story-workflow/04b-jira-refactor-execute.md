@@ -108,7 +108,13 @@ Make the code change for this single refactor.
 
 ### 6b. Run Tests Immediately
 
-Run the test command for this test type.
+**IMPORTANT: Run ONLY the specific test file(s) that are relevant to the refactor, NOT the full test suite.** Running the full suite between every refactor wastes too much time (integration tests can take 60s+ each). Use the specific test file path, e.g.:
+- `pnpm vitest run --config vitest.integration.config.ts tests/integration/path/to/specific.test.ts`
+- `pnpm vitest run tests/unit/path/to/specific.test.ts`
+
+For trivial refactors (extracting constants, renaming variables) that cannot change behavior, you may skip the intermediate test run and batch them, then run the specific test once after the batch.
+
+The FULL test suite is only run once in Step 7 after ALL refactors are complete.
 
 ### 6c. Check Result
 
@@ -219,7 +225,7 @@ Create the file `{refactor-complete-file}` with the following structure:
 
 Refactoring is complete. Now verify all tests pass:
 ```
-/agentic-hq-commands:workflow:jira-story-workflow:05-jira-verify {jira-id} {test-type}
+/agentic-hq-commands:workflow:jira-story-workflow:05-jira-validate {jira-id} {test-type}
 ```
 ```
 
@@ -258,7 +264,7 @@ After creating the file, tell the human:
 >
 > Please review the changes. When satisfied, run the VERIFY phase:
 > ```
-> /agentic-hq-commands:workflow:jira-story-workflow:05-jira-verify {jira-id} {test-type}
+> /agentic-hq-commands:workflow:jira-story-workflow:05-jira-validate {jira-id} {test-type}
 > ```
 >
 > **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR ✅ → VERIFY → (next test type)"

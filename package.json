@@ -33,6 +33,7 @@
     "test:integration:kill-script": "vitest run --config vitest.integration.config.ts tests/integration/process-control/kill-script-terminates-cli-process.integration.test.ts",
     "test:integration:real-claude-self-termination": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/real-claude-self-termination.integration.test.ts",
     "test:integration:claude-file-io": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/claude-executes-command-using-file-io.integration.test.ts",
+    "test:integration:create-test-jira-and-get-status": "vitest run --config vitest.integration.config.ts tests/integration/jira/custom-commands-create-and-get-status-of-test-jira.integration.test.ts",
     "test:unit:fake-claude-file-io": "vitest run --config vitest.unit.config.ts tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts",
     "// E2E TEST COMMANDS": "test:e2e = ALL e2e tests, test:e2e:demo-string-reversal = ONLY demo string reversal e2e test",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
