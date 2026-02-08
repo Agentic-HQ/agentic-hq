@@ -37,6 +37,7 @@ export default [
       '*.config.ts', // Config files in root (vitest.*.config.ts) - not in tsconfig.json
       '*.config.mjs', // Config files in root (eslint.config.mjs)
       'src/experiments/**', // Old experiments - to be cleaned up in separate chore Jira
+      'temp/**', // Test-generated files (e.g. e2e test project roots) - not in tsconfig.json
     ],
   },
 

@@ -186,14 +186,11 @@ Run the test command (e.g., `pnpm test:hello-world` for the specific test) and v
 
 **Do NOT add extra code "just in case"** - only fix what the test failure tells you to fix.
 
-## Step 7b: Run all the Tests Of Type {test-type} Using the Command That Runs All Those Test (Expect Success)
+## Step 7b: Run all the Tests Of Type {test-type} (SKIPPED for non-unit)
 
-To make sure your implementation hasn't broken any of the other tests of type: {test-type} run:
-
-- If {test-type} == 'unit': pnpm test (runs all unit tests)
-- If {test-type} == 'integration': pnpm test:integration (runs all integration tests - NOTE: we may have to change our mind if these tests are slow later...?)
-- If {test-type} == 'smoke': pnpm test:smoke (runs all smoke tests - NOTE: we may have to change our mind if these tests are slow later...?)
-- If {test-type} == 'e2e': pnpm test:e2e (runs all e2e tests - NOTE: we may have to change our mind if these tests are slow later...?)
+- If {test-type} == 'unit': Run `pnpm test` (runs all unit tests)
+- If {test-type} is 'integration', 'smoke', or 'e2e': **DO NOT run the full suite.** Tell the user:
+  > "NOTE: Running all {test-type} tests has been skipped to conserve Claude Code plan credits. Please run `pnpm test:{test-type}` manually if you want to verify no other tests were broken."
 
 ## Step 7c: Human Verifies Manual Acceptance Tests (if any)
 

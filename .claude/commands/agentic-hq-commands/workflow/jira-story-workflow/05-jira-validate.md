@@ -10,7 +10,7 @@ Your role is to perform comprehensive validation before the story can be conside
 3. Acceptance criteria are verified
 4. No regressions were introduced
 
-**Remember**: This is based on TDD best practices from Kent Beck, Uncle Bob, and Martin Fowler - run the ENTIRE test suite after refactoring to catch regressions, and verify acceptance criteria before considering work complete.
+**Remember**: This is based on TDD best practices from Kent Beck, Uncle Bob, and Martin Fowler - (if the user chooses that option) then you must run the ENTIRE test suite after refactoring to catch regressions, and verify acceptance criteria before considering work complete (Claude Code usage limit may cause the human to skip this for every Jira testing loop and run the full test set manually e.g. once a day, when not doing any coding and so usage limits aren't an issue)
 
 ## Variables
 
@@ -72,13 +72,33 @@ Read the following files to understand what was implemented and the acceptance c
 2. All existing phase files in `{workflow-files}` to understand what test types were completed
 3. Use the jira-verbatim-content-extractor agent to obtain all the details of the Jira you are working on *and* any parent and child Jiras.  Use this information to obtain an understanding of what was tested, developed and refactored and all of the Acceptance Criteria.
 
-## Step 5: Run Full Validation Suite
+## Step 5: Choose Validation Level
 
-**CRITICAL: Run `pnpm validate` which executes typecheck + lint + all unit tests.**
+**Running all test suites uses a LOT of Claude Code plan credits.** Present the following options to the user and **wait for their choice** before proceeding:
 
-This is the comprehensive quality gate that catches:
+> **Which validation level would you like to run?**
+>
+> **Option 1 — Lite (recommended):**
+> Runs `pnpm validate` (typecheck + lint + format check + unit tests) and, if the test type for this Jira is not unit, runs **only the specific test file(s) for this Jira**. Low credit cost.
+>
+> **Option 2 — Type suite:**
+> Runs `pnpm validate` **plus** `pnpm test:{test-type}` (all tests of the type we're working on). Medium credit cost.
+>
+> **Option 3 — Full:**
+> Runs `pnpm validate:all` (typecheck + lint + format check + ALL test types: unit, smoke, integration, e2e). High credit cost — only choose this if you're comfortable using a lot of remaining credits (e.g. near the end of your 5-hour usage window).
+>
+> **Tip:** Choose Option 1 and set an alarm for ~30 minutes before your 5-hour usage window resets. Then manually run `pnpm validate:all` yourself to double-check all tests still pass — without eating into AI credits.
+
+**STOP and wait for the user's choice.** Store the chosen option as `{validation-level}` (1, 2, or 3).
+
+## Step 6: Run `pnpm validate` (all options)
+
+**CRITICAL: Run `pnpm validate` which executes typecheck + lint + format check + all unit tests.**
+
+This is the core quality gate that catches:
 - TypeScript type errors (typecheck)
 - Code style and quality issues (lint)
+- Formatting issues (format check)
 - Runtime behavior regressions (unit tests)
 
 Run: `pnpm validate`
@@ -86,6 +106,7 @@ Run: `pnpm validate`
 **Record the results:**
 - Did typecheck pass? (Y/N)
 - Did lint pass? (Y/N)
+- Did format check pass? (Y/N)
 - Did unit tests pass? (X/Y tests)
 
 **If ANY check fails, STOP and report:**
@@ -93,35 +114,35 @@ Run: `pnpm validate`
 >
 > - [ ] TypeCheck: {PASS/FAIL - details}
 > - [ ] Lint: {PASS/FAIL - details}
+> - [ ] Format: {PASS/FAIL - details}
 > - [ ] Unit Tests: {PASS/FAIL - X/Y passing}
 >
 > Please fix these issues before the story can be considered complete."
 
-Do NOT proceed to Step 6 until `pnpm validate` passes completely.
+Do NOT proceed to Step 7 until `pnpm validate` passes completely.
 
-## Step 6: Run Integration Tests (if they exist)
+## Step 7: Run Additional Tests (based on validation level)
 
-Check if integration tests exist and run them:
+### If Option 1 (Lite):
 
-Run: `pnpm test:integration`
+If {test-type} is NOT 'unit', run **only the specific test file(s) for this Jira** (not the full suite). Record the result.
 
-Record whether integration tests pass. If they fail, report the failure but continue to Step 7 (we still want to document overall status).
+All other test suites: mark as "⏭️ SKIPPED (credit saving)".
 
-## Step 7: Run Smoke Tests (if they exist)
+### If Option 2 (Type suite):
 
-Check if smoke tests exist and run them:
+Run `pnpm test:{test-type}` for the type being worked on (e.g. `pnpm test:integration`, `pnpm test:smoke`, or `pnpm test:e2e`). Record the result.
 
-Run: `pnpm test:smoke`
+All other test suites: mark as "⏭️ SKIPPED (credit saving)".
 
-Record whether smoke tests pass. If they fail, report the failure but continue to the next step.
+### If Option 3 (Full):
 
-## Step 8: Run E2E Tests (if they exist)
+Run all test suites that weren't already covered by `pnpm validate`:
+- `pnpm test:smoke`
+- `pnpm test:integration`
+- `pnpm test:e2e`
 
-Check if e2e tests exist and run them:
-
-Run: `pnpm test:e2e`
-
-Record whether e2e tests pass. If they fail, report the failure but continue to documentation.
+Record each result. If any fail, report the failure but continue (we still want to document overall status).
 
 ## Step 8: Verify Acceptance Criteria
 
@@ -172,7 +193,9 @@ Create the file `{validate-file}` with the following structure:
 
 ## Full Validation Results
 
-### pnpm validate (typecheck + lint + unit tests)
+**Validation Level**: {Option 1: Lite / Option 2: Type Suite / Option 3: Full}
+
+### pnpm validate (typecheck + lint + format check + unit tests)
 
 **Command**: `pnpm validate`
 **Result**: ✅ PASS / ❌ FAIL
@@ -180,25 +203,26 @@ Create the file `{validate-file}` with the following structure:
 | Check | Result | Details |
 |-------|--------|---------|
 | TypeCheck (`tsc --noEmit`) | ✅/❌ | {any errors} |
-| Lint (`pnpm lint`) | ✅/❌ | {any errors} |
+| Lint (`pnpm lint:check`) | ✅/❌ | {any errors} |
+| Format (`pnpm format:check`) | ✅/❌ | {any errors} |
 | Unit Tests (`pnpm test`) | ✅/❌ | {X/Y passing} |
 
 ### Integration Tests
 
 **Command**: `pnpm test:integration`
-**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist)
+**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist) / ⏭️ SKIPPED (credit saving — run manually with `pnpm test:integration`)
 **Details**: {X/Y passing or N/A}
 
 ### Smoke Tests
 
 **Command**: `pnpm test:smoke`
-**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist)
+**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist) / ⏭️ SKIPPED (credit saving — run manually with `pnpm test:smoke`)
 **Details**: {X/Y passing or N/A}
 
 ### E2E Tests
 
 **Command**: `pnpm test:e2e`
-**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist)
+**Result**: ✅ PASS / ❌ FAIL / ⏭️ SKIPPED (none exist) / ⏭️ SKIPPED (credit saving — run manually with `pnpm test:e2e`)
 **Details**: {X/Y passing or N/A}
 
 ---
@@ -247,9 +271,11 @@ Use the Jira MCP tool to add a comment:
 **If validation passed:**
 > AI Agent has completed VALIDATE phase for {jira-id}.
 >
-> **Full Validation**: ✅ PASS (typecheck + lint + unit tests)
-> **Integration Tests**: {✅ PASS / ❌ FAIL / ⏭️ N/A}
-> **Smoke Tests**: {✅ PASS / ❌ FAIL / ⏭️ N/A}
+> **Validation Level**: {Option 1: Lite / Option 2: Type Suite / Option 3: Full}
+> **Core Validation (`pnpm validate`)**: ✅ PASS (typecheck + lint + format + unit tests)
+> **Integration Tests**: {✅ PASS / ❌ FAIL / ⏭️ N/A / ⏭️ Skipped (credit saving)}
+> **Smoke Tests**: {✅ PASS / ❌ FAIL / ⏭️ N/A / ⏭️ Skipped (credit saving)}
+> **E2E Tests**: {✅ PASS / ❌ FAIL / ⏭️ N/A / ⏭️ Skipped (credit saving)}
 > **Acceptance Criteria**: ✅ All verified
 >
 > Story is ready for commit.
@@ -260,6 +286,7 @@ Use the Jira MCP tool to add a comment:
 > AI Agent has completed VALIDATE phase for {jira-id}.
 >
 > **Status**: ❌ VALIDATION FAILED
+> **Validation Level**: {Option 1: Lite / Option 2: Type Suite / Option 3: Full}
 >
 > Issues found:
 > - {list failures}
@@ -275,9 +302,11 @@ After creating the file, tell the human:
 **If all validations passed:**
 > "I've completed the VALIDATE phase for {jira-id}.
 >
-> **Full Validation (`pnpm validate`)**: ✅ PASS
+> **Validation Level**: {Option 1: Lite / Option 2: Type Suite / Option 3: Full}
+> **Core Validation (`pnpm validate`)**: ✅ PASS
 > **Integration Tests**: {status}
 > **Smoke Tests**: {status}
+> **E2E Tests**: {status}
 > **Acceptance Criteria**: ✅ All {X} criteria verified with test coverage
 >
 > Results at: `{validate-file}`
@@ -289,10 +318,14 @@ After creating the file, tell the human:
 >
 > **TDD cycle complete**: RED ✅ → GREEN ✅ → REFACTOR ✅ → VALIDATE ✅"
 
+{If Option 1 was chosen, add}:
+> "**Reminder:** You chose Lite validation to save credits. Remember to manually run `pnpm validate:all` before your session window resets to double-check all test types still pass."
+
 **If any validation failed:**
 > "I've completed the VALIDATE phase for {jira-id}.
 >
 > **Status**: ❌ VALIDATION FAILED
+> **Validation Level**: {Option 1: Lite / Option 2: Type Suite / Option 3: Full}
 >
 > The following issues need to be resolved:
 > - {list of failures with details}
@@ -308,8 +341,8 @@ After creating the file, tell the human:
 
 ## Important Notes
 
-- **Run ENTIRE test suite**: Not just the tests you wrote - regressions can appear anywhere
-- **All checks must pass**: TypeCheck + Lint + Tests - no exceptions before commit
+- **Validation level is the user's choice**: Full test suite (Option 3) is ideal per TDD best practices, but credit cost is a real constraint. Respect the user's chosen level.
+- **`pnpm validate` is always mandatory**: TypeCheck + Lint + Format + Unit Tests must pass — no exceptions before commit
 - **Acceptance criteria mapping**: Every AC should have test coverage - flag gaps
 - **This is the quality gate**: If validate fails, the story is not complete
-- **Based on TDD best practices**: Kent Beck, Uncle Bob, Martin Fowler all emphasize running full suite after refactoring
+- **Credit-saving tip**: If using Option 1 (Lite), the user can manually run `pnpm validate:all` near the end of their session to catch regressions without burning AI credits

@@ -64,13 +64,11 @@ Wait for the user's response before continuing.
 
 ## Step 4: Verify Tests Pass BEFORE Refactoring
 
-**CRITICAL: Run all tests first to confirm we're starting from GREEN.**
+**CRITICAL: Confirm we're starting from GREEN.**
 
-Run:
-- If {test-type} == 'unit': `pnpm test`
-- If {test-type} == 'integration': `pnpm test:integration`
-- If {test-type} == 'smoke': `pnpm test:smoke`
-- If {test-type} == 'e2e': `pnpm test:e2e`
+- If {test-type} == 'unit': Run `pnpm test`
+- If {test-type} is 'integration', 'smoke', or 'e2e': **DO NOT run the full suite.** Instead, run only the specific test file(s) for this Jira. Tell the user:
+  > "NOTE: Running all {test-type} tests has been skipped to conserve Claude Code plan credits. Only running the specific test file(s) for this Jira to confirm GREEN. Please run `pnpm test:{test-type}` manually if you want a full suite check."
 
 If ANY test fails, **STOP** and tell the user:
 > "Tests are failing BEFORE refactoring. Cannot proceed with REFACTOR phase.
