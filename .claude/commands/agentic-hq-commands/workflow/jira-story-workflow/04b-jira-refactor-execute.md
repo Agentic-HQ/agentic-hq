@@ -59,7 +59,7 @@ If it exists, **STOP** and ask the user:
 >
 > What would you like to do?
 > 1. **Overwrite** - Delete the existing file and re-execute refactors
-> 2. **Skip to VERIFY** - Refactoring is done, proceed to verification
+> 2. **Skip to VALIDATE** - Refactoring is done, proceed to verification
 > 3. **Abort** - Cancel this command"
 
 Wait for the user's response before continuing.
@@ -219,7 +219,7 @@ Create the file `{refactor-complete-file}` with the following structure:
 
 ---
 
-## Ready for VERIFY Phase
+## Ready for VALIDATE Phase
 
 Refactoring is complete. Now verify all tests pass:
 ```
@@ -242,7 +242,7 @@ Use the Jira MCP tool to add a comment:
 >
 > Documented at: `{refactor-complete-file}`
 >
-> Next: VERIFY phase.
+> Next: VALIDATE phase.
 
 ## Step 10: Present to Human
 
@@ -260,12 +260,12 @@ After creating the file, tell the human:
 >
 > Completion doc at: `{refactor-complete-file}`
 >
-> Please review the changes. When satisfied, run the VERIFY phase:
+> Please review the changes. When satisfied, run the VALIDATE phase:
 > ```
 > /agentic-hq-commands:workflow:jira-story-workflow:05-jira-validate {jira-id} {test-type}
 > ```
 >
-> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR ✅ → VERIFY → (next test type)"
+> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR ✅ → VALIDATE → (next test type)"
 
 ---
 
@@ -284,7 +284,7 @@ After creating the file, tell the human:
 Report to human that refactoring couldn't be completed. The code from GREEN phase may be the final form for now.
 
 ### If analysis said "No refactors needed":
-Create a minimal completion doc stating no refactors were needed and proceed to VERIFY.
+Create a minimal completion doc stating no refactors were needed and proceed to VALIDATE.
 
 ### If human approved a refactor that fails repeatedly:
 Note it as "attempted but failed" and continue. Don't block on one problematic refactor.

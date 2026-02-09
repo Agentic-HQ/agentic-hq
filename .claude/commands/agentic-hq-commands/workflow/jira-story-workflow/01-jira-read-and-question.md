@@ -269,7 +269,7 @@ This command's purpose is **understanding and clarification** - nothing more.
 - **Research is valuable**: If you're unsure about something technical, research it now rather than guessing during implementation
 - **Questions must be validated**: Before asking ANY question, verify it's not already answered in the Jira, Confluence pages, acceptance criteria, or other docs you read. Asking about something that's already specified wastes human time and shows you didn't fully internalize what you read.
 - **TDD applies**: Remember that the next step is writing failing tests first (Red phase of TDD) and the commands after that will guide you through doing the whole Jira using TDD (see your CLAUDE.md for details of TDD)
-- **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e** (each with full RED → GREEN → REFACTOR → VERIFY cycle). Do NOT ask about test ordering - this is standard.
+- **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e** (each with full RED → GREEN → REFACTOR → VALIDATE cycle). Do NOT ask about test ordering - this is standard.
 - **🛑 STOP after Step 14**: Do NOT start implementing anything - wait for the human to run the next command. This command is READ-ONLY.
 
 ---

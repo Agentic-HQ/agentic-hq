@@ -304,7 +304,7 @@ The code created in the GREEN phase is already clean:
 - ✅ No obvious code smells
 - ✅ No structural improvements warranted at this stage
 
-**Recommendation**: Skip the refactor execute phase and proceed to VERIFY.
+**Recommendation**: Skip the refactor execute phase and proceed to VALIDATE.
 
 ---
 
@@ -347,7 +347,7 @@ After creating the file, tell the human:
 > /agentic-hq-commands:workflow:jira-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
 > ```
 >
-> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR (analysis ✅, execute pending) → VERIFY → (next test type)"
+> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR (analysis ✅, execute pending) → VALIDATE → (next test type)"
 
 ---
 

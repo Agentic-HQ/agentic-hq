@@ -291,7 +291,7 @@ After creating the file, tell the human:
 > /agentic-hq-commands:workflow:jira-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
 > ```
 >
-> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR → VERIFY → (next test type)"
+> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR → VALIDATE → (next test type)"
 
 **🛑 CRITICAL: STOP HERE - DO NOT CONTINUE TO REFACTORING 🛑**
 

@@ -6,7 +6,7 @@ You are executing the second step of the Jira Story Workflow: **Write ONE Failin
 
 This command writes exactly ONE test - either a unit, integration, smoke, or e2e test (specified by the second parameter). Your role is to write that ONE failing test to drive the implementation. This is the RED phase of TDD - the test must fail because the implementation doesn't exist yet, NOT because of bugs in the test code.
 
-**You will run this command multiple times** - once for each test type needed (e.g., once for unit, once for smoke), completing the full TDD cycle (RED → GREEN → REFACTOR → VERIFY) for each before moving to the next.
+**You will run this command multiple times** - once for each test type needed (e.g., once for unit, once for smoke), completing the full TDD cycle (RED → GREEN → REFACTOR → VALIDATE) for each before moving to the next.
 
 ## Variables
 
@@ -35,7 +35,7 @@ If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, 
 > Usage: `/jira-story-workflow:02-jira-write-failing-test AHQ-123 unit`
 >
 > **Recommended order:** unit → integration → smoke → e2e.
-> Each test type goes through a full TDD cycle (RED → GREEN → REFACTOR → VERIFY) before moving to the next."
+> Each test type goes through a full TDD cycle (RED → GREEN → REFACTOR → VALIDATE) before moving to the next."
 
 ## Step 2: Check Pre-requisites
 
@@ -282,7 +282,7 @@ After creating the file, tell the human:
 > /agentic-hq-commands:workflow:jira-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
 > ```
 >
-> **Reminder - TDD order:** unit → integration → smoke → e2e (each with full RED → GREEN → REFACTOR → VERIFY cycle)"
+> **Reminder - TDD order:** unit → integration → smoke → e2e (each with full RED → GREEN → REFACTOR → VALIDATE cycle)"
 
 ---
 
@@ -293,6 +293,6 @@ After creating the file, tell the human:
 - **RED phase includes all test scaffolding**: mocks, stubs, fixtures, fake processes, temp file setup, test data generators - these are TEST INFRASTRUCTURE, not implementation. Create whatever test scaffolding is needed to make the test runnable (except for the actual implementation being tested).
 - **NO production code in RED phase**: Do not create or modify the actual implementation code - that's GREEN phase work. Test scaffolding is NOT production code.
 - **Only fix TEST bugs**: If test has syntax errors or wrong paths, fix those. But "module not found" is correct!
-- **TDD cycle per test type**: Complete full cycle (RED → GREEN → REFACTOR → VERIFY) before next test type
+- **TDD cycle per test type**: Complete full cycle (RED → GREEN → REFACTOR → VALIDATE) before next test type
 - **Recommended order**: unit → integration → smoke → e2e (each test type drives different code)
 - **Remember to include this command in the Plan**: otherwise you'll forget to do the last steps (e.g. writing the "red phase" summary file)
