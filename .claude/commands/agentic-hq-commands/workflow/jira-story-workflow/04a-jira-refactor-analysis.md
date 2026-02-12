@@ -320,7 +320,7 @@ Or if you want to proceed to the next test type in the TDD cycle.
 
 ## Step 9: Add Comment to Jira
 
-Use the Jira MCP tool to add a comment:
+Load the Jira comment tool using `ToolSearch` with query `select:mcp__mcp-atlassian__jira_add_comment`, then use it to add a comment to {jira-id}:
 
 > AI Agent has completed REFACTOR analysis for {test-type} test.
 >

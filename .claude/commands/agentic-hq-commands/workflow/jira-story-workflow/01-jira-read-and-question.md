@@ -110,15 +110,15 @@ Document your research findings for inclusion in the summary.
 
 ## Step 10: Transition Jira to "In Progress" and Add Comment
 
-Use the Jira MCP agent to transition the Jira to "In Progress" status:
-1. First, use `getTransitionsForJiraIssue` to get available transitions
+Load the Jira MCP tools using `ToolSearch` with these queries: `select:mcp__mcp-atlassian__jira_get_transitions`, `select:mcp__mcp-atlassian__jira_transition_issue`, and `select:mcp__mcp-atlassian__jira_add_comment`. Then transition the Jira to "In Progress" status:
+1. First, use `mcp__mcp-atlassian__jira_get_transitions` to get available transitions
 2. Find the transition that moves to "In Progress" (or equivalent status)
-3. Use `transitionJiraIssue` to make the transition
+3. Use `mcp__mcp-atlassian__jira_transition_issue` to make the transition
 4. Also assign the Jira to yourself to show you are working on it now.
 
 If the transition fails (e.g., Jira is already in progress or workflow doesn't allow it), note this and WARN THE HUMAN but continue - it's not a blocker.
 
-**Then add a comment to the Jira** using `addCommentToJiraIssue`:
+**Then add a comment to the Jira** using `mcp__mcp-atlassian__jira_add_comment`:
 
 > "AI Agent has started work on this Jira.
 >

@@ -266,7 +266,7 @@ The following issues must be resolved before commit:
 
 ## Step 10: Add Comment to Jira
 
-Use the Jira MCP tool to add a comment:
+Load the Jira comment tool using `ToolSearch` with query `select:mcp__mcp-atlassian__jira_add_comment`, then use it to add a comment to {jira-id}:
 
 **If validation passed:**
 > AI Agent has completed VALIDATE phase for {jira-id}.

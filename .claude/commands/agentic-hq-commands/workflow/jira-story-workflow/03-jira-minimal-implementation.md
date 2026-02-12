@@ -259,7 +259,7 @@ The test is passing. Now review and refactor the code:
 
 ## Step 9: Add Comment to Jira
 
-Use the Jira MCP agent to add a comment to the Jira:
+Load the Jira comment tool using `ToolSearch` with query `select:mcp__mcp-atlassian__jira_add_comment`, then use it to add a comment to {jira-id}:
 
 > AI Agent has completed GREEN phase for {test-type} test.
 >

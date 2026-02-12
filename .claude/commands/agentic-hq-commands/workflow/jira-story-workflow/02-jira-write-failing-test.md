@@ -102,9 +102,10 @@ If the Jira doesn't require a {test-type} test, tell the user:
 ## Step 7a: Instruct The Human To Put You In Plan Mode And Create/Copy The Implementation Plan File
 
 Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you:
-- continue with creating the Plan for Step 7b to 7f
-- include in the Plan instructions to come back and re-read this command to complete all the remaining steps (as the Plan mode may have cleared the context - in which case you will forget you were even running this command!)
+- Create a Plan covering ONLY the **design/approach** for the test changes (what to change, what the test looks like, and why)
+- **IMPORTANT: The plan must NOT include Steps 7b through 10** (writing the test, running it, creating RED phase doc, Jira comment, presenting to human). Those steps are already defined in this command and will be completed by re-reading this command after the plan is approved and implemented.
 - **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{red-phase-plan-file}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
+- The plan's **LAST step** must be: "Re-read this command (`.claude/commands/agentic-hq-commands/workflow/jira-story-workflow/02-jira-write-failing-test.md`) and complete all remaining steps (7b through 10)" - this ensures context is restored after Plan mode may have cleared it
 - Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
 - then implement the Plan based on their feedback from the Plan (as usual)
 
@@ -251,7 +252,7 @@ Run the next command to implement code to pass this test:
 
 ## Step 9: Add Comment to Jira
 
-Use the Jira MCP agent to add a comment to the Jira:
+Load the Jira comment tool using `ToolSearch` with query `select:mcp__mcp-atlassian__jira_add_comment`, then use it to add a comment to {jira-id}:
 
 > AI Agent has completed RED phase for {test-type} test.<br />
 > Test Created At: {test file path}.<br />
