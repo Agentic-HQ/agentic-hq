@@ -1,12 +1,32 @@
----
-argument-hint: jira-id
----
-
 You are executing the first step of the Jira Story Workflow: **Read & Question**.
+
+Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
 
 Your role is to gain a deep understanding of the Jira, gather relevant context, do any necessary research, and then present a summary with questions for the human before implementation begins.
 
-## 🛑 Step 0: CRITICAL - This Command is READ-ONLY
+## Step 0a: Read Input
+
+Read the file: {command-input-output-files-directory}/command-input.json
+
+Extract the `command-input-string` value. It will be a plain English string like:
+`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path`
+
+Parse out:
+- `jira-id` - the Jira ID (e.g. `TEST-123`)
+- `project-root` - the absolute path to the project root directory
+
+## Step 0b: Establish Variables
+
+```
+jira-id = (parsed from input file above)
+project-root = (parsed from input file above)
+jira-docs-root = {project-root}/docs/jira-docs
+workflow-files = {jira-docs-root}/{jira-id}/workflow-files
+ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
+jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
+```
+
+## 🛑 Step 0b: CRITICAL - This Command is READ-ONLY
 
 **WARNING: This command is for READING and QUESTIONING only. You must NOT:**
 - Create any code files
@@ -23,16 +43,6 @@ Your role is to gain a deep understanding of the Jira, gather relevant context, 
 Implementation happens in subsequent commands (02, 03, 04, 05). If you find yourself wanting to create files or write code, STOP - you are overstepping.
 
 Tell the user you have read "Step 0" and understand this command is read-only.
-
-## Variables
-
-```
-jira-id = $0
-jira-docs-root = docs/jira-docs
-workflow-files = {jira-docs-root}/{jira-id}/workflow-files
-ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
-jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
-```
 
 ## Step 1: Validate Input
 
@@ -240,25 +250,46 @@ Read and discuss the answers with the human.
 
 Once everything is resolved, update the file to clarify what the agreed answers were and move on to step 14.
 
-## Step 14: Instruct Human On Next Step In Workflow
+## Step 14: Determine Test Types
 
-Once all points are cleared up, tell the human to run the next step in the workflow:
+Once all questions are resolved, determine which test types are needed for this Jira.
 
-/agentic-hq-commands:workflow:jira-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
+Look in the Jira description for a line matching: `Test types: X, Y` (where X, Y are comma-separated test types).
 
-## Step 15: 🛑 CRITICAL: STOP HERE - DO NOT IMPLEMENT ANYTHING 🛑
+If found, extract the comma-separated test types (e.g. `unit, e2e`).
 
-Your work for this command is COMPLETE after Step 14. Do NOT:
+If NOT found, intelligently determine which test types are needed from the possible list: unit, integration, smoke, e2e. Return the relevant ones in that order.
+
+If no tests are needed at all, use an empty string "".
+
+Tell the human the test types you determined and confirm with them before proceeding.
+
+## Step 15: Write Output
+
+Write to: {command-input-output-files-directory}/command-output.json
+
+```json
+{
+  "command-output-string": "<comma-separated test types e.g. unit, e2e>"
+}
+```
+
+CRITICAL: The `command-output-string` value must be ONLY the comma-separated test types (e.g. "unit, e2e") - nothing else, no extra text, no explanation. If no test types, use an empty string "".
+
+## Step 16: Self-Terminate
+
+Change directory to the root of this project and then run this command immediately:
+
+./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
+
+## Step 17: 🛑 CRITICAL: DO NOT IMPLEMENT ANYTHING 🛑
+
+This command's purpose is **understanding and clarification** - nothing more. Do NOT:
 - Start creating documentation files mentioned in the Jira
 - Start writing any code
 - Create "draft" versions of deliverables
 - Begin the RED phase (test writing) yourself
 - Make any file changes beyond the summary file
-
-**The human will start the next phase** by running the appropriate command. Each workflow step has specific instructions that the agent needs to follow - if you start the next step without that command, you will do it incorrectly.
-
-This command's purpose is **understanding and clarification** - nothing more.
-
 
 ---
 
@@ -270,7 +301,6 @@ This command's purpose is **understanding and clarification** - nothing more.
 - **Questions must be validated**: Before asking ANY question, verify it's not already answered in the Jira, Confluence pages, acceptance criteria, or other docs you read. Asking about something that's already specified wastes human time and shows you didn't fully internalize what you read.
 - **TDD applies**: Remember that the next step is writing failing tests first (Red phase of TDD) and the commands after that will guide you through doing the whole Jira using TDD (see your CLAUDE.md for details of TDD)
 - **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e** (each with full RED → GREEN → REFACTOR → VALIDATE cycle). Do NOT ask about test ordering - this is standard.
-- **🛑 STOP after Step 14**: Do NOT start implementing anything - wait for the human to run the next command. This command is READ-ONLY.
 
 ---
 

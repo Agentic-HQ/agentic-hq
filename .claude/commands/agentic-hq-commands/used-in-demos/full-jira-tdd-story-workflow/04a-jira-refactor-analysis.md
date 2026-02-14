@@ -1,19 +1,30 @@
----
-argument-hint: jira-id test-type
----
-
 You are executing the first part of the REFACTOR phase in the Jira Story Workflow: **Refactor Analysis**.
+
+Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
 
 Your role is to **analyze the code** written in the GREEN phase and **propose refactors** for human review. You will NOT execute any refactors yet - that happens in the next command after human approval.
 
 **Remember**: Refactoring improves code structure WITHOUT changing behavior. Tests must pass before AND after.
 
-## Variables
+## Step 0a: Read Input
+
+Read the file: {command-input-output-files-directory}/command-input.json
+
+Extract the `command-input-string` value. It will be a plain English string like:
+`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path and test-type = unit`
+
+Parse out:
+- `jira-id` - the Jira ID (e.g. `TEST-123`)
+- `project-root` - the absolute path to the project root directory
+- `test-type` - the test type (e.g. `unit` or `e2e`)
+
+## Step 0b: Establish Variables
 
 ```
-jira-id = $0
-test-type = $1
-jira-docs-root = docs/jira-docs
+jira-id = (parsed from input file above)
+test-type = (parsed from input file above)
+project-root = (parsed from input file above)
+jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
@@ -43,7 +54,7 @@ Check that `{green-phase-file}` exists. If it doesn't exist, STOP and tell the u
 >
 > You need to complete the GREEN phase before refactoring:
 > ```
-> /agentic-hq-commands:workflow:jira-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
+> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
 > ```"
 
 ## Step 3: Check for Existing Analysis File
@@ -259,7 +270,7 @@ These require your approval before execution:
 3. Add any comments explaining your decision
 4. Run the execute command:
 ```
-/agentic-hq-commands:workflow:jira-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
+/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
 ```
 ```
 
@@ -312,7 +323,7 @@ The code created in the GREEN phase is already clean:
 
 Since no refactors are needed, proceed directly to verification:
 ```
-/agentic-hq-commands:workflow:jira-story-workflow:05-jira-validate {jira-id} {test-type}
+/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:05-jira-validate {jira-id} {test-type}
 ```
 
 Or if you want to proceed to the next test type in the TDD cycle.
@@ -342,12 +353,24 @@ After creating the file, tell the human:
 >
 > Analysis at: `{refactor-analysis-file}`
 >
-> Please review the Tier 2 refactors and mark each as APPROVE/REJECT/DEFER, then run:
-> ```
-> /agentic-hq-commands:workflow:jira-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
-> ```
->
-> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR (analysis ✅, execute pending) → VALIDATE → (next test type)"
+> Please review the Tier 2 refactors and mark each as APPROVE/REJECT/DEFER.
+> The CLI will automatically proceed to the REFACTOR execute phase next."
+
+## Step 11: Write Output
+
+Write to: {command-input-output-files-directory}/command-output.json
+
+```json
+{
+  "command-output-string": "REFACTOR analysis complete for test-type {test-type}"
+}
+```
+
+## Step 12: Self-Terminate
+
+Change directory to the root of this project and then run this command immediately:
+
+./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
 
 ---
 

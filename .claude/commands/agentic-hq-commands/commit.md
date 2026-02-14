@@ -14,7 +14,7 @@ jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 ## Commit Workflow
 
 When I run this "commit" command I would like you to please:
-
+AH
 ### ⚠️ STEP 1: Check Jira ID FIRST (before anything else)
 
 **This is the FIRST thing to check.** The AI previously skipped this step because it wasn't prominent enough - it jumped straight to validation instead.
@@ -71,7 +71,6 @@ STOP and ask the human to confirm whether they intended to commit without provid
 - Run the "git ls-files --others --exclude-standard" to show the full list of all new files and send the output to .agentic-hq/temp/git-new-files-list/git-new-files-list-<TIMESTAMP>.txt where you update the timestamp based on the current date and time.
 - Tell the human the filenames so they can check them themselves
 - Analyse the files to work out what will be in the commit
-- If any of the files are in .claude/commands/agentic-hq-commands, STOP and then ask to human to confirm that this is the right Jira to commit the changes against, since the human is developing commands while working on code, and trying to keep commits separate (e.g. in https://agentic-hq.atlassian.net/browse/AHQ-13)
 - Analyse the files to determine whether some files should not be committed and so should be in the .gitignore file. **IMPORTANT**: Exclude the following from this check as they are ALWAYS ignored by git:
   - `.agentic-hq/temp/` directory and all its contents (temporary working files)
   - Any other directories/files you know are standard gitignore patterns

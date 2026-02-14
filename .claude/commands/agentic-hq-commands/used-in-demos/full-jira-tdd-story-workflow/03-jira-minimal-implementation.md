@@ -1,19 +1,30 @@
----
-argument-hint: jira-id test-type
----
-
 You are executing the third step of the Jira Story Workflow: **Minimal Implementation (GREEN Phase)**.
+
+Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
 
 Your role is to write the **minimum code necessary** to make the failing test pass. This is the GREEN phase of TDD - quick, dirty, and focused solely on making the test pass. No gold-plating, no extra features, no premature optimization.
 
 **Remember**: You will run REFACTOR after this, so don't worry about code quality yet - just make it work!
 
-## Variables
+## Step 0a: Read Input
+
+Read the file: {command-input-output-files-directory}/command-input.json
+
+Extract the `command-input-string` value. It will be a plain English string like:
+`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path and test-type = unit`
+
+Parse out:
+- `jira-id` - the Jira ID (e.g. `TEST-123`)
+- `project-root` - the absolute path to the project root directory
+- `test-type` - the test type (e.g. `unit` or `e2e`)
+
+## Step 0b: Establish Variables
 
 ```
-jira-id = $0
-test-type = $1
-jira-docs-root = docs/jira-docs
+jira-id = (parsed from input file above)
+test-type = (parsed from input file above)
+project-root = (parsed from input file above)
+jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
@@ -27,7 +38,7 @@ jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 
 WARNING: Don't start implementing **any** code changes until Step 6a (Plan Mode) has been successfully completed and the user has approved your planned implementation.  This is a critical part of the Code Review process - as the user finds it much easier to review code when they have read, understood and approved the plan **before** the code is created. Also catches problems/misunderstandings earlier and faster.
 
-Tell the user you have read "Step 0" and won't be doing any code changes with getting approval from them in Plan Mode first.
+Tell the user you have read "Step 0" and won't be doing any code changes without getting approval via Plan Mode first.
 
 ## Step 1: Validate Input
 
@@ -49,7 +60,7 @@ Check that `{red-phase-file}` exists. If it doesn't exist, STOP and tell the use
 >
 > You need to complete the RED phase before implementing:
 > ```
-> /agentic-hq-commands:workflow:jira-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
+> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
 > ```"
 
 **Check AI summary exists:**
@@ -93,9 +104,9 @@ From the failing test, determine:
 - Therefore: Create `src/misc/hello-world.ts` with a `helloWorld()` function that returns `'Hello world'`
 
 
-## Step 6a: Instruct The Human To Put You In Plan Mode And Create The Implementation Plan
+## Step 6a: Enter Plan Mode And Create The Implementation Plan
 
-Ask the human to put you in Plan Mode for doing the implementation in steps 6b and 6c and once they have done that and told you they have done it, then do the following:
+Use the `EnterPlanMode` tool to enter Plan Mode for the implementation in steps 6b and 6c. Once in Plan Mode, do the following:
 
 1. Create the plan for the implementation steps 6b and 6c (re-read the instructions in 6b and 6c to be clear)
 
@@ -253,7 +264,7 @@ Create the file `{green-phase-file}` with the following structure:
 
 The test is passing. Now review and refactor the code:
 ```
-/agentic-hq-commands:workflow:jira-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
+/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
 ```
 ```
 
@@ -270,7 +281,7 @@ Load the Jira comment tool using `ToolSearch` with query `select:mcp__mcp-atlass
 >
 > Next: REFACTOR phase to clean up the implementation.
 
-## Step 10: Present to Human and STOP
+## Step 10: Present to Human
 
 After creating the file, tell the human:
 
@@ -281,26 +292,23 @@ After creating the file, tell the human:
 >
 > Summary at: `{green-phase-file}`
 >
-> Please review the implementation. When you're satisfied that:
-> 1. The test passes with the correct command
-> 2. The implementation is minimal but correct
-> 3. No unnecessary code was added
->
-> ...then run the REFACTOR analysis phase:
-> ```
-> /agentic-hq-commands:workflow:jira-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
-> ```
->
-> **Reminder - TDD cycle**: RED ✅ → GREEN ✅ → REFACTOR → VALIDATE → (next test type)"
+> The CLI will automatically proceed to the REFACTOR analysis phase next."
 
-**🛑 CRITICAL: STOP HERE - DO NOT CONTINUE TO REFACTORING 🛑**
+## Step 11: Write Output
 
-Your work for this command is COMPLETE. Do NOT:
-- Start reviewing code for refactoring opportunities
-- Begin the REFACTOR phase yourself
-- Make any additional code changes
+Write to: {command-input-output-files-directory}/command-output.json
 
-The human will start the REFACTOR phase properly by running the next command. If you start refactoring without that command, you will do it incorrectly because the REFACTOR command has specific instructions and structure that you need to follow.
+```json
+{
+  "command-output-string": "GREEN phase complete for test-type {test-type}"
+}
+```
+
+## Step 12: Self-Terminate
+
+Change directory to the root of this project and then run this command immediately:
+
+./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
 
 ---
 
@@ -310,4 +318,3 @@ The human will start the REFACTOR phase properly by running the next command. If
 - **Hard-coded is OK**: If the test only checks one value, hard-coding that value is fine
 - **Ugly is OK**: Code quality improvements happen in REFACTOR, not GREEN
 - **Use AC commands**: Always run tests with the exact pnpm command from acceptance criteria
-- **🛑 STOP after Step 10**: Do NOT continue to REFACTOR on your own - wait for the human to run the REFACTOR command

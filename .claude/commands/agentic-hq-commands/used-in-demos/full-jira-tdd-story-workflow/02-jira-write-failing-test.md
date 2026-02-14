@@ -1,19 +1,30 @@
----
-argument-hint: jira-id test-type
----
-
 You are executing the second step of the Jira Story Workflow: **Write ONE Failing Test (RED Phase)**.
 
-This command writes exactly ONE test - either a unit, integration, smoke, or e2e test (specified by the second parameter). Your role is to write that ONE failing test to drive the implementation. This is the RED phase of TDD - the test must fail because the implementation doesn't exist yet, NOT because of bugs in the test code.
+Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
+
+This command writes exactly ONE test - either a unit, integration, smoke, or e2e test (specified by the test-type variable). Your role is to write that ONE failing test to drive the implementation. This is the RED phase of TDD - the test must fail because the implementation doesn't exist yet, NOT because of bugs in the test code.
 
 **You will run this command multiple times** - once for each test type needed (e.g., once for unit, once for smoke), completing the full TDD cycle (RED → GREEN → REFACTOR → VALIDATE) for each before moving to the next.
 
-## Variables
+## Step 0a: Read Input
+
+Read the file: {command-input-output-files-directory}/command-input.json
+
+Extract the `command-input-string` value. It will be a plain English string like:
+`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path and test-type = unit`
+
+Parse out:
+- `jira-id` - the Jira ID (e.g. `TEST-123`)
+- `project-root` - the absolute path to the project root directory
+- `test-type` - the test type (e.g. `unit` or `e2e`)
+
+## Step 0b: Establish Variables
 
 ```
-jira-id = $0
-test-type = $1
-jira-docs-root = docs/jira-docs
+jira-id = (parsed from input file above)
+test-type = (parsed from input file above)
+project-root = (parsed from input file above)
+jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
@@ -44,7 +55,7 @@ Check that `{ai-summary-file}` exists. If it doesn't exist, STOP and tell the us
 >
 > You need to run the first command before this one:
 > ```
-> /agentic-hq-commands:workflow:jira-story-workflow:01-jira-read-and-question {jira-id}
+> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:01-jira-read-and-question {jira-id}
 > ```"
 
 ## Step 3: Create Test Type Directory
@@ -99,13 +110,13 @@ If the Jira doesn't require a {test-type} test, tell the user:
 > 3. **Clarify** - Help me understand what {test-type} test is needed"
 
 
-## Step 7a: Instruct The Human To Put You In Plan Mode And Create/Copy The Implementation Plan File
+## Step 7a: Enter Plan Mode And Create/Copy The Implementation Plan File
 
-Ask the human to put you in Plan Mode for doing Step 7b and once they have done that and told you:
+Use the `EnterPlanMode` tool to enter Plan Mode. Once in Plan Mode:
 - Create a Plan covering ONLY the **design/approach** for the test changes (what to change, what the test looks like, and why)
 - **IMPORTANT: The plan must NOT include Steps 7b through 10** (writing the test, running it, creating RED phase doc, Jira comment, presenting to human). Those steps are already defined in this command and will be completed by re-reading this command after the plan is approved and implemented.
 - **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{red-phase-plan-file}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
-- The plan's **LAST step** must be: "Re-read this command (`.claude/commands/agentic-hq-commands/workflow/jira-story-workflow/02-jira-write-failing-test.md`) and complete all remaining steps (7b through 10)" - this ensures context is restored after Plan mode may have cleared it
+- The plan's **LAST step** must be: "Re-read this command (`.claude/commands/agentic-hq-commands/used-in-demos/full-jira-tdd-story-workflow/02-jira-write-failing-test.md`) and complete all remaining steps (7b through 10)" - this ensures context is restored after Plan mode may have cleared it
 - Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
 - then implement the Plan based on their feedback from the Plan (as usual)
 
@@ -246,7 +257,7 @@ Create the file `{red-phase-file}` with the following structure:
 
 Run the next command to implement code to pass this test:
 ```
-/agentic-hq-commands:workflow:jira-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
+/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
 ```
 ```
 
@@ -273,17 +284,23 @@ After creating the file, tell the human:
 >
 > Summary at: `{red-phase-file}`
 >
-> Please review the failing test. When you're satisfied that:
-> 1. The test covers the {test-type} acceptance criteria
-> 2. The test fails due to missing module/implementation (compilation error is correct!)
-> 3. The test structure/naming is acceptable
->
-> ...then run the GREEN phase:
-> ```
-> /agentic-hq-commands:workflow:jira-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
-> ```
->
-> **Reminder - TDD order:** unit → integration → smoke → e2e (each with full RED → GREEN → REFACTOR → VALIDATE cycle)"
+> The CLI will automatically proceed to the GREEN phase next."
+
+## Step 11: Write Output
+
+Write to: {command-input-output-files-directory}/command-output.json
+
+```json
+{
+  "command-output-string": "RED phase complete for test-type {test-type}"
+}
+```
+
+## Step 12: Self-Terminate
+
+Change directory to the root of this project and then run this command immediately:
+
+./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
 
 ---
 

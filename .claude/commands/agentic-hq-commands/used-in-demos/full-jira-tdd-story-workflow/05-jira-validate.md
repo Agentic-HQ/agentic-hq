@@ -1,8 +1,6 @@
----
-argument-hint: jira-id
----
-
 You are executing the fifth step of the Jira Story Workflow: **Validate (Pre-Commit Quality Gate)**.
+
+Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
 
 Your role is to perform comprehensive validation before the story can be considered complete and ready for commit. This is the final quality gate that ensures:
 1. All tests pass (not just the ones you wrote)
@@ -12,11 +10,23 @@ Your role is to perform comprehensive validation before the story can be conside
 
 **Remember**: This is based on TDD best practices from Kent Beck, Uncle Bob, and Martin Fowler - (if the user chooses that option) then you must run the ENTIRE test suite after refactoring to catch regressions, and verify acceptance criteria before considering work complete (Claude Code usage limit may cause the human to skip this for every Jira testing loop and run the full test set manually e.g. once a day, when not doing any coding and so usage limits aren't an issue)
 
-## Variables
+## Step 0a: Read Input
+
+Read the file: {command-input-output-files-directory}/command-input.json
+
+Extract the `command-input-string` value. It will be a plain English string like:
+`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path`
+
+Parse out:
+- `jira-id` - the Jira ID (e.g. `TEST-123`)
+- `project-root` - the absolute path to the project root directory
+
+## Step 0b: Establish Variables
 
 ```
-jira-id = $0
-jira-docs-root = docs/jira-docs
+jira-id = (parsed from input file above)
+project-root = (parsed from input file above)
+jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 validate-file = {workflow-files}/05-validate-phase-results.md
@@ -43,7 +53,7 @@ If none exist, STOP and tell the user:
 >
 > Start with:
 > ```
-> /agentic-hq-commands:workflow:jira-story-workflow:02-jira-write-failing-test {jira-id} unit
+> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:02-jira-write-failing-test {jira-id} unit
 > ```"
 
 **Check AI summary exists:**
@@ -334,8 +344,24 @@ After creating the file, tell the human:
 >
 > Please work with me (the AI) to fix these issues and re-run:
 > ```
-> /agentic-hq-commands:workflow:jira-story-workflow:05-jira-validate {jira-id}
+> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:05-jira-validate {jira-id}
 > ```"
+
+## Step 12: Write Output
+
+Write to: {command-input-output-files-directory}/command-output.json
+
+```json
+{
+  "command-output-string": "VALIDATE complete for {jira-id}"
+}
+```
+
+## Step 13: Self-Terminate
+
+Change directory to the root of this project and then run this command immediately:
+
+./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
 
 ---
 
