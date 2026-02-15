@@ -1,0 +1,17 @@
+{
+  "name": "agentic-hq-plugins",
+  "version": "0.0.2",
+  "description": "Bundled plugins for Agentic HQ including test plugins (to start with)",
+  "owner": {
+    "name": "Steve",
+    "email": "made-up-email-for-testing@agentichq.ai"
+  },
+  "plugins": [
+    {
+      "name": "steve-test-plugin",
+      "description": "Steve's test plugin for testing out plugin functionality in Agentic HQ",
+      "source": "./plugins/steve-test-plugin",
+      "category": "test"
+    }
+  ]
+}

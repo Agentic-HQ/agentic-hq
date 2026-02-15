@@ -1,0 +1,8 @@
+{
+  "name": "steve-test-plugin",
+  "description": "A test plugin created by Steve to test the plugin system",
+  "version": "0.0.4",
+  "author": {
+    "name": "Steve"
+  }
+}
