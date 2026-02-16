@@ -1,0 +1,8 @@
+{
+  "name": "agentic-hq-core-plugin",
+  "description": "Core plugin for Agentic HQ providing essential skills like self-termination",
+  "version": "0.0.1",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

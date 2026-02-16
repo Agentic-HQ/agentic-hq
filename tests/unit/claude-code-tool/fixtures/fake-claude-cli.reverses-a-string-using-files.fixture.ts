@@ -6,10 +6,10 @@
  * command: reading command-input.json, reversing the string, and writing the result to command-output.json.
  * This is TEST SCAFFOLDING - it replaces real Claude in unit tests.
  *
- * USAGE: tsx fake-claude-cli.reverses-a-string-using-files.fixture.ts "<command> <tempDir>"
+ * USAGE: tsx fake-claude-cli.reverses-a-string-using-files.fixture.ts [--plugin-dir=...] "<command> <tempDir>"
  *
- * NOTE: The command and tempDir are passed as a SINGLE combined string (argv[2]),
- * NOT as separate arguments. This replicates how real Claude receives its prompt.
+ * Uses Commander for argument parsing, just like the real Claude CLI handles flags
+ * (e.g. --plugin-dir) separately from the positional prompt/command argument.
  *
  * Input file: <tempDir>/command-input.json
  *   { "command-input-string": "hello world" }
@@ -24,29 +24,33 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { Command } from 'commander';
+
 /*
- * ARGV PARSING - REPLICATING REAL CLAUDE CLI BEHAVIOR
+ * ARGUMENT PARSING - REPLICATING REAL CLAUDE CLI BEHAVIOR
  *
- * Real Claude CLI receives a single prompt string containing both the slash command
- * and its arguments. For example:
+ * Real Claude CLI uses Commander (or similar) to parse flags like --plugin-dir
+ * separately from the positional prompt string. For example:
  *
- *   claude --print "/reverse-a-string /path/to/temp/dir"
+ *   claude --plugin-dir="./plugins/my-plugin" "/reverse-a-string /path/to/temp/dir"
  *
- * Claude internally parses this string to:
- * - Recognize "/reverse-a-string" as a slash command
- * - Make "/path/to/temp/dir" available as $0 in the command's markdown file
+ * Commander handles this automatically:
+ * - --plugin-dir is parsed as an option (ignored by this fake CLI)
+ * - The remaining positional argument is the combined command+tempDir string
  *
- * This fake CLI replicates that behavior by:
- * 1. Receiving the combined string as argv[2] (after 'tsx' and 'fixture.ts')
- * 2. Splitting on space to extract [command, tempDir]
- * 3. Using tempDir to find command-input.json and write command-output.json
- *
- * This ensures ClaudeCodeTool.ts can pass arguments identically to both real Claude
- * and test fixtures, with no special-case branching in production code.
- *
- * See also: src/tools/claude-code/ClaudeCodeTool.ts (ARGV HANDLING comment)
+ * This fake CLI uses Commander the same way, so it works regardless of what
+ * flags ClaudeCodeTool adds (--plugin-dir, etc.) without manual argv parsing.
  */
-const combinedPromptString = process.argv[2];
+const program = new Command();
+program
+  .allowUnknownOption() // Accept any flags (--plugin-dir, etc.) without erroring
+  .allowExcessArguments(true) // Don't error on extra positional args
+  .argument('[prompt...]', 'Combined command and tempDir string: "<command> <tempDir>"')
+  .parse();
+
+// Find the positional argument that isn't a flag — this is the command string,
+// just like real Claude CLI picks out the prompt from among its flags.
+const combinedPromptString = program.args.find((arg) => !arg.startsWith('--'));
 
 if (!combinedPromptString) {
   console.error('ERROR: No prompt string provided. Expected: "<command> <tempDir>"');
