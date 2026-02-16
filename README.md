@@ -54,8 +54,7 @@ you should now:
 {
   "permissions": {
     "allow": [
-      "Write",
-      "Bash(./tools/scripts/process-control/unix/kill-current-cli-process.sh:*)"
+      "Write"
     ],
     "deny": [],
     "ask": []

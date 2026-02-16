@@ -36,7 +36,7 @@
 # Check if exactly one argument provided
 if [ $# -ne 1 ]; then
     echo "ERROR: This script requires exactly one argument - the CLI process PID"
-    echo "USAGE: ./tools/scripts/process-control/unix/kill-current-cli-process.sh \$PPID"
+    echo "USAGE: {skill-base-dir}/scripts/kill-current-cli-process.sh \$PPID"
     echo "This will kill the current CLI session and return control to the parent process"
     exit 1
 fi

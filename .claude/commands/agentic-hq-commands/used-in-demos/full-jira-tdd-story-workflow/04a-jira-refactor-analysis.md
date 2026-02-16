@@ -368,9 +368,9 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ## Step 12: Self-Terminate
 
-Change directory to the root of this project and then run this command immediately:
+Run the self-termination skill immediately:
 
-./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID
+/agentic-hq-core-plugin:self-termination
 
 ---
 

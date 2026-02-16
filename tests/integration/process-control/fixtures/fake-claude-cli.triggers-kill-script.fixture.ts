@@ -67,10 +67,12 @@ function timestamp(): string {
  */
 const KILL_SCRIPT_PATH = path.join(
   process.cwd(),
-  'tools',
+  '.agentic-hq',
+  'plugins',
+  'agentic-hq-core-plugin',
+  'skills',
+  'self-termination',
   'scripts',
-  'process-control',
-  'unix',
   'kill-current-cli-process.sh'
 );
 

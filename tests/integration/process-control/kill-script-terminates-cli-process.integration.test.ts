@@ -2,7 +2,7 @@
  * Integration Test: Kill Script Terminates CLI Process
  *
  * This test verifies that the kill script at:
- *   tools/scripts/process-control/unix/kill-current-cli-process.sh
+ *   .agentic-hq/plugins/agentic-hq-core-plugin/skills/self-termination/scripts/kill-current-cli-process.sh
  * correctly terminates its parent process when called with $PPID.
  *
  * WHY NODE-PTY: We use node-pty to spawn the fixture to match how we'll spawn
