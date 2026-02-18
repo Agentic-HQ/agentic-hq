@@ -12,9 +12,9 @@ import { Command } from 'commander';
 
 import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
 
-const TIMES_TWO_COMMAND = '/agentic-hq-commands:used-in-demos:math-workflow:times-two';
-const PLUS_THREE_COMMAND = '/agentic-hq-commands:used-in-demos:math-workflow:plus-three';
-const DIV_FIVE_COMMAND = '/agentic-hq-commands:used-in-demos:math-workflow:div-five';
+const TIMES_TWO_COMMAND = '/agentic-hq-demos-plugin:math-workflow:times-two';
+const PLUS_THREE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:plus-three';
+const DIV_FIVE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:div-five';
 
 const program = new Command();
 

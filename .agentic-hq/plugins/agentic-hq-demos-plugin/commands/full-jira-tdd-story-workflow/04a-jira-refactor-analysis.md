@@ -54,7 +54,7 @@ Check that `{green-phase-file}` exists. If it doesn't exist, STOP and tell the u
 >
 > You need to complete the GREEN phase before refactoring:
 > ```
-> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
+> /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
 > ```"
 
 ## Step 3: Check for Existing Analysis File
@@ -270,7 +270,7 @@ These require your approval before execution:
 3. Add any comments explaining your decision
 4. Run the execute command:
 ```
-/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
+/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04b-jira-refactor-execute {jira-id} {test-type}
 ```
 ```
 
@@ -323,7 +323,7 @@ The code created in the GREEN phase is already clean:
 
 Since no refactors are needed, proceed directly to verification:
 ```
-/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:05-jira-validate {jira-id} {test-type}
+/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:05-jira-validate {jira-id} {test-type}
 ```
 
 Or if you want to proceed to the next test type in the TDD cycle.

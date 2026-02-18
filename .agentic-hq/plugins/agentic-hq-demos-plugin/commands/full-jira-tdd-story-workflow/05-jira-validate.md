@@ -53,7 +53,7 @@ If none exist, STOP and tell the user:
 >
 > Start with:
 > ```
-> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:02-jira-write-failing-test {jira-id} unit
+> /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:02-jira-write-failing-test {jira-id} unit
 > ```"
 
 **Check AI summary exists:**
@@ -344,7 +344,7 @@ After creating the file, tell the human:
 >
 > Please work with me (the AI) to fix these issues and re-run:
 > ```
-> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:05-jira-validate {jira-id}
+> /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:05-jira-validate {jira-id}
 > ```"
 
 ## Step 12: Write Output

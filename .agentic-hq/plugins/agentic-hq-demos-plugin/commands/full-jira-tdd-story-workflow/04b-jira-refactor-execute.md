@@ -56,7 +56,7 @@ Check that `{refactor-analysis-file}` exists. If it doesn't exist, STOP and tell
 >
 > You need to complete the analysis phase first:
 > ```
-> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
+> /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
 > ```"
 
 ## Step 3: Check for Existing Completion File
@@ -234,7 +234,7 @@ Create the file `{refactor-complete-file}` with the following structure:
 
 Refactoring is complete. Now verify all tests pass:
 ```
-/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:05-jira-validate {jira-id} {test-type}
+/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:05-jira-validate {jira-id} {test-type}
 ```
 ```
 

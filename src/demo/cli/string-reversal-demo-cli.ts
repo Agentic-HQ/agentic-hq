@@ -12,7 +12,7 @@ import { Command } from 'commander';
 
 import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
 
-const REVERSE_STRING_COMMAND = '/agentic-hq-commands:used-in-tests:integration:reverse-a-string';
+const REVERSE_STRING_COMMAND = '/agentic-hq-demos-plugin:string-reversal:reverse-a-string';
 
 const program = new Command();
 

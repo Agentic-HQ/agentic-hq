@@ -1,0 +1,8 @@
+{
+  "name": "agentic-hq-demos-plugin",
+  "description": "Demo workflows for Agentic HQ showcasing orchestration capabilities",
+  "version": "0.0.1",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

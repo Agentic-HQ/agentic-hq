@@ -29,17 +29,17 @@ import { Command } from 'commander';
 import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
 
 const COMMAND_01_READ_JIRA =
-  '/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:01-jira-read-and-question';
+  '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:01-jira-read-and-question';
 const COMMAND_02_RED =
-  '/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:02-jira-write-failing-test';
+  '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:02-jira-write-failing-test';
 const COMMAND_03_GREEN =
-  '/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:03-jira-minimal-implementation';
+  '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:03-jira-minimal-implementation';
 const COMMAND_04A_REFACTOR_ANALYSIS =
-  '/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04a-jira-refactor-analysis';
+  '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04a-jira-refactor-analysis';
 const COMMAND_04B_REFACTOR_EXECUTE =
-  '/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04b-jira-refactor-execute';
+  '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04b-jira-refactor-execute';
 const COMMAND_05_VALIDATE =
-  '/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:05-jira-validate';
+  '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:05-jira-validate';
 
 const GIT_ROOT_DETECTION_COMMAND = 'git rev-parse --show-toplevel';
 

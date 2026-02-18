@@ -18,7 +18,8 @@ import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool';
 
 const TEST_TIMEOUT_MS = 60_000; // 60s for real Claude Code execution
 
-const REVERSE_STRING_COMMAND = '/agentic-hq-commands:used-in-tests:integration:reverse-a-string';
+const REVERSE_STRING_COMMAND =
+  '/agentic-hq-commands:used-in-tests:integration:reverse-a-string-for-integration-test';
 
 describe('ClaudeCodeTool.execute(command, commandInput) with real Claude', () => {
   it(

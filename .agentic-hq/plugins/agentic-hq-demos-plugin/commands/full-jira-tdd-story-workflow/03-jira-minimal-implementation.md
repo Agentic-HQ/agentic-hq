@@ -29,7 +29,7 @@ workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
-green-phase-plan-file = {test-type-files}/03-green-phase-implementation-plan.md
+green-phase-plan-file-copy = {test-type-files}/03-green-phase-implementation-plan-copy.md
 green-phase-file = {test-type-files}/03-green-phase-summary-of-what-was-implemented.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 ```
@@ -60,7 +60,7 @@ Check that `{red-phase-file}` exists. If it doesn't exist, STOP and tell the use
 >
 > You need to complete the RED phase before implementing:
 > ```
-> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
+> /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:02-jira-write-failing-test {jira-id} {test-type}
 > ```"
 
 **Check AI summary exists:**
@@ -126,19 +126,19 @@ Use the `EnterPlanMode` tool to enter Plan Mode for the implementation in steps 
 
 3. Add to the end of the Plan a TODO to come back and re-read this command file for testing and documenting instructions after step 6c. IMPORTANT: Do not copy those instructions into the Plan - you will miss bits.
 
-4. Copy the entire plan to {green-phase-plan-file} and tell the human where it is
+4. Copy the entire plan to {green-phase-plan-file-copy} and tell the human where it is
 
-5.a. **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{green-phase-plan-file}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
+5.a. **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{green-phase-plan-file-copy}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
 
 5.b. Present the Plan to the user and get their feedback, modify based on feedback
 
-6. When finally approved, re-copy the updated plan to {green-phase-plan-file}
+6. When finally approved, re-copy the updated plan to {green-phase-plan-file-copy}
 
 7. Then implement the Plan
 
 ## Step 6b: Write the Minimal Implementation
 
-**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{green-phase-plan-file}`. If not, do it NOW before continuing.**
+**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{green-phase-plan-file-copy}`. If not, do it NOW before continuing.**
 
 **CRITICAL GREEN PHASE RULES:**
 - Write **only** enough code to make the test pass
@@ -264,7 +264,7 @@ Create the file `{green-phase-file}` with the following structure:
 
 The test is passing. Now review and refactor the code:
 ```
-/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
+/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
 ```
 ```
 

@@ -28,7 +28,7 @@ jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
-red-phase-plan-file = {test-type-files}/02-red-phase-failing-test-plan.md
+red-phase-plan-file-copy = {test-type-files}/02-red-phase-failing-test-plan-copy.md
 red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 ```
@@ -55,7 +55,7 @@ Check that `{ai-summary-file}` exists. If it doesn't exist, STOP and tell the us
 >
 > You need to run the first command before this one:
 > ```
-> /agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:01-jira-read-and-question {jira-id}
+> /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:01-jira-read-and-question {jira-id}
 > ```"
 
 ## Step 3: Create Test Type Directory
@@ -113,17 +113,16 @@ If the Jira doesn't require a {test-type} test, tell the user:
 ## Step 7a: Enter Plan Mode And Create/Copy The Implementation Plan File
 
 Use the `EnterPlanMode` tool to enter Plan Mode. Once in Plan Mode:
-- Create a Plan covering ONLY the **design/approach** for the test changes (what to change, what the test looks like, and why)
-- **IMPORTANT: The plan must NOT include Steps 7b through 10** (writing the test, running it, creating RED phase doc, Jira comment, presenting to human). Those steps are already defined in this command and will be completed by re-reading this command after the plan is approved and implemented.
-- **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{red-phase-plan-file}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
-- The plan's **LAST step** must be: "Re-read this command (`.claude/commands/agentic-hq-commands/used-in-demos/full-jira-tdd-story-workflow/02-jira-write-failing-test.md`) and complete all remaining steps (7b through 10)" - this ensures context is restored after Plan mode may have cleared it
+- Create a Plan for executing the remaining steps in this command.  IMPORTANT: If you're not going to copy all the details from the different Steps in this command, include in the Plan that the agent **must** refer back to the various "Step" sections in this command for full details (NOTE FROM HUMAN TO HUMAN READING THIS: I'm not sure how well this will work - there is a fundamental problem of conflict between a dynamic Plan created by Claude on the fly and the Command Steps which partially duplicate each other - it's hard to say which Claude should be following and when...)
+- **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{red-phase-plan-file-copy}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
+- The plan's **LAST step** must be: "Recheck that all commands have been executed in the 02-jira-write-failing-test.md command"
 - Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
-- then implement the Plan based on their feedback from the Plan (as usual)
+- Then implement the Plan based on their feedback from the Plan (as usual)
 
 
 ## Step 7b: Write the ONE Test File (After Plan Is Approved By Human)
 
-**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{red-phase-plan-file}`. If not, do it NOW before continuing.**
+**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{red-phase-plan-file-copy}`. If not, do it NOW before continuing.**
 
 **CRITICAL TDD RULES (Per Uncle Bob's Three Laws):**
 - **Law 1**: No production code until a test fails
@@ -257,7 +256,7 @@ Create the file `{red-phase-file}` with the following structure:
 
 Run the next command to implement code to pass this test:
 ```
-/agentic-hq-commands:used-in-demos:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
+/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} {test-type}
 ```
 ```
 
