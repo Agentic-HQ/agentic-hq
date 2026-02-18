@@ -1,0 +1,8 @@
+{
+  "name": "agentic-hq-utilities-plugin",
+  "description": "Utilities that are used by other Agentic HQ plugins",
+  "version": "0.0.1",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}
