@@ -222,12 +222,19 @@ Valid questions are things that:
 
 and summarise the most important things you found.
 
+## Test Types And Tests We Will Be Implementing
+
+**Test types: `{comma-separated test types}`** (in that order, each with full RED -> GREEN -> REFACTOR -> VALIDATE cycle)
+
+{For each test type, list the specific tests you plan to write and what they will verify. Be specific enough that the next agent (who writes the tests) knows exactly what to implement. Include:
+- Test descriptions/names
+- What each test verifies
+- Key assertions
+- Any test infrastructure needed (e.g., mocks, fixtures, test scripts)}
+
 ## Ready for Next Step
 
-Human, please:
-- Answer the questions
-- Let me know you've answered them and we'll discuss until resolved.
-- Then I'll tell you the next command to run
+All questions resolved, test types confirmed. This summary is complete.
 ```
 
 ## Step 12: Present to Human

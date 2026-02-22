@@ -1,0 +1,33 @@
+{
+  "name": "agentic-hq-demo-string-reversal",
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "// TEMPORARY-LOCAL-DEPENDENCY — See AHQ-61": {
+    "summary": "The agentic-hq dependency uses file: protocol as a TEMPORARY workaround. AHQ-61 will replace it with a proper script-driven, ENV-controlled dependency resolution system.",
+    "jira": "https://agentic-hq.atlassian.net/browse/AHQ-61",
+    "currentState": "file:../../../../../.. hard-links the main agentic-hq project so that 'import { ClaudeCodeTool } from agentic-hq/tools/claude-code' works.",
+    "whatAHQ61WillDo": "Replace file: with versioned dep, add ENV-driven .npmrc, add pnpmfile.cjs hook, add switching scripts (pnpm deps:local / deps:verdaccio / deps:prod). Package.json never changes after that — mode switching via scripts only.",
+    "the3Modes": "Local Dev: pnpm deps:local (AHQ_USE_LOCAL=1, uses live source) | Verdaccio: pnpm deps:verdaccio (tests published package locally) | Production: pnpm deps:prod (real npm/GitHub Packages)",
+    "keyInsight": "The import path 'agentic-hq/tools/claude-code' NEVER changes across modes."
+  },
+  "scripts": {
+    "// POSTINSTALL": "FIX: node-pty posix_spawnp failed. pnpm extracts spawn-helper without +x. Same fix as main project. See: https://github.com/pnpm/pnpm/issues/7366",
+    "postinstall": "chmod +x node_modules/.pnpm/node-pty@*/node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
+    "demo:string-reversal": "tsx src/string-reversal-demo-cli.ts"
+  },
+  "dependencies": {
+    "agentic-hq": "file:../../../../../..",
+    "tsx": "^4.20.6",
+    "commander": "^14.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "agentic-hq",
+      "node-pty",
+      "esbuild"
+    ]
+  }
+}

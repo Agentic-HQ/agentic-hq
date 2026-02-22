@@ -5,12 +5,15 @@
  * Demonstrates Agentic HQ's ability to orchestrate Claude Code.
  * Accepts a string via --string-to-reverse and outputs the reversed string.
  *
- * See: https://agentic-hq.atlassian.net/browse/AHQ-25
+ * This is the plugin-bundled version of the workflow CLI.
+ * Import uses the agentic-hq package (resolved via file: protocol for local dev).
+ *
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-56
  */
 
 import { Command } from 'commander';
 
-import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
+import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const REVERSE_STRING_COMMAND = '/agentic-hq-demos-plugin:string-reversal:reverse-a-string';
 

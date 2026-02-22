@@ -22,11 +22,10 @@
  * See: https://agentic-hq.atlassian.net/browse/AHQ-41 (Full Jira TDD Story Workflow)
  */
 
-import { execSync } from 'node:child_process';
-
 import { Command } from 'commander';
 
 import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
+import { getProjectRoot } from '../../utils/git/git-utils.js';
 
 const COMMAND_01_READ_JIRA =
   '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:01-jira-read-and-question';
@@ -40,8 +39,6 @@ const COMMAND_04B_REFACTOR_EXECUTE =
   '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04b-jira-refactor-execute';
 const COMMAND_05_VALIDATE =
   '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:05-jira-validate';
-
-const GIT_ROOT_DETECTION_COMMAND = 'git rev-parse --show-toplevel';
 
 /** Builds the variables string that command files will parse to extract jira-id, project-root, and optionally test-type */
 function buildVariablesString(jiraId: string, projectRoot: string, testType?: string): string {
@@ -62,8 +59,7 @@ program
   .action(async (options: { jiraId: string; projectRoot?: string }) => {
     // When --project-root is omitted, detect the git repo root so the CLI
     // works from anywhere inside a repo (AHQ-40).
-    const projectRoot =
-      options.projectRoot ?? execSync(GIT_ROOT_DETECTION_COMMAND, { encoding: 'utf-8' }).trim();
+    const projectRoot = options.projectRoot ?? getProjectRoot();
 
     const tool = new ClaudeCodeTool();
 

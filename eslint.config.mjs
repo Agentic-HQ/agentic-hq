@@ -38,6 +38,7 @@ export default [
       '*.config.mjs', // Config files in root (eslint.config.mjs)
       'src/experiments/**', // Old experiments - to be cleaned up in separate chore Jira
       'temp/**', // Test-generated files (e.g. e2e test project roots) - not in tsconfig.json
+      '.agentic-hq/plugins/**/ts-workflow/src/**', // Plugin ts-workflow code has its own tsconfig (AHQ-56)
     ],
   },
 

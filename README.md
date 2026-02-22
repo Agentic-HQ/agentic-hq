@@ -74,10 +74,13 @@ pnpm install
 # Verify everything works by running checks and quick unit tests
 pnpm validate
 
-# Run the demo string reversal program at src/demo/cli/string-reversal-demo-cli.ts
-# NOTE: The first time you run this Claude Code will ask if you trust this folder and to 
+# Run the string reversal demo via the agentic-hq CLI
+# NOTE: The first time you run this Claude Code will ask if you trust this folder and to
 # continue you will have to choose Yes
-pnpm demo:string-reversal --string-to-reverse="hello there"
+pnpm demo:agentic-hq-cli:string-reversal
+
+# Or run the plugin's TypeScript workflow directly (bypasses the agentic-hq CLI)
+pnpm demo:plugin-direct:string-reversal
 
 # Run the demo math workflow program at src/demo/cli/math-workflow-demo-cli.ts to 
 # see a simple 3 step workflow that uses output from one custom command as input to the next

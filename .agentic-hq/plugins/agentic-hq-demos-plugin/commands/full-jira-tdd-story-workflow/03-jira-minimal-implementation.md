@@ -252,17 +252,39 @@ Create the file `{green-phase-file}` with the following structure:
 
 ## What Was Implemented
 
-{Brief description of the minimal code written to pass the test}
+{Brief summary of what was built and why — 2-3 sentences max. What does the implementation do at a high level?}
+
+### Key implementation decisions:
+
+{List the important design/implementation choices made during GREEN. These help the human reviewer and the REFACTOR agent understand WHY things were done this way — not just what was done.}
+
+1. **{Decision area}**: {What was decided and why}
+2. **{Decision area}**: {What was decided and why}
+
+### Bugs found and fixed during GREEN:
+
+{During GREEN phase, you will often hit unexpected issues that require fixes beyond the planned implementation. **Document every bug/issue here** — this section is critical for the human reviewer because it surfaces changes that weren't in the original plan, helping them understand what happened and why. Without this, the human has to reverse-engineer unexpected changes from the git diff.}
+
+{List each bug with: what went wrong, how you fixed it, and which file(s) were affected.}
+
+1. {Problem} - fixed with {solution} in `{file}`
+2. {Problem} - {solution}
+
+{If no bugs were encountered, write: "None - implementation went as planned."}
 
 ## Files Created
 
 - `{path/to/file.ts}` - {description}
 
+## Files Modified
+
+- `{path/to/existing-file.ts}` - {brief description of what changed}
+
 ---
 
 ## Ready for REFACTOR Phase
 
-The test is passing. Now review and refactor the code:
+The test is passing. This program should self terminate, and then (if you are running the automated workflow) the following command will be run automatically:
 ```
 /agentic-hq-demos-plugin:full-jira-tdd-story-workflow:04a-jira-refactor-analysis {jira-id} {test-type}
 ```
