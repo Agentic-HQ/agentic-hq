@@ -39,6 +39,10 @@ build/Release
 
 # Dependency directories
 node_modules/
+
+# Lock files for package managers we don't use (project uses pnpm)
+package-lock.json
+yarn.lock
 jspm_packages/
 
 # Experiments with their own node_modules (isolated experimentation)
