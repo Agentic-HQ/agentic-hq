@@ -16,14 +16,15 @@ import { Command } from 'commander';
 import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const REVERSE_STRING_COMMAND = '/agentic-hq-demos-plugin:string-reversal:reverse-a-string';
+const DEFAULT_STRING_TO_REVERSE = 'this is the default string to reverse';
 
 const program = new Command();
 
 program
   .name('string-reversal-demo-cli')
   .description('Reverse a string using Claude Code')
-  .requiredOption('--string-to-reverse <string>', 'The string to reverse')
-  .action(async (options: { stringToReverse: string }) => {
+  .option('--string-to-reverse <string>', 'The string to reverse', DEFAULT_STRING_TO_REVERSE)
+  .action(async (options: { stringToReverse: string; }) => {
     const tool = new ClaudeCodeTool();
     const reversed = await tool.execute(REVERSE_STRING_COMMAND, options.stringToReverse);
     console.log(`Reversed string: ${reversed}`);

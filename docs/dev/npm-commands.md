@@ -56,11 +56,14 @@ pnpm format:fix
 Programs that demonstrate Agentic HQ capabilities. These are good starting points for understanding how the system works.
 
 ```bash
-# Simple hello world example (created initially just to test tech stack works)
-pnpm hello-world
+# String reversal demo via agentic-hq CLI (uses built-in default string)
+pnpm demo:agentic-hq-cli:string-reversal
 
-# Single step string reversal demo using Claude Code
-pnpm demo:string-reversal --string-to-reverse="hello there"
+# Override the default string:
+pnpm demo:agentic-hq-cli:string-reversal -- --string-to-reverse="hello there"
+
+# Or run the plugin directly (bypasses agentic-hq CLI):
+pnpm demo:plugin-direct:string-reversal
 
 # 3-step math workflow demonstrating command chaining
 # Takes an input number and runs: (input × 2 + 3) ÷ 5
@@ -129,7 +132,7 @@ End-to-end tests that verify complete workflows from start to finish. These test
 pnpm test:e2e
 
 # Test the string reversal demo CLI end-to-end
-pnpm demo:string-reversal --string-to-reverse="hello there"
+pnpm test:e2e:agentic-hq-cli-string-reversal
 
 # Test the math workflow demo CLI end-to-end
 pnpm test:e2e:demo-math-workflow
