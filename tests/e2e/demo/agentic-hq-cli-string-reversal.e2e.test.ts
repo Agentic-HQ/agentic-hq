@@ -10,13 +10,15 @@
  * See: https://agentic-hq.atlassian.net/browse/AHQ-56
  */
 
-import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { describe, it, expect, beforeEach } from 'vitest';
 
+import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
+
 const TEST_TIMEOUT_MS = 90_000; // 90s per acceptance criteria
+const LOG_FILE_LABEL = 'string-reversal';
 
 // Test data constants
 const TEST_INPUT_STRING = 'this is a test string';
@@ -40,11 +42,8 @@ describe('agentic-hq CLI String Reversal', () => {
       // Arrange — use `node bin/agentic-hq.cjs` directly (self-contained, no global npm link needed)
       const command = `node bin/agentic-hq.cjs --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
 
-      // Act - run the agentic-hq CLI and capture stdout
-      const output = execSync(command, {
-        cwd: process.cwd(),
-        encoding: 'utf-8',
-      });
+      // Act - run the agentic-hq CLI and capture stdout via log file
+      const output = runCliAndLogOutput(command, LOG_FILE_LABEL, TEST_TIMEOUT_MS);
 
       // Assert - verify the reversed string appears in the output
       expect(output).toContain(EXPECTED_REVERSED_STRING);

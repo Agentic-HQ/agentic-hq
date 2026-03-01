@@ -123,7 +123,7 @@ Document your research findings for inclusion in the summary.
 Load the Jira MCP tools using `ToolSearch` with these queries: `select:mcp__mcp-atlassian__jira_get_transitions`, `select:mcp__mcp-atlassian__jira_transition_issue`, and `select:mcp__mcp-atlassian__jira_add_comment`. Then transition the Jira to "In Progress" status:
 1. First, use `mcp__mcp-atlassian__jira_get_transitions` to get available transitions
 2. Find the transition that moves to "In Progress" (or equivalent status)
-3. Use `mcp__mcp-atlassian__jira_transition_issue` to make the transition
+3. Use `mcp__mcp-atlassian__jira_transition_issue` to make the transition. **IMPORTANT: Do NOT use the `comment` parameter on the transition call — it requires Atlassian Document Format (ADF) and will fail with plain Markdown. Always add comments separately via `mcp__mcp-atlassian__jira_add_comment` instead.**
 4. Also assign the Jira to yourself to show you are working on it now.
 
 If the transition fails (e.g., Jira is already in progress or workflow doesn't allow it), note this and WARN THE HUMAN but continue - it's not a blocker.
