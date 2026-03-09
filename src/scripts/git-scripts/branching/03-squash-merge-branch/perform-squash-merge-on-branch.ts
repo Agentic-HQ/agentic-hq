@@ -3,7 +3,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-import { command, run, string, option } from 'cmd-ts';
+import { Command } from 'commander';
 
 const execAsync = promisify(exec);
 
@@ -175,24 +175,24 @@ async function switchToMain(): Promise<void> {
 /**
  * Define the CLI command
  */
-const app = command({
-  name: 'perform-squash-merge-on-branch',
-  description: 'Squash merge a feature branch PR into main, archive the branch, and return to main',
-  version: '1.0.0',
-  args: {
-    branchName: option({
-      type: string,
-      long: 'branch-name',
-      description: 'The feature branch name to merge (e.g., feature/add-hello-script)',
-    }),
-    commitBody: option({
-      type: string,
-      long: 'commit-body',
-      description: 'Multi-line commit message body (use heredoc for multi-line)',
-    }),
-  },
-  handler: async ({ branchName, commitBody }) => {
+const program = new Command();
+
+program
+  .name('perform-squash-merge-on-branch')
+  .description('Squash merge a feature branch PR into main, archive the branch, and return to main')
+  .version('1.0.0')
+  .requiredOption(
+    '--branch-name <branchName>',
+    'The feature branch name to merge (e.g., feature/add-hello-script)'
+  )
+  .requiredOption(
+    '--commit-body <commitBody>',
+    'Multi-line commit message body (use heredoc for multi-line)'
+  )
+  .action(async (options: { branchName: string; commitBody: string }) => {
     try {
+      const { branchName, commitBody } = options;
+
       console.log('');
       console.log('╔════════════════════════════════════════════════════════════════╗');
       console.log('║  SQUASH MERGE, ARCHIVE, AND RETURN TO MAIN                     ║');
@@ -230,8 +230,7 @@ const app = command({
       console.error('');
       process.exit(1);
     }
-  },
-});
+  });
 
 // Run the CLI
-run(app, process.argv.slice(2));
+program.parse();

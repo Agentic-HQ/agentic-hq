@@ -59,7 +59,6 @@
     "pnpm": ">=10.0.0"
   },
   "dependencies": {
-    "cmd-ts": "^0.14.3",
     "commander": "^14.0.3",
     "node-pty": "^1.1.0"
   },
