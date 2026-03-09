@@ -14,6 +14,10 @@ const path = require('path');
 const tsxPath = path.join(__dirname, '..', 'node_modules', '.bin', 'tsx');
 const cliPath = path.join(__dirname, '..', 'src', 'cli', 'agentic-hq-cli.ts');
 
+// Tell AgenticHqConfig where the agentic-hq workspace lives (AHQ-79)
+// so it can resolve the paths to the plugins.
+process.env.AGENTIC_HQ_WORKSPACE_ROOT = path.join(__dirname, '..');
+
 try {
   execFileSync(tsxPath, [cliPath, ...process.argv.slice(2)], { stdio: 'inherit' });
 } catch (error) {

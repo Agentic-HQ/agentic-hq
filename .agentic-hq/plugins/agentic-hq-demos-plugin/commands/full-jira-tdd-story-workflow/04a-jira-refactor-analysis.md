@@ -164,6 +164,7 @@ Magic constants are literal values (numbers, strings) used directly in code with
 | **Simplify conditionals** | Reduce nested if/else, simplify boolean logic |
 | **Remove dead code** | Delete unused variables, unreachable code |
 | **Fix obvious code smells** | Long lines, inconsistent formatting |
+| **Add missing TSDoc** | TSDoc is required on exported classes and their public methods. A brief `/** ... */` comment explaining what the class/method does. Check each source file touched in this Jira. |
 
 ### 6d. Tier 2: Potential Structural Refactors (surface ALL of them - even ones you're unsure about)
 
@@ -212,6 +213,7 @@ Refactor in small, safe steps. If more than a few minutes since tests passed, re
 - Overly complex conditionals — simplify
 - Dead code — delete it
 - Long and complex sequences that the system has to go through to achieve something, when you can see a simpler way to do things
+- Missing TSDoc — exported classes and public methods should have `/** ... */` comments
 
 ### When NOT To Refactor
 

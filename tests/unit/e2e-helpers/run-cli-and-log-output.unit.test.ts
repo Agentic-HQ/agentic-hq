@@ -40,4 +40,20 @@ describe('runCliAndLogOutput', () => {
     // Assert - returned string contains the expected output
     expect(output).toContain('here is some test text');
   });
+
+  it('should execute command in the specified working directory', () => {
+    // Arrange
+    const command = "echo 'here is some test text and here is the output of pwd'; pwd";
+    const logFileLabel = 'unit-test';
+    const workingDirectory = '/tmp';
+
+    // Act
+    const output = runCliAndLogOutput(command, logFileLabel, undefined, workingDirectory);
+
+    // Assert - output contains the test text
+    expect(output).toContain('here is some test text and here is the output of pwd');
+
+    // Assert - pwd output shows the working directory was /tmp (resolves to /private/tmp on macOS)
+    expect(output).toContain('/tmp');
+  });
 });

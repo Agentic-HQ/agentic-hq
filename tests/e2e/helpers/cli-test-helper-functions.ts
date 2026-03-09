@@ -44,13 +44,15 @@ function printBanner(logFile: string): void {
  * @param command - The shell command to execute
  * @param logFileLabel - Label used to name the log file (e.g. 'unit-test' → `/tmp/e2e-unit-test.log`)
  * @param timeoutMs - Optional timeout in milliseconds for the command
+ * @param workingDirectory - Optional working directory for command execution (defaults to process.cwd())
  * @returns The contents of the log file after command execution
  * @throws Error with the log file path (not contents) and the original error as `cause`
  */
 export function runCliAndLogOutput(
   command: string,
   logFileLabel: string,
-  timeoutMs?: number
+  timeoutMs?: number,
+  workingDirectory?: string
 ): string {
   const logFile = path.join(
     LOG_FILE_DIRECTORY,
@@ -60,7 +62,7 @@ export function runCliAndLogOutput(
   const logFd = fs.openSync(logFile, 'w');
   try {
     execSync(command, {
-      cwd: process.cwd(),
+      cwd: workingDirectory ?? process.cwd(),
       timeout: timeoutMs,
       stdio: ['pipe', logFd, logFd],
     });

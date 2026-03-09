@@ -65,11 +65,35 @@ This gives Claude Code the permission:
 - to write files *ONLY* into this workspace directory
 - to run the kill-current-cli-process.sh bash script that kills the Claude Code process
 
-**WARNING:** Read the kill-current-cli-process.sh script to confirm you're happy with Claude Code running it. If you're not comfortable with setting these permission straight away, that's fine. It only means the integration tests will time out and error, and you'll be asked for permission by Claude Code when you run the demo programs.  You can still run all the demo programs.
+**Other workspaces:** If you run `agentic-hq` from your own workspaces, you'll need the same `"Write"` permission in those workspaces too (many will already have this enabled). Claude needs it to write temporary output files to `.agentic-hq/temp/command-input-output-files`.
+
+**E2E tests:** The cross-workspace e2e tests create temp workspaces under `/tmp/agentic-hq-test-workspaces/`. Before running them for the first time, you must manually trust this folder:
+```bash
+cd /tmp/agentic-hq-test-workspaces
+claude
+# Select "Yes, I trust this folder" when Claude Code prompts
+```
+> **Note:** `/tmp` is periodically cleaned by the OS, so this trust prompt may reappear every few days — causing e2e tests to hang with a timeout until you re-trust the folder.
+
+
+> **WARNING** Read `kill-current-cli-process.sh` to confirm you're happy with Claude Code running it.
+
+> **Note:** If you're not comfortable with setting these permissions straight away, that's fine. It only means the integration tests will time out and error, and you'll be asked for permission by Claude Code when you run the demo programs. You can still run all the demo programs.
 
 ```bash
+
+# Get pnpm set up so that when scripts/infra/install-dev-agentic-hq.sh runs it will 
+# already be set up
+# (That script runs this anyway, but better that user does this and knows it has been done as it
+# modifies user's ~/.zshrc file to add pnpm settings)
+pnpm setup
+
 # Install dependencies
 pnpm install
+
+# Run the script to install the dev version of agentic-hq CLI to your path
+# so that you can run it from any of your own git project workspaces
+scripts/infra/install-dev-agentic-hq.sh
 
 # Verify everything works by running checks and quick unit tests
 pnpm validate
@@ -119,6 +143,30 @@ by replacing:
    npx tsx src/demo/cli/my-workflow-cli.ts --your-arg-name=your-arg-value
    ```
 
+## Running Workflows From Your Own Workspaces
+
+After completing the Quick Start above, the `agentic-hq` command is available globally. You can `cd` into any git repository on your machine and run workflows from there.
+
+### Usage
+
+```bash
+agentic-hq --workflow-command-supplier=/<plugin>:<skill> -- [passthrough args]
+```
+
+- `--workflow-command-supplier` (required) — the plugin skill that supplies the workflow command to run
+- Everything after `--` is passed through to the workflow as arguments
+
+**Requirements:** Your current directory must be inside a **git repository** (the CLI uses `git rev-parse` to find the workspace root).
+
+### Example
+
+```bash
+# Create a temporary workspace and run the string reversal demo from it
+mkdir /tmp/tmp-Steve-Workspace-001
+cd /tmp/tmp-Steve-Workspace-001
+git init
+agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="this is working well"
+```
 
 
 ## Further Documentation

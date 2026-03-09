@@ -24,8 +24,8 @@
 
 import { Command } from 'commander';
 
+import { AgenticHqConfig } from '../../config/agentic-hq-config.js';
 import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
-import { getProjectRoot } from '../../utils/git/git-utils.js';
 
 const COMMAND_01_READ_JIRA =
   '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:01-jira-read-and-question';
@@ -58,8 +58,9 @@ program
   .option('--project-root <string>', 'The project root directory for file operations')
   .action(async (options: { jiraId: string; projectRoot?: string }) => {
     // When --project-root is omitted, detect the git repo root so the CLI
-    // works from anywhere inside a repo (AHQ-40).
-    const projectRoot = options.projectRoot ?? getProjectRoot();
+    // works from anywhere inside a repo (AHQ-40, AHQ-79).
+    const config = new AgenticHqConfig();
+    const projectRoot = options.projectRoot ?? config.getCurrentWorkspaceRoot();
 
     const tool = new ClaudeCodeTool();
 
