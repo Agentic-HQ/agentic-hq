@@ -3,25 +3,29 @@
  * Demo CLI: Math Workflow using Claude Code
  *
  * Demonstrates Agentic HQ's ability to chain multiple Claude Code sessions.
- * Takes an input number and runs it through 3 steps: ×2, +3, ÷5
+ * Takes an input number and runs it through 3 steps: x2, +3, /5
  *
- * See: https://agentic-hq.atlassian.net/browse/AHQ-10
+ * This is the plugin-bundled version of the workflow CLI.
+ * Import uses the agentic-hq package (resolved via file: protocol for local dev).
+ *
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-81
  */
 
 import { Command } from 'commander';
 
-import { ClaudeCodeTool } from '../../tools/claude-code/ClaudeCodeTool.js';
+import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const TIMES_TWO_COMMAND = '/agentic-hq-demos-plugin:math-workflow:times-two';
 const PLUS_THREE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:plus-three';
 const DIV_FIVE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:div-five';
+const DEFAULT_INPUT_NUMBER = '11';
 
 const program = new Command();
 
 program
   .name('math-workflow-demo-cli')
   .description('Run a 3-step math workflow using Claude Code')
-  .requiredOption('--input-number <number>', 'The input number to process')
+  .option('--input-number <number>', 'The input number to process', DEFAULT_INPUT_NUMBER)
   .action(async (options: { inputNumber: string }) => {
     const tool = new ClaudeCodeTool();
 

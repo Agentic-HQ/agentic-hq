@@ -1,18 +1,19 @@
 /**
- * E2E Test: Cross-Workspace String Reversal via globally-linked agentic-hq binary
+ * E2E Test: Cross-Workspace Math Workflow via globally-linked agentic-hq binary
  *
- * Verifies that the agentic-hq CLI works from a SEPARATE workspace (not within the repo):
+ * Verifies that the math workflow (3-step chain: x2, +3, /5) works from a
+ * SEPARATE workspace via the globally-linked agentic-hq binary:
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq --workflow-command-supplier=... -- --string-to-reverse="cross workspace test"
- * 5. Assert: Output contains the reversed string "tset ecapskrow ssorc"
+ * 4. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:math-workflow -- --input-number=11
+ * 5. Assert: Output contains "Output number: 5" (11 x2=22, +3=25, /5=5)
  * 6. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
  *
- * This proves the "three roots problem" is solved — plugin paths resolve to the agentic-hq
- * workspace while temp/CWD paths resolve to the user's workspace.
+ * This proves the math workflow works cross-workspace, following the same pattern
+ * as the string-reversal cross-workspace test from AHQ-79.
  *
- * See: https://agentic-hq.atlassian.net/browse/AHQ-79
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-81
  */
 
 import { execSync } from 'node:child_process';
@@ -24,14 +25,14 @@ import { describe, it, expect } from 'vitest';
 
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
-const TEST_TIMEOUT_MS = 90_000; // 90s per acceptance criteria
+const TEST_TIMEOUT_MS = 480_000; // 480s: 3 Claude invocations @ ~60s each worst case + install overhead + buffer
 const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + link --global
-const LOG_FILE_LABEL = 'cross-workspace-string-reversal';
+const LOG_FILE_LABEL = 'cross-workspace-math-workflow';
 const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
 
 // Test data constants
-const TEST_INPUT_STRING = 'cross workspace test';
-const EXPECTED_REVERSED_STRING = 'tset ecapskrow ssorc';
+const TEST_INPUT_NUMBER = 11;
+const EXPECTED_OUTPUT_NUMBER = 5; // 11 x2=22, +3=25, /5=5
 
 // Paths
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
@@ -55,9 +56,9 @@ const CLAUDE_SETTINGS_PERMISSIONS = {
   },
 };
 
-describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary', () => {
+describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', () => {
   it(
-    'should reverse a string from a separate workspace via the globally-linked binary',
+    'should process input number through math workflow from a separate workspace via the globally-linked binary',
     () => {
       // ═══════════════════════════════════════════════════════════════════════
       // PREREQUISITE WARNING
@@ -88,7 +89,7 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
           '║  Hopefully we will find a better way of doing this in the future.     ║\n' +
           '║  This will be added to the Prerequisites in the README for new users. ║\n' +
           '║                                                                       ║\n' +
-          '║  See: https://agentic-hq.atlassian.net/browse/AHQ-79                 ║\n' +
+          '║  See: https://agentic-hq.atlassian.net/browse/AHQ-81                 ║\n' +
           '╚═══════════════════════════════════════════════════════════════════════╝\n' +
           '\n'
       );
@@ -123,7 +124,6 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
 
       // Arrange — create .claude/settings.local.json to auto-accept Write permissions.
       // Without this, Claude prompts "Do you want to create command-output.json?" and hangs.
-      // See README.md Quick Start section for the minimal permissions required.
       const claudeSettingsDir = path.join(tempWorkspace, '.claude');
       fs.mkdirSync(claudeSettingsDir, { recursive: true });
       fs.writeFileSync(
@@ -132,7 +132,7 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
       );
 
       // Act — run agentic-hq from the temp workspace (exactly as a developer would)
-      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
+      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:math-workflow -- --input-number=${TEST_INPUT_NUMBER}`;
 
       let output: string;
       try {
@@ -173,8 +173,8 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
         throw error;
       }
 
-      // Assert — reversed string appears in output
-      expect(output).toContain(EXPECTED_REVERSED_STRING);
+      // Assert — expected output number appears in output
+      expect(output).toContain(`Output number: ${EXPECTED_OUTPUT_NUMBER}`);
 
       // Assert — .agentic-hq/temp/command-input-output-files/ was created in the temp workspace
       const commandIoDir = path.join(

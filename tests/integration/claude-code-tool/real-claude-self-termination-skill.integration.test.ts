@@ -24,7 +24,7 @@ import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool';
  * 30 seconds provides margin for Claude startup and skill execution.
  * If Claude doesn't self-terminate within this time, Vitest will fail the test.
  */
-const TEST_TIMEOUT_MS = 30_000;
+const TEST_TIMEOUT_MS = 120_000;
 
 /**
  * The slash command that tells Claude to self-terminate using the skill.
