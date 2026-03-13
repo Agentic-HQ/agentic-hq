@@ -43,42 +43,12 @@ git clone https://github.com/Agentic-HQ/agentic-hq
 cd agentic-hq
 ```
 
-To allow the:
-- integration tests to run
-- the demo CLI programs to run without giving permission to Claude Code to write files and run the kill script
-
-you should now:
-- create a .claude/settings.local.json file with the following contents:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Write"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
-```
-This gives Claude Code the permission:
-- to write files *ONLY* into this workspace directory
-- to run the kill-current-cli-process.sh bash script that kills the Claude Code process
-
-**Other workspaces:** If you run `agentic-hq` from your own workspaces, you'll need the same `"Write"` permission in those workspaces too (many will already have this enabled). Claude needs it to write temporary output files to `.agentic-hq/temp/command-input-output-files`.
-
-**E2E tests:** The cross-workspace e2e tests create temp workspaces under `/tmp/agentic-hq-test-workspaces/`. Before running them for the first time, you must manually trust this folder:
-```bash
-cd /tmp/agentic-hq-test-workspaces
-claude
-# Select "Yes, I trust this folder" when Claude Code prompts
-```
-> **Note:** `/tmp` is periodically cleaned by the OS, so this trust prompt may reappear every few days — causing e2e tests to hang with a timeout until you re-trust the folder.
-
-
-> **WARNING** Read `kill-current-cli-process.sh` to confirm you're happy with Claude Code running it.
-
-> **Note:** If you're not comfortable with setting these permissions straight away, that's fine. It only means the integration tests will time out and error, and you'll be asked for permission by Claude Code when you run the demo programs. You can still run all the demo programs.
+> **WARNING: Auto-approved tool permissions.** When you run workflows via the `agentic-hq` CLI, the following Claude Code tools are **automatically approved** (no permission prompt) via the `--allowedTools` flag in `src/tools/claude-code/ClaudeCodeTool.ts`:
+>
+CLAUDE TODO: Please put this as a nicely formatted human readable list:
+> `Bash`, `Edit`, `Write`, `MultiEdit`, `mcp__mcp-atlassian__jira_get_issue`, `mcp__mcp-atlassian__jira_create_issue`, `mcp__mcp-atlassian__jira_add_comment`, `mcp__mcp-atlassian__confluence_get_page`, `mcp__mcp-atlassian__confluence_search`, `mcp__mcp-atlassian__jira_get_transitions`, `mcp__mcp-atlassian__jira_transition_issue`, `mcp__mcp-atlassian__jira_search`, `mcp__mcp-atlassian__jira_update_issue`
+>
+> This applies to **all workspaces** that run via the `agentic-hq` CLI. You do **not** need to create `.claude/settings.local.json` — permissions are handled by the CLI automatically. Check the `ALLOWED_TOOLS` constant in `ClaudeCodeTool.ts` for the current list.
 
 ```bash
 
@@ -106,42 +76,53 @@ pnpm demo:agentic-hq-cli:string-reversal
 # Or run the plugin's TypeScript workflow directly (bypasses the agentic-hq CLI)
 pnpm demo:plugin-direct:string-reversal
 
-# Run the demo math workflow program at src/demo/cli/math-workflow-demo-cli.ts to 
-# see a simple 3 step workflow that uses output from one custom command as input to the next
-pnpm demo:math-workflow --input-number=11
+# Run the math workflow demo (3 step chain: x2, +3, /5) via the plugin directly
+pnpm demo:plugin-direct:math-workflow
 ```
 
 ### Building Your Own Workflow
 
-To create your own workflow:
+Workflows are implemented as **plugin skills** under `.agentic-hq/plugins/agentic-hq-demos-plugin/skills/`. To create your own:
 
-1. **Copy the demo program:**
+1. **Copy an existing skill** (e.g., math-workflow), excluding `node_modules`:
    ```bash
-   cp src/demo/cli/math-workflow-demo-cli.ts src/demo/cli/my-workflow-cli.ts
+   rsync -a --exclude node_modules \
+         .agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ \
+         .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/
    ```
 
-2. **Copy the demo commands:**
+2. **Rename the files** in `my-temp-workflow/ts-workflow/src/` to match your workflow name (e.g., `math-workflow-demo-cli.ts` → `my-temp-workflow-demo-cli.ts`)
+
+3. **Update `my-temp-workflow/SKILL.md`** — change the file paths in the command-output-string to point to your renamed files
+
+4. **Update `my-temp-workflow/ts-workflow/package.json`** — change the `name`, `description`, and `demo:*` script to match your workflow
+
+5. **Modify the TypeScript code** in `my-temp-workflow/ts-workflow/src/` to do what you need
+
+6. **Add a `demo:plugin-direct:my-temp-workflow` script** to the root `package.json` to run it directly:
+   ```json
+   "demo:plugin-direct:my-temp-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow && pnpm install --ignore-workspace) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow/src/my-temp-workflow-demo-cli.ts\""
+   ```
+
+7. **Run your workflow** — either directly or via the agentic-hq CLI:
    ```bash
-   cp -r .claude/commands/agentic-hq-commands/used-in-demos/math-workflow \
-         .claude/commands/my-commands
+   # Direct (bypasses agentic-hq CLI):
+   pnpm demo:plugin-direct:my-temp-workflow
+
+   # Via agentic-hq CLI (from any git workspace):
+   agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:my-temp-workflow -- --your-arg=value
    ```
 
-3. **Update the command paths** in your CLI to point to your new commands
-by replacing:
-   ```
-   /agentic-hq-commands:used-in-demos:math-workflow:
-   ```
-   with:
-   ```
-   /my-commands:
-   ```
+## Setting Up sooperset Atlassian MCP Server For Jira
 
-4. **Modify the commands** to do what you need and modify the input arguments to your program
+TODO:
 
-5. **Run your workflow:**
-   ```bash
-   npx tsx src/demo/cli/my-workflow-cli.ts --your-arg-name=your-arg-value
-   ```
+Have to document this to show how to set up and configure sooperset MCP Server at **user** level (so available in all workspaces).  Some of the docs are at:
+
+https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/6586383/Jira+Admin#30th-Jan-2026---Fixing-Problem-With-Jira-MCP-Reauth-By-Switching-To-sooperset-Atlassian-MCP-Server
+
+These are used in the Quick and Full TDD Jira Workflow demos.
+
 
 ## Running Workflows From Your Own Workspaces
 

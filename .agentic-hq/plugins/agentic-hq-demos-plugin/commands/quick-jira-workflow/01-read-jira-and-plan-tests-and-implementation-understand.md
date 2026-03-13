@@ -16,11 +16,10 @@ Your job is to:
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path`
+`Your variables for use in this command are jira-id = TEST-123`
 
 Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)
-- `project-root` - the absolute path to the project root directory
 
 ## Step 2: Read the Jira
 
@@ -32,7 +31,7 @@ This saves context in the current session by delegating the Jira reading to a su
 ## Step 3: Copy Entire Jira Details
 
 Set this variable:
-- `workflow-docs-directory` = `{project-root}/docs/jira-docs/{jira-id}/workflow-docs`
+- `workflow-docs-directory` = `docs/jira-docs/{jira-id}/workflow-docs`
 
 Create the directory `{workflow-docs-directory}` if it doesn't exist.
 

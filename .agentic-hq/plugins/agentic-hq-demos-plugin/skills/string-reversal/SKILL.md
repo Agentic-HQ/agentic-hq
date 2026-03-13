@@ -7,7 +7,6 @@ disable-model-invocation: true
 
 Set:
 skill-base-dir = the skill base directory you were provided with when you ran this skill.
-base-command = pnpm install --ignore-workspace && pnpm demo:string-reversal
 command-input-output-files-directory = $0
 
 ## Output
@@ -16,7 +15,7 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "cd {skill-base-dir}/ts-workflow && {base-command}"
+  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install --ignore-workspace) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/string-reversal-demo-cli.ts"
 }
 ```
 

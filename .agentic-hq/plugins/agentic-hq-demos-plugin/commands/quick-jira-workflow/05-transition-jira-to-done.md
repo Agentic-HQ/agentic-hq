@@ -13,7 +13,7 @@ Your job is to:
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path`
+`Your variables for use in this command are jira-id = TEST-123`
 
 Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)

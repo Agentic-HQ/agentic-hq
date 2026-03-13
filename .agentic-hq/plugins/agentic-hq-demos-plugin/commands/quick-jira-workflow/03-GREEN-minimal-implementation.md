@@ -16,18 +16,17 @@ Your job is to:
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path and test-type = unit`
+`Your variables for use in this command are jira-id = TEST-123 and test-type = unit`
 
 Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)
-- `project-root` - the absolute path to the project root directory
 - `test-type` - the test type (e.g. `unit` or `e2e`)
 
 ## Step 2: Read the Jira Details and RED Phase Summary From Files
 
 IMPORTANT: Do NOT use Jira MCP tools. Read from local files:
-- `{project-root}/docs/jira-docs/{jira-id}/workflow-docs/01-entire-jira-copy-of-details.md` - Full Jira content
-- `{project-root}/docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/02-RED-write-failing-test.summary.md` - What test was written and why it fails
+- `docs/jira-docs/{jira-id}/workflow-docs/01-entire-jira-copy-of-details.md` - Full Jira content
+- `docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/02-RED-write-failing-test.summary.md` - What test was written and why it fails
 
 ## Step 3: Write Minimal Implementation
 
@@ -41,7 +40,7 @@ GREEN PHASE RULES:
 - No premature optimization
 - Copy-paste and duplication are OK
 
-Write all implementation files relative to `{project-root}`.
+Write all implementation files relative to the project root.
 
 ## Step 4: Run the Test and Verify it PASSES
 
@@ -50,7 +49,7 @@ Run the test and confirm that it now passes. This is the GREEN phase - the test 
 ## Step 5: Write Summary
 
 Write a summary of what was implemented to:
-`{project-root}/docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/03-GREEN-minimal-implementation.summary.md`
+`docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/03-GREEN-minimal-implementation.summary.md`
 
 The summary should include:
 - What files were created/modified

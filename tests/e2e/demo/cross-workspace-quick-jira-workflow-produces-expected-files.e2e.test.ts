@@ -1,24 +1,25 @@
 /**
- * E2E Test: Cross-Workspace Math Workflow via globally-linked agentic-hq binary
+ * E2E Test: Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq binary
  *
- * Verifies that the math workflow (3-step chain: x2, +3, /5) works from a
- * SEPARATE workspace via the globally-linked agentic-hq binary:
+ * Verifies that the quick Jira TDD workflow works from a SEPARATE workspace:
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:math-workflow -- --input-number=11
- * 5. Assert: Output contains "Output number: 5" (11 x2=22, +3=25, /5=5)
- * 6. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
+ * 4. Setup: Create a test Jira via ClaudeCodeTool
+ * 5. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:quick-jira-workflow -- --jira-id={testJiraId}
+ * 6. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
+ * 7. Assert: Implementation files exist (src/temp-test-hello-world.ts, src/temp-test-hello-world.cli.ts)
+ * 8. Assert: Jira status is Done
  *
- * This proves the math workflow works cross-workspace, following the same pattern
- * as the string-reversal cross-workspace test from AHQ-79.
+ * This is the cross-workspace version of quick-jira-workflow-produces-expected-files.e2e.test.ts,
+ * following the pattern established by cross-workspace-demo-math-workflow and cross-workspace-string-reversal.
  *
  * NOTE: The setup code in this test is intentionally duplicated across the 3 cross-workspace
  * e2e tests (string-reversal, math-workflow, quick-jira-workflow). These are demo plugin tests
  * and should remain self-contained for readability by other developers. The tests differ slightly
  * and future tests will likely differ further. See AHQ-82 REFACTOR discussion.
  *
- * See: https://agentic-hq.atlassian.net/browse/AHQ-81
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-82
  */
 
 import { execSync } from 'node:child_process';
@@ -28,29 +29,61 @@ import * as path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
+import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
-const TEST_TIMEOUT_MS = 480_000; // 480s: 3 Claude invocations @ ~60s each worst case + install overhead + buffer
+const TEST_TIMEOUT_MS = 1_500_000; // 25 minutes: 5-command orchestration with loop + install overhead + API latency
 const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + link --global
-const LOG_FILE_LABEL = 'cross-workspace-math-workflow';
+const LOG_FILE_LABEL = 'cross-workspace-quick-jira-workflow';
 const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
 
-// Test data constants
-const TEST_INPUT_NUMBER = 11;
-const EXPECTED_OUTPUT_NUMBER = 5; // 11 x2=22, +3=25, /5=5
+const CREATE_TEST_JIRA_COMMAND =
+  '/agentic-hq-commands:used-in-tests:jira-helper-commands:create-test-jira';
+const GET_JIRA_STATUS_COMMAND =
+  '/agentic-hq-commands:used-in-tests:jira-helper-commands:get-jira-status';
+
+// Multi-step Jira description - specifies 2 test types (unit, e2e) for the multi-step workflow
+const MULTI_STEP_TEST_JIRA_INPUT =
+  'Title: Hello World CLI With Unit And E2E Tests  Description: Create a hello-world module and CLI. ' +
+  '- Create src/temp-test-hello-world.ts exporting a function helloWorld() that returns "Hello world" ' +
+  '- Create src/temp-test-hello-world.cli.ts that calls helloWorld() and prints the result ' +
+  '- Test types: unit, e2e ' +
+  '- Unit test: test that helloWorld() returns "Hello world" ' +
+  '- E2E test: test that running temp-test-hello-world.cli.ts prints "Hello world"';
+
+const JIRA_KEY_PATTERN = /^TEST-\d+$/;
+const EXPECTED_JIRA_STATUS = 'Done';
+const EXPECTED_TEST_TYPES = ['unit', 'e2e'];
 
 // Paths
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
 const INSTALL_SCRIPT = path.join(REPO_ROOT, 'scripts', 'infra', 'install-dev-agentic-hq.sh');
 const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
-const IO_FILES_DIR_PREFIX = 'io-files-';
-const COMMAND_INPUT_FILENAME = 'command-input.json';
-const COMMAND_OUTPUT_FILENAME = 'command-output.json';
 
-describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', () => {
+/** Asserts that all expected workflow output files exist for a given project root and Jira ID. */
+function assertWorkflowOutputFilesExist(projectRoot: string, testJiraId: string): void {
+  const workflowDocsRoot = path.join(projectRoot, 'docs', 'jira-docs', testJiraId, 'workflow-docs');
+  expect(fs.existsSync(path.join(workflowDocsRoot, '01-entire-jira-copy-of-details.md'))).toBe(
+    true
+  );
+  expect(fs.existsSync(path.join(workflowDocsRoot, '01-summary-of-jira.md'))).toBe(true);
+
+  for (const testType of EXPECTED_TEST_TYPES) {
+    const testTypeDir = path.join(workflowDocsRoot, `${testType}-test-files`);
+    expect(fs.existsSync(path.join(testTypeDir, '02-RED-write-failing-test.summary.md'))).toBe(
+      true
+    );
+    expect(
+      fs.existsSync(path.join(testTypeDir, '03-GREEN-minimal-implementation.summary.md'))
+    ).toBe(true);
+    expect(fs.existsSync(path.join(testTypeDir, '04-REFACTOR.summary.md'))).toBe(true);
+  }
+}
+
+describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq binary', () => {
   it(
-    'should process input number through math workflow from a separate workspace via the globally-linked binary',
-    () => {
+    'should implement a test Jira and produce expected files from a separate workspace via the globally-linked binary',
+    async () => {
       // WARNING: This is smelly! pnpm link --global mutates global pnpm state on
       // your machine. See: https://agentic-hq.atlassian.net/browse/AHQ-79 (Known Smell section)
       process.stdout.write(
@@ -76,11 +109,16 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', 
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
 
-      // Arrange — git init in the temp workspace (so getCurrentWorkspaceRoot() works)
+      // Arrange — git init in the temp workspace (so workspace root detection works)
       execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
-      // Act — run agentic-hq from the temp workspace (exactly as a developer would)
-      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:math-workflow -- --input-number=${TEST_INPUT_NUMBER}`;
+      // Arrange — create a test Jira in the TEST project (multi-step: 2 test types)
+      const tool = new ClaudeCodeTool();
+      const testJiraId = await tool.execute(CREATE_TEST_JIRA_COMMAND, MULTI_STEP_TEST_JIRA_INPUT);
+      expect(testJiraId).toMatch(JIRA_KEY_PATTERN);
+
+      // Act — run agentic-hq from the temp workspace (no --project-root, workspace IS the project root)
+      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:quick-jira-workflow -- --jira-id=${testJiraId}`;
 
       let output: string;
       try {
@@ -118,28 +156,21 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', 
         throw error;
       }
 
-      // Assert — expected output number appears in output
-      expect(output).toContain(`Output number: ${EXPECTED_OUTPUT_NUMBER}`);
+      // Assert — workflow produced output (basic sanity check)
+      expect(output.length).toBeGreaterThan(0);
 
-      // Assert — .agentic-hq/temp/command-input-output-files/ was created in the temp workspace
-      const commandIoDir = path.join(
-        tempWorkspace,
-        '.agentic-hq',
-        'temp',
-        'command-input-output-files'
+      // Assert — workflow output files from commands 01-04
+      assertWorkflowOutputFilesExist(tempWorkspace, testJiraId);
+
+      // Assert — implementation files exist
+      expect(fs.existsSync(path.join(tempWorkspace, 'src', 'temp-test-hello-world.ts'))).toBe(true);
+      expect(fs.existsSync(path.join(tempWorkspace, 'src', 'temp-test-hello-world.cli.ts'))).toBe(
+        true
       );
-      expect(fs.existsSync(commandIoDir)).toBe(true);
 
-      // Assert — contains at least one io-files-* subdirectory
-      const ioSubdirs = fs
-        .readdirSync(commandIoDir)
-        .filter((entry) => entry.startsWith(IO_FILES_DIR_PREFIX));
-      expect(ioSubdirs.length).toBeGreaterThanOrEqual(1);
-
-      // Assert — the subdirectory contains command-input.json and command-output.json
-      const firstIoDir = path.join(commandIoDir, ioSubdirs[0]);
-      expect(fs.existsSync(path.join(firstIoDir, COMMAND_INPUT_FILENAME))).toBe(true);
-      expect(fs.existsSync(path.join(firstIoDir, COMMAND_OUTPUT_FILENAME))).toBe(true);
+      // Assert — Jira status is Done
+      const jiraStatus = await tool.execute(GET_JIRA_STATUS_COMMAND, testJiraId);
+      expect(jiraStatus).toBe(EXPECTED_JIRA_STATUS);
 
       // Log — temp workspace won't be cleaned (auto-cleaned by OS from /tmp)
       process.stdout.write(

@@ -12,6 +12,11 @@
  * This proves the "three roots problem" is solved — plugin paths resolve to the agentic-hq
  * workspace while temp/CWD paths resolve to the user's workspace.
  *
+ * NOTE: The setup code in this test is intentionally duplicated across the 3 cross-workspace
+ * e2e tests (string-reversal, math-workflow, quick-jira-workflow). These are demo plugin tests
+ * and should remain self-contained for readability by other developers. The tests differ slightly
+ * and future tests will likely differ further. See AHQ-82 REFACTOR discussion.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-79
  */
 
@@ -41,58 +46,10 @@ const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
 
-/**
- * Claude Code permissions for the temp workspace.
- *
- * Auto-accepts the `Write` tool so Claude doesn't prompt
- * "Do you want to create command-output.json?" and hang the test.
- */
-const CLAUDE_SETTINGS_PERMISSIONS = {
-  permissions: {
-    allow: ['Write'],
-    deny: [],
-    ask: [],
-  },
-};
-
 describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary', () => {
   it(
     'should reverse a string from a separate workspace via the globally-linked binary',
     () => {
-      // ═══════════════════════════════════════════════════════════════════════
-      // PREREQUISITE WARNING
-      // ═══════════════════════════════════════════════════════════════════════
-      // This test runs the agentic-hq binary from a temp workspace under
-      // /tmp/agentic-hq-test-workspaces/. Claude Code will show a
-      // "Yes, I trust this folder" prompt the first time it sees a new
-      // workspace directory. Since /tmp is auto-cleaned by the OS every
-      // ~3 days (on Mac), this prompt WILL reappear periodically.
-      //
-      // If you haven't done this recently, this test WILL time out.
-      // ═══════════════════════════════════════════════════════════════════════
-      process.stdout.write(
-        '\n' +
-          '╔═══════════════════════════════════════════════════════════════════════╗\n' +
-          '║  ⚠️  PREREQUISITE: Claude Code must trust the temp workspace         ║\n' +
-          '╠═══════════════════════════════════════════════════════════════════════╣\n' +
-          '║                                                                       ║\n' +
-          '║  Before this test can pass, you must MANUALLY open Claude Code in:    ║\n' +
-          `║    ${TEMP_WORKSPACES_BASE}/\n` +
-          '║  and select "Yes, I trust this folder" when prompted.                 ║\n' +
-          '║                                                                       ║\n' +
-          '║  WHY: Claude shows a trust prompt for new workspaces. Since /tmp is   ║\n' +
-          '║  auto-cleaned by the OS every ~3 days (Mac), this prompt reappears    ║\n' +
-          '║  periodically. Each test run creates a new subdirectory with a UUID,  ║\n' +
-          '║  so the trust prompt appears for every new subdirectory.              ║\n' +
-          '║                                                                       ║\n' +
-          '║  Hopefully we will find a better way of doing this in the future.     ║\n' +
-          '║  This will be added to the Prerequisites in the README for new users. ║\n' +
-          '║                                                                       ║\n' +
-          '║  See: https://agentic-hq.atlassian.net/browse/AHQ-79                 ║\n' +
-          '╚═══════════════════════════════════════════════════════════════════════╝\n' +
-          '\n'
-      );
-
       // WARNING: This is smelly! pnpm link --global mutates global pnpm state on
       // your machine. See: https://agentic-hq.atlassian.net/browse/AHQ-79 (Known Smell section)
       process.stdout.write(
@@ -121,16 +78,6 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
       // Arrange — git init in the temp workspace (so getCurrentWorkspaceRoot() works)
       execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
-      // Arrange — create .claude/settings.local.json to auto-accept Write permissions.
-      // Without this, Claude prompts "Do you want to create command-output.json?" and hangs.
-      // See README.md Quick Start section for the minimal permissions required.
-      const claudeSettingsDir = path.join(tempWorkspace, '.claude');
-      fs.mkdirSync(claudeSettingsDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(claudeSettingsDir, 'settings.local.json'),
-        JSON.stringify(CLAUDE_SETTINGS_PERMISSIONS)
-      );
-
       // Act — run agentic-hq from the temp workspace (exactly as a developer would)
       const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
 
@@ -138,8 +85,8 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
       try {
         output = runCliAndLogOutput(command, LOG_FILE_LABEL, TEST_TIMEOUT_MS, tempWorkspace);
       } catch (error) {
-        // Check if this is a timeout error (ETIMEDOUT) — likely caused by Claude hanging
-        // on the "Trust this folder?" prompt
+        // Check if this is a timeout error (ETIMEDOUT) — likely caused by Claude
+        // waiting for permission to use a tool not in ALLOWED_TOOLS
         const isTimeout =
           error instanceof Error &&
           (error.message.includes('ETIMEDOUT') ||
@@ -148,25 +95,22 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
         if (isTimeout) {
           process.stdout.write(
             '\n' +
-              '╔═══════════════════════════════════════════════════════════════════════╗\n' +
-              '║  🔴 TEST TIMED OUT — LIKELY CAUSE: Claude is waiting for input       ║\n' +
-              '╠═══════════════════════════════════════════════════════════════════════╣\n' +
-              '║                                                                       ║\n' +
+              '╔═══════════════════════════════════════════════════════════════════════════╗\n' +
+              '║  🔴 TEST TIMED OUT — LIKELY CAUSE: Claude is waiting for permission      ║\n' +
+              '╠═══════════════════════════════════════════════════════════════════════════╣\n' +
+              '║                                                                           ║\n' +
               `║  Timeout after: ${TEST_TIMEOUT_MS / 1000} seconds\n` +
               `║  Log file: ${LOG_FILE_PATH}\n` +
-              '║                                                                       ║\n' +
-              '║  The most likely reason is that Claude Code is showing the            ║\n' +
-              '║  "Yes, I trust this folder" prompt for the temp workspace and         ║\n' +
-              '║  nobody pressed Enter to accept it.                                   ║\n' +
-              '║                                                                       ║\n' +
-              '║  TO FIX: Open a terminal, run:                                        ║\n' +
-              `║    cd ${TEMP_WORKSPACES_BASE} && claude\n` +
-              '║  Then select "Yes, I trust this folder" and press Enter.              ║\n' +
-              '║  Then re-run this test.                                               ║\n' +
-              '║                                                                       ║\n' +
-              '║  Check the log file for details:                                      ║\n' +
+              '║                                                                           ║\n' +
+              '║  The most likely reason is that Claude Code is waiting for permission     ║\n' +
+              '║  to use a tool that is not in the ALLOWED_TOOLS list.                    ║\n' +
+              '║                                                                           ║\n' +
+              '║  TO FIX: Check src/tools/claude-code/ClaudeCodeTool.ts ALLOWED_TOOLS     ║\n' +
+              '║  constant to see if a required tool is missing, then re-run this test.   ║\n' +
+              '║                                                                           ║\n' +
+              '║  Check the log file for details:                                          ║\n' +
               `║    cat ${LOG_FILE_PATH}\n` +
-              '╚═══════════════════════════════════════════════════════════════════════╝\n' +
+              '╚═══════════════════════════════════════════════════════════════════════════╝\n' +
               '\n'
           );
         }
