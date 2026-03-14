@@ -68,10 +68,16 @@ scripts/infra/install-dev-agentic-hq.sh
 # Verify everything works by running checks and quick unit tests
 pnpm validate
 
-# Run the string reversal demo via the agentic-hq CLI
+# See what workflows are available
+agentic-hq list
+
+# Run the string reversal demo via short alias
 # NOTE: The first time you run this Claude Code will ask if you trust this folder and to
 # continue you will have to choose Yes
-pnpm demo:agentic-hq-cli:string-reversal
+agentic-hq reversal
+
+# Run with custom args
+agentic-hq reversal -- --string-to-reverse='hello world'
 
 # Or run the plugin's TypeScript workflow directly (bypasses the agentic-hq CLI)
 pnpm demo:plugin-direct:string-reversal
@@ -104,12 +110,17 @@ Workflows are implemented as **plugin skills** under `.agentic-hq/plugins/agenti
    "demo:plugin-direct:my-temp-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow && pnpm install --ignore-workspace) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/my-temp-workflow/ts-workflow/src/my-temp-workflow-demo-cli.ts\""
    ```
 
-7. **Run your workflow** — either directly or via the agentic-hq CLI:
+7. **Optionally register a short alias** — add an entry to `WORKFLOW_SKILLS_REGISTRY` in `src/demo/demo-workflow-skills-registry.ts` so you can run it with `agentic-hq my-temp-workflow` instead of the full path
+
+8. **Run your workflow** — either directly or via the agentic-hq CLI:
    ```bash
    # Direct (bypasses agentic-hq CLI):
    pnpm demo:plugin-direct:my-temp-workflow
 
-   # Via agentic-hq CLI (from any git workspace):
+   # Via agentic-hq CLI short alias (if registered in step 7):
+   agentic-hq my-temp-workflow -- --your-arg=value
+
+   # Via agentic-hq CLI full skill path (always works):
    agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:my-temp-workflow -- --your-arg=value
    ```
 
@@ -128,24 +139,51 @@ These are used in the Quick and Full TDD Jira Workflow demos.
 
 After completing the Quick Start above, the `agentic-hq` command is available globally. You can `cd` into any git repository on your machine and run workflows from there.
 
+### Listing Available Workflows
+
+```bash
+agentic-hq list
+```
+
+This shows all available workflows with their short aliases, full skill paths, and usage examples:
+
+```
+Available workflows:
+
+  reversal    /agentic-hq-demos-plugin:string-reversal               Reverses a string (hello world demo)
+Example: agentic-hq reversal -- --string-reverse='hello there you'
+  math        /agentic-hq-demos-plugin:math-workflow                 Solves a math problem using an agent team
+Example: agentic-hq math -- --input-number=54321
+  quick-jira  /agentic-hq-demos-plugin:quick-jira-workflow           Creates and completes a Jira ticket
+Example: agentic-hq quick-jira -- --jira-id=TEST-123
+  full-jira   /agentic-hq-demos-plugin:full-jira-tdd-story-workflow  Full TDD story workflow driven by a Jira ticket
+Example: agentic-hq full-jira -- --jira-id=TEST-123
+```
+
 ### Usage
 
 ```bash
+# Run by short alias (recommended)
+agentic-hq <short-name> -- [passthrough args]
+
+# Run by full skill path (also works)
 agentic-hq --workflow-command-supplier=/<plugin>:<skill> -- [passthrough args]
 ```
 
-- `--workflow-command-supplier` (required) — the plugin skill that supplies the workflow command to run
 - Everything after `--` is passed through to the workflow as arguments
 
 **Requirements:** Your current directory must be inside a **git repository** (the CLI uses `git rev-parse` to find the workspace root).
 
-### Example
+### Examples
 
 ```bash
 # Create a temporary workspace and run the string reversal demo from it
 mkdir /tmp/tmp-Steve-Workspace-001
 cd /tmp/tmp-Steve-Workspace-001
 git init
+agentic-hq reversal -- --string-to-reverse="this is working well"
+
+# Or use the full skill path (equivalent)
 agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="this is working well"
 ```
 
