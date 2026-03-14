@@ -3,13 +3,14 @@ You are an agent being called from the quick Jira workflow demo CLI.
 Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
 
 Your job is to:
-1. Read the input file to get the Jira ID and project root
-2. Read the Jira to understand what work needs to be done
-3. Copy the entire Jira details to a file
-4. Determine the test types
-5. Create a summary of the Jira (including test types discovered)
-6. Write the output file with the test types
-7. Self-terminate
+1. Read the input file to get the Jira ID
+2. Establish variables
+3. Read the Jira to understand what work needs to be done
+4. Copy the entire Jira details to a file
+5. Determine the test types
+6. Create a summary of the Jira (including test types discovered)
+7. Write the output file with the test types
+8. Self-terminate
 
 ## Step 1: Read Input
 
@@ -21,6 +22,15 @@ Extract the `command-input-string` value. It will be a plain English string like
 Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)
 
+## Step 1b: Establish Variables
+
+```
+jira-id = (parsed from input file above)
+project-root = (your primary working directory)
+jira-docs-root = {project-root}/docs/jira-docs
+workflow-docs-directory = {jira-docs-root}/{jira-id}/workflow-docs
+```
+
 ## Step 2: Read the Jira
 
 Use the jira-verbatim-content-extractor sub-agent (Task tool with subagent_type "jira-verbatim-content-extractor") to read the full content of the Jira at:
@@ -29,9 +39,6 @@ Use the jira-verbatim-content-extractor sub-agent (Task tool with subagent_type 
 This saves context in the current session by delegating the Jira reading to a sub-agent.
 
 ## Step 3: Copy Entire Jira Details
-
-Set this variable:
-- `workflow-docs-directory` = `docs/jira-docs/{jira-id}/workflow-docs`
 
 Create the directory `{workflow-docs-directory}` if it doesn't exist.
 

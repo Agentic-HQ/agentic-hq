@@ -3,14 +3,15 @@ You are an agent being called from the quick Jira workflow demo CLI.
 Remember the following variable you will use in the rest of this command: command-input-output-files-directory = $0 (This is the temp directory containing the command input and output files)
 
 Your job is to:
-1. Read the input file to get the Jira ID, project root, and test type
-2. Read the Jira details and previous phase summaries from local files (NOT from Jira MCP)
-3. Run the test to verify it passes before refactoring
-4. Refactor the code
-5. Run the test again to verify refactoring didn't break anything
-6. Write a summary of what you did
-7. Write the output file
-8. Self-terminate
+1. Read the input file to get the Jira ID and test type
+2. Establish variables
+3. Read the Jira details and previous phase summaries from local files (NOT from Jira MCP)
+4. Run the test to verify it passes before refactoring
+5. Refactor the code
+6. Run the test again to verify refactoring didn't break anything
+7. Write a summary of what you did
+8. Write the output file
+9. Self-terminate
 
 ## Step 1: Read Input
 
@@ -23,12 +24,23 @@ Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)
 - `test-type` - the test type (e.g. `unit` or `e2e`)
 
+## Step 1b: Establish Variables
+
+```
+jira-id = (parsed from input file above)
+test-type = (parsed from input file above)
+project-root = (your primary working directory)
+jira-docs-root = {project-root}/docs/jira-docs
+workflow-docs-directory = {jira-docs-root}/{jira-id}/workflow-docs
+test-type-files = {workflow-docs-directory}/{test-type}-test-files
+```
+
 ## Step 2: Read the Jira Details and Previous Phase Summaries From Files
 
 IMPORTANT: Do NOT use Jira MCP tools. Read from local files:
-- `docs/jira-docs/{jira-id}/workflow-docs/01-entire-jira-copy-of-details.md` - Full Jira content
-- `docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/02-RED-write-failing-test.summary.md` - What test was written
-- `docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/03-GREEN-minimal-implementation.summary.md` - What implementation was written
+- `{workflow-docs-directory}/01-entire-jira-copy-of-details.md` - Full Jira content
+- `{test-type-files}/02-RED-write-failing-test.summary.md` - What test was written
+- `{test-type-files}/03-GREEN-minimal-implementation.summary.md` - What implementation was written
 
 ## Step 3: Run Tests Before Refactoring
 
@@ -52,7 +64,7 @@ Run the same test again to verify refactoring didn't break anything. The test MU
 ## Step 6: Write Summary
 
 Write a summary of what was refactored to:
-`docs/jira-docs/{jira-id}/workflow-docs/{test-type}-test-files/04-REFACTOR.summary.md`
+`{test-type-files}/04-REFACTOR.summary.md`
 
 The summary should include:
 - What refactoring was done (or "No refactoring needed" if the code was already clean)

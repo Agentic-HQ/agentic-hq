@@ -15,17 +15,16 @@ Your role is to perform comprehensive validation before the story can be conside
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path`
+`Your variables for use in this command are jira-id = TEST-123`
 
 Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)
-- `project-root` - the absolute path to the project root directory
 
 ## Step 0b: Establish Variables
 
 ```
 jira-id = (parsed from input file above)
-project-root = (parsed from input file above)
+project-root = (your primary working directory)
 jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md

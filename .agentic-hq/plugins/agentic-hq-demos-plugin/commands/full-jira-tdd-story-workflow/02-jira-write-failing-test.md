@@ -11,11 +11,10 @@ This command writes exactly ONE test - either a unit, integration, smoke, or e2e
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`Your variables for use in this command are jira-id = TEST-123 and project-root = /some/path and test-type = unit`
+`Your variables for use in this command are jira-id = TEST-123 and test-type = unit`
 
 Parse out:
 - `jira-id` - the Jira ID (e.g. `TEST-123`)
-- `project-root` - the absolute path to the project root directory
 - `test-type` - the test type (e.g. `unit` or `e2e`)
 
 ## Step 0b: Establish Variables
@@ -23,7 +22,7 @@ Parse out:
 ```
 jira-id = (parsed from input file above)
 test-type = (parsed from input file above)
-project-root = (parsed from input file above)
+project-root = (your primary working directory)
 jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
