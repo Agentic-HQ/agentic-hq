@@ -2,7 +2,7 @@
 
 Agentic HQ is a thin Typescript wrapper around Claude Code that allows you to chain together your Custom Commands to automate your Claude Code workflows.
 
-The long term aim of Agentic HQ is to provide a powerful toolset that enables developers to collaborate closely, and enjoyably, with LLMS to produce better software faster (as Dave Farley says in https://www.youtube.com/watch?v=eoaDr5PpT2c&t=447s)
+The long term aim of Agentic HQ is to provide a powerful toolset that enables developers to collaborate closely, and enjoyably, with LLMs to produce better software faster (as Dave Farley says in https://www.youtube.com/watch?v=eoaDr5PpT2c&t=447s)
 
 The [Roadmap](docs/roadmap.md) contains the following planned enhancements:
 - a Jira Story Workflow that runs all the Commands required to complete a single Jira Story.
@@ -23,42 +23,52 @@ To install to go https://nodejs.org/en/download and follow the instructions to i
 To confirm version 22 is installed run: `node --version`.
 
 ### pnpm (Package Manager)
-This project uses pnpm. **You must use pnpm 10.28.1 or later.**
+This project uses pnpm via [corepack](https://nodejs.org/api/corepack.html), which ships with Node.js 22+. Corepack automatically downloads and uses the exact pnpm version pinned in `package.json` — you never need to install or update pnpm manually.
 
 ```bash
-# Check your pnpm version
-pnpm --version
+# Enable corepack (one-time setup, does NOT modify shell config files)
+corepack enable
 
-# If outdated, update using corepack (built into Node.js 22+):
-corepack use pnpm@10.28.1
+# Verify — should show the version from package.json (currently 10.33.0)
+pnpm --version
 ```
 
-**Why pnpm 10.28.1+?** Earlier versions have bugs with peer dependency resolution and build script handling that cause issues with this project's dependencies.
+That's it. When the pinned version changes in `package.json`, corepack handles it automatically on next run.
+
+> **WARNING: Do NOT run `pnpm setup`.** This command **modifies your `~/.zshrc`** to add `PNPM_HOME` and PATH entries — a machine-wide side-effect. With corepack you do not need it.
 
 ## Quick Start
+
+> **WARNING: Auto-approved tool permissions.** When you run workflows via the `agentic-hq` CLI, the following Claude Code tools are **automatically approved** (no permission prompt) via the `--allowedTools` flag in `src/tools/claude-code/ClaudeCodeTool.ts`:
+>
+> **Claude Code built-in tools:**
+> - `Bash` — Shell command execution
+> - `Edit` — File editing
+> - `Write` — File creation
+> - `MultiEdit` — Multiple file edits in one operation
+>
+> **Jira (via Atlassian MCP server):**
+> - `jira_get_issue` — Read issue details
+> - `jira_create_issue` — Create new issues
+> - `jira_add_comment` — Add comments to issues
+> - `jira_get_transitions` — Get available status transitions
+> - `jira_transition_issue` — Change issue status
+> - `jira_search` — Search for issues (JQL)
+> - `jira_update_issue` — Update issue fields
+>
+> **Confluence (via Atlassian MCP server):**
+> - `confluence_get_page` — Read page content
+> - `confluence_search` — Search for pages
+>
+> This applies to **all workspaces** that run via the `agentic-hq` CLI. You do **not** need to create `.claude/settings.local.json` — permissions are handled by the CLI automatically. Check the `ALLOWED_TOOLS` constant in `ClaudeCodeTool.ts` for the current list.
+
 
 ```bash
 # Clone the repo
 git clone https://github.com/Agentic-HQ/agentic-hq
 cd agentic-hq
-```
 
-> **WARNING: Auto-approved tool permissions.** When you run workflows via the `agentic-hq` CLI, the following Claude Code tools are **automatically approved** (no permission prompt) via the `--allowedTools` flag in `src/tools/claude-code/ClaudeCodeTool.ts`:
->
-CLAUDE TODO: Please put this as a nicely formatted human readable list:
-> `Bash`, `Edit`, `Write`, `MultiEdit`, `mcp__mcp-atlassian__jira_get_issue`, `mcp__mcp-atlassian__jira_create_issue`, `mcp__mcp-atlassian__jira_add_comment`, `mcp__mcp-atlassian__confluence_get_page`, `mcp__mcp-atlassian__confluence_search`, `mcp__mcp-atlassian__jira_get_transitions`, `mcp__mcp-atlassian__jira_transition_issue`, `mcp__mcp-atlassian__jira_search`, `mcp__mcp-atlassian__jira_update_issue`
->
-> This applies to **all workspaces** that run via the `agentic-hq` CLI. You do **not** need to create `.claude/settings.local.json` — permissions are handled by the CLI automatically. Check the `ALLOWED_TOOLS` constant in `ClaudeCodeTool.ts` for the current list.
-
-```bash
-
-# Get pnpm set up so that when scripts/infra/install-dev-agentic-hq.sh runs it will 
-# already be set up
-# (That script runs this anyway, but better that user does this and knows it has been done as it
-# modifies user's ~/.zshrc file to add pnpm settings)
-pnpm setup
-
-# Install dependencies
+# Install dependencies (corepack auto-downloads the pinned pnpm version)
 pnpm install
 
 # Run the script to install the dev version of agentic-hq CLI to your path
