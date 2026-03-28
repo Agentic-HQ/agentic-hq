@@ -5,7 +5,7 @@ Remember the following variable you will use in the rest of this command: comman
 Your job is to:
 1. Read the input file to get the Jira ID and test type
 2. Establish variables
-3. Read the Jira details and RED phase summary from local files (NOT from Jira MCP)
+3. Read the Jira details and RED phase summary from local files (NOT from mcp-atlassian MCP)
 4. Write minimal code to make the failing test pass
 5. Run the test and verify it PASSES
 6. Write a summary of what you did
@@ -36,7 +36,7 @@ test-type-files = {workflow-docs-directory}/{test-type}-test-files
 
 ## Step 2: Read the Jira Details and RED Phase Summary From Files
 
-IMPORTANT: Do NOT use Jira MCP tools. Read from local files:
+IMPORTANT: Do NOT use mcp-atlassian MCP tools. Read from local files:
 - `{workflow-docs-directory}/01-entire-jira-copy-of-details.md` - Full Jira content
 - `{test-type-files}/02-RED-write-failing-test.summary.md` - What test was written and why it fails
 

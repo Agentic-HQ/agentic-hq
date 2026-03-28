@@ -13,7 +13,7 @@
 
 import { Command } from 'commander';
 
-import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const REVERSE_STRING_COMMAND = '/agentic-hq-demos-plugin:string-reversal:reverse-a-string';
 const DEFAULT_STRING_TO_REVERSE = 'this is the default string to reverse';
@@ -25,7 +25,7 @@ program
   .description('Reverse a string using Claude Code')
   .option('--string-to-reverse <string>', 'The string to reverse', DEFAULT_STRING_TO_REVERSE)
   .action(async (options: { stringToReverse: string; }) => {
-    const tool = new ClaudeCodeTool();
+    const tool = new DefaultClaudeCodeTool();
     const reversed = await tool.execute(REVERSE_STRING_COMMAND, options.stringToReverse);
     console.log(`Reversed string: ${reversed}`);
   });

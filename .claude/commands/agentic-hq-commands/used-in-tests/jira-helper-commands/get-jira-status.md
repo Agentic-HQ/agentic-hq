@@ -16,7 +16,7 @@ Extract the `command-input-string` value. It will be a Jira ID like `TEST-123`.
 
 ## Step 2: Get Jira Status
 
-Use your Jira MCP tool to get the issue details for the Jira ID from the input string. Extract the status name (e.g. "Backlog", "In Progress", "Done").
+Use your mcp-atlassian MCP tool to get the issue details for the Jira ID from the input string. Extract the status name (e.g. "Backlog", "In Progress", "Done").
 
 ## Step 3: Write Output
 

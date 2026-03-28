@@ -2,7 +2,7 @@
  * Integration Test: Real Claude Code Self-Termination via Skill
  *
  * This test verifies that:
- * 1. ClaudeCodeTool can run a slash command that invokes the self-termination skill
+ * 1. MarshalledCLITool can run a slash command that invokes the self-termination skill
  * 2. The skill terminates Claude Code (not killed by test)
  * 3. Control returns to the test within 30 seconds
  *
@@ -17,7 +17,7 @@
 
 import { describe, it } from 'vitest';
 
-import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool';
+import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 
 /**
  * Timeout in milliseconds for Claude to self-terminate via skill.
@@ -33,12 +33,12 @@ const TEST_TIMEOUT_MS = 120_000;
 const SELF_TERMINATE_SKILL_COMMAND =
   '/agentic-hq-commands:used-in-tests:integration:just-self-terminate-using-skill';
 
-describe('ClaudeCodeTool self-termination via skill', () => {
+describe('MarshalledCLITool self-termination via skill', () => {
   it(
     'should return control to test when Claude executes self-termination skill command',
     async () => {
       // Arrange
-      const tool = new ClaudeCodeTool();
+      const tool = new DefaultClaudeCodeTool();
 
       // Act - Run the self-terminating skill command and wait for it to complete
       const commandInput = 'Unused command input string';

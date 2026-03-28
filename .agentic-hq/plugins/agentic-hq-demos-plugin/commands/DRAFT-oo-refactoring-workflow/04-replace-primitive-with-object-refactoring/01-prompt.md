@@ -1,0 +1,4 @@
+❯ Please ask Perplexity for some help on this. I've heard from Martin Fowler that every "thing" That you pass around in your system when you are designing and building it should be a class and never a     
+   primitive. That's even if it is never expected to have any properties. This is because it makes it clearer what it is. It's also because at any point you may want to push functionality into it      
+  rather than putting the primitive into a method. You put the method into the object. This seems a really good tactic to me. Can you please look up what it's called and describe it to me, or get          
+  Perplexity to look up what it's called and describe it and describe the benefits? Planning on creating a command that looks throughout the code for this and refactors to adhere to this principle. 

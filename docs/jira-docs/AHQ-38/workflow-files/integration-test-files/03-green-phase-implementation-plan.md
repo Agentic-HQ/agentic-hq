@@ -4,7 +4,7 @@
 
 1. **create-test-jira command location**: `.claude/commands/agentic-hq-commands/used-in-tests/jira-helper-commands/create-test-jira.md` → [Step 2]
 2. **create-test-jira reads input string** with "Title: ... Description: ..." format → [Step 2]
-3. **create-test-jira creates Jira in TEST project** using Jira MCP tools → [Step 2]
+3. **create-test-jira creates Jira in TEST project** using mcp-atlassian MCP tools → [Step 2]
 4. **create-test-jira outputs ONLY the Jira ID** (e.g. `TEST-123`) as `command-output-string` → [Step 2]
 5. **get-jira-status command location**: `.claude/commands/agentic-hq-commands/used-in-tests/jira-helper-commands/get-jira-status.md` → [Step 3]
 6. **get-jira-status reads Jira ID from input string** → [Step 3]
@@ -29,7 +29,7 @@ Following the exact pattern from `reverse-a-string.md` and `div-five.md`:
 
 1. Read `$0/command-input.json` and extract `command-input-string`
 2. Parse the "Title:" and "Description:" from the input string
-3. Use the Jira MCP tool to create a new issue in the **TEST** project with the parsed title and description, issue type "Task"
+3. Use the mcp-atlassian MCP tool to create a new issue in the **TEST** project with the parsed title and description, issue type "Task"
 4. Extract ONLY the Jira key (e.g. `TEST-123`) from the result
 5. Write `$0/command-output.json` with `{ "command-output-string": "TEST-123" }`
 6. Self-terminate using `./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID`
@@ -41,7 +41,7 @@ Following the exact pattern from `reverse-a-string.md` and `div-five.md`:
 Following the exact same pattern:
 
 1. Read `$0/command-input.json` and extract `command-input-string` (this is the Jira ID)
-2. Use the Jira MCP tool to get the issue details for that Jira ID
+2. Use the mcp-atlassian MCP tool to get the issue details for that Jira ID
 3. Extract ONLY the status name (e.g. `Backlog`) from the result
 4. Write `$0/command-output.json` with `{ "command-output-string": "Backlog" }`
 5. Self-terminate using `./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID`

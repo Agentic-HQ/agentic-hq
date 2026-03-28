@@ -39,7 +39,7 @@ import { Command } from 'commander';
  * - The remaining positional argument is the combined command+tempDir string
  *
  * This fake CLI uses Commander the same way, so it works regardless of what
- * flags ClaudeCodeTool adds (--plugin-dir, etc.) without manual argv parsing.
+ * flags ClaudeCommandBuilder adds (--plugin-dir, etc.) without manual argv parsing.
  */
 const program = new Command();
 program

@@ -133,7 +133,7 @@ Steps in command:
 2. Use `jira_get_transitions` + `jira_transition_issue` to move Jira to Done
 3. Write output, self-terminate
 
-**Why a separate command**: The CLI (TypeScript) doesn't have Jira MCP access. Only Claude commands have MCP. The Jira says "4 workflow commands" - this 5th is infrastructure (like the old command's Step 5 was internal).
+**Why a separate command**: The CLI (TypeScript) doesn't have mcp-atlassian MCP access. Only Claude commands have MCP. The Jira says "4 workflow commands" - this 5th is infrastructure (like the old command's Step 5 was internal).
 
 ---
 

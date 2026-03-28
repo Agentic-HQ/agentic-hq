@@ -16,9 +16,9 @@
 
 import { describe, it, expect } from 'vitest';
 
-import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool';
+import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 
-const TEST_TIMEOUT_MS = 120_000; // 120s for real Claude Code + Jira API calls
+const TEST_TIMEOUT_MS = 300_000; // 300s for real Claude Code + Jira API calls (sometimes slow)
 
 const CREATE_TEST_JIRA_COMMAND =
   '/agentic-hq-commands:used-in-tests:jira-helper-commands:create-test-jira';
@@ -34,7 +34,7 @@ describe('create-test-jira and get-jira-status custom commands', () => {
     'should create a test Jira and verify its status is Backlog',
     async () => {
       // Arrange
-      const tool = new ClaudeCodeTool();
+      const tool = new DefaultClaudeCodeTool();
 
       // Act - Step 1: Create a test Jira in the TEST project
       const testJiraId = await tool.execute(CREATE_TEST_JIRA_COMMAND, CREATE_JIRA_INPUT);

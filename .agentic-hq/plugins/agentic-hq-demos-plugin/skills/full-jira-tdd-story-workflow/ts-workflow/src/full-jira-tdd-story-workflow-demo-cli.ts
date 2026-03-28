@@ -18,7 +18,7 @@
 
 import { Command } from 'commander';
 
-import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const COMMAND_01_READ_JIRA =
   '/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:01-jira-read-and-question';
@@ -49,7 +49,7 @@ program
   .description('Run the full interactive Jira TDD Story Workflow using Claude Code')
   .requiredOption('--jira-id <string>', 'The Jira ID to implement (e.g. AHQ-41)')
   .action(async (options: { jiraId: string }) => {
-    const tool = new ClaudeCodeTool();
+    const tool = new DefaultClaudeCodeTool();
 
     // Step 1: Read Jira, get comma-separated test types
     const testTypesString = await tool.execute(

@@ -76,7 +76,7 @@ It instructs Claude to:
 4. **Implement Jira instructions**: Do whatever the Jira says, creating files relative to `{projectRoot}`
 5. **Set variables**: `jiraWorkflowFilesDirectory` = `{projectRoot}/docs/jira-docs/{jiraId}/workflow-docs`, `summaryDocFilename` = `{jiraWorkflowFilesDirectory}/01-read-jira-implement-and-mark-as-done.summary.md`
 6. **Write summary doc**: Create directory and write summary at `{summaryDocFilename}`
-7. **Transition Jira to Done**: Use Jira MCP tools (`jira_get_transitions` then `jira_transition_issue`)
+7. **Transition Jira to Done**: Use mcp-atlassian MCP tools (`jira_get_transitions` then `jira_transition_issue`)
 8. **Write output**: Write `command-output.json` to `{commandInputOutputFilesDirectory}` with completion message
 9. **Self-terminate**: Run `./tools/scripts/process-control/unix/kill-current-cli-process.sh $PPID`
 

@@ -19,7 +19,7 @@ Parse out the title (text after "Title:" and before "Description:") and the desc
 
 ## Step 2: Create Jira
 
-Use your Jira MCP tool to create a new issue in the **TEST** project with:
+Use your mcp-atlassian tool to create a new Jira issue in the **TEST** project with:
 - Project key: TEST
 - Issue type: Task
 - Summary: the parsed title (trimmed)

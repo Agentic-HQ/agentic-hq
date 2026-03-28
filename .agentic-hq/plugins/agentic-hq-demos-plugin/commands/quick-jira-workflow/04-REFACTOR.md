@@ -5,7 +5,7 @@ Remember the following variable you will use in the rest of this command: comman
 Your job is to:
 1. Read the input file to get the Jira ID and test type
 2. Establish variables
-3. Read the Jira details and previous phase summaries from local files (NOT from Jira MCP)
+3. Read the Jira details and previous phase summaries from local files (NOT from mcp-atlassian MCP)
 4. Run the test to verify it passes before refactoring
 5. Refactor the code
 6. Run the test again to verify refactoring didn't break anything
@@ -37,7 +37,7 @@ test-type-files = {workflow-docs-directory}/{test-type}-test-files
 
 ## Step 2: Read the Jira Details and Previous Phase Summaries From Files
 
-IMPORTANT: Do NOT use Jira MCP tools. Read from local files:
+IMPORTANT: Do NOT use mcp-atlassian MCP tools. Read from local files:
 - `{workflow-docs-directory}/01-entire-jira-copy-of-details.md` - Full Jira content
 - `{test-type-files}/02-RED-write-failing-test.summary.md` - What test was written
 - `{test-type-files}/03-GREEN-minimal-implementation.summary.md` - What implementation was written

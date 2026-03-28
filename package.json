@@ -8,7 +8,7 @@
     "agentic-hq": "bin/agentic-hq.cjs"
   },
   "exports": {
-    "./tools/claude-code": "./src/tools/claude-code/ClaudeCodeTool.ts"
+    "./tools/claude-code": "./src/tools/marshalled-io-tools/claude-code/index.ts"
   },
   "scripts": {
     "// POSTINSTALL": "FIX: node-pty posix_spawnp failed on macOS. pnpm extracts spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Known pnpm bug: https://github.com/pnpm/pnpm/issues/7366. Mac-only (darwin-*), fails silently on other platforms.",

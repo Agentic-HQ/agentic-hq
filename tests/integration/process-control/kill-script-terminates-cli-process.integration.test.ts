@@ -55,6 +55,14 @@ const FIXTURE_PATH = path.join(
   'fake-claude-cli.triggers-kill-script.fixture.ts'
 );
 
+/**
+ * Standard Unix exit code for SIGINT termination.
+ * Convention: 128 + signal number. SIGINT = signal 2, so 128 + 2 = 130.
+ * Must match SIGINT_EXIT_CODE in the fixture file:
+ *   fixtures/fake-claude-cli.triggers-kill-script.fixture.ts
+ */
+const SIGINT_EXIT_CODE = 130;
+
 describe('kill-current-cli-process.sh', () => {
   it(
     'should terminate the parent process when called with $PPID',
@@ -120,8 +128,16 @@ describe('kill-current-cli-process.sh', () => {
       // Output should contain the startup message
       expect(output).toContain("Hi I'm fake-claude-cli.triggers-kill-script.fixture.ts");
 
-      // Output should NOT contain the failure message (if we see this, kill script didn't work)
-      expect(output).not.toContain("If you see this then the kill script didn't work");
+      // Verify the kill script terminated the fixture via SIGINT.
+      //
+      // The original test asserted that a failure message was NOT in the output.
+      // This was flaky because of a race condition between the SIGINT handler and
+      // the child.on('close') callback — under load, the close callback could fire
+      // first and print the message before SIGINT was processed.
+      //
+      // Exit code is deterministic: the SIGINT handler always calls process.exit(130),
+      // regardless of callback ordering. No race condition possible.
+      expect(result.exitCode).toBe(SIGINT_EXIT_CODE);
     },
     WHOLE_TEST_TIMEOUT_SECONDS * MILLISECONDS_PER_SECOND
   );

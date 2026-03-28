@@ -15,7 +15,7 @@
 
 import { Command } from 'commander';
 
-import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const COMMAND_01_READ_JIRA =
   '/agentic-hq-demos-plugin:quick-jira-workflow:01-read-jira-and-plan-tests-and-implementation-understand';
@@ -42,7 +42,7 @@ program
   .description('Run a multi-step Jira workflow using Claude Code')
   .requiredOption('--jira-id <string>', 'The Jira ID to implement (e.g. TEST-123)')
   .action(async (options: { jiraId: string }) => {
-    const tool = new ClaudeCodeTool();
+    const tool = new DefaultClaudeCodeTool();
 
     // Step 1: Read Jira, get comma-separated test types
     const testTypesString = await tool.execute(

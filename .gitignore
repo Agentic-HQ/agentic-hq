@@ -145,7 +145,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Agentic HQ temporary files
+# Agentic HQ temporary files and user-local config overrides
 .agentic-hq/temp/
 temp/
 

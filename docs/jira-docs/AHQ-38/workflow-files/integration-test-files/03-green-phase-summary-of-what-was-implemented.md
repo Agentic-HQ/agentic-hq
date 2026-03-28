@@ -29,7 +29,7 @@ Two Claude Code custom command markdown files following the established file-bas
 
 Both commands self-terminate after writing output.
 
-**Note**: The test timeout was increased from 60s to 120s because real Claude Code + Jira MCP calls take ~57s, leaving insufficient margin at 60s.
+**Note**: The test timeout was increased from 60s to 120s because real Claude Code + mcp-atlassian MCP calls take ~57s, leaving insufficient margin at 60s.
 
 **Note**: `mcp__mcp-atlassian__jira_create_issue` permission was added to `.claude/settings.local.json` (by human) to allow the create-test-jira command to work non-interactively.
 

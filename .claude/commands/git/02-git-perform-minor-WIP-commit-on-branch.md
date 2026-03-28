@@ -44,10 +44,14 @@ git rev-parse --abbrev-ref HEAD
 Run these commands to understand what has changed:
 
 ```bash
-# Show current status
+# Preview what 'git add -A' would stage — the source of truth for ALL files that will be committed
+# This catches both tracked changes AND new untracked files (git diff HEAD misses untracked files)
+git add -A --dry-run
+
+# Show which files are modified vs new vs deleted
 git status
 
-# Show what will be committed
+# Show diff of tracked file changes
 git diff HEAD
 
 # Show the last commit on this branch for context
@@ -55,7 +59,7 @@ git log -1 --oneline
 ```
 
 Analyze the changes to understand:
-- What files were modified/added/deleted
+- What files were modified/added/deleted (use `git add -A --dry-run` as the complete file list, `git status` for modified/new/deleted classification)
 - What functionality was changed
 - The scope and complexity of the changes
 

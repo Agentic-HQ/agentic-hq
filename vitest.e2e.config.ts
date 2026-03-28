@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import E2eTestSequencer from './tests/e2e/e2e-test-sequencer.js';
 
 /**
  * E2E test configuration for Agentic HQ
@@ -21,6 +22,7 @@ export default defineConfig({
     fileParallelism: false,
     sequence: {
       concurrent: false,
+      sequencer: E2eTestSequencer,
     },
     // NO global timeout - each test specifies its own via it('...', async () => {}, TIMEOUT_MS)
   },

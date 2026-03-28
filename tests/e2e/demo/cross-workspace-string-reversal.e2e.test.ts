@@ -29,7 +29,7 @@ import { describe, it, expect } from 'vitest';
 
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
-const TEST_TIMEOUT_MS = 90_000; // 90s per acceptance criteria
+const TEST_TIMEOUT_MS = 300_000; // 300s because Claude can be reeeeeeeally slow
 const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + link --global
 const LOG_FILE_LABEL = 'cross-workspace-string-reversal';
 const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
@@ -105,7 +105,7 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
               '║  The most likely reason is that Claude Code is waiting for permission     ║\n' +
               '║  to use a tool that is not in the ALLOWED_TOOLS list.                    ║\n' +
               '║                                                                           ║\n' +
-              '║  TO FIX: Check src/tools/claude-code/ClaudeCodeTool.ts ALLOWED_TOOLS     ║\n' +
+              '║  TO FIX: Check src/tools/claude-code/claude-command-builder.ts            ║\n' +
               '║  constant to see if a required tool is missing, then re-run this test.   ║\n' +
               '║                                                                           ║\n' +
               '║  Check the log file for details:                                          ║\n' +

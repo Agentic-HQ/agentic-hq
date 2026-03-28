@@ -53,5 +53,5 @@ No external research needed - this task uses well-established patterns already i
 - `package.json` - Checked existing test script naming conventions. Need to add `test:integration:create-test-jira-and-get-status` entry.
 - `vitest.integration.config.ts` - Confirmed integration tests match `tests/integration/**/*.integration.test.ts` pattern.
 
-**Key findings**: The codebase has a very consistent pattern for custom commands and their tests. The new commands just need to use Jira MCP tools instead of string manipulation, but the I/O scaffolding is identical.
+**Key findings**: The codebase has a very consistent pattern for custom commands and their tests. The new commands just need to use mcp-atlassian MCP tools instead of string manipulation, but the I/O scaffolding is identical.
 

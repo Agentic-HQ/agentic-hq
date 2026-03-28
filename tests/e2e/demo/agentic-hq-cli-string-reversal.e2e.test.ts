@@ -17,7 +17,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
-const TEST_TIMEOUT_MS = 90_000; // 90s per acceptance criteria
+const TEST_TIMEOUT_MS = 300_000; // 300s because Claude can be reeeeeeeally slow
 const LOG_FILE_LABEL = 'string-reversal';
 
 // Test data constants

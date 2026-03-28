@@ -78,7 +78,7 @@ Verify the test file has no TypeScript errors (imports should be valid since `Cl
 
 Re-read the original `/jira-story-workflow:02-jira-write-failing-test` command and complete:
 - **Step 8**: Create RED phase document at `docs/jira-docs/AHQ-37/workflow-files/e2e-test-files/02-red-phase-failing-tests.md`
-- **Step 9**: Add Jira comment to AHQ-37 via Jira MCP
+- **Step 9**: Add Jira comment to AHQ-37 via mcp-atlassian MCP
 - **Step 10**: Present results to human
 
 ## Verification

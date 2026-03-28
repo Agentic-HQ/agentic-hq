@@ -125,32 +125,55 @@ const child = spawn('bash', ['-c', `${KILL_SCRIPT_PATH} $PPID`], {
   stdio: 'inherit', // Pass through all output so test can see kill script's messages
 });
 
+// ==============================================================================
+// SIGNAL DELIVERY GRACE PERIOD (cosmetic only)
+// ==============================================================================
+// A race condition in this test was fixed by asserting on exit code (130)
+// instead of output — exit code is deterministic regardless of callback order.
+// This 1-second timeout just prevents a confusing "didn't work" message on
+// stdout; if it fires (extreme load >1s), the test still passes.
+//
+// Without it, under system load the child.on('close') callback can fire before
+// the SIGINT handler and print the failure message — even though SIGINT is
+// pending and will arrive moments later. The delay gives the already-pending
+// SIGINT time to be processed. If SIGINT fires during the wait, process.exit(130)
+// kills everything and this callback never runs.
+// ==============================================================================
+/**
+ * Grace period (in milliseconds) before printing the failure message.
+ * Cosmetic only — suppresses misleading output when the close callback
+ * fires before the SIGINT handler under system load.
+ */
+const SIGNAL_DELIVERY_GRACE_PERIOD_MS = 1000;
+
 child.on('close', (code) => {
-  // Step 4: If we get here, the kill script didn't work!
-  // (The SIGINT handler should have terminated us before this callback runs)
-  console.log(
-    `${timestamp()} - Finished calling kill-current-cli-process.sh If you see this then the kill script didn't work :-(`
-  );
-  console.log(`${timestamp()} - Kill script exit code: ${code}`);
-
-  // Step 5: Enter infinite loop waiting for input (like Claude does)
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  function promptForever(): void {
+  setTimeout(() => {
+    // Step 4: If we get here, the kill script genuinely didn't work —
+    // SIGINT never arrived even after the grace period.
     console.log(
-      `${timestamp()} - Now I'm going to sit here for ever waiting for you to type a prompt (which I'll ignore because I'm a Fake Claude!):`
+      `${timestamp()} - Finished calling kill-current-cli-process.sh If you see this then the kill script didn't work :-(`
     );
+    console.log(`${timestamp()} - Kill script exit code: ${code}`);
 
-    rl.question('> ', (answer) => {
-      console.log(
-        `${timestamp()} - I'm a Fake Claude so I'm going to ignore your prompt "${answer}" and loop back round to ask you again... :)`
-      );
-      promptForever();
+    // Step 5: Enter infinite loop waiting for input (like Claude does)
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
     });
-  }
 
-  promptForever();
+    function promptForever(): void {
+      console.log(
+        `${timestamp()} - Now I'm going to sit here for ever waiting for you to type a prompt (which I'll ignore because I'm a Fake Claude!):`
+      );
+
+      rl.question('> ', (answer) => {
+        console.log(
+          `${timestamp()} - I'm a Fake Claude so I'm going to ignore your prompt "${answer}" and loop back round to ask you again... :)`
+        );
+        promptForever();
+      });
+    }
+
+    promptForever();
+  }, SIGNAL_DELIVERY_GRACE_PERIOD_MS);
 });

@@ -5,7 +5,7 @@
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Run git init in the temp workspace
- * 4. Setup: Create a test Jira via ClaudeCodeTool
+ * 4. Setup: Create a test Jira via MarshalledCLITool
  * 5. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:quick-jira-workflow -- --jira-id={testJiraId}
  * 6. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
  * 7. Assert: Implementation files exist (src/temp-test-hello-world.ts, src/temp-test-hello-world.cli.ts)
@@ -29,10 +29,10 @@ import * as path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
-import { ClaudeCodeTool } from '../../../src/tools/claude-code/ClaudeCodeTool';
+import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
-const TEST_TIMEOUT_MS = 1_500_000; // 25 minutes: 5-command orchestration with loop + install overhead + API latency
+const TEST_TIMEOUT_MS = 3_600_000; // 60 minutes: 5-command orchestration with loop + install overhead + API latency
 const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + link --global
 const LOG_FILE_LABEL = 'cross-workspace-quick-jira-workflow';
 const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
@@ -113,7 +113,7 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
       execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Arrange — create a test Jira in the TEST project (multi-step: 2 test types)
-      const tool = new ClaudeCodeTool();
+      const tool = new DefaultClaudeCodeTool();
       const testJiraId = await tool.execute(CREATE_TEST_JIRA_COMMAND, MULTI_STEP_TEST_JIRA_INPUT);
       expect(testJiraId).toMatch(JIRA_KEY_PATTERN);
 
@@ -144,7 +144,7 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
               '║  The most likely reason is that Claude Code is waiting for permission     ║\n' +
               '║  to use a tool that is not in the ALLOWED_TOOLS list.                    ║\n' +
               '║                                                                           ║\n' +
-              '║  TO FIX: Check src/tools/claude-code/ClaudeCodeTool.ts ALLOWED_TOOLS     ║\n' +
+              '║  TO FIX: Check src/tools/claude-code/claude-command-builder.ts            ║\n' +
               '║  constant to see if a required tool is missing, then re-run this test.   ║\n' +
               '║                                                                           ║\n' +
               '║  Check the log file for details:                                          ║\n' +

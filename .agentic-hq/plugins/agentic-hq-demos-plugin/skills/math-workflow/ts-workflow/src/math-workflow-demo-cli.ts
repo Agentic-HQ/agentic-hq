@@ -13,7 +13,7 @@
 
 import { Command } from 'commander';
 
-import { ClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
 
 const TIMES_TWO_COMMAND = '/agentic-hq-demos-plugin:math-workflow:times-two';
 const PLUS_THREE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:plus-three';
@@ -27,7 +27,7 @@ program
   .description('Run a 3-step math workflow using Claude Code')
   .option('--input-number <number>', 'The input number to process', DEFAULT_INPUT_NUMBER)
   .action(async (options: { inputNumber: string }) => {
-    const tool = new ClaudeCodeTool();
+    const tool = new DefaultClaudeCodeTool();
 
     // Step 1: Multiply by 2
     const step1Result = await tool.execute(TIMES_TWO_COMMAND, options.inputNumber);

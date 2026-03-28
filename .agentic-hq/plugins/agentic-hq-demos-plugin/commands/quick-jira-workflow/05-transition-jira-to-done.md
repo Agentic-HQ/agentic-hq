@@ -20,7 +20,7 @@ Parse out:
 
 ## Step 2: Transition Jira to Done
 
-Use the Jira MCP tools to transition the Jira to "Done":
+Use the mcp-atlassian MCP tools to transition the Jira to "Done":
 1. First, use `jira_get_transitions` to get the available transitions for `{jira-id}`
 2. Find the transition that moves the issue to "Done"
 3. Use `jira_transition_issue` with that transition ID to move the Jira to Done
