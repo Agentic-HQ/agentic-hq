@@ -262,13 +262,27 @@ Once everything is resolved, update the file to clarify what the agreed answers 
 
 Once all questions are resolved, determine which test types are needed for this Jira.
 
-Look in the Jira description for a line matching: `Test types: X, Y` (where X, Y are comma-separated test types).
+Look in the Jira description for a line matching a test types specification. This could be in various formats, e.g.:
+- `Test types: X, Y`
+- `test-type = X`
+- `test-type=X`
+- Or similar variations (case-insensitive, with or without spaces/hyphens)
 
-If found, extract the comma-separated test types (e.g. `unit, e2e`).
+Where `X, Y` are comma-separated values from the possible list: `unit`, `integration`, `smoke`, `e2e`, `manual`.
 
-If NOT found, intelligently determine which test types are needed from the possible list: unit, integration, smoke, e2e, manual. Return the relevant ones in that order. Use `manual` when the Jira involves work that won't have automated tests — the AI still implements the code, but the human tests manually.
+If found, extract the test types (e.g. `unit, e2e`).
 
-If no tests are needed at all, use an empty string "".
+If **NOT found anywhere in the Jira description**, **STOP** and ask the human:
+
+> "I couldn't find any test types specified in the Jira description (e.g. `Test types: unit, e2e` or `test-type = manual`).
+>
+> Was this intentional, or should you add test types to the Jira before we continue?
+>
+> 1. **Add to Jira** - I'll wait while you update the Jira with the correct test types, then I'll re-read it
+> 2. **Use `manual`** - Proceed with `manual` testing (human tests manually, no automated tests)
+> 3. **Tell me now** - Just tell me the test types and we'll proceed (e.g. `unit`, `unit, e2e`, `manual`)"
+
+Wait for the human's response. If they choose option 1, re-read the Jira and extract the test types. If they choose option 2, use `manual`. If they choose option 3, use whatever they specify.
 
 Tell the human the test types you determined and confirm with them before proceeding.
 
