@@ -45,8 +45,8 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:04a-jira-refactor-analysis AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, `manual`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, `e2e`, or `manual`.
 >
 > Usage: `/jira-story-workflow:04a-jira-refactor-analysis AHQ-123 unit`"
 
@@ -81,6 +81,12 @@ Wait for the user's response before continuing.
 
 **CRITICAL: Confirm we're starting from GREEN.**
 
+**If test-type is `manual`:**
+- Ask the human: "Before we analyze refactoring opportunities, please confirm the current implementation works correctly. Have you manually tested and verified it's working as expected? (Yes/No)"
+- If YES: Proceed to Step 5
+- If NO: STOP and tell them to complete manual testing first before refactoring can be analyzed
+
+**For automated test types:**
 - If {test-type} == 'unit': Run `pnpm test`
 - If {test-type} is 'integration', 'smoke', or 'e2e': **DO NOT run the full suite.** Instead, run only the specific test file(s) for this Jira. Tell the user:
   > "NOTE: Running all {test-type} tests has been skipped to conserve Claude Code plan credits. Only running the specific test file(s) for this Jira to confirm GREEN. Please run `pnpm test:{test-type}` manually if you want a full suite check."

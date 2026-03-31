@@ -39,12 +39,12 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:02-jira-write-failing-test AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, `manual`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, `e2e`, or `manual`.
 >
 > Usage: `/jira-story-workflow:02-jira-write-failing-test AHQ-123 unit`
 >
-> **Recommended order:** unit → integration → smoke → e2e.
+> **Recommended order:** unit → integration → smoke → e2e → manual.
 > Each test type goes through a full TDD cycle (RED → GREEN → REFACTOR → VALIDATE) before moving to the next."
 
 ## Step 2: Check Pre-requisites
@@ -83,6 +83,48 @@ Read the following files to understand the task:
 1. `{ai-summary-file}` - Your understanding of the Jira and human's answers to questions
 2. Use the jira-verbatim-content-extractor agent to obtain all the details of the Jira you are working on *and* any parent and child Jiras.  Use this information to obtain an understanding of what you are implementing and the acceptance criteria and the EXACT commands that will run for the test of this test type = {test-type}.
 3. Any existing test files in the project to understand test patterns/conventions
+
+## Step 5.5: Branch for Manual Test Type
+
+**If test-type is `manual`**, follow this alternative flow instead of Steps 6-8:
+
+### 5.5a. Create Manual RED Phase Document (No Automated Tests)
+
+Create the directory `{test-type-files}` (`{workflow-files}/manual-test-files/`) if it doesn't exist.
+
+Create the file `{red-phase-file}` with:
+
+```markdown
+# RED Phase Complete: {jira-id} (manual test)
+
+**Jira**: [{jira-id}]({jira-url})
+**Test Type**: manual
+**Phase**: RED (Manual Testing Approach)
+**Generated**: {current date/time}
+
+---
+
+## Manual Testing Approach
+
+No automated tests will be created for this work. The AI will implement the requirements, and the human will manually test the result.
+
+**Decision**: Human confirmed no automated tests needed (manual testing only).
+
+---
+
+## Ready for GREEN Phase
+
+Run the next command for AI implementation (human will manually test):
+```
+/agentic-hq-demos-plugin:full-jira-tdd-story-workflow:03-jira-minimal-implementation {jira-id} manual
+```
+```
+
+Then **skip to Step 9** (Add Comment to Jira) and continue from there.
+
+**If test-type is NOT `manual`**, continue with Step 6 below as normal.
+
+---
 
 ## Step 6: Identify the Test to Write
 
@@ -310,5 +352,6 @@ Run the self-termination skill immediately:
 - **NO production code in RED phase**: Do not create or modify the actual implementation code - that's GREEN phase work. Test scaffolding is NOT production code.
 - **Only fix TEST bugs**: If test has syntax errors or wrong paths, fix those. But "module not found" is correct!
 - **TDD cycle per test type**: Complete full cycle (RED → GREEN → REFACTOR → VALIDATE) before next test type
-- **Recommended order**: unit → integration → smoke → e2e (each test type drives different code)
+- **Recommended order**: unit → integration → smoke → e2e → manual (each test type drives different code)
+- **Manual test type**: For `manual`, no automated tests are written. Create a minimal RED phase doc and proceed directly to GREEN.
 - **Remember to include this command in the Plan**: otherwise you'll forget to do the last steps (e.g. writing the "red phase" summary file)

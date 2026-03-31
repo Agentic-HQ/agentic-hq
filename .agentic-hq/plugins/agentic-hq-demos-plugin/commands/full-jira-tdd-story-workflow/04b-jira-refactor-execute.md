@@ -42,8 +42,8 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:04b-jira-refactor-execute AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, `manual`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, `e2e`, or `manual`.
 >
 > Usage: `/jira-story-workflow:04b-jira-refactor-execute AHQ-123 unit`"
 
@@ -102,6 +102,14 @@ Read `{refactor-analysis-file}` and check for the `## Review Status: COMPLETE` m
 
 **CRITICAL: Confirm we're starting from GREEN.**
 
+**If test-type is `manual`:**
+- Ask the human: "Before I execute refactors, please confirm the current implementation works. Have you manually tested it? (Yes/No)"
+- If YES: Proceed to Step 6
+- If NO: STOP and tell them to test first
+- Also run `pnpm validate` (unit tests and other validation) if they exist — those are fast, automated, and always worth running regardless of test type
+
+**For automated test types:**
+
 **Always run unit tests first** (they're fast, ~1s): `pnpm test`
 
 Then run the test-type-specific tests:
@@ -125,6 +133,10 @@ For each refactor (Tier 1 first, then Agreed Refactors Summary Table items marke
 Make the code change for this single refactor.
 
 ### 6b. Run the Correct Tests Immediately
+
+**If test-type is `manual`:** Do NOT ask the human to test after each individual refactor (manual testing is slow/costly). Still run `pnpm test` (unit tests) after each refactor if they exist — those are fast and automated. Skip any test-type-specific test runs. The human will be offered a manual test at the end (Step 7).
+
+**For automated test types:**
 
 **ALWAYS run unit tests** (`pnpm test`) after every refactor — they're fast (~1s) and catch type/import/logic errors immediately.
 
@@ -163,6 +175,13 @@ If you've been refactoring for more than 5 minutes without a passing test, somet
 - Do NOT continue blindly
 
 ## Step 7: Run Full Test Suite
+
+**If test-type is `manual`:**
+- After ALL refactors are complete, ask the human: "All refactors are done. Would you like to manually test that everything still works? (Recommended but optional)"
+- Wait for their response. If they test and find issues, work with them to fix before proceeding.
+- Also run `pnpm validate` (unit tests and other quick checks) if they exist — always worth a final automated check.
+
+**For automated test types:**
 
 After all refactors are complete, run the FULL test suite for this test type one more time to confirm everything works together.
 

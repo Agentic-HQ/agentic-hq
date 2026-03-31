@@ -46,6 +46,7 @@ Check that at least one of these files exists:
 - `{workflow-files}/integration-test-files/04a-refactor-phase-proposed-refactors.md`
 - `{workflow-files}/smoke-test-files/04a-refactor-phase-proposed-refactors.md`
 - `{workflow-files}/e2e-test-files/04a-refactor-phase-proposed-refactors.md`
+- `{workflow-files}/manual-test-files/04a-refactor-phase-proposed-refactors.md`
 
 If none exist, STOP and tell the user:
 > "No REFACTOR phase files found. You need to complete at least one RED-GREEN-REFACTOR cycle before validation.
@@ -197,6 +198,7 @@ Create the file `{validate-file}` with the following structure:
 | Integration | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
 | Smoke | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
 | E2E | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete/Incomplete/Skipped |
+| Manual | ✅/❌/- | ✅/❌/- | ✅/❌/- | Complete (human-verified)/Incomplete/Skipped |
 
 ---
 

@@ -46,8 +46,8 @@ If `{jira-id}` is empty or not provided, STOP and tell the user:
 > "Please provide a Jira ID. Usage: `/jira-story-workflow:03-jira-minimal-implementation AHQ-123 unit`"
 
 **Check test-type:**
-If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, STOP and tell the user:
-> "Please provide a valid test type: `unit`, `integration`, `smoke`, or `e2e`.
+If `{test-type}` is empty or not one of: `unit`, `integration`, `smoke`, `e2e`, `manual`, STOP and tell the user:
+> "Please provide a valid test type: `unit`, `integration`, `smoke`, `e2e`, or `manual`.
 >
 > Usage: `/jira-story-workflow:03-jira-minimal-implementation AHQ-123 unit`"
 
@@ -181,6 +181,15 @@ This means for the **smoke test** (not unit test), you'd also need to set up a C
 
 ## Step 7: Run the Test Using the AC Command (Expect Success)
 
+**If test-type is `manual`:** Skip the automated test commands below. Instead, tell the human:
+> "Implementation is complete. Since this is a **manual** test type, please manually test the implementation and confirm it works.
+>
+> Please let me know when you've tested and whether it passes."
+
+**STOP and WAIT** for human confirmation. If the human reports issues, work with them to fix the implementation and ask them to re-test. Once confirmed working, skip to Step 8.
+
+**For all other test types:**
+
 **CRITICAL: Use the EXACT pnpm command from the acceptance criteria** - NOT `npx vitest` or other shortcuts.
 
 Run the test command (e.g., `pnpm test:hello-world` for the specific test) and verify:
@@ -196,8 +205,9 @@ Run the test command (e.g., `pnpm test:hello-world` for the specific test) and v
 
 **Do NOT add extra code "just in case"** - only fix what the test failure tells you to fix.
 
-## Step 7b: Run all the Tests Of Type {test-type} (SKIPPED for non-unit)
+## Step 7b: Run all the Tests Of Type {test-type} (SKIPPED for non-unit and manual)
 
+- If {test-type} == 'manual': **SKIP** — manual testing is handled by the human in Step 7 above.
 - If {test-type} == 'unit': Run `pnpm test` (runs all unit tests)
 - If {test-type} is 'integration', 'smoke', or 'e2e': **DO NOT run the full suite.** Tell the user:
   > "NOTE: Running all {test-type} tests has been skipped to conserve Claude Code plan credits. Please run `pnpm test:{test-type}` manually if you want to verify no other tests were broken."

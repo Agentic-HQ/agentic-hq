@@ -225,11 +225,13 @@ and summarise the most important things you found.
 
 **Test types: `{comma-separated test types}`** (in that order, each with full RED -> GREEN -> REFACTOR -> VALIDATE cycle)
 
-{For each test type, list the specific tests you plan to write and what they will verify. Be specific enough that the next agent (who writes the tests) knows exactly what to implement. Include:
+{For each automated test type (unit, integration, smoke, e2e), list the specific tests you plan to write and what they will verify. Be specific enough that the next agent (who writes the tests) knows exactly what to implement. Include:
 - Test descriptions/names
 - What each test verifies
 - Key assertions
-- Any test infrastructure needed (e.g., mocks, fixtures, test scripts)}
+- Any test infrastructure needed (e.g., mocks, fixtures, test scripts)
+
+For manual test type: Describe what the AI will implement and what the human will manually test/verify. No automated test names needed — instead describe the manual testing steps the human should follow.}
 
 ## Ready for Next Step
 
@@ -264,7 +266,7 @@ Look in the Jira description for a line matching: `Test types: X, Y` (where X, Y
 
 If found, extract the comma-separated test types (e.g. `unit, e2e`).
 
-If NOT found, intelligently determine which test types are needed from the possible list: unit, integration, smoke, e2e. Return the relevant ones in that order.
+If NOT found, intelligently determine which test types are needed from the possible list: unit, integration, smoke, e2e, manual. Return the relevant ones in that order. Use `manual` when the Jira involves work that won't have automated tests — the AI still implements the code, but the human tests manually.
 
 If no tests are needed at all, use an empty string "".
 
@@ -306,7 +308,7 @@ This command's purpose is **understanding and clarification** - nothing more. Do
 - **Research is valuable**: If you're unsure about something technical, research it now rather than guessing during implementation
 - **Questions must be validated**: Before asking ANY question, verify it's not already answered in the Jira, Confluence pages, acceptance criteria, or other docs you read. Asking about something that's already specified wastes human time and shows you didn't fully internalize what you read.
 - **TDD applies**: Remember that the next step is writing failing tests first (Red phase of TDD) and the commands after that will guide you through doing the whole Jira using TDD (see your CLAUDE.md for details of TDD)
-- **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e** (each with full RED → GREEN → REFACTOR → VALIDATE cycle). Do NOT ask about test ordering - this is standard.
+- **TDD test order**: When a Jira specifies multiple test types, the order is always: **unit → integration → smoke → e2e → manual** (each with full RED → GREEN → REFACTOR → VALIDATE cycle). Do NOT ask about test ordering - this is standard. When `manual` is specified, it's typically the only test type (no automated tests).
 
 ---
 
