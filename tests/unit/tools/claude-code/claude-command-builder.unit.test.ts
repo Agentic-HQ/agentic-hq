@@ -26,17 +26,21 @@ describe('ClaudeCommandBuilder', () => {
       const builder = new ClaudeCommandBuilder(mockInstallation);
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
-      expect(pluginDirArgs).toHaveLength(3);
+      // 3 default + 1 temporary (TEMPORARILY_ADDED_PLUGIN_DIR — remove when AHQ-103 lands)
+      expect(pluginDirArgs).toHaveLength(4);
       expect(pluginDirArgs.join(' ')).toContain('agentic-hq-core-plugin');
       expect(pluginDirArgs.join(' ')).toContain('agentic-hq-demos-plugin');
       expect(pluginDirArgs.join(' ')).toContain('agentic-hq-utilities-plugin');
+      expect(pluginDirArgs.join(' ')).toContain('steve-test-workflow-workspace-001');
     });
 
     it('should resolve plugin dirs under installation.configDir/plugins', () => {
       const builder = new ClaudeCommandBuilder(mockInstallation);
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
-      for (const arg of pluginDirArgs) {
+      // Skip the temporary plugin dir — it has an absolute path, not under configDir
+      const defaultPluginDirArgs = pluginDirArgs.filter((a) => !a.includes('steve-test'));
+      for (const arg of defaultPluginDirArgs) {
         const dirPath = arg.replace('--plugin-dir=', '');
         expect(dirPath).toMatch(/^\/fake\/workspace\/.agentic-hq\/plugins\//);
       }
@@ -49,6 +53,13 @@ describe('ClaudeCommandBuilder', () => {
       expect(allowedToolsArg).toBeDefined();
       expect(allowedToolsArg).toContain('Bash');
       expect(allowedToolsArg).toContain('Edit');
+    });
+
+    it('should include Read scoped to configDir in allowedTools', () => {
+      const builder = new ClaudeCommandBuilder(mockInstallation);
+      const cmd = builder.build('test-command', '/tmp/marshalling-dir');
+      const allowedToolsArg = cmd.args.find((a) => a.startsWith('--allowedTools='));
+      expect(allowedToolsArg).toContain('Read(/fake/workspace/.agentic-hq)');
     });
 
     it('should append command and marshallingId to args', () => {

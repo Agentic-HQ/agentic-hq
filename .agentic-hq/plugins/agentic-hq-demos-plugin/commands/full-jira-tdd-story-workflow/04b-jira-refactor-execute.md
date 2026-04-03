@@ -177,9 +177,11 @@ If you've been refactoring for more than 5 minutes without a passing test, somet
 ## Step 7: Run Full Test Suite
 
 **If test-type is `manual`:**
-- After ALL refactors are complete, ask the human: "All refactors are done. Would you like to manually test that everything still works? (Recommended but optional)"
-- Wait for their response. If they test and find issues, work with them to fix before proceeding.
-- Also run `pnpm validate` (unit tests and other quick checks) if they exist — always worth a final automated check.
+- Run `pnpm validate` (unit tests and other quick checks) if they exist — always worth a final automated check.
+- After ALL refactors are complete AND `pnpm validate` passes, ask the human: "All refactors are done and `pnpm validate` passes. Would you like to manually test that everything still works? (Yes/Skip)"
+- **STOP and wait for the human's response before proceeding to Step 8.** Do NOT start writing the completion document until the human replies.
+- If they test and find issues, work with them to fix before proceeding.
+- If they say "Skip", proceed to Step 8.
 
 **For automated test types:**
 

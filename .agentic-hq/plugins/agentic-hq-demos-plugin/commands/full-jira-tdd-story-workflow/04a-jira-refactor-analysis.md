@@ -126,7 +126,9 @@ Before approving or proposing refactors, consider these principles:
 
 Go back through EVERY document you read in Step 5 and extract refactoring opportunities. These come from two sources:
 
-1. **Explicitly deferred items** - things the documents said to do later (e.g. "defer to REFACTOR phase", `// REFACTOR:` comments, acknowledged shortcuts).  You **must** do a search of all of these documents for the string "REFACTOR" or "refactor" or "Refactor" to check for any references or mentions that point to possible refactorings, and include details of any outputs that are not just standard boiler plate mentions of this phase in the instructions.
+1. **Explicitly deferred items** - things the documents said to do later (e.g. "defer to REFACTOR phase", `// REFACTOR:` comments, acknowledged shortcuts).  You **must** do a recursive search of all files in `{workflow-files}` for the string "REFACTOR" or "refactor" or "Refactor" to check for any references or mentions that point to possible refactorings, and include details of any outputs that are not just standard boiler plate mentions of this phase in the instructions.
+
+   > **ANTI-PATTERN: Do NOT search more broadly than `{workflow-files}`** (e.g. the entire codebase, or the project root). A broad search returns huge numbers of irrelevant hits — every command file that mentions "REFACTOR phase" as boilerplate, every reference doc, every unrelated source file. Search ONLY within `{workflow-files}` — that directory contains all the phase documents for this Jira.
 2. **Opportunities you identify by reviewing the approach** - things nobody called out, but that become apparent when reviewing what was planned vs what was implemented (e.g. awkward seams, naming that made sense during GREEN but looks wrong now, module boundaries that could be improved, test organisation issues)
 
 **For EACH item found**, record:
