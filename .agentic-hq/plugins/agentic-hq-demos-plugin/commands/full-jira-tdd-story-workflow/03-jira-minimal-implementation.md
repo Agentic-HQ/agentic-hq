@@ -126,15 +126,18 @@ Use the `EnterPlanMode` tool to enter Plan Mode for the implementation in steps 
    - If a requirement doesn't point to any section in your plan, you've missed it - rework the plan to include it
    - Do NOT scatter "Maps to: Req #X" annotations throughout the plan - keep the mapping in ONE place (this section)
 
-2b. **Add a "## Project Design Requirements Compliance" section** to the plan. If the design requirements file was not found, write "Skipped - no project-design-requirements.md found in workspace" and move on. Otherwise, create a table mapping each relevant requirement to the plan section that addresses it:
-   ```
-   | # | Design Requirement | Plan Section Addressing It | Notes |
-   |---|-------------------|---------------------------|-------|
-   | D.1 | Class/interface pair for each concept | Step 2: Create FooInterface + DefaultFoo | Foo is the core concept in this Jira |
-   | D.2 | Tell don't ask | Step 3: Push display logic into FooResult.display() | Instead of extracting and manipulating state |
-   | D.3 | Minimal state / avoid caching | Step 2: FooResult delegates to sub-objects | No intermediate List<> storage |
-   | D.4 | Switchable concrete classes | Step 2: DefaultFoo implements Foo interface | Third party could provide CustomFoo |
-   ```
+2b. **Add a "## Project Design Requirements Compliance" section** to the plan. If the design requirements file was not found, write "Skipped - no project-design-requirements.md found in workspace" and move on. Otherwise:
+   - Read the design requirements document carefully and include **all sections it requires for the planning/design phase** in your plan. The requirements doc may mandate specific sections, tables, or descriptions that must appear in plans — you must follow those instructions.
+     - For example, a requirements doc might require a "Data Dictionary" table mapping concepts to Class/Interface names, and an "English Language Description" paragraph showing how the system works using those names. If the doc says to create these during planning, you must create them.
+   - Create a compliance table mapping each relevant requirement to the plan section that addresses it:
+     ```
+     | # | Design Requirement | Plan Section Addressing It | Notes |
+     |---|-------------------|---------------------------|-------|
+     | D.1 | Class/interface pair for each concept | Step 2: Create FooInterface + DefaultFoo | Foo is the core concept in this Jira |
+     | D.2 | Tell don't ask | Step 3: Push display logic into FooResult.display() | Instead of extracting and manipulating state |
+     | D.3 | Minimal state / avoid caching | Step 2: FooResult delegates to sub-objects | No intermediate List<> storage |
+     | D.4 | Switchable concrete classes | Step 2: DefaultFoo implements Foo interface | Third party could provide CustomFoo |
+     ```
    - Flag any requirements that the plan does NOT meet and explain why (e.g., "This is a utility function, not a domain concept — class/interface pair not warranted per the document's 'balance' caveat")
    - NOTE: This is the GREEN phase. The implementation is intentionally minimal — "ugly but working is acceptable". Not all design requirements need to be fully met here. If deferring, state clearly: "Deferred to REFACTOR: {requirement} because GREEN phase only requires minimal passing code."
    - This section must be presented to the user as part of the plan review so they can verify design requirements are being addressed

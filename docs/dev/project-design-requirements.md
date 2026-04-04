@@ -149,6 +149,13 @@ currentWorkspaceWorkflowSearchResult.display()
 
 is likely to involve the currentWorkspaceWorkflowSearchResult delegating the search of the workspace to an object it contains (e.g. a WorkspaceSearchResult object that knows it's workspace root is "/tmp/steve-temp-workspace") and that WorkspaceSearchResult object does the search on the file system for the plugins and workflows.
 
+
+== Creating A Data Dictionary Table And Corresponding English Language Description During Design/Plan Phase
+
+When doing planning, in order to be sure we are mapping all concepts to a class/interface two additional sections must be created:
+- A "Data Dictionary" section containing a table of all the concepts we are working with and their planned Class and Interface names.
+- An "English Language Description Using Concepts" section - which describes in a paragraph how the system will work with the class or interface names slotted in so they read like English.   The class/interface names should be **bolded** to stand out in markdown format.  Verbs that could represent messages between classes must be highlighted as *italic* and these would be messages between object/interfaces e.g. *displays*   If this paragraph doesn't read fluently and easily as English, then this is a sign the design doesn't reflect well how the system works.  Example sentence: "The **WorkflowSearchResult** *displaysSearchResults* to the user by *printingAHeader* and then asking it's **WorkspaceWorkflowSearchResults** to *display* themselves." (NOTE here: *printingAHeader* would correspond to an internal method printHeader() which just does "console.output("Workflows Available:");" )
+
 == Important Caveat
 
 Designing a well structured and well balanced set of classes and interfaces to make an object oriented system that is easy to understand and easy to change is **hard work** and you won't get it right first time.  You have to try, see where it looks bad, looks complicated, could be simplified, could be consolidated, and **iterate** until you have something that is **good enough** (NOT perfect, as that will use up far to much time and energy).  It's all about balance and assessing risk/reward for work done.
