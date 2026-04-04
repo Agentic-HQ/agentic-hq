@@ -35,7 +35,8 @@ red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
 green-phase-plan-file-copy = {test-type-files}/03-green-phase-implementation-plan-copy.md
 green-phase-file = {test-type-files}/03-green-phase-summary-of-what-was-implemented.md
 refactor-analysis-file = {test-type-files}/04a-refactor-phase-proposed-refactors.md
-
+project-design-requirements-filename = project-design-requirements.md
+design-requirements-default-path = {project-root}/docs/dev/{project-design-requirements-filename}
 ```
 
 ## Step 1: Validate Input
@@ -108,6 +109,7 @@ Read the following files to understand what was planned and implemented:
 - green-phase-file = summarises what was actually done to create the code that passed the test. NOTE: This would have been a **minimal** implementation - and so there will often be scope for refactoring to remove duplication or improve the design of this code or the whole system that incorporates this code.
 2. The actual implementation file(s) mentioned in the GREEN phase document
 3. The test file(s) for this test type
+4. Discover and read the project design requirements file IN FULL: check `{design-requirements-default-path}` first, then search the workspace for `{project-design-requirements-filename}` if not found. You will need every requirement from this document for the compliance audit in Step 6e. If not found, note this — the compliance audit will be skipped.
 
 ## Step 6: Analyze Code for Potential Refactors
 
@@ -185,6 +187,34 @@ Magic constants are literal values (numbers, strings) used directly in code with
 | **Add generalization** | Make code more generic "for future use" | Classic gold-plating |
 
 NOTE: Items from Step 6a that warrant action should be classified into Tier 1 or Tier 2 as appropriate.
+
+### 6e. Project Design Requirements Compliance Audit
+
+**If the design requirements file was not found, skip this step entirely** and note "Skipped - no project-design-requirements.md found in workspace" in the document.
+
+**Otherwise, perform a thorough audit:**
+
+Read the design requirements file and extract every distinct requirement. For each requirement:
+
+1. **Identify the requirement** — quote or paraphrase the specific requirement from the document
+2. **Assess compliance** — examine the actual implementation files (from GREEN phase) against this requirement
+3. **Reference specific evidence** — name the specific files, classes, interfaces, patterns, or code structures that demonstrate compliance (or lack thereof)
+4. **Assign a status**:
+   - **MET** — The implementation satisfies this requirement. State the evidence.
+   - **PARTIALLY MET** — Some aspects are satisfied, others are not. Detail what's met and what's missing.
+   - **NOT MET** — The implementation does not satisfy this requirement. Explain the gap.
+   - **NOT APPLICABLE** — This requirement doesn't apply to the work in this Jira (e.g., the Jira only adds a test helper, not a domain concept). Explain why.
+5. **If PARTIALLY MET or NOT MET**: Propose a specific refactoring action to address the gap. Each such refactoring proposal should be added to **Tier 2 refactors** for human review (not auto-approved, since design decisions require human judgment).
+
+**Key requirements to audit** (but always use the actual document as source of truth — it may have been updated):
+- Class/interface pair for every "concept" in the system
+- Default naming convention (e.g., `DefaultFoo` implementing `Foo` interface)
+- Tell don't ask / push work into objects
+- Switchability — could a third party replace any concrete class easily?
+- Minimal state — are fields being used to cache intermediate state unnecessarily?
+- Balance caveat — is the implementation appropriately balanced (not fractured to the extreme)?
+
+This audit creates traceability between the project's design requirements and what was actually implemented.
 
 **Utility file naming guidance**: When extracting functions to utility files, name the file after the **domain/category** (e.g. `src/utils/git/git-utils.ts`, `src/utils/cli/pty-utils.ts`), NOT after the single function being extracted (e.g. `project-root.ts`, `spawnPty.ts`). Naming a file after one function creates a 1:1 file-to-function mapping that discourages adding related functions later. A domain-named file provides a natural home for future related helpers.
 
@@ -331,13 +361,33 @@ _None yet - human to fill in or write "None"_
 
 ---
 
+## Project Design Requirements Compliance Audit
+
+{If design requirements file was NOT found: "Skipped - no project-design-requirements.md file was found in this workspace."}
+
+{Otherwise:}
+
+**Design Requirements File**: `{path to design requirements file}`
+
+| # | Requirement | Evidence (files, classes, patterns) | Status | Refactoring Proposal (if needed) |
+|---|-------------|-------------------------------------|--------|----------------------------------|
+| DR.1 | {requirement from document} | {specific files, classes, patterns} | MET / PARTIALLY MET / NOT MET / NOT APPLICABLE | {proposal or —} |
+| DR.2 | ... | ... | ... | ... |
+
+**Summary**: X of Y requirements MET, Z PARTIALLY MET, W NOT MET, V NOT APPLICABLE
+
+> **Note to human**: Any refactoring proposals in this audit have been added to Tier 2 above for your APPROVE / REJECT / DISCUSS decision. The audit itself is for your awareness and traceability.
+
+---
+
 ## Summary
 
 | Category | Count |
 |----------|-------|
 | Tier 1 (Auto-approved) | X |
 | Tier 2 AI-Identified (Pending review) | Y |
-| **Total identified by AI** | X+Y |
+| Design Requirements Audit (items needing action) | Z |
+| **Total identified by AI** | X+Y+Z |
 
 ---
 

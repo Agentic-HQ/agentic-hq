@@ -30,6 +30,8 @@ ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.m
 red-phase-plan-file-copy = {test-type-files}/02-red-phase-failing-test-plan-copy.md
 red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
+project-design-requirements-filename = project-design-requirements.md
+design-requirements-default-path = {project-root}/docs/dev/{project-design-requirements-filename}
 ```
 
 ## Step 1: Validate Input
@@ -83,6 +85,7 @@ Read the following files to understand the task:
 1. `{ai-summary-file}` - Your understanding of the Jira and human's answers to questions
 2. Use the jira-verbatim-content-extractor agent to obtain all the details of the Jira you are working on *and* any parent and child Jiras.  Use this information to obtain an understanding of what you are implementing and the acceptance criteria and the EXACT commands that will run for the test of this test type = {test-type}.
 3. Any existing test files in the project to understand test patterns/conventions
+4. Discover and read the project design requirements file: check `{design-requirements-default-path}` first, then search the workspace for `{project-design-requirements-filename}` if not found. If found, read it — these are the project's OO design principles that your test plan should consider. If not found, note this and continue.
 
 ## Step 5.5: Branch for Manual Test Type
 
@@ -157,6 +160,10 @@ Use the `EnterPlanMode` tool to enter Plan Mode. Once in Plan Mode:
 - Create a Plan for executing the remaining steps in this command.  IMPORTANT: If you're not going to copy all the details from the different Steps in this command, include in the Plan that the agent **must** refer back to the various "Step" sections in this command for full details (IGNORE THIS: NOTE FROM HUMAN TO HUMAN READING THIS: I'm not sure how well this will work - there is a fundamental problem of conflict between a dynamic Plan created by Claude on the fly and the Command Steps which partially duplicate each other - it's hard to say which Claude should be following and when...)
 - **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{red-phase-plan-file-copy}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
 - The plan's **LAST step** must be: "Recheck that all commands have been executed in the 02-jira-write-failing-test.md command"
+- **Add a "## Project Design Requirements Compliance" section** to the plan. If the design requirements file was not found, write "Skipped - no project-design-requirements.md found in workspace" and move on. Otherwise:
+  - Explain how the planned test approach aligns with the project design requirements, referencing specific requirements (e.g., "test imports interface not concrete class, validating class/interface pair requirement", "test uses dependency injection, validating that the component is switchable")
+  - Note which design requirements can't be validated at the test level and will be addressed in GREEN/REFACTOR (e.g., "State management requirements will be validated during implementation, not at the test level")
+  - This is lighter than the GREEN version — tests validate design indirectly
 - Present the Plan to the user and then get their feedback on the Plan and modify it based on that feedback (as you always do)
 - Then implement the Plan based on their feedback from the Plan (as usual)
 

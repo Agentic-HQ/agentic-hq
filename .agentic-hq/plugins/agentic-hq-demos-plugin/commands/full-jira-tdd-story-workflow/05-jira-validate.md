@@ -30,6 +30,8 @@ workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 validate-file = {workflow-files}/05-validate-phase-results.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
+project-design-requirements-filename = project-design-requirements.md
+design-requirements-default-path = {project-root}/docs/dev/{project-design-requirements-filename}
 ```
 
 ## Step 1: Validate Input
@@ -81,6 +83,7 @@ Read the following files to understand what was implemented and the acceptance c
 1. `{ai-summary-file}` - Your understanding of the Jira and requirements
 2. All existing phase files in `{workflow-files}` to understand what test types were completed
 3. Use the jira-verbatim-content-extractor agent to obtain all the details of the Jira you are working on *and* any parent and child Jiras.  Use this information to obtain an understanding of what was tested, developed and refactored and all of the Acceptance Criteria.
+4. Discover the design requirements file: check `{design-requirements-default-path}` first, then search the workspace for `{project-design-requirements-filename}` if not found. If found, read the refactor analysis file(s) in `{workflow-files}` to check whether a "Project Design Requirements Compliance Audit" section was completed and what its outcome was.
 
 ## Step 5: Choose Validation Level
 
@@ -177,6 +180,19 @@ From the Jira acceptance criteria, verify each item:
 
 **If any acceptance criteria lack test coverage or are failing, flag this clearly.**
 
+### Design Requirements Compliance Check
+
+If the design requirements file was found in Step 4:
+
+1. Read the refactor analysis file(s) in `{workflow-files}` and locate the "Project Design Requirements Compliance Audit" section
+2. Verify the audit was completed (section exists and has content)
+3. Check that all NOT MET items either:
+   - Had refactoring proposals that were EXECUTED in 04b, OR
+   - Were explicitly SKIPPED/REJECTED by the human in the Agreed Refactors Summary Table (with justification)
+4. Report the final compliance status
+
+If no design requirements file was found: note "N/A — no project-design-requirements.md in workspace" and move on.
+
 ## Step 9: Create Validate Phase Document
 
 Create the file `{validate-file}` with the following structure:
@@ -249,6 +265,20 @@ Create the file `{validate-file}` with the following structure:
 
 ---
 
+## Design Requirements Compliance
+
+{If no design requirements file found: "N/A — No project-design-requirements.md file exists in this workspace."}
+
+{If audit was completed in 04a:}
+**Audit Completed In**: `{path to refactor analysis file}`
+**Result**: X of Y requirements MET, Z PARTIALLY MET (addressed in refactoring), W NOT MET (see notes)
+
+{If any NOT MET items remain after refactoring, list them with the human's decision from 04a}
+
+**Final Compliance Status**: ✅ All requirements addressed / ⚠️ Some requirements deferred (see above)
+
+---
+
 ## Summary
 
 | Category | Status |
@@ -258,6 +288,7 @@ Create the file `{validate-file}` with the following structure:
 | Smoke Tests | ✅/❌/⏭️ |
 | E2E Tests | ✅/❌/⏭️ |
 | Acceptance Criteria | ✅/❌ |
+| Design Requirements | ✅/⚠️/⏭️ |
 | **Ready for Commit** | ✅ YES / ❌ NO |
 
 ---

@@ -23,6 +23,8 @@ jira-docs-root = {project-root}/docs/jira-docs
 workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
+project-design-requirements-filename = project-design-requirements.md
+design-requirements-default-path = {project-root}/docs/dev/{project-design-requirements-filename}
 ```
 
 ## 🛑 Step 0b: CRITICAL - This Command is READ-ONLY
@@ -98,6 +100,17 @@ Review any Jiras linked in the description or via issue links.
 
 Skip linked Jiras that are clearly not relevant (e.g., unrelated work items just mentioned in passing).
 
+## Step 7.5: Discover and Read Project Design Requirements
+
+Search for the project design requirements file:
+
+1. Check the default location: `{design-requirements-default-path}`
+2. If not found at the default location, search the workspace for any file named `{project-design-requirements-filename}`
+3. If found: read the entire file and note which requirements are most relevant to this Jira
+4. If not found anywhere: note this but do NOT fail the workflow — design requirements compliance sections will simply be skipped in subsequent phases
+
+Tell the user what you found (path and brief description) or that no design requirements file was found.
+
 ## Step 8: Read Relevant Project Files
 
 Based on what you learned from the Jira(s), read files in the project that will help you understand:
@@ -172,6 +185,18 @@ Create the file `{workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 ### {Research Topic 2}
 
 {Findings...}
+
+## Project Design Requirements
+
+**File**: `{path to design requirements file, or "NOT FOUND"}`
+
+{If the file was found, provide a brief summary of the key design requirements that are RELEVANT to this Jira's work. Do not reproduce the entire file. Instead:
+
+1. List the requirements from the document that will be most relevant to the implementation of this Jira
+2. For each, note WHY it's relevant to this specific task
+3. Flag any requirements that may be challenging to meet given the scope of this Jira
+
+If the file was NOT found, write: "No project-design-requirements.md file was found in the workspace. Design requirements compliance sections will be skipped in subsequent phases."}
 
 ## Questions for Human
 
