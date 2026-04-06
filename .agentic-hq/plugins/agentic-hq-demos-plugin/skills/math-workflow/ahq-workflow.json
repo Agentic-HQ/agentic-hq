@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "math-workflow",
+  "shortId": "math",
+  "description": "Solves a math problem using an agent team",
+  "exampleParameters": "-- --input-number=54321",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

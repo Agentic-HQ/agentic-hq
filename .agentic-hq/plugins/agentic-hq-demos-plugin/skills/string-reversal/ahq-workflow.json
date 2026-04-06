@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "string-reversal",
+  "shortId": "reversal",
+  "description": "Reverses a string (hello world demo)",
+  "exampleParameters": "-- --string-to-reverse='hello there you'",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

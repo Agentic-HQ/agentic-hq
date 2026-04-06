@@ -13,6 +13,7 @@ import { Command } from 'commander';
 
 import type { WorkflowCommandBuilder } from '../interfaces/workflow-command-builder.js';
 import type { WorkflowSkillsRegistry } from '../workflow/workflow-skills/workflow-skills-registry.js';
+import { WorkflowSearchResultsImpl } from '../workflow-discovery/workflow-listing/workflow-search-results-impl.js';
 
 /**
  * Create a configured Commander program that delegates workflow execution
@@ -36,7 +37,7 @@ export function createProgram(
     .command('list')
     .description('List available workflow skills')
     .action(() => {
-      console.log(registry.formatSkillList());
+      console.log(new WorkflowSearchResultsImpl().getWorkflowsListingString());
     });
 
   // --- short alias subcommands (e.g., agentic-hq math) ---

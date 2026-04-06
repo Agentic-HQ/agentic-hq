@@ -109,7 +109,7 @@ Read the following files to understand what was planned and implemented:
 - green-phase-file = summarises what was actually done to create the code that passed the test. NOTE: This would have been a **minimal** implementation - and so there will often be scope for refactoring to remove duplication or improve the design of this code or the whole system that incorporates this code.
 2. The actual implementation file(s) mentioned in the GREEN phase document
 3. The test file(s) for this test type
-4. Discover and read the project design requirements file IN FULL: check `{design-requirements-default-path}` first, then search the workspace for `{project-design-requirements-filename}` if not found. You will need every requirement from this document for the compliance audit in Step 6e. If not found, note this — the compliance audit will be skipped.
+4. Discover and read the project design requirements file IN FULL: check `{design-requirements-default-path}` first, then search the workspace for `{project-design-requirements-filename}` if not found. You will need every requirement from this document for the compliance audit in Step 6f. If not found, note this — the compliance audit will be skipped.
 
 ## Step 6: Analyze Code for Potential Refactors
 
@@ -163,7 +163,33 @@ Magic constants are literal values (numbers, strings) used directly in code with
 
 **If ANY magic constants are found, add them to Tier 1 refactors.**
 
-### 6c. Tier 1: Always-Safe Refactors (Auto-approved)
+### 6c. Audit To Confirm Methods Used In Production Code (Not Just Tests)
+
+**You MUST audit every method on every interface/class created or modified in this Jira.**
+
+The audit checks whether each method is actually needed. A method that only exists because a test asserts on it (no production-code caller outside tests) is a code smell per `feedback_no_test_only_production_methods.md`. Similarly, a method on a public interface that is only called by its own implementing class (via `this.method()`) doesn't need to be on the interface — no external caller ever uses it through the interface contract.
+
+**How to check — for EACH method on EACH interface/class touched in this Jira:**
+
+1. Grep the entire codebase for callers of the method (include `.method(` and implicit-`.toString()` usage in template literals where relevant).
+2. Identify all production callers (under `src/`) and test callers (under `tests/`).
+3. **For methods on an INTERFACE**, ask: "Does any caller use this method through the interface (i.e., from outside the implementing class)?"
+4. **For methods on a CLASS** (or a method that is only on the concrete class, not on any interface), ask: "Does any production code call this method at all (including self-calls)?"
+5. Assign one of three statuses:
+   - **✓** — method is used as intended.
+     - For interface methods: at least one caller outside the implementing class calls it through the interface.
+     - For class-only methods: at least one production caller (including self) exists.
+   - **NOT USED THROUGH INTERFACE ⚠️** — method is declared on an interface, but the ONLY production callers are `this.method()` self-calls from inside the implementing class (plus possibly tests). **Code smell**: make the method private in the implementation class and remove it from the interface. Tests that assert on this method should be rewritten to assert via methods that external code actually calls.
+   - **TEST-ONLY ⚠️** — method has zero production callers (including zero self-calls); only tests reference it. **Code smell**: delete the method, or rethink the design so production code needs it.
+   - (Exception: **NOT-YET-WIRED** — a subsystem entry point that's deliberately not yet called from the CLI and will be wired in a later phase. Not a code smell — this is the deliberate API surface. Document WHY it's not yet wired.)
+
+**For EACH method flagged NOT USED THROUGH INTERFACE or TEST-ONLY**, add a Human-Identified refactor proposal (H.x) to delete, inline, or make-private + remove-from-interface. Put the proposal in the Tier 2 Human-Identified section.
+
+**WHY THIS MATTERS**: Methods live on a public contract forever. If every production caller is `this.method()` inside the implementation, the interface grows unnecessary API surface that future callers have to understand, and tests become coupled to implementation details instead of public behavior. Catching this at REFACTOR is much cheaper than later.
+
+**Real example (AHQ-104)**: The `AhqWorkflow` interface initially declared 5 methods, but 4 of them (`getShortName()`, `getDescription()`, `getFullClaudeSkillCommand()`, `getExampleCommand()`) were only called by `this.method()` inside `AhqWorkflowImpl.getWorkflowListingEntryString()`. The audit originally marked them ✓ because they had production callers — but every production caller was `this.method()` from inside the same class, so no external code ever used them through the `AhqWorkflow` interface. The methods were later removed from the interface, made private in the implementation, and the tests were rewritten to assert only via `getWorkflowListingEntryString()`.
+
+### 6d. Tier 1: Always-Safe Refactors (Auto-approved)
 
 | Refactor Type | Description |
 |---------------|-------------|
@@ -175,7 +201,7 @@ Magic constants are literal values (numbers, strings) used directly in code with
 | **Fix obvious code smells** | Long lines, inconsistent formatting |
 | **Add missing TSDoc** | TSDoc is required on exported classes and their public methods. A brief `/** ... */` comment explaining what the class/method does. Check each source file touched in this Jira. |
 
-### 6d. Tier 2: Potential Structural Refactors (surface ALL of them - even ones you're unsure about)
+### 6e. Tier 2: Potential Structural Refactors (surface ALL of them - even ones you're unsure about)
 
 | Refactor Type | Description | Risk |
 |---------------|-------------|------|
@@ -188,7 +214,7 @@ Magic constants are literal values (numbers, strings) used directly in code with
 
 NOTE: Items from Step 6a that warrant action should be classified into Tier 1 or Tier 2 as appropriate.
 
-### 6e. Project Design Requirements Compliance Audit
+### 6f. Project Design Requirements Compliance Audit
 
 **If the design requirements file was not found, skip this step entirely** and note "Skipped - no project-design-requirements.md found in workspace" in the document.
 
@@ -307,6 +333,30 @@ Analysis of the AI summary, red phase, green phase, and implementation documents
 
 **Or if all clean:**
 > All literal values are already extracted to named constants.
+
+---
+
+## Audit To Confirm Methods Used In Production Code (Not Just Tests)
+
+Auditing every method on every interface/class created or modified in this Jira.
+
+**Legend**:
+- **✓** = used as intended (interface methods: called through the interface from outside the implementing class; class-only methods: any production caller exists)
+- **NOT USED THROUGH INTERFACE ⚠️** = interface method only called by `this.method()` from inside the implementing class (plus possibly tests) — should be made private + removed from the interface
+- **TEST-ONLY ⚠️** = zero production callers (not even self-calls); only tests reference it — should be deleted
+- **NOT-YET-WIRED** = subsystem entry point, deliberately not yet wired into the CLI (will be wired later) — keep
+
+| Interface / Class | Method | Status | Evidence |
+|---|---|---|---|
+| `{Interface}` | `{method()}` | ✓ / NOT USED THROUGH INTERFACE ⚠️ / TEST-ONLY ⚠️ / NOT-YET-WIRED | `{file:line}` |
+
+**Flagged methods:**
+- `{Interface}.{method()}` — **make private + remove from interface** (not used through interface) / **delete** (test-only) / **keep** ({reason})
+
+**Any flagged methods above are added as Human-Identified refactors (H.x) in Tier 2 below.**
+
+**Or if all clean:**
+> All interface methods have at least one external caller using them through the interface. No test-only methods found.
 
 ---
 

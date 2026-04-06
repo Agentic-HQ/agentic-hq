@@ -106,18 +106,20 @@ Read `{refactor-analysis-file}` and check for the `## Review Status: COMPLETE` m
 - Ask the human: "Before I execute refactors, please confirm the current implementation works. Have you manually tested it? (Yes/No)"
 - If YES: Proceed to Step 6
 - If NO: STOP and tell them to test first
-- Also run `pnpm validate` (unit tests and other validation) if they exist — those are fast, automated, and always worth running regardless of test type
+- Also run `pnpm validate` (typecheck + lint + unit tests) if they exist — it's fast, automated, and always worth running regardless of test type
 
 **For automated test types:**
 
-**Always run unit tests first** (they're fast, ~1s): `pnpm test`
+**Always run `pnpm validate` first** (typecheck + lint + unit tests — fast, ~5s): `cd <project-dir>; pnpm validate`
+
+`pnpm validate` is the canonical pre-commit check — it runs TypeScript typecheck, lint check, and unit tests in one command. Do NOT run `pnpm test`, `pnpm typecheck`, and `pnpm lint:check` separately — use `pnpm validate` to run them together.
 
 Then run the test-type-specific tests:
-- If {test-type} == 'unit': Already done above.
+- If {test-type} == 'unit': Already done above (unit tests are part of `pnpm validate`).
 - If {test-type} is 'integration', 'smoke', or 'e2e': **DO NOT run the full suite.** Instead, run only the specific test file(s) for this Jira. Tell the user:
   > "NOTE: Running all {test-type} tests has been skipped to conserve Claude Code plan credits. Only running the specific test file(s) for this Jira to confirm GREEN. Please run `pnpm test:{test-type}` manually if you want a full suite check."
 
-If ANY test fails, **STOP**:
+If ANY test fails (or typecheck/lint fails), **STOP**:
 > "Tests are failing BEFORE refactoring. Cannot proceed.
 >
 > Please fix failing tests first. The REFACTOR phase requires a green test suite."
@@ -134,11 +136,11 @@ Make the code change for this single refactor.
 
 ### 6b. Run the Correct Tests Immediately
 
-**If test-type is `manual`:** Do NOT ask the human to test after each individual refactor (manual testing is slow/costly). Still run `pnpm test` (unit tests) after each refactor if they exist — those are fast and automated. Skip any test-type-specific test runs. The human will be offered a manual test at the end (Step 7).
+**If test-type is `manual`:** Do NOT ask the human to test after each individual refactor (manual testing is slow/costly). Still run `pnpm validate` (typecheck + lint + unit tests) after each refactor if they exist — those are fast and automated. Skip any test-type-specific test runs. The human will be offered a manual test at the end (Step 7).
 
 **For automated test types:**
 
-**ALWAYS run unit tests** (`pnpm test`) after every refactor — they're fast (~1s) and catch type/import/logic errors immediately.
+**ALWAYS run `pnpm validate`** (typecheck + lint + unit tests) after every refactor — it's fast (~5s) and catches type errors, lint issues, AND test failures in a single command. Do NOT run `pnpm test`, `pnpm typecheck`, and `pnpm lint:check` separately — `pnpm validate` is the canonical combined check used pre-commit. Running the checks separately wastes time and risks missing one.
 
 **CRITICAL: You MUST ALSO run the specific test that actually exercises the changed functionality.** Ask yourself: "Which test would FAIL if this refactor broke something?" That is the test you must run. If the answer is the e2e test, you MUST run the e2e test — even though it's slow. Do NOT skip it just because it takes 60 seconds.
 
@@ -151,7 +153,7 @@ Use the specific test file path, e.g.:
 - `pnpm vitest run --config vitest.e2e.config.ts tests/e2e/path/to/specific.test.ts`
 - `pnpm vitest run --config vitest.integration.config.ts tests/integration/path/to/specific.test.ts`
 
-For trivial refactors (extracting constants, renaming variables) that genuinely cannot change behavior, you may skip the intermediate test-type-specific test run and batch them, but still run unit tests after the batch.
+For trivial refactors (extracting constants, renaming variables) that genuinely cannot change behavior, you may skip the intermediate test-type-specific test run and batch them, but still run `pnpm validate` after the batch.
 
 The FULL test suite is only run once in Step 7 after ALL refactors are complete.
 

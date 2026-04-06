@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "quick-jira-workflow",
+  "shortId": "quick-jira",
+  "description": "Creates and completes a Jira ticket",
+  "exampleParameters": "-- --jira-id=TEST-123",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

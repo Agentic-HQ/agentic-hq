@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-core-plugin",
+  "skillId": "create-workflow",
+  "shortId": "create-workflow",
+  "description": "Create a new Agentic HQ workflow",
+  "exampleParameters": "",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "full-jira-tdd-story-workflow",
+  "shortId": "full-jira",
+  "description": "Full TDD story workflow driven by a Jira ticket",
+  "exampleParameters": "-- --jira-id=TEST-123",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

@@ -17,7 +17,7 @@ Read the SRP header of multiple classes and interfaces to see how this is design
 
 If we are talking about a “concept” in the spec for a feature (e.g. Plugin or WorkflowSearchResult) then we want an interface and a class for that concept.   
 
-Currently we are using the convention that if an interface has only one “default” implementation we call the interface the concept name e.g. WorkflowSearchResult and the default concrete implementation DefaultWorkflowSearchResult.  This means that this DefaultWorkflowSearchResult is our "default" implementation of the WorkflowSearchResult, but anyone else can create their own CustomWorkflowSearchResult which does things a different way and easily replace our default with their custom implementation.
+We use the convention that the interface gets the concept name (e.g. `WorkflowSearchResults`) and the concrete implementation appends `Impl` (e.g. `WorkflowSearchResultsImpl`).  This means that `WorkflowSearchResultsImpl` is our implementation of the `WorkflowSearchResults` interface, but anyone else can create their own `CustomWorkflowSearchResults` which does things a different way and easily replace our implementation with theirs.
 
 As an example for:
 https://agentic-hq.atlassian.net/browse/AHQ-103 - 
@@ -159,3 +159,36 @@ When doing planning, in order to be sure we are mapping all concepts to a class/
 == Important Caveat
 
 Designing a well structured and well balanced set of classes and interfaces to make an object oriented system that is easy to understand and easy to change is **hard work** and you won't get it right first time.  You have to try, see where it looks bad, looks complicated, could be simplified, could be consolidated, and **iterate** until you have something that is **good enough** (NOT perfect, as that will use up far to much time and energy).  It's all about balance and assessing risk/reward for work done.
+
+== STEVE TO DO LATER
+
+Claude has been taking my advice/requests during planning and squirreling design tips/preferences away in documents here:
+
+(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % tail -8 /Users/stevepersonal/.claude/projects/-Users-stevepersonal-dev-agentic-hq-agentic-hq/memory/MEMORY.md
+## Feedback
+- [Unit test file per class](feedback_unit_test_file_per_class.md) — One test file per class, not all tests in one file
+- [Directory structure by entity](feedback_directory_structure_by_entity.md) — Dirs group by entity/concept, not code type (no value-objects/, domain/ dirs)
+- [Constructor injection pattern](feedback_constructor_injection_delegation.md) — Prefer dependencies in constructor; methods delegate to contained objects + method params
+- [No "er" suffix classes](feedback_no_er_suffix_classes.md) — Classes like Parser/Discoverer are code smells; behavior belongs inside the entity
+- [Temp dirs need UID](feedback_temp_dirs_need_uid.md) — Test temp dirs must include unique ID to avoid parallel test clashes
+- [Avoid cached state](feedback_avoid_cached_state.md) — Store minimal source data, derive values dynamically on each method call
+- [Collection names: plural not List](feedback_collection_names_plural_not_list.md) — Use AhqWorkflows not AhqWorkflowList; plural doesn't prescribe data structure
+(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % 
+(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % 
+(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % ls -al /Users/stevepersonal/.claude/projects/-Users-stevepersonal-dev-agentic-hq-agentic-hq/memory            
+total 64
+drwxr-xr-x   10 stevepersonal  staff    320  4 Apr 19:58 .
+drwxr-xr-x@ 682 stevepersonal  staff  21824  4 Apr 18:04 ..
+-rw-r--r--    1 stevepersonal  staff    812  4 Apr 19:49 feedback_avoid_cached_state.md
+-rw-r--r--    1 stevepersonal  staff    661  4 Apr 19:57 feedback_collection_names_plural_not_list.md
+-rw-r--r--    1 stevepersonal  staff   1172  4 Apr 18:12 feedback_constructor_injection_delegation.md
+-rw-r--r--    1 stevepersonal  staff    851  4 Apr 18:06 feedback_directory_structure_by_entity.md
+-rw-r--r--    1 stevepersonal  staff    950  4 Apr 18:25 feedback_no_er_suffix_classes.md
+-rw-r--r--    1 stevepersonal  staff    543  4 Apr 18:37 feedback_temp_dirs_need_uid.md
+-rw-r--r--    1 stevepersonal  staff    729  4 Apr 18:01 feedback_unit_test_file_per_class.md
+-rw-r--r--    1 stevepersonal  staff   2340  4 Apr 19:58 MEMORY.md
+(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % 
+
+TODO: Go through these and incorporate them at some point into this doc.
+
+For the moment - Claude should read through these file (if on Steve's computer) and incorporate them into the design requirements for the current work.
