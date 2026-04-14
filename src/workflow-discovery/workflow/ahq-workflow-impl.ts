@@ -1,12 +1,16 @@
 import type { AhqFile } from '../interfaces/ahq-file.js';
 import type { AhqWorkflow } from '../interfaces/ahq-workflow.js';
 import type { ExampleCommand } from '../interfaces/example-command.js';
+import type { FullClaudeSkillCommand } from '../interfaces/full-claude-skill-command.js';
 import type { WorkflowDescription } from '../interfaces/workflow-description.js';
 import type { WorkflowMetadata } from '../interfaces/workflow-metadata.js';
+import type { WorkflowShortName } from '../interfaces/workflow-short-name.js';
 import { JsonFileWorkflowMetadata } from '../workspace/json-file-workflow-metadata.js';
 
 import { ExampleCommandImpl } from './example-command-impl.js';
+import { FullClaudeSkillCommandImpl } from './full-claude-skill-command-impl.js';
 import { WorkflowDescriptionImpl } from './workflow-description-impl.js';
+import { WorkflowShortNameImpl } from './workflow-short-name-impl.js';
 
 const WHAT_IT_DOES_LINE_PREFIX = '\n   What it does: ';
 
@@ -16,7 +20,8 @@ const WHAT_IT_DOES_LINE_PREFIX = '\n   What it does: ';
  *
  * SRP Does: Assemble a single workflow's listing entry (example command
  * + description) by delegating to value-object createFroms over a
- * JsonFileWorkflowMetadata view of an AhqFile.
+ * JsonFileWorkflowMetadata view of an AhqFile, and expose metadata
+ * for CLI registration and execution.
  *
  * SRP Knows About: The listing entry format (example + description
  * composition), the JsonFileWorkflowMetadata binding, and the
@@ -27,12 +32,21 @@ const WHAT_IT_DOES_LINE_PREFIX = '\n   What it does: ';
  */
 export class AhqWorkflowImpl implements AhqWorkflow {
   private readonly metadata: WorkflowMetadata;
+
   constructor(file: AhqFile) {
     this.metadata = new JsonFileWorkflowMetadata(file);
   }
   /** Return the workflow's description (delegates to WorkflowDescriptionImpl.createFrom). */
-  private getDescription(): WorkflowDescription {
+  getDescription(): WorkflowDescription {
     return WorkflowDescriptionImpl.createFrom(this.metadata);
+  }
+  /** Return the workflow's short name (delegates to WorkflowShortNameImpl.createFrom). */
+  getShortName(): WorkflowShortName {
+    return WorkflowShortNameImpl.createFrom(this.metadata);
+  }
+  /** Return the full /pluginId:skillId command (delegates to FullClaudeSkillCommandImpl.createFrom). */
+  getFullClaudeSkillCommand(): FullClaudeSkillCommand {
+    return FullClaudeSkillCommandImpl.createFrom(this.metadata);
   }
   /** Return the example invocation command (delegates to ExampleCommandImpl.createFrom). */
   private getExampleCommand(): ExampleCommand {

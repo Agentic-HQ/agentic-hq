@@ -6,7 +6,7 @@
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:math-workflow -- --input-number=11
+ * 4. Run: agentic-hq math -- --input-number=11
  * 5. Assert: Output contains "Output number: 5" (11 x2=22, +3=25, /5=5)
  * 6. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
  *
@@ -80,7 +80,7 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', 
       execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Act — run agentic-hq from the temp workspace (exactly as a developer would)
-      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:math-workflow -- --input-number=${TEST_INPUT_NUMBER}`;
+      const command = `agentic-hq math -- --input-number=${TEST_INPUT_NUMBER}`;
 
       let output: string;
       try {

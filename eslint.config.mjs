@@ -39,6 +39,7 @@ export default [
       'src/experiments/**', // Old experiments - to be cleaned up in separate chore Jira
       'temp/**', // Test-generated files (e.g. e2e test project roots) - not in tsconfig.json
       '.agentic-hq/plugins/**/ts-workflow/src/**', // Plugin ts-workflow code has its own tsconfig (AHQ-56)
+      'tests/e2e/fixtures/**/ts-workflow/src/**', // Fixture ts-workflow code has its own tsconfig
     ],
   },
 

@@ -28,7 +28,7 @@ workflow-files = {jira-docs-root}/{jira-id}/workflow-files
 test-type-files = {workflow-files}/{test-type}-test-files
 ai-summary-file = {workflow-files}/ai-summary-of-jiras-and-questions-for-human.md
 red-phase-file = {test-type-files}/02-red-phase-failing-tests.md
-green-phase-plan-file-copy = {test-type-files}/03-green-phase-implementation-plan-copy.md
+green-phase-plan-file-copy = {test-type-files}/03-APPROVED-green-phase-implementation-plan-copy.md
 green-phase-file = {test-type-files}/03-green-phase-summary-of-what-was-implemented.md
 jira-url = https://agentic-hq.atlassian.net/browse/{jira-id}
 project-design-requirements-filename = project-design-requirements.md
@@ -144,19 +144,15 @@ Use the `EnterPlanMode` tool to enter Plan Mode for the implementation in steps 
 
 3. Add to the end of the Plan a TODO to come back and re-read this command file for testing and documenting instructions after step 6c. IMPORTANT: Do not copy those instructions into the Plan - you will miss bits.
 
-4. Copy the entire plan to {green-phase-plan-file-copy} and tell the human where it is
+4. **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{green-phase-plan-file-copy}` before proceeding with implementation"** - this ensures the approved plan is saved to the workflow directory
 
-5.a. **CRITICAL: The plan MUST include as its FIRST step (Step 0): "Copy this approved plan to `{green-phase-plan-file-copy}` before proceeding with implementation"** - this ensures the plan file is saved to the workflow directory
+5. Present the Plan to the user and get their feedback, modify based on feedback
 
-5.b. Present the Plan to the user and get their feedback, modify based on feedback
-
-6. When finally approved, re-copy the updated plan to {green-phase-plan-file-copy}
-
-7. Then implement the Plan
+6. When finally approved, implement the Plan (which starts with Step 0: copying the approved plan)
 
 ## Step 6b: Write the Minimal Implementation
 
-**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan - copying the approved plan to `{green-phase-plan-file-copy}`. If not, do it NOW before continuing.**
+**CHECKPOINT: Before proceeding, verify you have completed Step 0 from your plan — copying the approved plan to `{green-phase-plan-file-copy}`. If not, do it NOW before writing any code.**
 
 **CRITICAL GREEN PHASE RULES:**
 - Write **only** enough code to make the test pass

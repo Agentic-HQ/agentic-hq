@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-temp-e2e-test-plugin",
+  "skillId": "string-reversal-copy-for-test",
+  "shortId": "string-reversal-copy-for-test",
+  "description": "Reverses a string (e2e test copy)",
+  "exampleParameters": "-- --string-to-reverse='hello there you'",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ E2E Tests"
+  }
+}

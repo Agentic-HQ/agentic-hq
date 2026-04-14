@@ -30,7 +30,7 @@ export function createTestWorkspaceFixture(rootDir: string): void {
       skillId: 'math-skill',
       shortId: 'math',
       description: 'Solves math problems',
-      exampleParameters: '-- --input-number=54321',
+      exampleParameters: '-- --input-number=11',
       version: '1.0.0',
       author: 'Test',
     }),

@@ -36,9 +36,12 @@ describe('MarshalledCLITool.execute(command, commandInput)', () => {
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(workspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(new DefaultAgenticHqInstallation(gitWorkspace), TSX_EXECUTABLE, [
-        FAKE_CLI_PATH,
-      ]),
+      new ClaudeCommandBuilder(
+        new DefaultAgenticHqInstallation(gitWorkspace),
+        workspace,
+        TSX_EXECUTABLE,
+        [FAKE_CLI_PATH]
+      ),
       workspace
     );
     const commandInputString = 'this is a test string';

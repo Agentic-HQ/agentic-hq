@@ -2,7 +2,7 @@
  * E2E Test: agentic-hq CLI String Reversal
  *
  * Verifies the full end-to-end flow of the agentic-hq CLI:
- * 1. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="<input>"
+ * 1. Run: agentic-hq reversal -- --string-to-reverse="<input>"
  * 2. The CLI invokes the skill to get the workflow command
  * 3. The workflow runs and reverses the string via the reverse-a-string command
  * 4. The reversed string appears in stdout
@@ -40,7 +40,7 @@ describe('agentic-hq CLI String Reversal', () => {
     'should reverse a string via the agentic-hq CLI workflow',
     () => {
       // Arrange — use `node bin/agentic-hq.cjs` directly (self-contained, no global npm link needed)
-      const command = `node bin/agentic-hq.cjs --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
+      const command = `node bin/agentic-hq.cjs reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
 
       // Act - run the agentic-hq CLI and capture stdout via log file
       const output = runCliAndLogOutput(command, LOG_FILE_LABEL, TEST_TIMEOUT_MS);

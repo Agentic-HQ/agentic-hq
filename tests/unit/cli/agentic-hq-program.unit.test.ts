@@ -1,18 +1,18 @@
 /**
- * Unit Test: CLI program delegates to injected WorkflowCommandBuilder and WorkflowSkillsRegistry.
+ * Unit Test: CLI program delegates to injected WorkflowCommandBuilder and WorkflowSearchResults.
  *
  * Verifies that the CLI program factory:
- * 1. Accepts a WorkflowCommandBuilder and WorkflowSkillsRegistry via injection
- * 2. Delegates workflow execution to builder.build() + command.execute()
- * 3. Passes the correct skill path and passthrough args
+ * 1. Accepts a WorkflowCommandBuilder and WorkflowSearchResults via injection
+ * 2. Calls searchResults.registerWorkflowsWith() to register discovered workflows
+ * 3. Does not call builder.build() for the list command
  */
 import { describe, expect, it, vi } from 'vitest';
 
 import { createProgram } from '../../../src/cli/agentic-hq-program.js';
-import { DEMO_SKILLS } from '../../../src/demo/demo-skills.js';
 import type { WorkflowCommandBuilder } from '../../../src/interfaces/workflow-command-builder.js';
 import type { WorkflowCommand } from '../../../src/interfaces/workflow-command.js';
-import { WorkflowSkillsRegistry } from '../../../src/workflow/workflow-skills/workflow-skills-registry.js';
+import type { WorkflowRegistry } from '../../../src/workflow-discovery/interfaces/workflow-registry.js';
+import type { WorkflowSearchResults } from '../../../src/workflow-discovery/interfaces/workflow-search-results.js';
 
 function createMockBuilder(): { builder: WorkflowCommandBuilder; mockCommand: WorkflowCommand } {
   const mockCommand: WorkflowCommand = {
@@ -24,56 +24,75 @@ function createMockBuilder(): { builder: WorkflowCommandBuilder; mockCommand: Wo
   return { builder, mockCommand };
 }
 
-describe('createProgram with WorkflowCommandBuilder and WorkflowSkillsRegistry injection', () => {
-  it('should delegate short alias workflow to builder.build() + command.execute()', async () => {
+function createStubSearchResults(
+  onRegister?: (registry: WorkflowRegistry) => void
+): WorkflowSearchResults {
+  return {
+    getWorkflowsListingString: () => 'stub listing',
+    registerWorkflowsWith: (registry: WorkflowRegistry) => {
+      if (onRegister) {
+        onRegister(registry);
+      }
+    },
+  };
+}
+
+describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults injection', () => {
+  it('should call searchResults.registerWorkflowsWith() during program creation', () => {
+    const { builder } = createMockBuilder();
+    const registerSpy = vi.fn();
+    const searchResults: WorkflowSearchResults = {
+      getWorkflowsListingString: () => 'listing',
+      registerWorkflowsWith: registerSpy,
+    };
+
+    createProgram(builder, searchResults);
+
+    expect(registerSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should delegate dynamically registered workflow to builder.build() + command.execute()', async () => {
     const { builder, mockCommand } = createMockBuilder();
-    const program = createProgram(builder, new WorkflowSkillsRegistry(DEMO_SKILLS));
+    const searchResults = createStubSearchResults((registry) => {
+      registry.register({
+        getShortName: () => ({ toString: () => 'test-wf' }),
+        getDescription: () => ({ toString: () => 'A test workflow' }),
+        getFullClaudeSkillCommand: () => ({ toString: () => '/test-plugin:test-skill' }),
+        getWorkflowListingEntryString: () => 'test-wf',
+      });
+    });
 
-    await program.parseAsync(['node', 'agentic-hq', 'reversal']);
+    const program = createProgram(builder, searchResults);
+    await program.parseAsync(['node', 'agentic-hq', 'test-wf']);
 
-    expect(builder.build).toHaveBeenCalledWith('/agentic-hq-demos-plugin:string-reversal', []);
+    expect(builder.build).toHaveBeenCalledWith('/test-plugin:test-skill', []);
     expect(mockCommand.execute).toHaveBeenCalledTimes(1);
   });
 
   it('should pass passthrough args to builder.build()', async () => {
     const { builder, mockCommand } = createMockBuilder();
-    const program = createProgram(builder, new WorkflowSkillsRegistry(DEMO_SKILLS));
+    const searchResults = createStubSearchResults((registry) => {
+      registry.register({
+        getShortName: () => ({ toString: () => 'test-wf' }),
+        getDescription: () => ({ toString: () => 'A test workflow' }),
+        getFullClaudeSkillCommand: () => ({ toString: () => '/test-plugin:test-skill' }),
+        getWorkflowListingEntryString: () => 'test-wf',
+      });
+    });
 
-    await program.parseAsync([
-      'node',
-      'agentic-hq',
-      'reversal',
-      '--',
-      '--string-reverse=hello world',
-    ]);
+    const program = createProgram(builder, searchResults);
+    await program.parseAsync(['node', 'agentic-hq', 'test-wf', '--', '--extra-arg=value']);
 
-    expect(builder.build).toHaveBeenCalledWith('/agentic-hq-demos-plugin:string-reversal', [
-      '--string-reverse=hello world',
-    ]);
-    expect(mockCommand.execute).toHaveBeenCalledTimes(1);
-  });
-
-  it('should delegate --workflow-command-supplier to builder.build()', async () => {
-    const { builder, mockCommand } = createMockBuilder();
-    const program = createProgram(builder, new WorkflowSkillsRegistry(DEMO_SKILLS));
-
-    await program.parseAsync([
-      'node',
-      'agentic-hq',
-      '--workflow-command-supplier=/custom:skill',
-      '--',
-      '--extra',
-    ]);
-
-    expect(builder.build).toHaveBeenCalledWith('/custom:skill', ['--extra']);
+    expect(builder.build).toHaveBeenCalledWith('/test-plugin:test-skill', ['--extra-arg=value']);
     expect(mockCommand.execute).toHaveBeenCalledTimes(1);
   });
 
   it('should not call builder.build() for list command', async () => {
     const { builder } = createMockBuilder();
-    const program = createProgram(builder, new WorkflowSkillsRegistry(DEMO_SKILLS));
+    const searchResults = createStubSearchResults();
 
-    // Suppress console.log for list output
+    const program = createProgram(builder, searchResults);
+
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await program.parseAsync(['node', 'agentic-hq', 'list']);
     spy.mockRestore();
@@ -81,21 +100,24 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSkillsRegistry i
     expect(builder.build).not.toHaveBeenCalled();
   });
 
-  it('should use skills from injected registry, not hardcoded data', async () => {
-    const customRegistry = new WorkflowSkillsRegistry([
-      {
-        shortName: 'custom-skill',
-        fullPath: '/custom-plugin:custom',
-        description: 'A custom skill',
-        example: 'agentic-hq custom-skill',
-      },
-    ]);
-    const { builder, mockCommand } = createMockBuilder();
-    const program = createProgram(builder, customRegistry);
+  it('should use the injected searchResults when handling the list command', async () => {
+    const { builder } = createMockBuilder();
+    const listingSpy = vi.fn().mockReturnValue('injected-listing-marker');
+    const searchResults: WorkflowSearchResults = {
+      getWorkflowsListingString: listingSpy,
+      registerWorkflowsWith: () => {},
+    };
 
-    await program.parseAsync(['node', 'agentic-hq', 'custom-skill']);
+    const program = createProgram(builder, searchResults);
 
-    expect(builder.build).toHaveBeenCalledWith('/custom-plugin:custom', []);
-    expect(mockCommand.execute).toHaveBeenCalledTimes(1);
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      await program.parseAsync(['node', 'agentic-hq', 'list']);
+
+      expect(listingSpy).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalledWith('injected-listing-marker');
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 });

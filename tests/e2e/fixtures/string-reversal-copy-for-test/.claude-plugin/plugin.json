@@ -1,0 +1,8 @@
+{
+  "name": "agentic-hq-temp-e2e-test-plugin",
+  "description": "Temporary test plugin for e2e tests — verifies user workspace workflow discovery and execution",
+  "version": "0.0.1",
+  "author": {
+    "name": "Agentic HQ E2E Tests"
+  }
+}

@@ -30,9 +30,12 @@ describe('MarshalledCLITool with real session factory and fake CLI', () => {
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(workspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(new DefaultAgenticHqInstallation(gitWorkspace), TSX_EXECUTABLE, [
-        FAKE_CLI_PATH,
-      ]),
+      new ClaudeCommandBuilder(
+        new DefaultAgenticHqInstallation(gitWorkspace),
+        workspace,
+        TSX_EXECUTABLE,
+        [FAKE_CLI_PATH]
+      ),
       workspace
     );
 

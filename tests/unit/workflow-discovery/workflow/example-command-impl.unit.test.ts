@@ -14,10 +14,10 @@ describe('ExampleCommandImpl', () => {
     const cmd: ExampleCommand = ExampleCommandImpl.createFrom(
       stubWorkflowMetadata({
         shortId: 'math',
-        exampleParameters: '-- --input-number=54321',
+        exampleParameters: '-- --input-number=11',
       })
     );
-    expect(cmd.toString()).toBe('agentic-hq math -- --input-number=54321');
+    expect(cmd.toString()).toBe('agentic-hq math -- --input-number=11');
   });
 
   it('should handle no parameters', () => {

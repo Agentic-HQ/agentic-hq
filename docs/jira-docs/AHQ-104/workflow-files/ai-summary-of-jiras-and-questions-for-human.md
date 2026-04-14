@@ -177,3 +177,20 @@ In terms of functionality - anything else that isn’t absolutely required to ju
 ## Ready for Next Step
 
 All questions resolved, test types confirmed (`unit, e2e`). This summary is complete.
+
+
+
+
+== UPDATE - Refactors Spotted By Human
+
+See REFACTORs in:
+src/workflow-discovery/interfaces/workflow-search-results.ts
+and it's implementing class.
+
+
+See also:
+
+### Step 2b: Add duplicate command name guard to WorkflowRegistryImpl
+
+in green plan file which needs undoing after the removal of classes.
+

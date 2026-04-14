@@ -53,7 +53,7 @@ export class CompositionRoot {
     return new MarshalledCLITool(
       this.getIOMarshallerSessionFactory(),
       this.getCLIWrapper(),
-      new ClaudeCommandBuilder(this.getAgenticHqInstallation()),
+      new ClaudeCommandBuilder(this.getAgenticHqInstallation(), this.getUserProjectWorkspace()),
       this.getUserProjectWorkspace()
     );
   }

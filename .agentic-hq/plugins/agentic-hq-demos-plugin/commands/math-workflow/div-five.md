@@ -11,9 +11,11 @@ Your job is to:
 
 ## Step 1: Read Input
 Read the file: {command-input-output-files-directory}/command-input.json
+Briefly tell the user the value of the command-input-string you found in the command-input.json file
 
 ## Step 2: Divide by 5
 Take the `command-input-string` value, parse it as a number, and divide by 5.
+Briefly explain the calculation you did to the user.
 
 ## Step 3: Write Output
 Write to: {command-input-output-files-directory}/command-output.json
@@ -22,6 +24,8 @@ Write to: {command-input-output-files-directory}/command-output.json
   "command-output-string": "<the result as a string>"
 }
 ```
+Briefly tell the user the value of the command-output-string you wrote to the command-output.json file
+
 
 ## Step 4: Self-Terminate
 

@@ -1,10 +1,14 @@
 /**
  * Unit Test: MarshalledCLITool with ClaudeCommandBuilder defaults.
  *
- * Verifies that ClaudeCommandBuilder's default plugin dirs and allowed tools
+ * Verifies that ClaudeCommandBuilder's dynamically discovered plugin dirs and allowed tools
  * are correctly passed through to the CLI when used with MarshalledCLITool.
  */
-import { describe, expect, it, vi } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgenticHqInstallation } from '../../../src/interfaces/agentic-hq-installation.js';
 import type { CLICommand } from '../../../src/interfaces/cli-command.js';
@@ -14,14 +18,19 @@ import type { UserProjectWorkspace } from '../../../src/interfaces/user-project-
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
 
-const mockInstallation: AgenticHqInstallation = {
-  getConfigDir: () => '/fake/workspace/.agentic-hq',
-};
+let tmpDir: string;
+let ahqConfigDir: string;
 
-const mockWorkspace: UserProjectWorkspace = {
-  getRoot: () => '/fake/project',
-  getTempDir: () => '/fake/project/.agentic-hq/temp',
-};
+beforeEach(() => {
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ccb-config-test-'));
+  ahqConfigDir = path.join(tmpDir, '.agentic-hq');
+  fs.mkdirSync(path.join(ahqConfigDir, 'plugins', 'agentic-hq-core-plugin'), { recursive: true });
+  fs.mkdirSync(path.join(ahqConfigDir, 'plugins', 'agentic-hq-demos-plugin'), { recursive: true });
+});
+
+afterEach(() => {
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+});
 
 function createMockSessionFactory(): IOMarshallerSessionFactory {
   return {
@@ -46,23 +55,27 @@ function createMockCliWrapper(): CLIWrapper & { getLastCallArgs: () => string[] 
 }
 
 describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
-  it('should use default plugin dirs and allowed tools', async () => {
+  it('should discover plugin dirs dynamically and include allowed tools', async () => {
     const mockWrapper = createMockCliWrapper();
+    const installation: AgenticHqInstallation = { getConfigDir: () => ahqConfigDir };
+    const workspace: UserProjectWorkspace = {
+      getRoot: () => tmpDir,
+      getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
+    };
 
     const tool = new MarshalledCLITool(
       createMockSessionFactory(),
       mockWrapper,
-      new ClaudeCommandBuilder(mockInstallation),
-      mockWorkspace
+      new ClaudeCommandBuilder(installation, workspace),
+      workspace
     );
 
     await tool.execute('test-command', 'test input');
 
     const args = mockWrapper.getLastCallArgs();
-    // Should contain the hardcoded defaults
+    // Should contain dynamically discovered plugin dirs
     expect(args.join(' ')).toContain('agentic-hq-core-plugin');
     expect(args.join(' ')).toContain('agentic-hq-demos-plugin');
-    expect(args.join(' ')).toContain('agentic-hq-utilities-plugin');
     expect(args.join(' ')).toContain('--allowedTools=');
     expect(args.join(' ')).toContain('Bash');
   });

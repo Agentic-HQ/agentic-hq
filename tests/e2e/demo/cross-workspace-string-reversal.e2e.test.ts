@@ -5,7 +5,7 @@
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq --workflow-command-supplier=... -- --string-to-reverse="cross workspace test"
+ * 4. Run: agentic-hq reversal -- --string-to-reverse="cross workspace test"
  * 5. Assert: Output contains the reversed string "tset ecapskrow ssorc"
  * 6. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
  *
@@ -79,7 +79,7 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
       execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Act — run agentic-hq from the temp workspace (exactly as a developer would)
-      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
+      const command = `agentic-hq reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
 
       let output: string;
       try {

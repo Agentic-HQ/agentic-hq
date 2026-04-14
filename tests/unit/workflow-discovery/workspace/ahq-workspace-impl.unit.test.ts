@@ -1,16 +1,15 @@
 /**
- * Tests AhqWorkspaceImpl — knows the AHQ workspace root (from env var) and
- * delegates file searches to its root AhqDirectory.
- * Variables typed as AhqWorkspace/AhqFiles interfaces; Impl used only for construction.
+ * Tests AhqWorkspaceImpl — reads root from AGENTIC_HQ_WORKSPACE_ROOT env var and
+ * implements Workspace by delegating to WorkspaceImpl.
+ * Variables typed as Workspace interface; AhqWorkspaceImpl used only for construction.
  */
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
 import { afterEach, describe, expect } from 'vitest';
 
-import type { AhqWorkspace } from '../../../../src/workflow-discovery/interfaces/ahq-workspace.js';
+import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 import { AhqWorkspaceImpl } from '../../../../src/workflow-discovery/workspace/ahq-workspace-impl.js';
+import { StubWorkflowRegistry } from '../test-fixtures/stub-workflow-registry.js';
 import { tmpdirTest } from '../test-fixtures/tmpdir-fixture.js';
+import { createTestWorkspaceFixture } from '../test-fixtures/workspace-fixture.js';
 
 describe('AhqWorkspaceImpl', () => {
   const originalEnv = process.env.AGENTIC_HQ_WORKSPACE_ROOT;
@@ -24,60 +23,29 @@ describe('AhqWorkspaceImpl', () => {
   });
 
   tmpdirTest(
-    'should use AGENTIC_HQ_WORKSPACE_ROOT env var as root when resolving files',
+    'should implement Workspace and return listing with "Agentic HQ Workspace" header via getWorkflowListingString',
     ({ tmpdir }) => {
-      const skillDir = path.join(
-        tmpdir,
-        '.agentic-hq',
-        'plugins',
-        'test-plugin',
-        'skills',
-        'test-skill'
-      );
-      fs.mkdirSync(skillDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(skillDir, 'ahq-workflow.json'),
-        '{"marker": "env-var-root-content"}',
-        'utf-8'
-      );
-
+      createTestWorkspaceFixture(tmpdir);
       process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
-      const workspace: AhqWorkspace = new AhqWorkspaceImpl();
-      const contents = workspace
-        .findFiles('.agentic-hq/plugins/*/skills/*/ahq-workflow.json')
-        .map((f) => f.readContent());
+      const workspace: Workspace = new AhqWorkspaceImpl();
+      const output = workspace.getWorkflowListingString();
 
-      expect(contents).toHaveLength(1);
-      expect(contents[0]).toContain('env-var-root-content');
+      expect(output).toContain('Agentic HQ Workspace');
+      expect(output).toContain(`(directory: ${tmpdir})`);
+      expect(output).toContain('Plugin: test-plugin-alpha');
+      expect(output).toContain('reversal');
     }
   );
 
-  tmpdirTest(
-    'should find files matching a glob pattern and return AhqFile objects',
-    ({ tmpdir }) => {
-      const skillDir = path.join(
-        tmpdir,
-        '.agentic-hq',
-        'plugins',
-        'test-plugin',
-        'skills',
-        'test-skill'
-      );
-      fs.mkdirSync(skillDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(skillDir, 'ahq-workflow.json'),
-        '{"marker": "glob-match-content"}',
-        'utf-8'
-      );
+  tmpdirTest('should register discovered workflows via registerWorkflowsWith', ({ tmpdir }) => {
+    createTestWorkspaceFixture(tmpdir);
+    process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
+    const workspace: Workspace = new AhqWorkspaceImpl();
+    const registry = new StubWorkflowRegistry();
 
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
-      const workspace: AhqWorkspace = new AhqWorkspaceImpl();
-      const contents = workspace
-        .findFiles('.agentic-hq/plugins/*/skills/*/ahq-workflow.json')
-        .map((f) => f.readContent());
+    workspace.registerWorkflowsWith(registry);
 
-      expect(contents).toHaveLength(1);
-      expect(contents[0]).toContain('glob-match-content');
-    }
-  );
+    // test-plugin-alpha has 2 workflows, test-plugin-beta has 1 = 3 total
+    expect(registry.registered).toHaveLength(3);
+  });
 });

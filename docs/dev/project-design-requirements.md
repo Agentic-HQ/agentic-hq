@@ -150,11 +150,30 @@ currentWorkspaceWorkflowSearchResult.display()
 is likely to involve the currentWorkspaceWorkflowSearchResult delegating the search of the workspace to an object it contains (e.g. a WorkspaceSearchResult object that knows it's workspace root is "/tmp/steve-temp-workspace") and that WorkspaceSearchResult object does the search on the file system for the plugins and workflows.
 
 
+== Concept Table: Mapping Concepts To Interfaces And Classes
+
+When designing or changing classes/interfaces, create a **Concept Table** that maps each real-world concept to its interface and implementation class. This table should be created early in design and kept up to date as the design evolves.
+
+The "Concept" column should describe the thing in plain English (not code). The interface and impl class names should follow from the concept name naturally.
+
+Example from AHQ-106 (dynamic workflow discovery):
+
+| Concept | Interface | Impl Class | Purpose |
+|---------|-----------|------------|---------|
+| A workspace containing plugins | `Workspace` | (two concrete impls below) | Common contract — has `getWorkflowListingString()`, contains Plugins |
+| The AHQ workspace | `Workspace` | `AhqWorkspaceImpl` (modify existing) | Root from `AGENTIC_HQ_WORKSPACE_ROOT` env var |
+| The user's current workspace | `Workspace` | `CurrentUserWorkspaceImpl` | Root from `process.cwd()`. When same dir as AHQ, returns "same as" message |
+| A plugin containing workflows | `Plugin` | `PluginImpl` | Discovers workflows within a plugin, formats per-plugin listing section |
+| A plugin's directory path | `PluginDirectory` | `PluginDirectoryImpl` | Delegates to workspace for root, computes path dynamically |
+| Top-level search results | `WorkflowSearchResults` | `WorkflowSearchResultsImpl` (modify existing) | Contains two Workspaces, provides listing + all workflows |
+
+This table serves as a quick reference for anyone reading or modifying the code, and ensures every concept has been deliberately mapped to a class/interface pair.
+
 == Creating A Data Dictionary Table And Corresponding English Language Description During Design/Plan Phase
 
 When doing planning, in order to be sure we are mapping all concepts to a class/interface two additional sections must be created:
 - A "Data Dictionary" section containing a table of all the concepts we are working with and their planned Class and Interface names.
-- An "English Language Description Using Concepts" section - which describes in a paragraph how the system will work with the class or interface names slotted in so they read like English.   The class/interface names should be **bolded** to stand out in markdown format.  Verbs that could represent messages between classes must be highlighted as *italic* and these would be messages between object/interfaces e.g. *displays*   If this paragraph doesn't read fluently and easily as English, then this is a sign the design doesn't reflect well how the system works.  Example sentence: "The **WorkflowSearchResult** *displaysSearchResults* to the user by *printingAHeader* and then asking it's **WorkspaceWorkflowSearchResults** to *display* themselves." (NOTE here: *printingAHeader* would correspond to an internal method printHeader() which just does "console.output("Workflows Available:");" )
+- An "English Language Description Using Concepts" section - which describes in a paragraph how the system will work with the class or interface names slotted in so they read like English.   The class/interface names should be **bolded** to stand out in markdown format.  Verbs that represent actual method calls / messages between objects must be highlighted as *italic* e.g. *getWorkflowListingString*.  Plain narrative verbs that describe internal behavior or flow (e.g. "creates", "checks", "delegates to") should NOT be in italics — only verbs that correspond to real method names on the public interface of a class.  The ELD should walk through the system's main scenarios step by step (e.g. listing, execution) showing start-to-finish mechanics.  If this paragraph doesn't read fluently and easily as English, then this is a sign the design doesn't reflect well how the system works.  Example sentence: "The **WorkflowSearchResults** asks each **Workspace** to *getWorkflowListingString*. The **AhqWorkspaceImpl** creates a **WorkspaceImpl** with the env var root and delegates to it."  ANTI-PATTERN: "*delegatesToAWorkspaceImpl*" — this is NOT a method name, it's narrative description of what happens internally. It should be plain text: "delegates to a WorkspaceImpl". Only use italics for things that will be actual method calls like *getWorkflowListingString*, *registerWorkflowsWith*, *findWorkflowFiles* etc.  PHRASING: Use "asks X to *doThing*" not "asks X for its *doThing*" — the former reads as natural English ("asks the **Workspace** to *getWorkflowListingString*") while the latter sounds like you're asking for a property rather than sending a message.
 
 == Important Caveat
 

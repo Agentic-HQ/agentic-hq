@@ -12,9 +12,9 @@ import { stubWorkflowMetadata } from '../test-fixtures/stub-workflow-metadata.js
 describe('ExampleParametersImpl', () => {
   it('should return value via toString()', () => {
     const params: ExampleParameters = ExampleParametersImpl.createFrom(
-      stubWorkflowMetadata({ exampleParameters: '-- --input-number=54321' })
+      stubWorkflowMetadata({ exampleParameters: '-- --input-number=11' })
     );
-    expect(params.toString()).toBe('-- --input-number=54321');
+    expect(params.toString()).toBe('-- --input-number=11');
   });
 
   it('should allow empty string (workflows with no params)', () => {

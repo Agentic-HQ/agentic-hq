@@ -1,7 +1,8 @@
 /**
  * Tests AhqWorkflowImpl — a workflow entity that constructs itself from an
- * ahq-workflow.json AhqFile and returns its listing entry line via
- * getWorkflowListingEntryString(). Value objects are built internally on demand.
+ * ahq-workflow.json AhqFile, and returns its listing entry line via
+ * getWorkflowListingEntryString(). Also exposes getShortName(), getDescription(),
+ * and getFullClaudeSkillCommand() for CLI subcommand registration and execution.
  * Variables typed as AhqWorkflow/AhqFile interfaces; Impls used only for construction.
  */
 import * as fs from 'node:fs';
@@ -30,7 +31,7 @@ const VALID_WORKFLOW_JSON = {
   skillId: 'math-workflow',
   shortId: 'math',
   description: 'Solves a math problem using an agent team',
-  exampleParameters: '-- --input-number=54321',
+  exampleParameters: '-- --input-number=11',
   version: '1.0.0',
   author: 'Agentic HQ',
 };
@@ -43,7 +44,7 @@ describe('AhqWorkflowImpl', () => {
       const workflow: AhqWorkflow = new AhqWorkflowImpl(file);
       const display = workflow.getWorkflowListingEntryString();
 
-      expect(display).toContain('agentic-hq math -- --input-number=54321');
+      expect(display).toContain('agentic-hq math -- --input-number=11');
       expect(display).toContain('   What it does: Solves a math problem using an agent team');
     }
   );
@@ -68,4 +69,30 @@ describe('AhqWorkflowImpl', () => {
     const file: AhqFile = new AhqFileImpl(writeTempWorkflowFile(tmpdir, 'not json'));
     expect(() => new AhqWorkflowImpl(file)).toThrow();
   });
+
+  tmpdirTest('should return short name via getShortName', ({ tmpdir }) => {
+    const file: AhqFile = new AhqFileImpl(writeTempJsonPath(tmpdir, VALID_WORKFLOW_JSON));
+    const workflow: AhqWorkflow = new AhqWorkflowImpl(file);
+
+    expect(workflow.getShortName().toString()).toBe('math');
+  });
+
+  tmpdirTest('should return description via getDescription', ({ tmpdir }) => {
+    const file: AhqFile = new AhqFileImpl(writeTempJsonPath(tmpdir, VALID_WORKFLOW_JSON));
+    const workflow: AhqWorkflow = new AhqWorkflowImpl(file);
+
+    expect(workflow.getDescription().toString()).toBe('Solves a math problem using an agent team');
+  });
+
+  tmpdirTest(
+    'should return full Claude skill command via getFullClaudeSkillCommand',
+    ({ tmpdir }) => {
+      const file: AhqFile = new AhqFileImpl(writeTempJsonPath(tmpdir, VALID_WORKFLOW_JSON));
+      const workflow: AhqWorkflow = new AhqWorkflowImpl(file);
+
+      expect(workflow.getFullClaudeSkillCommand().toString()).toBe(
+        '/agentic-hq-demos-plugin:math-workflow'
+      );
+    }
+  );
 });

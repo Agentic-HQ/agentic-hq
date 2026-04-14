@@ -12,26 +12,20 @@
  * the user's project lives (i.e. where the "claude" command will be
  * run from).
  */
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { AgenticHqInstallation } from '../../../interfaces/agentic-hq-installation.js';
 import type { CLICommand } from '../../../interfaces/cli-command.js';
 import type { MarshalledIOCLICommandBuilder } from '../../../interfaces/marshalled-io-cli-command-builder.js';
+import type { UserProjectWorkspace } from '../../../interfaces/user-project-workspace.js';
 import { DefaultCLICommand } from '../../../io/terminal/default-cli-command.js';
 
 // Default CLI executable
 const DEFAULT_CLAUDE_EXECUTABLE = 'claude';
 
-// Plugin directory names within installation.pluginsDir
-const PLUGIN_DIR_NAMES = [
-  'agentic-hq-core-plugin',
-  'agentic-hq-demos-plugin',
-  'agentic-hq-utilities-plugin',
-];
-
-// TODO: Remove when implementing AHQ-103 — temporary for manual testing of create-workflow
-const TEMPORARILY_ADDED_PLUGIN_DIR =
-  '/Users/stevepersonal/dev/agentic-hq/test-workflow-workspaces/steve-test-workflow-workspace-001';
+const AGENTIC_HQ_DIR = '.agentic-hq';
+const PLUGINS_SUBDIR = 'plugins';
 
 /**
  * Allowed tools for Claude Code, passed via --allowedTools CLI flag.
@@ -56,15 +50,18 @@ const DEFAULT_ALLOWED_TOOLS = [
 
 export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   private readonly agenticHqInstallation: AgenticHqInstallation;
+  private readonly userWorkspace: UserProjectWorkspace;
   private readonly executable: string;
   private readonly extraArgs: string[];
 
   constructor(
     agenticHqInstallation: AgenticHqInstallation,
+    userWorkspace: UserProjectWorkspace,
     executable: string = DEFAULT_CLAUDE_EXECUTABLE,
     extraArgs: string[] = []
   ) {
     this.agenticHqInstallation = agenticHqInstallation;
+    this.userWorkspace = userWorkspace;
     this.executable = executable;
     this.extraArgs = extraArgs;
   }
@@ -97,12 +94,36 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
     return [...DEFAULT_ALLOWED_TOOLS, `Read(${agenticHqInstallationRootDir})`].join(' ');
   }
 
+  // REFACTOR: Later, investigate whether we can simplify this by
+  // passing pluginDir explicitly from AhqWorkflow (when doing skill resolution)
+  // and from DefaultClaudeCodeTool (when running a command from the workflow runtime)
+  // instead of doing what we are doing here: i.e. scanning the two workspace directories
+  // for *all* plugins and adding them to the path.  If it's going to be too much work/hassle
+  // leave it for now, as this whole "2 workspace" setup is probably temporary for developers to
+  // try out AHQ, and in the future we'll probably want some more complex dynamic resolution
+  // of plugin directories in multiple (unlimited) workspaces - so may be better to leave doing this
+  // "properly" until then and leave this slightly hacky, quick search of 2 workspaces for the moment.
   private getPluginDirFlags(): string[] {
-    const pluginsDir = path.join(this.agenticHqInstallation.getConfigDir(), 'plugins');
-    return [
-      ...PLUGIN_DIR_NAMES.map((name) => `--plugin-dir=${path.join(pluginsDir, name)}`),
-      // TODO: Remove when implementing AHQ-103 — temporary for manual testing of create-workflow
-      `--plugin-dir=${TEMPORARILY_ADDED_PLUGIN_DIR}`,
-    ];
+    const ahqPluginsDir = path.join(this.agenticHqInstallation.getConfigDir(), PLUGINS_SUBDIR);
+    const userPluginsDir = path.join(this.userWorkspace.getRoot(), AGENTIC_HQ_DIR, PLUGINS_SUBDIR);
+
+    const flags: string[] = [];
+    this.addPluginDirsFrom(ahqPluginsDir, flags);
+    if (userPluginsDir !== ahqPluginsDir) {
+      this.addPluginDirsFrom(userPluginsDir, flags);
+    }
+    return flags;
+  }
+
+  private addPluginDirsFrom(pluginsDir: string, flags: string[]): void {
+    if (!fs.existsSync(pluginsDir)) {
+      return;
+    }
+    const entries = fs.readdirSync(pluginsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        flags.push(`--plugin-dir=${path.join(pluginsDir, entry.name)}`);
+      }
+    }
   }
 }

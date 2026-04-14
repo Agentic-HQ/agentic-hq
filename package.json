@@ -50,6 +50,7 @@
     "test:e2e:cross-workspace-demo-math-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-demo-math-workflow-gives-expected-output-number.e2e.test.ts",
     "test:e2e:cross-workspace-quick-jira-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-quick-jira-workflow-produces-expected-files.e2e.test.ts",
     "test:e2e:cross-workspace-list-workflows": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-list-workflows.e2e.test.ts",
+    "test:e2e:user-workspace-workflows": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/string-reversal-workflow-in-new-workspace-lists-and-executes.e2e.test.ts",
     "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"
   },
   "engines": {

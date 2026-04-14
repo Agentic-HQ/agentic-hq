@@ -6,7 +6,7 @@
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Run git init in the temp workspace
  * 4. Setup: Create a test Jira via MarshalledCLITool
- * 5. Run: agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:quick-jira-workflow -- --jira-id={testJiraId}
+ * 5. Run: agentic-hq quick-jira -- --jira-id={testJiraId}
  * 6. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
  * 7. Assert: Implementation files exist (src/temp-test-hello-world.ts, src/temp-test-hello-world.cli.ts)
  * 8. Assert: Jira status is Done
@@ -118,7 +118,7 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
       expect(testJiraId).toMatch(JIRA_KEY_PATTERN);
 
       // Act — run agentic-hq from the temp workspace (no --project-root, workspace IS the project root)
-      const command = `agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:quick-jira-workflow -- --jira-id=${testJiraId}`;
+      const command = `agentic-hq quick-jira -- --jira-id=${testJiraId}`;
 
       let output: string;
       try {

@@ -1,36 +1,42 @@
-import type { AhqDirectory } from '../interfaces/ahq-directory.js';
-import type { AhqFiles } from '../interfaces/ahq-files.js';
-import type { AhqWorkspace } from '../interfaces/ahq-workspace.js';
+import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
+import type { Workspace } from '../interfaces/workspace.js';
 
-import { AhqDirectoryImpl } from './ahq-directory-impl.js';
+import { WorkspaceImpl } from './workspace-impl.js';
 
 export const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR = 'AGENTIC_HQ_WORKSPACE_ROOT';
+const AHQ_WORKSPACE_DISPLAY_NAME = 'Agentic HQ Workspace';
 
 /**
- * AhqWorkspaceImpl — Concrete AhqWorkspace that reads the root path
- * from the `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegates searches
- * to an AhqDirectory.
+ * AhqWorkspaceImpl — Concrete Workspace that reads the root path
+ * from the `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegates
+ * listing/registration to a WorkspaceImpl.
  *
  * SRP Does: Read the workspace root path from the
- * `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegate file searches to
- * an AhqDirectory at that root.
+ * `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegate
+ * listing/registration to a WorkspaceImpl.
  *
- * SRP Knows About: The `AGENTIC_HQ_WORKSPACE_ROOT` env var name and
- * the AhqDirectoryImpl constructor.
+ * SRP Knows About: The `AGENTIC_HQ_WORKSPACE_ROOT` env var name
+ * and the WorkspaceImpl constructor.
  *
- * SRP Knows Nothing About: How globs are matched or what the files
- * contain.
+ * SRP Knows Nothing About: How plugins are discovered or how
+ * listings are formatted.
  */
-export class AhqWorkspaceImpl implements AhqWorkspace {
-  private readonly rootDirectory: AhqDirectory;
-
-  constructor() {
-    const root = process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR] ?? '';
-    this.rootDirectory = new AhqDirectoryImpl(root);
+export class AhqWorkspaceImpl implements Workspace {
+  /** Return the AHQ workspace's full listing section (delegates to WorkspaceImpl). */
+  getWorkflowListingString(): string {
+    return this.createDelegate().getWorkflowListingString();
   }
 
-  /** Return files in the workspace matching the given glob (delegates to the root AhqDirectory). */
-  findFiles(globPattern: string): AhqFiles {
-    return this.rootDirectory.findMatchingFiles(globPattern);
+  /** Register all AHQ workspace workflows with the registry (delegates to WorkspaceImpl). */
+  registerWorkflowsWith(registry: WorkflowRegistry): void {
+    this.createDelegate().registerWorkflowsWith(registry);
+  }
+
+  private createDelegate(): WorkspaceImpl {
+    return new WorkspaceImpl(AHQ_WORKSPACE_DISPLAY_NAME, this.getRoot());
+  }
+
+  private getRoot(): string {
+    return process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR] ?? '';
   }
 }
