@@ -90,7 +90,18 @@ Give examples of existing workflow-ids for inspiration: `math-workflow`, `string
 
 The workflow-id should be kebab-case (lowercase with hyphens).
 
-### 3c. one-sentence-description
+### 3c. workflow-short-id
+
+A short identifier used on the CLI so users can type a fast alias, e.g. `agentic-hq math` (where `math` is the shortId for the math-workflow).
+
+**Examples of existing short IDs:**
+- `math` (for `math-workflow`)
+- `full-jira` (for `full-jira-tdd-story-workflow`)
+- `quick-jira` (for `quick-jira-tdd-story-workflow`)
+
+Keep it short and kebab-case. It must be unique across all workflows the user intends to register.
+
+### 3d. one-sentence-description
 
 A one-sentence description of what the workflow does. This will appear in the spec header and in the skill registration.
 
@@ -98,16 +109,18 @@ A one-sentence description of what the workflow does. This will appear in the sp
 
 ## Step 4: Establish Derived Variables
 
-Once the user has provided `plugin-id`, `workflow-id`, and `one-sentence-description`, establish:
+Once the user has provided `plugin-id`, `workflow-id`, `workflow-short-id`, and `one-sentence-description`, establish:
 
 ```
 plugin-id = (from user)
 workflow-id = (from user)
 one-sentence-description = (from user)
+workflow-short-id = (from user)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
+ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
 workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
 draft-workflow-spec-filename = {workflow-creation-docs-dir}/01-DRAFT-workflow-spec.md
 ```
@@ -122,6 +135,16 @@ Work with the user to create the DRAFT workflow spec. This is a back-and-forth p
 
 Write the spec to `{draft-workflow-spec-filename}`.
 
+### Discussing Parameters and `exampleParameters`
+
+Before drafting the spec, work with the user to decide whether the new workflow should accept any CLI parameters.
+
+- Use the Full Jira workflow as a concrete example: `agentic-hq full-jira -- --jira-id=AHQ-107`. Everything after the `-- ` is a passthrough parameter the user's TypeScript CLI receives directly.
+- If the workflow takes parameters, produce an `exampleParameters` string that starts with `-- ` (the passthrough marker), e.g. `"-- --jira-id=AHQ-107"`.
+- **CRITICAL**: `exampleParameters` MUST always start with `-- ` when it's non-empty. This is the convention that makes them passthrough parameters.
+- **If the workflow takes NO parameters**, set `exampleParameters` to the empty string `""`. This matches the convention used by existing parameter-less workflows (e.g. `create-workflow`).
+- Record the decided value under the "Workflow Metadata" section of the DRAFT spec (see template below). Command 02 will read it from the spec when creating `ahq-workflow.json`.
+
 ### Spec Template
 
 The spec should include:
@@ -132,6 +155,15 @@ The spec should include:
 **Description**: {one-sentence-description}
 **Plugin**: {plugin-id}
 **Status**: DRAFT
+
+---
+
+## Workflow Metadata
+
+- **workflow-short-id**: {workflow-short-id}
+- **exampleParameters**: {exampleParameters (starts with `-- ` or empty string `""`)}
+
+These values will be written to `{skills-dir}/ahq-workflow.json` in Command 02.
 
 ---
 
@@ -186,11 +218,11 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir={agentic-hq-workspace-root-dir} and plugin-id={plugin-id} and workflow-id={workflow-id}"
+  "command-output-string": "The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir={agentic-hq-workspace-root-dir} and plugin-id={plugin-id} and workflow-id={workflow-id} and workflow-short-id={workflow-short-id}"
 }
 ```
 
-Replace `{agentic-hq-workspace-root-dir}`, `{plugin-id}`, and `{workflow-id}` with their actual values.
+Replace `{agentic-hq-workspace-root-dir}`, `{plugin-id}`, `{workflow-id}`, and `{workflow-short-id}` with their actual values.
 
 ---
 

@@ -11,12 +11,13 @@ Remember the following variable you will use in the rest of this command: comman
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a string like:
-`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow`
+`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
 
 Parse out:
 - `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
 - `plugin-id` — the plugin where the workflow lives
 - `workflow-id` — the workflow identifier
+- `workflow-short-id` — the short CLI alias for the workflow
 
 ## Step 0b: Establish Variables
 
@@ -24,11 +25,13 @@ Parse out:
 agentic-hq-workspace-root-dir = (parsed from input)
 plugin-id = (parsed from input)
 workflow-id = (parsed from input)
+workflow-short-id = (parsed from input)
 project-root = (your primary working directory)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
+ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
 workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
 user-facing-help-doc-filename = {skills-docs-dir}/user-facing-help-doc.md
 human-manual-testing-feedback-file = {workflow-creation-docs-dir}/05-human-manual-testing-feedback-and-AI-analysis.md
@@ -61,7 +64,7 @@ Tell the user clearly how to run and test the workflow, including the iterative 
 >
 > **How to run your workflow:**
 >
-> {Provide the exact command(s) to run the workflow — this depends on how it was registered. If it was registered as a skill, it might be runnable via `agentic-hq {workflow-id}` or via the slash command.}
+> {Provide the exact command to run the workflow. It should be run using: `agentic-hq {workflow-short-id}` and you should tell the user about any parameters, their format and give examples}
 >
 > **What to test:**
 >

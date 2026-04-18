@@ -11,12 +11,13 @@ Remember the following variable you will use in the rest of this command: comman
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a string like:
-`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow`
+`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
 
 Parse out:
 - `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
 - `plugin-id` — the plugin where the workflow will live
 - `workflow-id` — the workflow identifier
+- `workflow-short-id` — the short CLI alias for the workflow (e.g. `math`, `full-jira`)
 
 ## Step 0b: Establish Variables
 
@@ -24,11 +25,13 @@ Parse out:
 agentic-hq-workspace-root-dir = (parsed from input)
 plugin-id = (parsed from input)
 workflow-id = (parsed from input)
+workflow-short-id = (parsed from input)
 project-root = (your primary working directory)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
+ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
 workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
 draft-workflow-spec-filename = {workflow-creation-docs-dir}/01-DRAFT-workflow-spec.md
 approved-workflow-spec-filename = {workflow-creation-docs-dir}/02a-APPROVED-workflow-spec.md
@@ -76,10 +79,11 @@ Use the `EnterPlanMode` tool to plan the implementation. Your plan should cover:
 
 0. Copying the Plan file (once approved) **verbatim** (exact copy, no modifications) to: `{plan-verbatim-copy-file}`
 1. **What command files to create** — one `.md` file per command defined in the spec, following the math-workflow command pattern
-2. **What the TypeScript CLI looks like** — command constants, linear flow, variable passing
-3. **SKILL.md** — returns the shell command to run the CLI
-4. **package.json** — dependencies (agentic-hq via link:, tsx, commander)
-5. **tsconfig.json** — standard config
+2. **`ahq-workflow.json`** — the workflow metadata file, placed at `{ahq-workflow-metadata-filename}`, containing the 7 required fields
+3. **What the TypeScript CLI looks like** — command constants, linear flow, variable passing
+4. **SKILL.md** — returns the shell command to run the CLI
+5. **package.json** — dependencies (agentic-hq via link:, tsx, commander)
+6. **tsconfig.json** — standard config
 
 For each command file, outline:
 - The Step 0b variables block (full chain from plugin-id/workflow-id)
@@ -136,7 +140,38 @@ Input: "session-dir=/path/to/session"
 ```
 Each command then constructs `{session-dir}/01-check-in.md`, `{session-dir}/02-explore.md`, etc. on its own.
 
-### 4b. Create TypeScript CLI
+### 4b. Create ahq-workflow.json
+
+Create the workflow metadata file at `{ahq-workflow-metadata-filename}` (i.e. `{skills-dir}/ahq-workflow.json`).
+
+**Source for each field:**
+- `pluginId` — the `plugin-id` variable.
+- `skillId` — the `workflow-id` variable.
+- `shortId` — the `workflow-short-id` variable.
+- `description` — the `one-sentence-description` from the APPROVED spec header.
+- `exampleParameters` — read from the "Workflow Metadata" section of `{approved-workflow-spec-filename}`. If the spec records it as empty (`""`), write an empty string. **When non-empty, the value MUST start with `-- `** — if it doesn't, fix the spec before proceeding (this indicates the `-- ` prefix convention wasn't applied in Command 01).
+- `version` — constant `"1.0.0"` for new workflows.
+- `author.name` — constant `"Agentic HQ"` for new workflows.
+
+**Template:**
+
+```json
+{
+  "pluginId": "{plugin-id}",
+  "skillId": "{workflow-id}",
+  "shortId": "{workflow-short-id}",
+  "description": "{one-sentence-description}",
+  "exampleParameters": "{exampleParameters-from-spec}",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}
+```
+
+After writing the file, verify it contains valid JSON and all seven fields are present.
+
+### 4c. Create TypeScript CLI
 
 Create the orchestrator CLI at `{skills-dir}/ts-workflow/src/{workflow-id}-cli.ts`.
 
@@ -156,13 +191,13 @@ Follow the math-workflow-demo-cli.ts pattern:
 - Simple linear flow: execute commands sequentially
 - Pass variables between commands as plain English strings
 
-### 4c. Create SKILL.md
+### 4d. Create SKILL.md
 
 Create `{skills-dir}/SKILL.md` following the math-workflow SKILL.md pattern:
 - `disable-model-invocation: true`
 - Returns shell command to install deps and run CLI via tsx
 
-### 4d. Create package.json and tsconfig.json
+### 4e. Create package.json and tsconfig.json
 
 Create `{skills-dir}/ts-workflow/package.json` and `{skills-dir}/ts-workflow/tsconfig.json` following the existing patterns.
 

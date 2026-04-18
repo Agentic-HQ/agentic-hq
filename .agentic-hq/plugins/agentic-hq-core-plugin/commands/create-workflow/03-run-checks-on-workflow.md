@@ -11,12 +11,13 @@ Remember the following variable you will use in the rest of this command: comman
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a string like:
-`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow`
+`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
 
 Parse out:
 - `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
 - `plugin-id` — the plugin where the workflow lives
 - `workflow-id` — the workflow identifier
+- `workflow-short-id` — the short CLI alias for the workflow
 
 ## Step 0b: Establish Variables
 
@@ -24,11 +25,13 @@ Parse out:
 agentic-hq-workspace-root-dir = (parsed from input)
 plugin-id = (parsed from input)
 workflow-id = (parsed from input)
+workflow-short-id = (parsed from input)
 project-root = (your primary working directory)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
+ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
 workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
 approved-workflow-spec-filename = {workflow-creation-docs-dir}/02a-APPROVED-workflow-spec.md
 workflow-implementation-approval-list-file = {workflow-creation-docs-dir}/03a-workflow-implementation-approval-list.md
@@ -66,9 +69,10 @@ Go through every element in `{approved-workflow-spec-filename}` and verify the i
 3. **The CLI chains commands in the correct order** as defined in the spec
 4. **SKILL.md exists** and correctly references the CLI
 5. **package.json and tsconfig.json exist** with correct dependencies
-6. **Variable naming conventions** match the math-workflow pattern (kebab-case, $0 for temp dir)
-7. **Self-termination** is present at the end of every command
-8. **Context loading** — each command (beyond the first) reads previous commands and generated files
+6. **`ahq-workflow.json` exists and is valid** — confirm the file exists at `{ahq-workflow-metadata-filename}`, is valid JSON, and contains all seven required fields: `pluginId`, `skillId`, `shortId`, `description`, `exampleParameters`, `version`, `author.name`. Verify each field's value matches the values from the approved spec / variable chain (e.g. `pluginId` equals `plugin-id`, `skillId` equals `workflow-id`, `shortId` equals `workflow-short-id`, `description` equals `one-sentence-description`). If `exampleParameters` is non-empty, verify it starts with `-- `.
+7. **Variable naming conventions** match the math-workflow pattern (kebab-case, $0 for temp dir)
+8. **Self-termination** is present at the end of every command
+9. **Context loading** — each command (beyond the first) reads previous commands and generated files
 
 Create the file `{workflow-implementation-approval-list-file}` with the results:
 
@@ -99,6 +103,7 @@ Create the file `{workflow-implementation-approval-list-file}` with the results:
 | Self-termination at end | PASS/FAIL | |
 | File-based I/O (command-input/output.json) | PASS/FAIL | |
 | Context loading in commands 02+ | PASS/FAIL | |
+| ahq-workflow.json present and well-formed | PASS/FAIL | |
 
 ---
 
