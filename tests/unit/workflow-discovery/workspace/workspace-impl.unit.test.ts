@@ -3,11 +3,15 @@
  * Takes a display name and root directory path. When told to getWorkflowListingString(),
  * dynamically scans for plugins, creates PluginImpl for each, tells each to format itself.
  * When told to registerWorkflowsWith(registry), dynamically discovers plugins and tells
- * each to register its workflows with the registry. No stored state — everything is
- * discovered, created, and used within each method call.
+ * each to register its workflows with the registry. Also owns the mechanical logic for
+ * Workspace's four root/path methods: getRoot, getTempDir, getDotAgenticHqDir, isAhqWorkspace.
+ * No stored state beyond constructor args — everything is discovered, created, and used
+ * within each method call.
  * Variables typed as Workspace interface; WorkspaceImpl used only for construction.
  */
-import { describe, expect } from 'vitest';
+import * as path from 'node:path';
+
+import { afterEach, describe, expect } from 'vitest';
 
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 import { WorkspaceImpl } from '../../../../src/workflow-discovery/workspace/workspace-impl.js';
@@ -16,6 +20,16 @@ import { tmpdirTest } from '../test-fixtures/tmpdir-fixture.js';
 import { createTestWorkspaceFixture } from '../test-fixtures/workspace-fixture.js';
 
 describe('WorkspaceImpl', () => {
+  const originalEnv = process.env.AGENTIC_HQ_WORKSPACE_ROOT;
+
+  afterEach(() => {
+    if (originalEnv === undefined) {
+      delete process.env.AGENTIC_HQ_WORKSPACE_ROOT;
+    } else {
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = originalEnv;
+    }
+  });
+
   tmpdirTest(
     'should format listing with workspace header containing display name and directory path',
     ({ tmpdir }) => {
@@ -62,6 +76,41 @@ describe('WorkspaceImpl', () => {
 
       // test-plugin-alpha has 2 workflows, test-plugin-beta has 1 = 3 total
       expect(registry.registered).toHaveLength(3);
+    }
+  );
+
+  // Direct coverage of the mechanical logic WorkspaceImpl owns for the four new Workspace
+  // methods (getRoot/getTempDir/getDotAgenticHqDir/isAhqWorkspace). Outer impls delegate here.
+  tmpdirTest('should return rootDir via getRoot()', ({ tmpdir }) => {
+    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+    expect(workspace.getRoot()).toBe(tmpdir);
+  });
+
+  tmpdirTest('should return {root}/.agentic-hq/temp via getTempDir()', ({ tmpdir }) => {
+    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+    expect(workspace.getTempDir()).toBe(path.join(tmpdir, '.agentic-hq', 'temp'));
+  });
+
+  tmpdirTest('should return {root}/.agentic-hq via getDotAgenticHqDir()', ({ tmpdir }) => {
+    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+    expect(workspace.getDotAgenticHqDir()).toBe(path.join(tmpdir, '.agentic-hq'));
+  });
+
+  tmpdirTest(
+    'should return true from isAhqWorkspace() when rootDir equals AGENTIC_HQ_WORKSPACE_ROOT',
+    ({ tmpdir }) => {
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
+      const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+      expect(workspace.isAhqWorkspace()).toBe(true);
+    }
+  );
+
+  tmpdirTest(
+    'should return false from isAhqWorkspace() when rootDir differs from AGENTIC_HQ_WORKSPACE_ROOT',
+    ({ tmpdir }) => {
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
+      const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+      expect(workspace.isAhqWorkspace()).toBe(false);
     }
   );
 });

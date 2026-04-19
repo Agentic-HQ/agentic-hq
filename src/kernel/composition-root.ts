@@ -11,34 +11,27 @@
  * SRP Knows Nothing About: How any individual component works internally.
  */
 
-import type { AgenticHqInstallation } from '../interfaces/agentic-hq-installation.js';
 import type { CLIWrapper } from '../interfaces/cli-wrapper.js';
-import type { GitWorkspace } from '../interfaces/git-workspace.js';
 import type { IOMarshallerSessionFactory } from '../interfaces/io-marshaller-session-factory.js';
 import type { Tool } from '../interfaces/tool.js';
-import type { UserProjectWorkspace } from '../interfaces/user-project-workspace.js';
 import type { WorkflowCommandBuilder } from '../interfaces/workflow-command-builder.js';
 import { JsonFileIOMarshallerSessionFactory } from '../io/marshalling/json-file-io-marshaller-session-factory.js';
 import { PtyCLIWrapper } from '../io/terminal/pty-cli-wrapper.js';
 import { ClaudeCommandBuilder } from '../tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../tools/marshalled-io-tools/marshalled-cli-tool.js';
 import { ClaudeWorkflowCommandBuilder } from '../workflow/claude/claude-workflow-command-builder.js';
-import { DefaultAgenticHqInstallation } from '../workspace/default-agentic-hq-installation.js';
-import { DefaultGitWorkspace } from '../workspace/default-git-workspace.js';
-import { DefaultUserProjectWorkspace } from '../workspace/default-user-project-workspace.js';
+import type { Workspace } from '../workflow-discovery/interfaces/workspace.js';
+import { AhqWorkspaceImpl } from '../workflow-discovery/workspace/ahq-workspace-impl.js';
+import { CurrentUserWorkspaceImpl } from '../workflow-discovery/workspace/current-user-workspace-impl.js';
 
 /** Stateless wiring class — each get* method returns a freshly-wired component. */
 export class CompositionRoot {
-  private getGitWorkspace(): GitWorkspace {
-    return new DefaultGitWorkspace();
+  private getAhqWorkspace(): Workspace {
+    return new AhqWorkspaceImpl();
   }
 
-  private getAgenticHqInstallation(): AgenticHqInstallation {
-    return new DefaultAgenticHqInstallation(this.getGitWorkspace());
-  }
-
-  private getUserProjectWorkspace(): UserProjectWorkspace {
-    return new DefaultUserProjectWorkspace(this.getGitWorkspace());
+  private getCurrentUserWorkspace(): Workspace {
+    return new CurrentUserWorkspaceImpl();
   }
 
   private getCLIWrapper(): CLIWrapper {
@@ -46,15 +39,15 @@ export class CompositionRoot {
   }
 
   private getIOMarshallerSessionFactory(): IOMarshallerSessionFactory {
-    return new JsonFileIOMarshallerSessionFactory(this.getUserProjectWorkspace());
+    return new JsonFileIOMarshallerSessionFactory(this.getCurrentUserWorkspace());
   }
 
   getTool(): Tool {
     return new MarshalledCLITool(
       this.getIOMarshallerSessionFactory(),
       this.getCLIWrapper(),
-      new ClaudeCommandBuilder(this.getAgenticHqInstallation(), this.getUserProjectWorkspace()),
-      this.getUserProjectWorkspace()
+      new ClaudeCommandBuilder(this.getAhqWorkspace(), this.getCurrentUserWorkspace()),
+      this.getCurrentUserWorkspace()
     );
   }
 
@@ -63,7 +56,7 @@ export class CompositionRoot {
     return new ClaudeWorkflowCommandBuilder(
       this.getTool(),
       this.getCLIWrapper(),
-      this.getUserProjectWorkspace()
+      this.getCurrentUserWorkspace()
     );
   }
 }

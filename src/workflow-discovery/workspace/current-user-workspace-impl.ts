@@ -1,7 +1,6 @@
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 
-import { AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR } from './ahq-workspace-impl.js';
 import { WorkspaceImpl } from './workspace-impl.js';
 
 const LOCAL_WORKSPACE_DISPLAY_NAME = 'Local Workspace';
@@ -26,7 +25,7 @@ const SAME_AS_AHQ_MESSAGE =
 export class CurrentUserWorkspaceImpl implements Workspace {
   /** Return the local workspace listing, or "same as AHQ" message if directories match. */
   getWorkflowListingString(): string {
-    if (this.isSameAsAhqWorkspace()) {
+    if (this.isAhqWorkspace()) {
       return SAME_AS_AHQ_MESSAGE;
     }
     return this.createDelegate().getWorkflowListingString();
@@ -34,14 +33,30 @@ export class CurrentUserWorkspaceImpl implements Workspace {
 
   /** Register workflows from local workspace, or nothing if same as AHQ (no duplicates). */
   registerWorkflowsWith(registry: WorkflowRegistry): void {
-    if (this.isSameAsAhqWorkspace()) {
+    if (this.isAhqWorkspace()) {
       return;
     }
     this.createDelegate().registerWorkflowsWith(registry);
   }
 
-  private isSameAsAhqWorkspace(): boolean {
-    return process.cwd() === process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR];
+  /** Return process.cwd() via delegate. */
+  getRoot(): string {
+    return this.createDelegate().getRoot();
+  }
+
+  /** Return `{cwd}/.agentic-hq/temp` via delegate. */
+  getTempDir(): string {
+    return this.createDelegate().getTempDir();
+  }
+
+  /** Return `{cwd}/.agentic-hq` via delegate. */
+  getDotAgenticHqDir(): string {
+    return this.createDelegate().getDotAgenticHqDir();
+  }
+
+  /** Return true iff cwd equals the AHQ workspace root (via delegate). */
+  isAhqWorkspace(): boolean {
+    return this.createDelegate().isAhqWorkspace();
   }
 
   private createDelegate(): WorkspaceImpl {

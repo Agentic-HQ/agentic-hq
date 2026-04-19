@@ -10,13 +10,12 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AgenticHqInstallation } from '../../../src/interfaces/agentic-hq-installation.js';
 import type { CLICommand } from '../../../src/interfaces/cli-command.js';
 import type { CLIWrapper } from '../../../src/interfaces/cli-wrapper.js';
 import type { IOMarshallerSessionFactory } from '../../../src/interfaces/io-marshaller-session-factory.js';
-import type { UserProjectWorkspace } from '../../../src/interfaces/user-project-workspace.js';
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
+import type { Workspace } from '../../../src/workflow-discovery/interfaces/workspace.js';
 
 let tmpDir: string;
 let ahqConfigDir: string;
@@ -57,17 +56,28 @@ function createMockCliWrapper(): CLIWrapper & { getLastCallArgs: () => string[] 
 describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
   it('should discover plugin dirs dynamically and include allowed tools', async () => {
     const mockWrapper = createMockCliWrapper();
-    const installation: AgenticHqInstallation = { getConfigDir: () => ahqConfigDir };
-    const workspace: UserProjectWorkspace = {
+    const ahqWorkspace: Workspace = {
+      getWorkflowListingString: () => '',
+      registerWorkflowsWith: () => {},
       getRoot: () => tmpDir,
       getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
+      getDotAgenticHqDir: () => ahqConfigDir,
+      isAhqWorkspace: () => true,
+    };
+    const currentUserWorkspace: Workspace = {
+      getWorkflowListingString: () => '',
+      registerWorkflowsWith: () => {},
+      getRoot: () => tmpDir,
+      getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
+      getDotAgenticHqDir: () => path.join(tmpDir, '.agentic-hq'),
+      isAhqWorkspace: () => true,
     };
 
     const tool = new MarshalledCLITool(
       createMockSessionFactory(),
       mockWrapper,
-      new ClaudeCommandBuilder(installation, workspace),
-      workspace
+      new ClaudeCommandBuilder(ahqWorkspace, currentUserWorkspace),
+      currentUserWorkspace
     );
 
     await tool.execute('test-command', 'test input');

@@ -12,13 +12,17 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CLICommand } from '../../../../src/interfaces/cli-command.js';
 import type { CLIWrapper } from '../../../../src/interfaces/cli-wrapper.js';
 import type { Tool } from '../../../../src/interfaces/tool.js';
-import type { UserProjectWorkspace } from '../../../../src/interfaces/user-project-workspace.js';
 import type { WorkflowCommandBuilder } from '../../../../src/interfaces/workflow-command-builder.js';
 import { ClaudeWorkflowCommandBuilder } from '../../../../src/workflow/claude/claude-workflow-command-builder.js';
+import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 
-const mockWorkspace: UserProjectWorkspace = {
+const mockWorkspace: Workspace = {
+  getWorkflowListingString: () => '',
+  registerWorkflowsWith: () => {},
   getRoot: () => '/mock/project-root',
   getTempDir: () => '/mock/project-root/.agentic-hq/temp',
+  getDotAgenticHqDir: () => '/mock/project-root/.agentic-hq',
+  isAhqWorkspace: () => false,
 };
 
 function createMockTool(resolvedCommand: string): Tool {

@@ -15,16 +15,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { AgenticHqInstallation } from '../../../interfaces/agentic-hq-installation.js';
 import type { CLICommand } from '../../../interfaces/cli-command.js';
 import type { MarshalledIOCLICommandBuilder } from '../../../interfaces/marshalled-io-cli-command-builder.js';
-import type { UserProjectWorkspace } from '../../../interfaces/user-project-workspace.js';
 import { DefaultCLICommand } from '../../../io/terminal/default-cli-command.js';
+import type { Workspace } from '../../../workflow-discovery/interfaces/workspace.js';
 
 // Default CLI executable
 const DEFAULT_CLAUDE_EXECUTABLE = 'claude';
 
-const AGENTIC_HQ_DIR = '.agentic-hq';
 const PLUGINS_SUBDIR = 'plugins';
 
 /**
@@ -49,19 +47,19 @@ const DEFAULT_ALLOWED_TOOLS = [
 ];
 
 export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
-  private readonly agenticHqInstallation: AgenticHqInstallation;
-  private readonly userWorkspace: UserProjectWorkspace;
+  private readonly ahqWorkspace: Workspace;
+  private readonly currentUserWorkspace: Workspace;
   private readonly executable: string;
   private readonly extraArgs: string[];
 
   constructor(
-    agenticHqInstallation: AgenticHqInstallation,
-    userWorkspace: UserProjectWorkspace,
+    ahqWorkspace: Workspace,
+    currentUserWorkspace: Workspace,
     executable: string = DEFAULT_CLAUDE_EXECUTABLE,
     extraArgs: string[] = []
   ) {
-    this.agenticHqInstallation = agenticHqInstallation;
-    this.userWorkspace = userWorkspace;
+    this.ahqWorkspace = ahqWorkspace;
+    this.currentUserWorkspace = currentUserWorkspace;
     this.executable = executable;
     this.extraArgs = extraArgs;
   }
@@ -75,7 +73,7 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   private buildArgsList(aiToolCommand: string, marshallingId: string): string[] {
     return [
       ...this.extraArgs,
-      ...this.getPluginDirFlags(),
+      ...this.getClaudeCliPluginDirArgs(),
       `--allowedTools=${this.buildAllowedToolsListString()}`,
       // Claude expects the AI tool command plus marshalling session ID as the final positional argument.
       `${aiToolCommand} ${marshallingId}`,
@@ -90,7 +88,7 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
     // approve agenticHqInstallationRootDir Read access here.
     // NOTE: This is temporary since AHQ-102 will bundle required resources with each workflow skill,
     // and so at that point we can remove this entire function and just use DEFAULT_ALLOWED_TOOLS again.
-    const agenticHqInstallationRootDir = this.agenticHqInstallation.getConfigDir();
+    const agenticHqInstallationRootDir = this.ahqWorkspace.getDotAgenticHqDir();
     return [...DEFAULT_ALLOWED_TOOLS, `Read(${agenticHqInstallationRootDir})`].join(' ');
   }
 
@@ -103,13 +101,16 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   // try out AHQ, and in the future we'll probably want some more complex dynamic resolution
   // of plugin directories in multiple (unlimited) workspaces - so may be better to leave doing this
   // "properly" until then and leave this slightly hacky, quick search of 2 workspaces for the moment.
-  private getPluginDirFlags(): string[] {
-    const ahqPluginsDir = path.join(this.agenticHqInstallation.getConfigDir(), PLUGINS_SUBDIR);
-    const userPluginsDir = path.join(this.userWorkspace.getRoot(), AGENTIC_HQ_DIR, PLUGINS_SUBDIR);
+  private getClaudeCliPluginDirArgs(): string[] {
+    const ahqPluginsDir = path.join(this.ahqWorkspace.getDotAgenticHqDir(), PLUGINS_SUBDIR);
+    const userPluginsDir = path.join(
+      this.currentUserWorkspace.getDotAgenticHqDir(),
+      PLUGINS_SUBDIR
+    );
 
     const flags: string[] = [];
     this.addPluginDirsFrom(ahqPluginsDir, flags);
-    if (userPluginsDir !== ahqPluginsDir) {
+    if (!this.currentUserWorkspace.isAhqWorkspace()) {
       this.addPluginDirsFrom(userPluginsDir, flags);
     }
     return flags;

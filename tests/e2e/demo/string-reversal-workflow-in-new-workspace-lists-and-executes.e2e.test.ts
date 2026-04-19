@@ -8,9 +8,8 @@
  * Setup:
  * 1. Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. git init in the temp workspace
- * 4. Copy the string-reversal-copy-for-test fixture plugin into the temp workspace
- * 5. Patch the ts-workflow package.json with the real REPO_ROOT path
+ * 3. Copy the string-reversal-copy-for-test fixture plugin into the temp workspace
+ * 4. Patch the ts-workflow package.json with the real REPO_ROOT path
  *
  * The fixture plugin (agentic-hq-temp-e2e-test-plugin) is a self-contained copy of the
  * string-reversal demo, stored in tests/e2e/fixtures/ per Jira requirement to avoid
@@ -86,9 +85,6 @@ describe('User Workspace Workflow Discovery and Execution via globally-linked ag
     // Arrange — create a unique temp workspace
     tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
     fs.mkdirSync(tempWorkspace, { recursive: true });
-
-    // Arrange — git init in the temp workspace (so getCurrentWorkspaceRoot() works)
-    execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
     // Arrange — copy fixture plugin into the temp workspace's plugin directory
     const targetPluginDir = path.join(tempWorkspace, PLUGINS_SUBPATH, TEST_PLUGIN_NAME);

@@ -32,11 +32,29 @@ export class AhqWorkspaceImpl implements Workspace {
     this.createDelegate().registerWorkflowsWith(registry);
   }
 
-  private createDelegate(): WorkspaceImpl {
-    return new WorkspaceImpl(AHQ_WORKSPACE_DISPLAY_NAME, this.getRoot());
+  /** Return AHQ workspace root from env var, falling back to process.cwd() when unset. */
+  getRoot(): string {
+    // Fallback to process.cwd() only fires outside the CLI bin wrapper (e.g. from pnpm
+    // scripts or tests run at the AHQ root) — the bin wrapper always sets AGENTIC_HQ_WORKSPACE_ROOT.
+    return process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR] ?? process.cwd();
   }
 
-  private getRoot(): string {
-    return process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR] ?? '';
+  /** Return `{root}/.agentic-hq/temp` (delegates to WorkspaceImpl). */
+  getTempDir(): string {
+    return this.createDelegate().getTempDir();
+  }
+
+  /** Return `{root}/.agentic-hq` (delegates to WorkspaceImpl). */
+  getDotAgenticHqDir(): string {
+    return this.createDelegate().getDotAgenticHqDir();
+  }
+
+  /** Always true — this class IS the AHQ workspace by definition (overrides delegate). */
+  isAhqWorkspace(): boolean {
+    return true;
+  }
+
+  private createDelegate(): WorkspaceImpl {
+    return new WorkspaceImpl(AHQ_WORKSPACE_DISPLAY_NAME, this.getRoot());
   }
 }

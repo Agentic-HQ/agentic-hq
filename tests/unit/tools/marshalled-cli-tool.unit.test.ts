@@ -15,12 +15,16 @@ import type { IOMarshallerSessionFactory } from '../../../src/interfaces/io-mars
 import type { IOMarshallerSession } from '../../../src/interfaces/io-marshaller-session.js';
 import type { MarshalledIOCLICommandBuilder } from '../../../src/interfaces/marshalled-io-cli-command-builder.js';
 import type { Tool } from '../../../src/interfaces/tool.js';
-import type { UserProjectWorkspace } from '../../../src/interfaces/user-project-workspace.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
+import type { Workspace } from '../../../src/workflow-discovery/interfaces/workspace.js';
 
-const mockWorkspace: UserProjectWorkspace = {
+const mockWorkspace: Workspace = {
+  getWorkflowListingString: () => '',
+  registerWorkflowsWith: () => {},
   getRoot: () => '/mock/project',
   getTempDir: () => '/mock/project/.agentic-hq/temp',
+  getDotAgenticHqDir: () => '/mock/project/.agentic-hq',
+  isAhqWorkspace: () => false,
 };
 
 function createMockSession(): IOMarshallerSession {

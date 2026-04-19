@@ -5,10 +5,9 @@
  * SEPARATE workspace via the globally-linked agentic-hq binary:
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq math -- --input-number=11
- * 5. Assert: Output contains "Output number: 5" (11 x2=22, +3=25, /5=5)
- * 6. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
+ * 3. Run: agentic-hq math -- --input-number=11
+ * 4. Assert: Output contains "Output number: 5" (11 x2=22, +3=25, /5=5)
+ * 5. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
  *
  * This proves the math workflow works cross-workspace, following the same pattern
  * as the string-reversal cross-workspace test from AHQ-79.
@@ -75,9 +74,6 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', 
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
-
-      // Arrange — git init in the temp workspace (so getCurrentWorkspaceRoot() works)
-      execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Act — run agentic-hq from the temp workspace (exactly as a developer would)
       const command = `agentic-hq math -- --input-number=${TEST_INPUT_NUMBER}`;

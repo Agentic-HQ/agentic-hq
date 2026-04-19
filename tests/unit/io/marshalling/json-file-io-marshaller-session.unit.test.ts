@@ -9,15 +9,19 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import type { UserProjectWorkspace } from '../../../../src/interfaces/user-project-workspace.js';
 import { JsonFileIOMarshallerSessionFactory } from '../../../../src/io/marshalling/json-file-io-marshaller-session-factory.js';
 import { JsonFileIOMarshallerSession } from '../../../../src/io/marshalling/json-file-io-marshaller-session.js';
+import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 
 const TEST_TEMP_DIR = '/tmp/test-io-marshaller';
 
-const mockWorkspace: UserProjectWorkspace = {
+const mockWorkspace: Workspace = {
+  getWorkflowListingString: () => '',
+  registerWorkflowsWith: () => {},
   getRoot: () => '/mock/project',
   getTempDir: () => TEST_TEMP_DIR,
+  getDotAgenticHqDir: () => '/mock/project/.agentic-hq',
+  isAhqWorkspace: () => false,
 };
 
 describe('JsonFileIOMarshallerSession', () => {

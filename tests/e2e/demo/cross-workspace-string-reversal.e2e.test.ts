@@ -4,10 +4,9 @@
  * Verifies that the agentic-hq CLI works from a SEPARATE workspace (not within the repo):
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq reversal -- --string-to-reverse="cross workspace test"
- * 5. Assert: Output contains the reversed string "tset ecapskrow ssorc"
- * 6. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
+ * 3. Run: agentic-hq reversal -- --string-to-reverse="cross workspace test"
+ * 4. Assert: Output contains the reversed string "tset ecapskrow ssorc"
+ * 5. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
  *
  * This proves the "three roots problem" is solved — plugin paths resolve to the agentic-hq
  * workspace while temp/CWD paths resolve to the user's workspace.
@@ -74,9 +73,6 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary'
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
-
-      // Arrange — git init in the temp workspace (so getCurrentWorkspaceRoot() works)
-      execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Act — run agentic-hq from the temp workspace (exactly as a developer would)
       const command = `agentic-hq reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;

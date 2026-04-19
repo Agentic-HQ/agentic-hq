@@ -6,11 +6,10 @@
  * globally-linked binary:
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. Setup: Run git init in the temp workspace
- * 4. Run: agentic-hq list
- * 5. Assert: Output contains `Available workflows:` header
- * 6. Assert: Output contains `create-workflow` (stable core workflow — confirms discovery)
- * 7. Assert: Output contains `What it does: Create` (partial match — confirms new format)
+ * 3. Run: agentic-hq list
+ * 4. Assert: Output contains `Available workflows:` header
+ * 5. Assert: Output contains `create-workflow` (stable core workflow — confirms discovery)
+ * 6. Assert: Output contains `What it does: Create` (partial match — confirms new format)
  *
  * This is the e2e-phase RED test for AHQ-104. The current CLI produces the OLD
  * hardcoded aligned format (does NOT contain `What it does:` lines), so the
@@ -71,9 +70,6 @@ describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary'
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
-
-      // Arrange — git init in the temp workspace (so getCurrentWorkspaceRoot() works)
-      execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Act — run `agentic-hq list` from the temp workspace (exactly as a developer would)
       const command = 'agentic-hq list';

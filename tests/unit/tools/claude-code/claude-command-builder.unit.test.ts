@@ -10,10 +10,9 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AgenticHqInstallation } from '../../../../src/interfaces/agentic-hq-installation.js';
-import type { UserProjectWorkspace } from '../../../../src/interfaces/user-project-workspace.js';
 import { DefaultCLICommand } from '../../../../src/io/terminal/default-cli-command.js';
 import { ClaudeCommandBuilder } from '../../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
+import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 
 let tmpDir: string;
 let ahqConfigDir: string;
@@ -33,25 +32,40 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-function mockInstallation(): AgenticHqInstallation {
-  return { getConfigDir: () => ahqConfigDir };
+function mockAhqWorkspace(): Workspace {
+  return {
+    getWorkflowListingString: () => '',
+    registerWorkflowsWith: () => {},
+    getRoot: () => path.dirname(ahqConfigDir),
+    getTempDir: () => path.join(ahqConfigDir, 'temp'),
+    getDotAgenticHqDir: () => ahqConfigDir,
+    isAhqWorkspace: () => true,
+  };
 }
 
-function mockWorkspace(root?: string): UserProjectWorkspace {
+function mockUserWorkspace(root?: string): Workspace {
   const r = root ?? userWorkspaceRoot;
-  return { getRoot: () => r, getTempDir: () => path.join(r, '.agentic-hq', 'temp') };
+  const dotDir = path.join(r, '.agentic-hq');
+  return {
+    getWorkflowListingString: () => '',
+    registerWorkflowsWith: () => {},
+    getRoot: () => r,
+    getTempDir: () => path.join(dotDir, 'temp'),
+    getDotAgenticHqDir: () => dotDir,
+    isAhqWorkspace: () => r === path.dirname(ahqConfigDir),
+  };
 }
 
 describe('ClaudeCommandBuilder', () => {
   describe('build()', () => {
     it('should return a CLICommand with executable "claude" by default', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       expect(cmd.executable).toBe('claude');
     });
 
     it('should include --plugin-dir flags for all plugin subdirectories in AHQ installation', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
       expect(pluginDirArgs).toHaveLength(2);
@@ -66,7 +80,7 @@ describe('ClaudeCommandBuilder', () => {
         recursive: true,
       });
 
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace(userRoot));
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace(userRoot));
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
       // 2 from AHQ + 1 from user workspace
@@ -77,7 +91,7 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should not duplicate plugin dirs when workspace and installation are the same directory', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
       // Only AHQ plugins — no duplicates from workspace
@@ -86,8 +100,8 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should handle non-existent user workspace plugin dir gracefully', () => {
       const builder = new ClaudeCommandBuilder(
-        mockInstallation(),
-        mockWorkspace('/nonexistent/workspace')
+        mockAhqWorkspace(),
+        mockUserWorkspace('/nonexistent/workspace')
       );
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
@@ -96,7 +110,7 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should include --allowedTools flag with default tools', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const allowedToolsArg = cmd.args.find((a) => a.startsWith('--allowedTools='));
       expect(allowedToolsArg).toBeDefined();
@@ -105,27 +119,27 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should include Read scoped to configDir in allowedTools', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const allowedToolsArg = cmd.args.find((a) => a.startsWith('--allowedTools='));
       expect(allowedToolsArg).toContain(`Read(${ahqConfigDir})`);
     });
 
     it('should append command and marshallingId to args', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('my-command', '/tmp/my-session');
       const lastArg = cmd.args[cmd.args.length - 1]!;
       expect(lastArg).toBe('my-command /tmp/my-session');
     });
 
     it('should use custom executable when provided', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace(), 'tsx');
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace(), 'tsx');
       const cmd = builder.build('test-command', '/tmp/dir');
       expect(cmd.executable).toBe('tsx');
     });
 
     it('should include extra args before plugin flags', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace(), 'tsx', [
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace(), 'tsx', [
         '/path/to/fake.ts',
       ]);
       const cmd = builder.build('test-command', '/tmp/dir');
@@ -133,13 +147,13 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should return a DefaultCLICommand instance', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('test-command', '/tmp/dir');
       expect(cmd).toBeInstanceOf(DefaultCLICommand);
     });
 
     it('should produce a human-readable string via toString()', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('my-cmd', '/tmp/sess');
       const str = cmd.toString();
       expect(str).toContain('claude');
@@ -149,7 +163,7 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should log ANSI-formatted debug output via logDebug()', () => {
-      const builder = new ClaudeCommandBuilder(mockInstallation(), mockWorkspace());
+      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
       const cmd = builder.build('my-cmd', '/tmp/sess');
 
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});

@@ -18,4 +18,12 @@ export interface Workspace {
   getWorkflowListingString(): string;
   /** Tell each plugin in this workspace to register its workflows with the registry. */
   registerWorkflowsWith(registry: WorkflowRegistry): void;
+  /** Return the absolute path of this workspace's root directory. */
+  getRoot(): string;
+  /** Return `{root}/.agentic-hq/temp` — this workspace's temp-file directory. */
+  getTempDir(): string;
+  /** Return `{root}/.agentic-hq` — this workspace's AHQ config directory. */
+  getDotAgenticHqDir(): string;
+  /** Return true iff this workspace's root equals the AHQ workspace root. */
+  isAhqWorkspace(): boolean;
 }

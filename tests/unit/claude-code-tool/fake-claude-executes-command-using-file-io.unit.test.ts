@@ -15,9 +15,8 @@ import { JsonFileIOMarshallerSessionFactory } from '../../../src/io/marshalling/
 import { PtyCLIWrapper } from '../../../src/io/terminal/pty-cli-wrapper.js';
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
-import { DefaultAgenticHqInstallation } from '../../../src/workspace/default-agentic-hq-installation.js';
-import { DefaultGitWorkspace } from '../../../src/workspace/default-git-workspace.js';
-import { DefaultUserProjectWorkspace } from '../../../src/workspace/default-user-project-workspace.js';
+import { AhqWorkspaceImpl } from '../../../src/workflow-discovery/workspace/ahq-workspace-impl.js';
+import { CurrentUserWorkspaceImpl } from '../../../src/workflow-discovery/workspace/current-user-workspace-impl.js';
 
 // TypeScript executor for running .ts fixtures directly
 const TSX_EXECUTABLE = 'tsx';
@@ -31,18 +30,13 @@ const FAKE_CLI_PATH = path.join(
 describe('MarshalledCLITool.execute(command, commandInput)', () => {
   it('should reverse a string via file I/O with fake CLI', async () => {
     // Arrange - inject fake CLI instead of real Claude
-    const gitWorkspace = new DefaultGitWorkspace();
-    const workspace = new DefaultUserProjectWorkspace(gitWorkspace);
+    const ahqWorkspace = new AhqWorkspaceImpl();
+    const currentUserWorkspace = new CurrentUserWorkspaceImpl();
     const tool = new MarshalledCLITool(
-      new JsonFileIOMarshallerSessionFactory(workspace),
+      new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(
-        new DefaultAgenticHqInstallation(gitWorkspace),
-        workspace,
-        TSX_EXECUTABLE,
-        [FAKE_CLI_PATH]
-      ),
-      workspace
+      new ClaudeCommandBuilder(ahqWorkspace, currentUserWorkspace, TSX_EXECUTABLE, [FAKE_CLI_PATH]),
+      currentUserWorkspace
     );
     const commandInputString = 'this is a test string';
     const expectedCommandOutputString = 'gnirts tset a si siht';

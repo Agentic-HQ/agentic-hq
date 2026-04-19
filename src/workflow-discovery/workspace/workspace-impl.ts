@@ -5,7 +5,10 @@ import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import { PluginImpl } from '../plugin/plugin-impl.js';
 
-const PLUGINS_DIR = path.join('.agentic-hq', 'plugins');
+const DOT_AGENTIC_HQ_DIR_NAME = '.agentic-hq';
+const TEMP_SUBDIR_NAME = 'temp';
+const PLUGINS_DIR = path.join(DOT_AGENTIC_HQ_DIR_NAME, 'plugins');
+const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR = 'AGENTIC_HQ_WORKSPACE_ROOT';
 
 /**
  * WorkspaceImpl — Concrete Workspace that scans for plugin directories
@@ -42,6 +45,26 @@ export class WorkspaceImpl implements Workspace {
     for (const plugin of plugins) {
       plugin.registerWorkflowsWith(registry);
     }
+  }
+
+  /** Return the absolute path of this workspace's root directory. */
+  getRoot(): string {
+    return this.rootDir;
+  }
+
+  /** Return `{root}/.agentic-hq/temp` — this workspace's temp-file directory. */
+  getTempDir(): string {
+    return path.join(this.rootDir, DOT_AGENTIC_HQ_DIR_NAME, TEMP_SUBDIR_NAME);
+  }
+
+  /** Return `{root}/.agentic-hq` — this workspace's AHQ config directory. */
+  getDotAgenticHqDir(): string {
+    return path.join(this.rootDir, DOT_AGENTIC_HQ_DIR_NAME);
+  }
+
+  /** Return true iff rootDir equals the AGENTIC_HQ_WORKSPACE_ROOT env var (plain string equality, per Q5). */
+  isAhqWorkspace(): boolean {
+    return this.rootDir === process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR];
   }
 
   /** Discover plugin directories under `.agentic-hq/plugins/`. */

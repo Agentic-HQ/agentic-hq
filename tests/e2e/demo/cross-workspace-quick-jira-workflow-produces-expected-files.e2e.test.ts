@@ -4,12 +4,11 @@
  * Verifies that the quick Jira TDD workflow works from a SEPARATE workspace:
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. Setup: Run git init in the temp workspace
- * 4. Setup: Create a test Jira via MarshalledCLITool
- * 5. Run: agentic-hq quick-jira -- --jira-id={testJiraId}
- * 6. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
- * 7. Assert: Implementation files exist (src/temp-test-hello-world.ts, src/temp-test-hello-world.cli.ts)
- * 8. Assert: Jira status is Done
+ * 3. Setup: Create a test Jira via MarshalledCLITool
+ * 4. Run: agentic-hq quick-jira -- --jira-id={testJiraId}
+ * 5. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
+ * 6. Assert: Implementation files exist (src/temp-test-hello-world.ts, src/temp-test-hello-world.cli.ts)
+ * 7. Assert: Jira status is Done
  *
  * This is the cross-workspace version of quick-jira-workflow-produces-expected-files.e2e.test.ts,
  * following the pattern established by cross-workspace-demo-math-workflow and cross-workspace-string-reversal.
@@ -108,9 +107,6 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
-
-      // Arrange — git init in the temp workspace (so workspace root detection works)
-      execSync('git init', { cwd: tempWorkspace, stdio: 'pipe' });
 
       // Arrange — create a test Jira in the TEST project (multi-step: 2 test types)
       const tool = new DefaultClaudeCodeTool();

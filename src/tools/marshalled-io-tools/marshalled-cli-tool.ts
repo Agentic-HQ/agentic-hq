@@ -16,14 +16,14 @@ import type { IOMarshallerSessionFactory } from '../../interfaces/io-marshaller-
 import type { IOMarshallerSession } from '../../interfaces/io-marshaller-session.js';
 import type { MarshalledIOCLICommandBuilder } from '../../interfaces/marshalled-io-cli-command-builder.js';
 import type { Tool } from '../../interfaces/tool.js';
-import type { UserProjectWorkspace } from '../../interfaces/user-project-workspace.js';
+import type { Workspace } from '../../workflow-discovery/interfaces/workspace.js';
 
 export class MarshalledCLITool implements Tool {
   constructor(
     private readonly sessionFactory: IOMarshallerSessionFactory,
     private readonly cliWrapper: CLIWrapper,
     private readonly marshalledIOCLICommandBuilder: MarshalledIOCLICommandBuilder,
-    private readonly workspace: UserProjectWorkspace
+    private readonly workspace: Workspace
   ) {}
 
   async execute(command: string, input: string): Promise<string> {

@@ -13,9 +13,9 @@
  */
 import type { CLIWrapper } from '../../interfaces/cli-wrapper.js';
 import type { Tool } from '../../interfaces/tool.js';
-import type { UserProjectWorkspace } from '../../interfaces/user-project-workspace.js';
 import type { WorkflowCommandBuilder } from '../../interfaces/workflow-command-builder.js';
 import type { WorkflowCommand } from '../../interfaces/workflow-command.js';
+import type { Workspace } from '../../workflow-discovery/interfaces/workspace.js';
 import { DefaultWorkflowCommand } from '../workflow-command/default-workflow-command.js';
 
 const UNUSED_INPUT_STRING = 'unused input string';
@@ -24,7 +24,7 @@ export class ClaudeWorkflowCommandBuilder implements WorkflowCommandBuilder {
   constructor(
     private readonly tool: Tool,
     private readonly cliWrapper: CLIWrapper,
-    private readonly workspace: UserProjectWorkspace
+    private readonly workspace: Workspace
   ) {}
 
   async build(skillPath: string, passthroughArgs: string[]): Promise<WorkflowCommand> {

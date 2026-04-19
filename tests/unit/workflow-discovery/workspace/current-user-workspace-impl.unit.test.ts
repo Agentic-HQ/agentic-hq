@@ -1,10 +1,14 @@
 /**
  * Tests CurrentUserWorkspaceImpl — the user's current workspace based on process.cwd().
- * Implements Workspace by delegating to a WorkspaceImpl created on the fly.
+ * Implements Workspace by delegating to a WorkspaceImpl created on the fly (cwd as rootDir).
  * When cwd equals the AHQ workspace root, returns a "same as" message instead of listing.
+ * For the four root/path methods (getRoot/getTempDir/getDotAgenticHqDir/isAhqWorkspace),
+ * delegates straight through to WorkspaceImpl — no overrides.
  * No fields stored — WorkspaceImpl is created fresh each call.
  * Variables typed as Workspace interface; CurrentUserWorkspaceImpl used only for construction.
  */
+import * as path from 'node:path';
+
 import { afterEach, describe, expect } from 'vitest';
 
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
@@ -78,6 +82,45 @@ describe('CurrentUserWorkspaceImpl', () => {
       workspace.registerWorkflowsWith(registry);
 
       expect(registry.registered).toHaveLength(0);
+    }
+  );
+
+  // Coverage of the four new Workspace methods: pure delegation through to WorkspaceImpl
+  // (cwd becomes rootDir). isAhqWorkspace compares cwd to env var per Q5 (simple string equality).
+  tmpdirTest('should return process.cwd() via getRoot()', ({ tmpdir }) => {
+    process.cwd = () => tmpdir;
+    process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
+    const workspace: Workspace = new CurrentUserWorkspaceImpl();
+    expect(workspace.getRoot()).toBe(tmpdir);
+  });
+
+  tmpdirTest(
+    'should return {cwd}/.agentic-hq/temp via getTempDir() (delegation-proof)',
+    ({ tmpdir }) => {
+      process.cwd = () => tmpdir;
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
+      const workspace: Workspace = new CurrentUserWorkspaceImpl();
+      expect(workspace.getTempDir()).toBe(path.join(tmpdir, '.agentic-hq', 'temp'));
+    }
+  );
+
+  tmpdirTest(
+    'should return true from isAhqWorkspace() when cwd equals AGENTIC_HQ_WORKSPACE_ROOT',
+    ({ tmpdir }) => {
+      process.cwd = () => tmpdir;
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
+      const workspace: Workspace = new CurrentUserWorkspaceImpl();
+      expect(workspace.isAhqWorkspace()).toBe(true);
+    }
+  );
+
+  tmpdirTest(
+    'should return false from isAhqWorkspace() when cwd differs from AGENTIC_HQ_WORKSPACE_ROOT',
+    ({ tmpdir }) => {
+      process.cwd = () => tmpdir;
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
+      const workspace: Workspace = new CurrentUserWorkspaceImpl();
+      expect(workspace.isAhqWorkspace()).toBe(false);
     }
   );
 });
