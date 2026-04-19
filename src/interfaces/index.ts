@@ -18,4 +18,3 @@ export type { MarshalledIOCLICommandBuilder } from './marshalled-io-cli-command-
 export type { Tool } from './tool.js';
 export type { WorkflowCommandBuilder } from './workflow-command-builder.js';
 export type { WorkflowCommand } from './workflow-command.js';
-export type { ClaudeCodeTool } from './claude-code-tool.js';

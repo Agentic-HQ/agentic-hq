@@ -1,29 +1,32 @@
 /**
- * DefaultClaudeCodeTool — Stateless facade that delegates to CompositionRoot.
+ * DefaultClaudeCodeTool — MarshalledCLITool pre-wired for Claude Code.
  *
- * SRP Does: Create a CompositionRoot per execute() call and delegate to its tool.
+ * SRP Does: Supply the four Claude-specific wiring arguments to
+ * MarshalledCLITool's constructor — the session factory, CLI wrapper,
+ * ClaudeCommandBuilder, and current-user workspace — sourced from a
+ * CompositionRoot.
  *
- * SRP Knows About: CompositionRoot (the single place where wiring happens).
+ * SRP Knows About: That Claude's CLI command is built by
+ * ClaudeCommandBuilder (wired with the AHQ + current-user workspaces),
+ * and that the rest of the pipeline (session, CLI wrapper, working
+ * directory) is shared generic infrastructure drawn from CompositionRoot.
  *
- * SRP Knows Nothing About: How any of the individual components work internally,
- * or which concrete classes are wired together.
- *
- * REFACTOR: When I do the refactoring in https://agentic-hq.atlassian.net/browse/AHQ-91 (Remove Git Root Directory Checking)
- * the CompositionRoot class should simplify massively.  At that point the wiring simplifies.
- *
- * I expect at that point it will be easier (in the follow up Jira https://agentic-hq.atlassian.net/browse/AHQ-96) to
- * refactor so that this DefaultClaudeCodeTool
- * actually does some useful stuff - like putting the Claude specific components together i.e. the ClaudeCommandBuilder
- * and whatever marshelling method is returned by compositionRoot.getIOMarshallerSessionFactory() and whatever CLI
- * is returned by compositionRoot.getCLIWrapper().  In fact seems likely that DefaultClaudeCodeTool should be passed a
- * compositionRoot and wire itself a tool up and delegate to that.  This would replace CompositionRoot.getTool()
- *
+ * SRP Knows Nothing About: How MarshalledCLITool orchestrates the
+ * execute() pipeline, how ClaudeCommandBuilder assembles Claude's CLI
+ * arguments internally, or how I/O is marshalled.
  */
-import type { ClaudeCodeTool } from '../../../interfaces/claude-code-tool.js';
 import { CompositionRoot } from '../../../kernel/composition-root.js';
+import { MarshalledCLITool } from '../marshalled-cli-tool.js';
 
-export class DefaultClaudeCodeTool implements ClaudeCodeTool {
-  async execute(command: string, input: string): Promise<string> {
-    return new CompositionRoot().getTool().execute(command, input);
+import { ClaudeCommandBuilder } from './claude-command-builder.js';
+
+export class DefaultClaudeCodeTool extends MarshalledCLITool {
+  constructor(root: CompositionRoot = new CompositionRoot()) {
+    super(
+      root.getIOMarshallerSessionFactory(),
+      root.getCLIWrapper(),
+      new ClaudeCommandBuilder(root.getAhqWorkspace(), root.getCurrentUserWorkspace()),
+      root.getCurrentUserWorkspace()
+    );
   }
 }

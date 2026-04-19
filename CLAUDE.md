@@ -36,33 +36,30 @@ Perplexity MCP is great.  You almost always get really useful answers from it, t
 If you need to commit something, STOP and tell the user:
 > "These changes are ready to commit. Please run the `/commit` command when you're ready."
 
-## 🚨 CRITICAL: NEVER RUN FORMATTERS MID-WORK 🚨
+## Running Formatters: Only After Confirming Scope
 
-**RULE: NEVER run `pnpm format:fix`, `prettier --write`, or any auto-formatters during active work (unless you have checked first using pnpm format:check that the formatting changes only apply to the new code you are working on in this commit)!**
+**RULE: Formatters (`pnpm format:fix`, `prettier --write`, `pnpm lint:fix`) are allowed mid-work ONLY after `pnpm format:check` / `pnpm lint:check` has confirmed the pending changes are confined to code you wrote in this commit. If the check shows unrelated files would be reformatted, do NOT run the fix.**
 
-- Running formatters mid-work pollutes the git commit history
-- Makes it IMPOSSIBLE to see what real changes were made vs. formatting changes
-- **BREAKS TRACEABILITY** of actual code changes
-- Formatters should ONLY be run:
-  - At the very beginning of a new story (clean slate)
-  - At the very end before final commit (after ALL work is done)
-  - As a separate, dedicated formatting commit (no code changes mixed in)
+The goal is to keep functional changes separate from whole-repo reformatting churn — not to ban formatters outright.
 
-**Example of the Problem:**
-- You change 1 line of actual code
-- Formatter touches 44 files with whitespace/formatting changes
-- Git diff shows hundreds of lines changed
-- Impossible to review what actually changed
-- Code review becomes nightmare
+**Allowed workflow:**
+1. Run `pnpm format:check` (read-only) — see which files would change.
+2. If **only your in-progress files** are listed → running `pnpm format:fix` (or `prettier --write <those files>`) is fine.
+3. If **unrelated files** are listed → stop. Either leave them alone, or make it a separate dedicated formatting commit with no code changes mixed in.
 
-**When asked to check linting/formatting:**
-- Run `pnpm lint:check` (read-only check) ✅
-- Run `pnpm format:check` (read-only check) ✅
-- Report issues found ✅
-- **ONLY run `pnpm format:fix` if the changes will format new code you've written in this commit** ❌
-- **ONLY run `pnpm lint:fix` if the changes will fix new code you've written in this commit** ❌
+Same pattern for `pnpm lint:check` → `pnpm lint:fix`.
 
-**NO EXCEPTIONS** - formatting changes must be isolated from functional changes!
+**Why this matters (problem we're avoiding):**
+- You change 1 line of actual code.
+- You run `pnpm format:fix` without checking scope first.
+- Formatter touches 44 files with whitespace/formatting changes.
+- Git diff shows hundreds of lines changed.
+- Impossible to review what actually changed; code review becomes a nightmare.
+
+**One exception where no scope check is needed:**
+- A separate, dedicated formatting commit with no code changes mixed in — by definition the whole commit *is* the reformatting, so mixing is impossible.
+
+**The rule is about scope discipline, not about blocking the tool.**
 
 ## 🚨 CRITICAL: NEVER CATCH ERRORS AND FALL BACK TO DEFAULTS 🚨
 
