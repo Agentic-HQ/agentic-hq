@@ -1,9 +1,14 @@
 /**
  * CLI program factory — creates a configured Commander program with injected dependencies.
  *
- * Separated from agentic-hq-cli.ts (the entry point) so that:
+ * Separated from main.ts/app.ts (the entry point) so that:
  * 1. The program can be tested without triggering program.parse() side effects
  * 2. The WorkflowCommandBuilder and WorkflowSearchResults can be injected for testing or customization
+ *
+ * Keeping `createProgram` as its own factory (rather than folding it into
+ * `app.run()`) matters for the Classwitch Root Project shape of this repo:
+ * the factory stays directly test-friendly for both the root project and any
+ * Classwitch Override Project that reuses it via `app.run()`.
  *
  * The CLI is thin: it parses args, resolves the skill path, and delegates
  * to the injected WorkflowCommandBuilder for workflow command building and execution.
