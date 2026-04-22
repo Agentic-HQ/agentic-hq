@@ -24,25 +24,51 @@
  *   the teaching signal and add ceremony with no functional benefit
  *   (see AHQ-124 discussion).
  *
- *   AHQ-117 will later convert the `new WorkflowSearchResultsImpl()`
- *   construction below (and 5 other `new SomeImpl()` calls elsewhere in the
- *   codebase) to `rootServiceRegistry.loadClass(...)` calls — the classwitch
- *   swap point. That content change does not affect this file's *shape*, so
- *   override repos that already target `app.run()` will keep working
- *   unchanged when AHQ-117 lands.
+ *   AHQ-117 converted the `new WorkflowSearchResultsImpl()` construction
+ *   below (and 5 other `new SomeImpl()` calls elsewhere in the codebase)
+ *   to `rootServiceRegistry.loadClass(...)` calls — the Classwitch swap
+ *   point. Override projects' registries replace these defaults at
+ *   side-effect-import time.
  *
- * See: https://agentic-hq.atlassian.net/browse/AHQ-124
+ *   AHQ-117 Add-On §9 also centralises `AGENTIC_HQ_WORKSPACE_ROOT`
+ *   resolution inside `run()` below. A is the Root Classwitch Project and
+ *   the authoritative workflow source (alongside the user's cwd); override
+ *   projects override *code*, not workflow sources, and therefore must
+ *   NOT set this env var themselves. Resolving it here — from this file's
+ *   own `import.meta.url` — means override projects' `bin/*.cjs` wrappers
+ *   never touch it and cannot get it wrong.
+ *
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-124,
+ *      https://agentic-hq.atlassian.net/browse/AHQ-117
  */
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { rootServiceRegistry } from '../classwitch-registry/root-registry.js';
 import { CompositionRoot } from '../kernel/composition-root.js';
-import { WorkflowSearchResultsImpl } from '../workflow-discovery/workflow-listing/workflow-search-results-impl.js';
+import { AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR } from '../workflow-discovery/workspace/ahq-workspace-impl.js';
 
 import { createProgram } from './agentic-hq-program.js';
 
 export const app = {
   run(): void {
+    // NOTE RE REFACTOR: In the future would be good to work out what this AGENTIC_HQ_WORKSPACE_ROOT env
+    // variable does and how it controls the system. May be better to have it as an explicit
+    // Typescript parameter that is set on the boundaries of the system and passed inward, instead of
+    // this "env" variable which is like a global, hidden variable which is harder to test, track,
+    // understand and control.
+    // (The separate concern this note used to carry — about Classwitch Override Projects colliding on
+    // workspace-root meaning — is resolved by AHQ-117 Add-On §9: `app.run()` resolves A's own location
+    // from `import.meta.url`, so override projects don't set the env var at all.)
+    if (!process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR]) {
+      const thisFileDir = path.dirname(fileURLToPath(import.meta.url));
+      process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR] = path.resolve(thisFileDir, '..', '..');
+    }
+
     const root = new CompositionRoot();
     const builder = root.getWorkflowCommandBuilder();
-    createProgram(builder, new WorkflowSearchResultsImpl()).parse();
+    const WorkflowSearchResultsClass = rootServiceRegistry.loadClass('WorkflowSearchResultsImpl');
+    createProgram(builder, new WorkflowSearchResultsClass()).parse();
   },
 };

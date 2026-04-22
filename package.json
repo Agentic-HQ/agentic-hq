@@ -8,6 +8,10 @@
     "agentic-hq": "bin/agentic-hq.cjs"
   },
   "exports": {
+    ".": "./src/index.ts",
+    "./cli": "./src/cli/app.ts",
+    "./cli/program": "./src/cli/agentic-hq-program.ts",
+    "./classwitch-registry": "./src/classwitch-registry/root-registry.ts",
     "./tools/claude-code": "./src/tools/marshalled-io-tools/claude-code/index.ts"
   },
   "scripts": {
@@ -58,6 +62,7 @@
     "pnpm": ">=10.0.0"
   },
   "dependencies": {
+    "classwitch": "file:../classwitch",
     "commander": "^14.0.3",
     "fast-glob": "^3.3.3",
     "node-pty": "^1.1.0"

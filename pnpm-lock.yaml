@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      classwitch:
+        specifier: file:../classwitch
+        version: file:../classwitch
       commander:
         specifier: ^14.0.3
         version: 14.0.3
@@ -735,6 +738,9 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
+
+  classwitch@file:../classwitch:
+    resolution: {directory: ../classwitch, type: directory}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -2397,6 +2403,8 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+
+  classwitch@file:../classwitch: {}
 
   color-convert@2.0.1:
     dependencies:

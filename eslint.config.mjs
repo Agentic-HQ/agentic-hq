@@ -158,6 +158,33 @@ export default [
     },
   },
 
+  // Classwitch override enforcement (AHQ-117 Add-On §8):
+  // Production code under src/ must obtain default-class implementations via
+  // rootServiceRegistry.loadClass('<ServiceName>') — never a direct `new
+  // DefaultXxx(...)` call. Going through the registry is what lets Classwitch
+  // Override Projects swap the class at runtime; a direct `new` call silently
+  // defeats any override with zero feedback.
+  // Excluded: src/classwitch-registry/** (the registry owns the defaults),
+  // tests/** (via the test-files block below), and override-project or plugin
+  // code that lives outside src/.
+  // See https://agentic-hq.atlassian.net/browse/AHQ-117 and
+  // docs/dev/how-to-guides/how-to-create-your-own-classwitch-override-project.md.
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['src/classwitch-registry/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "NewExpression[callee.name=/^(DefaultClaudeCodeTool|DefaultCLICommand|ClaudeWorkflowCommandBuilder|DefaultWorkflowCommand|MarshalledCLITool|WorkflowSearchResultsImpl)$/]",
+          message:
+            "Direct `new Default*()` construction defeats Classwitch overrides. Use `rootServiceRegistry.loadClass('<ServiceName>')` instead — see the classwitch how-to §5 (classwitch/docs/how-to-guides/how-to-convert-project-to-root-classwitch-project.md) and docs/dev/how-to-guides/how-to-create-your-own-classwitch-override-project.md.",
+        },
+      ],
+    },
+  },
+
   // Test files configuration
   {
     files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/__tests__/**/*.ts'],
