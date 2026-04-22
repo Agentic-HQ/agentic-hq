@@ -11,9 +11,9 @@
  * resolved it, or how I/O is marshalled. Uses CLICommand internally via
  * composition.
  */
-import { rootServiceRegistry } from '../../classwitch-registry/root-registry.js';
 import type { CLIWrapper } from '../../interfaces/cli-wrapper.js';
 import type { WorkflowCommand } from '../../interfaces/workflow-command.js';
+import { DefaultCLICommand } from '../../io/terminal/default-cli-command.js';
 
 export class DefaultWorkflowCommand implements WorkflowCommand {
   constructor(
@@ -23,8 +23,7 @@ export class DefaultWorkflowCommand implements WorkflowCommand {
   ) {}
 
   async execute(): Promise<void> {
-    const CLICommandClass = rootServiceRegistry.loadClass('DefaultCLICommand');
-    const command = new CLICommandClass('bash', ['-c', this.commandString]);
+    const command = new DefaultCLICommand('bash', ['-c', this.commandString]);
     await this.cliWrapper.run(command, this.workingDirectory);
   }
 }

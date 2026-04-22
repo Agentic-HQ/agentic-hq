@@ -15,9 +15,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { rootServiceRegistry } from '../../../classwitch-registry/root-registry.js';
 import type { CLICommand } from '../../../interfaces/cli-command.js';
 import type { MarshalledIOCLICommandBuilder } from '../../../interfaces/marshalled-io-cli-command-builder.js';
+import { DefaultCLICommand } from '../../../io/terminal/default-cli-command.js';
 import type { Workspace } from '../../../workflow-discovery/interfaces/workspace.js';
 
 // Default CLI executable
@@ -67,8 +67,7 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   build(aiToolCommand: string, marshallingId: string): CLICommand {
     const args = this.buildArgsList(aiToolCommand, marshallingId);
 
-    const CLICommandClass = rootServiceRegistry.loadClass('DefaultCLICommand');
-    return new CLICommandClass(this.executable, args);
+    return new DefaultCLICommand(this.executable, args);
   }
 
   private buildArgsList(aiToolCommand: string, marshallingId: string): string[] {
