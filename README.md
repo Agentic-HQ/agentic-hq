@@ -198,6 +198,16 @@ agentic-hq --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal 
 ```
 
 
+## Extending via Classwitch Override Projects
+
+agentic-hq is a **Classwitch Root Project**: 6 of its concrete classes are registered as switchable **services** so that contributors can publish their own *variants* of agentic-hq — different AI backend, different CLI output, different workflow-command semantics — **without forking this repo**. You declare an override in a separate package, import it before calling agentic-hq's `app.run()`, and the registry swaps your class in at runtime. Swaps are type-checked at compile time.
+
+The full step-by-step how-to — with a worked example that overrides the CLI-output service with an ANSI-coloured variant — is here:
+
+👉 **[How to Create Your Own Classwitch Override Project](docs/dev/how-to-guides/how-to-create-your-own-classwitch-override-project.md)**
+
+The 6 services you can override are listed in the guide's "Available services" table (service names, interfaces, and default classes). For the Root-Project side of the pattern see the [classwitch how-to guide](../classwitch/docs/how-to-guides/how-to-convert-project-to-root-classwitch-project.md).
+
 ## Further Documentation
 
 You can also:
