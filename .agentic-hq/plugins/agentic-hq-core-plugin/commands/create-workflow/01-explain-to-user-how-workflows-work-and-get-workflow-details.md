@@ -77,7 +77,22 @@ Which plugin should this workflow live in?
 
 **Default suggestion: `agentic-hq-demos-plugin`** (where the existing demo workflows live).
 
-Explain that available plugins can be found in `{project-root}/.agentic-hq/plugins/` and the choice determines where the command and skill files will be created.
+Explain that available plugins can be found in `{project-root}/.agentic-hq/plugins/`. The plugin can either already exist OR be a brand-new plugin that this workflow run will create — the user's choice determines where the command and skill files will be created.
+
+#### After plugin-id is collected: detect plugin & gather plugin metadata
+
+After the user has supplied `plugin-id`, compute `plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}` and check whether `{plugin-dir}/.claude-plugin/plugin.json` exists.
+
+- **If `plugin.json` exists** → silently read it. Extract the following without prompting the user (the user does not care about pre-existing plugin metadata at this point):
+    - `plugin-description` ← `description` field
+    - `plugin-version` ← `version` field
+    - `plugin-author-name` ← `author.name` field
+- **If `plugin.json` does NOT exist** → tell the user clearly: *"That plugin doesn't exist yet — I'll create it as a new plugin."* Then gather the metadata for the new manifest:
+    - Ask for `plugin-description` (one sentence describing what the plugin is for; this becomes the `description` field of `plugin.json`).
+    - Use silent default `plugin-version = "0.0.1"` (only ask if the user explicitly wants to override).
+    - Use silent default `plugin-author-name = "Agentic HQ"` (only ask if the user explicitly wants to override).
+
+These three values, together with `plugin-id` and `plugin-dir`, will be recorded under "Plugin Metadata" in the DRAFT workflow spec (see Step 5). Command 02 will read them from the APPROVED spec when it ensures `{plugin-dir}/.claude-plugin/plugin.json` exists.
 
 ### 3b. workflow-id
 
@@ -117,10 +132,14 @@ workflow-id = (from user)
 one-sentence-description = (from user)
 workflow-short-id = (from user)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
+plugin-description = (from existing plugin.json, or asked from user if plugin is new — see Step 3a)
+plugin-version = (from existing plugin.json, or default "0.0.1" for new plugin)
+plugin-author-name = (from existing plugin.json, or default "Agentic HQ" for new plugin)
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
 ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
+plugin-manifest-filename = {plugin-dir}/.claude-plugin/plugin.json
 workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
 draft-workflow-spec-filename = {workflow-creation-docs-dir}/01-DRAFT-workflow-spec.md
 ```
@@ -155,6 +174,19 @@ The spec should include:
 **Description**: {one-sentence-description}
 **Plugin**: {plugin-id}
 **Status**: DRAFT
+
+---
+
+## Plugin Metadata
+
+- **plugin-id**: {plugin-id}
+- **plugin-dir**: {plugin-dir}
+- **plugin-manifest-filename**: {plugin-manifest-filename}
+- **plugin-description**: {plugin-description}
+- **plugin-version**: {plugin-version}
+- **plugin-author-name**: {plugin-author-name}
+
+If the plugin does not yet exist, Command 02 will create `{plugin-manifest-filename}` from these values. If it already exists, Command 02 will leave the existing manifest untouched.
 
 ---
 

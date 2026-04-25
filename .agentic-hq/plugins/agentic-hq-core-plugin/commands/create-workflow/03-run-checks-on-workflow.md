@@ -28,6 +28,7 @@ workflow-id = (parsed from input)
 workflow-short-id = (parsed from input)
 project-root = (your primary working directory)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
+plugin-manifest-filename = {plugin-dir}/.claude-plugin/plugin.json
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
@@ -70,9 +71,10 @@ Go through every element in `{approved-workflow-spec-filename}` and verify the i
 4. **SKILL.md exists** and correctly references the CLI
 5. **package.json and tsconfig.json exist** with correct dependencies
 6. **`ahq-workflow.json` exists and is valid** — confirm the file exists at `{ahq-workflow-metadata-filename}`, is valid JSON, and contains all seven required fields: `pluginId`, `skillId`, `shortId`, `description`, `exampleParameters`, `version`, `author.name`. Verify each field's value matches the values from the approved spec / variable chain (e.g. `pluginId` equals `plugin-id`, `skillId` equals `workflow-id`, `shortId` equals `workflow-short-id`, `description` equals `one-sentence-description`). If `exampleParameters` is non-empty, verify it starts with `-- `.
-7. **Variable naming conventions** match the math-workflow pattern (kebab-case, $0 for temp dir)
-8. **Self-termination** is present at the end of every command
-9. **Context loading** — each command (beyond the first) reads previous commands and generated files
+7. **Plugin manifest (`{plugin-manifest-filename}`) exists and is valid** — confirm the file exists at `{plugin-manifest-filename}` (i.e. `{plugin-dir}/.claude-plugin/plugin.json`), is valid JSON, and contains all four required fields: `name`, `description`, `version`, `author.name`. Verify `name` equals `plugin-id`. This check applies regardless of whether the manifest was created in this `create-workflow` run or already existed — both cases should result in a valid manifest at the end. Without this file, Claude Code's `--plugin-dir` flag will not load the plugin.
+8. **Variable naming conventions** match the math-workflow pattern (kebab-case, $0 for temp dir)
+9. **Self-termination** is present at the end of every command
+10. **Context loading** — each command (beyond the first) reads previous commands and generated files
 
 Create the file `{workflow-implementation-approval-list-file}` with the results:
 
@@ -104,6 +106,7 @@ Create the file `{workflow-implementation-approval-list-file}` with the results:
 | File-based I/O (command-input/output.json) | PASS/FAIL | |
 | Context loading in commands 02+ | PASS/FAIL | |
 | ahq-workflow.json present and well-formed | PASS/FAIL | |
+| Plugin manifest (plugin.json) present and well-formed | PASS/FAIL | |
 
 ---
 

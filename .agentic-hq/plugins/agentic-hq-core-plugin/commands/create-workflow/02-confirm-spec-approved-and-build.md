@@ -28,6 +28,7 @@ workflow-id = (parsed from input)
 workflow-short-id = (parsed from input)
 project-root = (your primary working directory)
 plugin-dir = {project-root}/.agentic-hq/plugins/{plugin-id}
+plugin-manifest-filename = {plugin-dir}/.claude-plugin/plugin.json
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
@@ -48,7 +49,10 @@ example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-wo
 Read the following to gain full context:
 
 1. **Previous command file**: `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md` — to understand what Command 01 did
-2. **All files in `{workflow-creation-docs-dir}`** — the DRAFT spec and any other docs created so far
+2. **All files in `{workflow-creation-docs-dir}`** — the DRAFT spec and any other docs created so far. **While reading the DRAFT spec, extract the values from the "Plugin Metadata" section** — they will be used in Step 4f to ensure the plugin manifest exists:
+   - `plugin-description`
+   - `plugin-version`
+   - `plugin-author-name`
 3. **Example workflow files** for patterns:
    - All `.md` files in `{example-workflow-commands-dir}` — command file patterns
    - `{example-workflow-cli-file}` — TypeScript CLI pattern
@@ -84,6 +88,7 @@ Use the `EnterPlanMode` tool to plan the implementation. Your plan should cover:
 4. **SKILL.md** — returns the shell command to run the CLI
 5. **package.json** — dependencies (agentic-hq via link:, tsx, commander)
 6. **tsconfig.json** — standard config
+7. **Plugin manifest (`{plugin-manifest-filename}`)** — created from the "Plugin Metadata" section of the APPROVED spec only if `{plugin-manifest-filename}` does not already exist (idempotent — never clobbers an existing manifest). Required for Claude Code's `--plugin-dir` flag to load the plugin's commands/skills.
 
 For each command file, outline:
 - The Step 0b variables block (full chain from plugin-id/workflow-id)
@@ -200,6 +205,31 @@ Create `{skills-dir}/SKILL.md` following the math-workflow SKILL.md pattern:
 ### 4e. Create package.json and tsconfig.json
 
 Create `{skills-dir}/ts-workflow/package.json` and `{skills-dir}/ts-workflow/tsconfig.json` following the existing patterns.
+
+### 4f. Ensure Plugin Manifest Exists
+
+Some workflows are scaffolded into a brand-new plugin (one that didn't exist before this `create-workflow` run). For those cases the Claude Code plugin manifest also needs to exist or Claude Code's `--plugin-dir` flag won't load the plugin's commands/skills.
+
+Check whether `{plugin-manifest-filename}` (i.e. `{plugin-dir}/.claude-plugin/plugin.json`) exists.
+
+- **If it does NOT exist** → create it. Use the values extracted from the APPROVED spec's "Plugin Metadata" section in Step 1:
+
+  ```json
+  {
+    "name": "{plugin-id}",
+    "description": "{plugin-description}",
+    "version": "{plugin-version}",
+    "author": {
+      "name": "{plugin-author-name}"
+    }
+  }
+  ```
+
+  Tell the user clearly: *"Created new plugin: {plugin-id} (manifest at `{plugin-manifest-filename}`)"*.
+
+- **If it already exists** → leave it untouched. Tell the user: *"Plugin already exists; manifest left as-is."*
+
+This step is idempotent — it MUST NOT clobber an existing `plugin.json`. After this step, both the plugin directory and its manifest are guaranteed to exist, so Claude Code's `--plugin-dir` flag will discover the new workflow's commands/skills.
 
 ---
 
