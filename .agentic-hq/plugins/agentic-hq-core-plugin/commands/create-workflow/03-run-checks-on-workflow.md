@@ -32,6 +32,7 @@ plugin-manifest-filename = {plugin-dir}/.claude-plugin/plugin.json
 commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
+ts-workflow-dir = {skills-dir}/ts-workflow
 ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
 workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
 approved-workflow-spec-filename = {workflow-creation-docs-dir}/02a-APPROVED-workflow-spec.md
@@ -107,6 +108,7 @@ Create the file `{workflow-implementation-approval-list-file}` with the results:
 | Context loading in commands 02+ | PASS/FAIL | |
 | ahq-workflow.json present and well-formed | PASS/FAIL | |
 | Plugin manifest (plugin.json) present and well-formed | PASS/FAIL | |
+| Generated TS CLI installs and typechecks cleanly | PASS/FAIL | (filled in by Step 2A — leave as `PASS/FAIL` placeholder when writing the file in this step) |
 
 ---
 
@@ -116,6 +118,61 @@ Create the file `{workflow-implementation-approval-list-file}` with the results:
 ```
 
 Present the results to the user.
+
+---
+
+## Step 2A: Install Deps + Typecheck the Generated TS CLI
+
+The Step 2 checks above verify file existence, JSON validity, and convention compliance. This step goes one level deeper and verifies the **generated TypeScript CLI actually compiles** — file-level checks alone could green-light a CLI with real type errors (wrong import path, wrong Commander API usage, bad tsconfig setting) that nobody would discover until the workflow is run for the first time (or until someone opens the file in VSCode and sees red squigglies).
+
+This step fills in the **"Generated TS CLI installs and typechecks cleanly"** row that Step 2 added to `{workflow-implementation-approval-list-file}` — that row is left as `PASS/FAIL` placeholder by Step 2 and resolved here.
+
+### 2A.1: Install dependencies
+
+Run:
+
+```bash
+cd {ts-workflow-dir} && pnpm install --ignore-workspace
+```
+
+`--ignore-workspace` keeps this install isolated from any parent pnpm workspace.
+
+This creates two things on disk:
+- **`{ts-workflow-dir}/node_modules/`** — gitignored by convention (every existing `ts-workflow/` directory in the repo follows this).
+- **`{ts-workflow-dir}/pnpm-lock.yaml`** — **NOT gitignored**; convention is to commit it. Tell the user explicitly: *"Generated `pnpm-lock.yaml` at `{ts-workflow-dir}/pnpm-lock.yaml` — please include this in your workflow's commit. Convention across all `ts-workflow/` directories in the repo is to track lockfiles."*
+
+If `pnpm install` fails, capture the error output verbatim, write FAIL into the row's Status column with the error in the Notes column, surface the failure to the user, and STOP this step (do not attempt the typecheck — it would fail for unrelated reasons). Do not attempt to fix the install error here; that's Command 02 scaffolding territory.
+
+### 2A.2: Typecheck the generated CLI
+
+#### Pick the TypeScript version
+
+Before running the typecheck, **verify the pinned TypeScript major.minor below still matches the agentic-hq root project's TypeScript version** so the typecheck behaves the same way as the root's `pnpm validate`.
+
+1. Read `{agentic-hq-workspace-root-dir}/package.json`.
+2. Find the `typescript` entry under `devDependencies` (or `dependencies`). It will be a semver range like `"^5.9.3"`.
+3. Extract the major.minor (e.g. `5.9` from `"^5.9.3"`).
+4. Compare against the pinned major.minor in the `pnpm dlx` command immediately below (currently `5.9`):
+   - **If they match**: proceed with the command as written.
+   - **If they don't match**: this Command 03 file's pin is stale relative to the root. Use the root's major.minor for *this* check (so the workflow-being-created is typechecked against the same TS the root uses), then surface the discrepancy to the user with: *"The TypeScript pin in `create-workflow`'s Command 03 (`typescript@<old>`) is older than the agentic-hq root's `typescript@<new>`. I used `typescript@<new>` for this check. Please bump the pin in `.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/03-run-checks-on-workflow.md` so future workflow-creation runs use the up-to-date version."*
+
+#### Run the typecheck
+
+```bash
+cd {ts-workflow-dir} && pnpm --package=typescript@5.9 dlx tsc --noEmit -p tsconfig.json
+```
+
+(Substitute the root's major.minor here if the previous sub-step found a mismatch.)
+
+**Why `pnpm dlx typescript@<version>` rather than adding `typescript` to the bundled `ts-workflow/package.json` as a devDep:**
+- Avoids inflating every workflow's `package.json` and `pnpm-lock.yaml` with a `typescript` entry.
+- Avoids ~50 MB of additional `node_modules/` per workflow (only partially mitigated by pnpm's content-addressable store).
+- `pnpm dlx` is a built-in subcommand of `pnpm` — which IS already a documented prerequisite of Agentic HQ (see README.md "Prerequisites" section) — so no new install requirement is introduced.
+- The pinned `typescript@5.9` lives once here in Command 03; bump it centrally and all future workflow-creation runs use the new version.
+
+If `tsc --noEmit` exits zero (no type errors), write PASS into the row.
+
+If `tsc --noEmit` exits non-zero, write FAIL into the row's Status column, paste the error output verbatim into the Notes column (or into a sub-section under the table if it's long), and surface the failure to the user. Do NOT attempt to fix the errors as part of this step — Command 03 is verification-only. The user decides whether to (a) regenerate the relevant file by hand, or (b) treat it as a Command 02 scaffolding bug to fix before the next `create-workflow` run.
 
 ---
 

@@ -53,11 +53,21 @@ Read the following to gain full context:
    - `plugin-description`
    - `plugin-version`
    - `plugin-author-name`
-3. **Example workflow files** for patterns:
+
+   Also: if the spec contains any blockquote callout addressed to **"the execution agent"**, that's instructions written specifically for YOU — read it carefully and act on it.
+3. **Example workflow files** for patterns. Two reference workflows are bundled with Agentic HQ — pick whichever matches the shape of the workflow you're building (or read both, if the workflow spans both shapes):
+
+   **A. Simple workflow — math-workflow** (3 sequential pure-data-transform commands, no user interaction, output of one feeds input of next):
    - All `.md` files in `{example-workflow-commands-dir}` — command file patterns
-   - `{example-workflow-cli-file}` — TypeScript CLI pattern
+   - `{example-workflow-cli-file}` — TS CLI **propagation** pattern (each command's output → next command's input)
    - `{example-workflow-skill-dir}/SKILL.md` — SKILL.md pattern
    - `{example-workflow-skill-dir}/ts-workflow/package.json` — package.json pattern
+
+   **B. Substantial workflow — create-workflow** (multiple commands with user interaction, plan mode, file-system gating, no output-propagation):
+   - All `.md` files in `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/` — command file patterns for substantial workflows
+   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/src/create-workflow-cli.ts` — TS CLI **re-inject** pattern (read env var once, build one input string, pass it to every command, ignore each command's output; phase gating via filesystem state)
+
+   The DRAFT spec's "TypeScript CLI" section tells you which CLI pattern to follow (propagation vs re-inject). When in doubt, study both.
 
 ---
 
@@ -144,6 +154,8 @@ This is verbose, error-prone, and scales poorly as you add more commands.
 Input: "session-dir=/path/to/session"
 ```
 Each command then constructs `{session-dir}/01-check-in.md`, `{session-dir}/02-explore.md`, etc. on its own.
+
+**Exception — install-time constants from the user's environment**: things like `agentic-hq-workspace-root-dir` (read from `AGENTIC_HQ_WORKSPACE_ROOT` by the TS CLI), `plugin-id`, and `workflow-id` legitimately propagate as multiple individual variables. They aren't filesystem paths derivable from a parent directory — they're separate constants. `create-workflow` itself propagates 4 such constants between its 5 commands and that's correct. The "single directory, derive paths" rule applies to **runtime filesystem paths under a known parent**, not to constants the TS CLI got from `process.env` or from CLI passthrough parameters. See Command 01 Step 1.5 for the full model.
 
 ### 4b. Create ahq-workflow.json
 
