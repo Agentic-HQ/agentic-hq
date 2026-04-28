@@ -421,7 +421,25 @@ _(No human additions yet. Human: add bullets below this line as needed.)_
    b. **Mark as RESOLVED**: strike through the bullet (`~~- ...~~`) and append `**RESOLVED**:` plus a pointer to where in the spec the change was applied (e.g. *"folded into Command 03's Behaviour outline as new step 5"*).
 
    Never silently absorb (apply the change but skip the strike-through + RESOLVED marker) and never silently ignore (skip the bullet without asking the human). Both leave the Human Additions section out of sync with the spec body.
-8. Repeat until the user says they approve the draft
+8. **Present an explicit gate prompt at the end of every revision pass — using the `AskUserQuestion` tool, not free-form text.** Once you've applied the user's answers and any Human Additions, do **not** hand the ball back with vague wording like "ready for your next pass" or "ready for approval" — the human shouldn't have to guess whether they're meant to act, acknowledge, or just nod. Invoke `AskUserQuestion` so the user gets a proper choice menu they can click rather than having to type a reply:
+
+   ```
+   AskUserQuestion({
+     questions: [{
+       question: "Spec updated based on your answers / changes requested. What next?",
+       header: "Spec gate",
+       multiSelect: false,
+       options: [
+         { label: "Approve spec", description: "Proceed to scaffolding in Command 02 of create-workflow." },
+         { label: "Discuss further", description: "Keep iterating on the DRAFT spec; type what you want to discuss." }
+       ]
+     }]
+   })
+   ```
+
+   The user can also pick the auto-provided "Other" option to type free-form feedback. The structured prompt makes the gate unambiguous: the human knows the workflow is paused on their decision and they have a click-to-answer interface.
+
+9. Repeat until the user picks "Approve spec" (approves the draft).
 
 **Do NOT rename the file from DRAFT** — that happens in Command 02.
 

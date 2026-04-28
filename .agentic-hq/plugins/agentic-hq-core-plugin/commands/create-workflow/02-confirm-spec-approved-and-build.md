@@ -245,7 +245,64 @@ This step is idempotent — it MUST NOT clobber an existing `plugin.json`. After
 
 ---
 
-## Step 5: Write Output
+## Step 5: Build Summary and Human Review Gate
+
+The build is complete. Before letting the workflow advance to Command 03 (`run-checks-on-workflow`), give the human one last look.
+
+### 5a. Print a build summary inline
+
+Tell the user, in this order:
+
+1. **What was built** — the workflow-id and plugin-id, plus a one-line confirmation that scaffolding finished cleanly.
+2. **Files written** — a flat list with absolute paths, grouped:
+   - **Command files**: every `{commands-dir}/NN-...md` written in Step 4a.
+   - **Skill files**: `{ahq-workflow-metadata-filename}`, the TypeScript CLI, `{skills-dir}/SKILL.md`, the `ts-workflow/package.json`, the `ts-workflow/tsconfig.json`.
+   - **Plugin manifest**: either the path to the newly-created `{plugin-manifest-filename}` (if Step 4f created it) **or** the literal note "left untouched (already existed)".
+   - **Plan-verbatim copy**: `{plan-verbatim-copy-file}`.
+3. **APPROVED spec location**: `{approved-workflow-spec-filename}` — point the user there in case they want to re-read the spec while reviewing the generated files.
+4. **Pointers to where to look** — tell the user the two directories that contain everything they should review: `{commands-dir}` and `{skills-dir}`.
+
+Keep the summary compact (no walls of text — paths + counts).
+
+### 5b. Ask the human to review and gate the next step
+
+Use the `AskUserQuestion` tool to present a structured choice — not a free-form prompt. The user clicks an option rather than typing. Exact shape:
+
+```
+AskUserQuestion({
+  questions: [{
+    question: "Build complete. Please review the generated command files and TypeScript CLI under {commands-dir}/ and {skills-dir}/. What next?",
+    header: "Build review",
+    multiSelect: false,
+    options: [
+      {
+        label: "Approve And Move To Next 03-run-checks-on-workflow.md Command",
+        description: "All looks good. Write command-output.json and self-terminate; the orchestrator will then run Command 03 (run-checks-on-workflow)."
+      },
+      {
+        label: "Discuss Problems Or Improvements/Changes Identified",
+        description: "Pause here. Tell me what to change. I'll iterate; the orchestrator will NOT advance until you re-approve."
+      }
+    ]
+  }]
+})
+```
+
+Substitute `{commands-dir}` and `{skills-dir}` with the resolved paths in the actual question text so the user sees the absolute locations.
+
+### 5c. Branch on the answer
+
+- **If the user picks "Approve And Move To Next 03-run-checks-on-workflow.md Command"** (or selects "Other" with an unambiguous approval) → continue to Step 6 (Write Output) and Step 7 (Self-Terminate).
+
+- **If the user picks "Discuss Problems Or Improvements/Changes Identified"** → engage with their feedback. Iterate on whatever they raise (edit command files, fix the TS CLI, tweak the SKILL.md, etc.). After each iteration, re-present the same `AskUserQuestion` gate. Loop until they pick "Approve".
+
+  **CRITICAL — abandon-path semantics**: while the user is in the "Discuss" branch and has not yet approved, do **NOT** write `command-output.json`, do **NOT** call the self-termination skill. Self-terminating would let the TS CLI orchestrator advance to Command 03 against an unapproved build. If the user wants to fully abandon (not just iterate), tell them: *"Stopping. Hit Ctrl-C multiple times in a row to also kill the TypeScript Workflow program — that will halt the chain so Command 03 doesn't run on this build."*
+
+  Only proceed past this gate when the user has explicitly picked "Approve".
+
+---
+
+## Step 6: Write Output
 
 Write to: {command-input-output-files-directory}/command-output.json
 
@@ -257,7 +314,7 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ---
 
-## Step 6: Self-Terminate
+## Step 7: Self-Terminate
 
 Run the self-termination skill immediately:
 
