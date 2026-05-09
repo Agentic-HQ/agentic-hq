@@ -1,10 +1,17 @@
-= Project Design Requirements
+# Project Design Requirements
 
-== About This Doc
+## About This Doc
 
-This doc contains the design requirement for this project.
+This doc contains the design requirement for this Agentic HQ project.
 
-== How Code Should Be Designed
+It is used by all the agents in the Full Jira TDD Story Workflow to ensure the requirements are kept to when developing software in the Agentic HQ project.  See:
+
+[02-jira-write-failing-test.md](../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/full-jira-tdd-story-workflow/02-jira-write-failing-test.md)
+
+and the other commands in that workflow.
+
+
+## How Code Should Be Designed
 
 Code in this project should be created in highly object oriented way, with each component having it’s own:
 
@@ -13,7 +20,7 @@ Code in this project should be created in highly object oriented way, with each 
 
 To understand this please read around the existing code to see the patterns/design used so far.  Early in the project I spent many weeks refactoring tightly coupled, procedural code from 3 big files into about 12 different classes, each following the Single Responsibility Principle.  
 
-Read the SRP header of multiple classes and interfaces to see how this is designed and documented.  A good example of this is the concrete class MarshalledCliTool in marshalled-cli-tool.ts which implements the simple Tool interface.
+Read the SRP header of multiple classes and interfaces to see how this is designed and documented.  A good example of this is the concrete class MarshalledCLITool in marshalled-cli-tool.ts which implements the simple Tool interface.
 
 If we are talking about a “concept” in the spec for a feature (e.g. Plugin or WorkflowSearchResult) then we want an interface and a class for that concept.   
 
@@ -61,7 +68,7 @@ to make every concrete class “switchable” by a third-party developer, so the
 
 So while developing this feature, think always:
 
-"If someone want to replace (switch out) just one small aspect of the feature I've deveoped with their own concrete class to change the behaviour - could they do it easily?"
+"If someone want to replace (switch out) just one small aspect of the feature I've developed with their own concrete class to change the behaviour - could they do it easily?"
 
 If the answer is "No, because that small aspect is mixed up with other things inside a function somewhere" - then we've failed to extract that things as a "concept" into a class/inteface.  This means we need to rethink and extract it.
 
@@ -71,7 +78,7 @@ Answer: There are valid arguments that if you spread out a system *entirely* int
 
 I want a complete audit done at the end of this plan and of the implementation of what parts people could switch out to change behaviour (or fix a bit with a class, without having to get it merged into the main branch).
 
-== Important Requirement About State
+## Important Requirement About State
 
 Often programmers (and LLMs) write software that likes to build up, maintain and manipulate state - which is stored/cached in object fields.
 
@@ -147,10 +154,10 @@ When we do this with all our code it becomes massively simpler.  It becomes a ne
 
 currentWorkspaceWorkflowSearchResult.display()
 
-is likely to involve the currentWorkspaceWorkflowSearchResult delegating the search of the workspace to an object it contains (e.g. a WorkspaceSearchResult object that knows it's workspace root is "/tmp/steve-temp-workspace") and that WorkspaceSearchResult object does the search on the file system for the plugins and workflows.
+is likely to involve the currentWorkspaceWorkflowSearchResult delegating the search of the workspace to an object it contains (e.g. a WorkspaceSearchResult object that knows its workspace root is "/tmp/steve-temp-workspace") and that WorkspaceSearchResult object does the search on the file system for the plugins and workflows.
 
 
-== Concept Table: Mapping Concepts To Interfaces And Classes
+## Concept Table: Mapping Concepts To Interfaces And Classes
 
 When designing or changing classes/interfaces, create a **Concept Table** that maps each real-world concept to its interface and implementation class. This table should be created early in design and kept up to date as the design evolves.
 
@@ -169,45 +176,38 @@ Example from AHQ-106 (dynamic workflow discovery):
 
 This table serves as a quick reference for anyone reading or modifying the code, and ensures every concept has been deliberately mapped to a class/interface pair.
 
-== Creating A Data Dictionary Table And Corresponding English Language Description During Design/Plan Phase
+## Creating A Data Dictionary Table And Corresponding English Language Description During Design/Plan Phase
 
 When doing planning, in order to be sure we are mapping all concepts to a class/interface two additional sections must be created:
 - A "Data Dictionary" section containing a table of all the concepts we are working with and their planned Class and Interface names.
 - An "English Language Description Using Concepts" section - which describes in a paragraph how the system will work with the class or interface names slotted in so they read like English.   The class/interface names should be **bolded** to stand out in markdown format.  Verbs that represent actual method calls / messages between objects must be highlighted as *italic* e.g. *getWorkflowListingString*.  Plain narrative verbs that describe internal behavior or flow (e.g. "creates", "checks", "delegates to") should NOT be in italics — only verbs that correspond to real method names on the public interface of a class.  The ELD should walk through the system's main scenarios step by step (e.g. listing, execution) showing start-to-finish mechanics.  If this paragraph doesn't read fluently and easily as English, then this is a sign the design doesn't reflect well how the system works.  Example sentence: "The **WorkflowSearchResults** asks each **Workspace** to *getWorkflowListingString*. The **AhqWorkspaceImpl** creates a **WorkspaceImpl** with the env var root and delegates to it."  ANTI-PATTERN: "*delegatesToAWorkspaceImpl*" — this is NOT a method name, it's narrative description of what happens internally. It should be plain text: "delegates to a WorkspaceImpl". Only use italics for things that will be actual method calls like *getWorkflowListingString*, *registerWorkflowsWith*, *findWorkflowFiles* etc.  PHRASING: Use "asks X to *doThing*" not "asks X for its *doThing*" — the former reads as natural English ("asks the **Workspace** to *getWorkflowListingString*") while the latter sounds like you're asking for a property rather than sending a message.
 
-== Important Caveat
+## Important Caveat
 
 Designing a well structured and well balanced set of classes and interfaces to make an object oriented system that is easy to understand and easy to change is **hard work** and you won't get it right first time.  You have to try, see where it looks bad, looks complicated, could be simplified, could be consolidated, and **iterate** until you have something that is **good enough** (NOT perfect, as that will use up far to much time and energy).  It's all about balance and assessing risk/reward for work done.
 
-== STEVE TO DO LATER
+## STEVE TO DO LATER — Design Rules Captured In Memory, Not Yet Folded Into This Doc
 
-Claude has been taking my advice/requests during planning and squirreling design tips/preferences away in documents here:
+During planning sessions Claude has been recording design tips/preferences as feedback memory files under `~/.claude/projects/-Users-stevepersonal-dev-agentic-hq-agentic-hq/memory/`. These need to be folded into the relevant sections above; until then they live as standalone memory files. Each entry below has enough description that — if the memory file were lost — the rule could be reconstructed from this doc plus the code:
 
-(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % tail -8 /Users/stevepersonal/.claude/projects/-Users-stevepersonal-dev-agentic-hq-agentic-hq/memory/MEMORY.md
-## Feedback
-- [Unit test file per class](feedback_unit_test_file_per_class.md) — One test file per class, not all tests in one file
-- [Directory structure by entity](feedback_directory_structure_by_entity.md) — Dirs group by entity/concept, not code type (no value-objects/, domain/ dirs)
-- [Constructor injection pattern](feedback_constructor_injection_delegation.md) — Prefer dependencies in constructor; methods delegate to contained objects + method params
-- [No "er" suffix classes](feedback_no_er_suffix_classes.md) — Classes like Parser/Discoverer are code smells; behavior belongs inside the entity
-- [Temp dirs need UID](feedback_temp_dirs_need_uid.md) — Test temp dirs must include unique ID to avoid parallel test clashes
-- [Avoid cached state](feedback_avoid_cached_state.md) — Store minimal source data, derive values dynamically on each method call
-- [Collection names: plural not List](feedback_collection_names_plural_not_list.md) — Use AhqWorkflows not AhqWorkflowList; plural doesn't prescribe data structure
-(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % 
-(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % 
-(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % ls -al /Users/stevepersonal/.claude/projects/-Users-stevepersonal-dev-agentic-hq-agentic-hq/memory            
-total 64
-drwxr-xr-x   10 stevepersonal  staff    320  4 Apr 19:58 .
-drwxr-xr-x@ 682 stevepersonal  staff  21824  4 Apr 18:04 ..
--rw-r--r--    1 stevepersonal  staff    812  4 Apr 19:49 feedback_avoid_cached_state.md
--rw-r--r--    1 stevepersonal  staff    661  4 Apr 19:57 feedback_collection_names_plural_not_list.md
--rw-r--r--    1 stevepersonal  staff   1172  4 Apr 18:12 feedback_constructor_injection_delegation.md
--rw-r--r--    1 stevepersonal  staff    851  4 Apr 18:06 feedback_directory_structure_by_entity.md
--rw-r--r--    1 stevepersonal  staff    950  4 Apr 18:25 feedback_no_er_suffix_classes.md
--rw-r--r--    1 stevepersonal  staff    543  4 Apr 18:37 feedback_temp_dirs_need_uid.md
--rw-r--r--    1 stevepersonal  staff    729  4 Apr 18:01 feedback_unit_test_file_per_class.md
--rw-r--r--    1 stevepersonal  staff   2340  4 Apr 19:58 MEMORY.md
-(base) stevepersonal@Steves-MacBook-Pro tmp-steve-workspace-002 % 
+- **Unit test file per class** (`feedback_unit_test_file_per_class.md`) — one `.unit.test.ts` file per source class; never bundle tests for several classes into one file. Mirror the source folder layout under `tests/unit/` (e.g. `src/workflow-discovery/plugin/plugin-impl.ts` → `tests/unit/workflow-discovery/plugin/plugin-impl.unit.test.ts`).
 
-TODO: Go through these and incorporate them at some point into this doc.
+- **Directory structure by entity** (`feedback_directory_structure_by_entity.md`) — group source folders by **concept/entity** (`plugin/`, `workspace/`, `workflow/`), never by code-type (`value-objects/`, `domain/`, `services/`). Each concept folder holds its interface, impl(s) and helpers together, so one folder = one thing to understand.
 
-For the moment - Claude should read through these file (if on Steve's computer) and incorporate them into the design requirements for the current work.
+- **Constructor injection + delegation** (`feedback_constructor_injection_delegation.md`) — take dependencies as `private readonly` fields in the constructor; methods then delegate to those fields plus their own params. Keeps method signatures small, makes collaborators explicit at construction time, and lets tests swap deps in via the constructor (rather than passing the same dep through every method).
+
+- **No "-er" suffix classes** (`feedback_no_er_suffix_classes.md`) — class names ending in "-er" (Parser, Discoverer, Manager, Helper, Handler) usually mean behaviour has been pulled out of the entity that owns the data — a "tell, don't ask" violation. Push the method back onto the entity itself; the codebase deliberately has zero of these classes (Builder is OK only when it's a real Builder pattern, not a generic dumping ground).
+
+- **Temp dirs need UID** (`feedback_temp_dirs_need_uid.md`) — test and runtime temp dirs must include a UUID, not just a timestamp; vitest parallelism and same-second workflow steps **will** collide on a timestamp-only path eventually. Use `<timestamp>_<uuid>` — see `JsonFileIOMarshallerSession` building `io-files-<timestamp>_<uuid>` via `crypto.randomUUID()` (`src/io/marshalling/json-file-io-marshaller-session.ts:39`).
+
+- **Avoid cached state** (`feedback_avoid_cached_state.md`) — store only the minimal source data in fields; **derive** computed values dynamically on each method call rather than caching them. Cached fields drift out of sync with their source over time, causing subtle bugs; recomputation is almost always cheap enough to be the safer default. (Closely related to the "Important Requirement About State" section above.)
+
+- **Collection names: plural, not "List"** (`feedback_collection_names_plural_not_list.md`) — name collection types with the plural noun (`Workflows`, `Plugins`) rather than baking in a data structure (`WorkflowList`, `PluginArray`, `WorkflowSet`). The interface describes *what* it is, not *how* it's stored, so the impl can change without renaming the type.
+
+- **Do not delete comments when changing code** (`feedback_do_not_delete_comments.md`) — never delete existing comments as a side-effect of an edit; REFACTOR notes, TODOs, design-intent blocks and SRP docstrings often capture concerns the surrounding code itself can't express. Only remove a comment when *every* sentence in it is now false; if part of a multi-concern comment is resolved, keep the still-valid parts, and move comments with the code when files split.
+
+- **Tests assert behaviour, not implementation details** (`feedback_no_instanceof_in_tests.md`) — in unit tests, never use `instanceof`, prototype-identity comparisons (`X.prototype.method === Y.prototype.method`), `constructor.name`, or `(x as any).privateField`; those couple tests to *what an object is* rather than *what it does*, so behaviour-preserving refactors break them for no real reason. Drive assertions through observable effects: call public methods, spy on injected dependencies, and check side-effects.
+
+TODO: incorporate each of these into the relevant section above (or add new sections), and then either delete this list or leave it as a short index pointing at the in-doc home of each rule.
+
+> **Note (2026-05-07):** The first 7 memory files in the list above were lost during a laptop move and have been **reconstructed** from the one-line summaries plus concrete code anchors — they capture the gist, not the original wording. The last 2 (`feedback_do_not_delete_comments.md` and `feedback_no_instanceof_in_tests.md`) survived and are originals. Please review the reconstructed ones and adjust if any text doesn't match what you intended.

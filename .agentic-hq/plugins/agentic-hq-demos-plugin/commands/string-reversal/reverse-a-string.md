@@ -15,6 +15,11 @@ Read the file: {command-input-output-files-directory}/command-input.json
 ## Step 2: Reverse String
 Take the `command-input-string` value and reverse it character by character.
 
+Tell the user:
+- The value of the command-input-string you have read in
+- The string you have reversed
+- What you are doing to the reversed string (writing it to the command-output.json file)
+
 ## Step 3: Write Output
 Write to: {command-input-output-files-directory}/command-output.json
 ```json
