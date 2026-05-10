@@ -208,11 +208,11 @@ skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
 ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
 plugin-manifest-filename = {plugin-dir}/.claude-plugin/plugin.json
-workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
-draft-workflow-spec-filename = {workflow-creation-docs-dir}/01-DRAFT-workflow-spec.md
+workflow-creation-artifacts-dir = {project-root}/docs/artifacts/workflow-creation-artifacts/{plugin-id}/{workflow-id}
+draft-workflow-spec-filename = {workflow-creation-artifacts-dir}/01-DRAFT-workflow-spec.md
 ```
 
-Create the `{workflow-creation-docs-dir}` directory.
+Create the `{workflow-creation-artifacts-dir}` directory.
 
 ---
 

@@ -34,10 +34,10 @@ skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
 ts-workflow-dir = {skills-dir}/ts-workflow
 ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
-workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
-approved-workflow-spec-filename = {workflow-creation-docs-dir}/02a-APPROVED-workflow-spec.md
-workflow-implementation-approval-list-file = {workflow-creation-docs-dir}/03a-workflow-implementation-approval-list.md
-workflow-potential-refactorings-file = {workflow-creation-docs-dir}/03b-workflow-potential-refactorings.md
+workflow-creation-artifacts-dir = {project-root}/docs/artifacts/workflow-creation-artifacts/{plugin-id}/{workflow-id}
+approved-workflow-spec-filename = {workflow-creation-artifacts-dir}/02a-APPROVED-workflow-spec.md
+workflow-implementation-approval-list-file = {workflow-creation-artifacts-dir}/03a-workflow-implementation-approval-list.md
+workflow-potential-refactorings-file = {workflow-creation-artifacts-dir}/03b-workflow-potential-refactorings.md
 example-workflow-commands-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow
 example-workflow-skill-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow
 ```
@@ -51,7 +51,7 @@ Read the following to gain full context:
 1. **Previous command files**:
    - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md`
    - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md`
-2. **All files in `{workflow-creation-docs-dir}`** — spec, verbatim copy, any other process docs
+2. **All files in `{workflow-creation-artifacts-dir}`** — spec, verbatim copy, any other process docs
 3. **All generated workflow code**:
    - All files in `{commands-dir}` — the command .md files that were created
    - All files in `{skills-dir}` — SKILL.md, CLI .ts, package.json, tsconfig.json

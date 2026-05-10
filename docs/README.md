@@ -49,8 +49,6 @@ hand.
   (37 `AHQ-N` folders, each with a `workflow-files/` subdirectory). Many AHQ
   features were implemented via the `full-jira-tdd-story-workflow`, which
   drops its plans, RED/GREEN/REFACTOR notes and validation results here.
-- [`workflow-creation-docs/`](workflow-creation-docs/) — Per-workflow design
-  and lifecycle docs, organised by plugin then by workflow.
 
 ## Historical
 

@@ -12,12 +12,6 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 
 const tsxPath = path.join(__dirname, '..', 'node_modules', '.bin', 'tsx');
-// Points at the 2-line `main.ts` entry — the Classwitch Root Project pattern:
-// `main.ts` just runs `app.run()`, which keeps the entry point trivially tiny.
-// Classwitch Override Projects (e.g. the `agentic-hq-with-colours` repo planned
-// in AHQ-120) ship their own `bin/<override>.cjs` pointing at their own 3-line
-// `main.ts` (override registry side-effect import + `app.run()`).
-// See: https://agentic-hq.atlassian.net/browse/AHQ-124
 const cliPath = path.join(__dirname, '..', 'src', 'cli', 'main.ts');
 
 // Tell directory-functions where the agentic-hq workspace lives (AHQ-79)
@@ -26,9 +20,7 @@ const cliPath = path.join(__dirname, '..', 'src', 'cli', 'main.ts');
 // variable does and how it controls the system. May be better to have it as an explicit
 // Typescript parameter that is set on the boundaries of the system and passed inward, instead of
 // this "env" variable which is like a global, hidden variable which is harder to test, track,
-// understand and control.  **Also** when a Classwitch Override Project overrides this Classwitch
-// Root Project there are complication with what this workspace root is (should it be the new project
-// root directory or the original Agentic HQ root project directory???).
+// understand and control.
 process.env.AGENTIC_HQ_WORKSPACE_ROOT = path.join(__dirname, '..');
 
 try {

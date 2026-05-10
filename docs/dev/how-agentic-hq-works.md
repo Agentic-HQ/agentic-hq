@@ -328,17 +328,6 @@ so you don't mistake them for permanent design:
   (Bash, Edit, Write, Jira/Confluence MCP, etc.) are listed in
   `claude-command-builder.ts`. Per-workflow bundling is tracked in
   [AHQ-102](https://agentic-hq.atlassian.net/browse/AHQ-102).
-- **Classwitch Root Project pattern.** The deliberately-tiny entry shape
-  (`bin/agentic-hq.cjs` → 2-line `main.ts` → `app.ts` exposing `const app`
-  with a `run()` method) is so that **Classwitch Override Projects** —
-  e.g. the `agentic-hq-with-colours` repo planned in
-  [AHQ-120](https://agentic-hq.atlassian.net/browse/AHQ-120) — can ship
-  their own `bin/...cjs` and `main.ts` that side-effect-import an override
-  registry and then call the same `app.run()`. The shape itself is the
-  pattern; see the long comments in `main.ts` and `app.ts`, and
-  [AHQ-124](https://agentic-hq.atlassian.net/browse/AHQ-124) for the
-  rationale. AHQ-117 will later swap several `new SomeImpl()` calls for
-  `rootServiceRegistry.loadClass(...)` — same shape, different content.
 - **Env-var workspace root.** `bin/agentic-hq.cjs` sets
   `AGENTIC_HQ_WORKSPACE_ROOT` so downstream code can find the plugins
   directory. There's a REFACTOR note in that file flagging the env-var

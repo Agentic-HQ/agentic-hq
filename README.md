@@ -10,9 +10,7 @@ Automate developer workflows to give you better control of the AI and its contex
 
 ### AI Based Software Systems
 
-Agentic HQ (AHQ) could also be used to create an AI Based Software System that executes a multi-stage workflow process, with human in the loop for guidance/checking/control.  The human could be taken through a multi-step, complex workflow where they interact with Claude Code at the necessary stages, to achieve an arbitrarily complex task.  Fine grained control over Claude's context can be achieved by keeping each Skill small and focussed and by only loading the text required for that task from markdown files. 
-
-NOTE: The only 2 examples of this type of workflow are the [classwitch conversion workflows](.agentic-hq/plugins/agentic-hq-classwitch-plugin) which were successfully written and run to do a complex code conversion process, but since then the classwitch conversion has been abandoned, and so these aren't as relevant. The focus has mainly been on AI Developer Workflows (see above)
+Agentic HQ (AHQ) could also be used to create an AI Based Software System that executes a multi-stage workflow process, with human in the loop for guidance/checking/control.  The human could be taken through a multi-step, complex workflow where they interact with Claude Code at the necessary stages, to achieve an arbitrarily complex task.  Fine grained control over Claude's context can be achieved by keeping each Skill small and focussed and by only loading the text required for that task from markdown files.
 
 ## Prerequisites
 
@@ -162,12 +160,6 @@ This shows all available workflows grouped by plugin, with example usage for eac
 Available workflows:
 
 Agentic HQ Workspace (directory: /Users/stevepersonal/dev/agentic-hq/agentic-hq):-
-Plugin: agentic-hq-classwitch-plugin
-Workflows:
-agentic-hq converter
-   What it does: Converts an existing Typescript project to a Classwitch Root Project so developers can easily and independently create an override project with their own features/fixes
-agentic-hq override
-   What it does: Create a new Classwitch Override Project that overrides an existing Classwitch Root Project so that some functionality can be changed/added/fixed in the override project.
 Plugin: agentic-hq-core-plugin
 Workflows:
 agentic-hq create-workflow

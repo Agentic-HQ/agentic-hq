@@ -32,8 +32,8 @@ commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
 ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
-workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
-approved-workflow-spec-filename = {workflow-creation-docs-dir}/02a-APPROVED-workflow-spec.md
+workflow-creation-artifacts-dir = {project-root}/docs/artifacts/workflow-creation-artifacts/{plugin-id}/{workflow-id}
+approved-workflow-spec-filename = {workflow-creation-artifacts-dir}/02a-APPROVED-workflow-spec.md
 user-facing-help-doc-filename = {skills-docs-dir}/user-facing-help-doc.md
 ```
 
@@ -53,7 +53,7 @@ Read the following to gain full context:
    - `exampleParameters` — the example invocation parameters (starts with `-- ` when non-empty, or an empty string `""` for parameterless workflows)
    - `version` — the workflow version
    - `author.name` — the author name
-3. **All files in `{workflow-creation-docs-dir}`** — spec, approval list, refactorings, etc.
+3. **All files in `{workflow-creation-artifacts-dir}`** — spec, approval list, refactorings, etc.
 4. **All generated workflow code**:
    - All files in `{commands-dir}` — the command .md files
    - All files in `{skills-dir}` — SKILL.md, CLI .ts, package.json, tsconfig.json

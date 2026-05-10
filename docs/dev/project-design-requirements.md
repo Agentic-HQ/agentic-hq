@@ -60,12 +60,6 @@ workflowVersion.doSomethingToVersion()
 
 This is the “tell, don’t ask” method of coding.
 
-Part of the reason for making everything we talk about or do in AHQ into a class/interface is that we are soon going to be using the framework I’ve also written:
-
-classwitch
-
-to make every concrete class “switchable” by a third-party developer, so they can replace it with their own implementation quickly and easily and publish their version of AHQ without having to change the original project.  It’s similar to plugins, but different…
-
 So while developing this feature, think always:
 
 "If someone want to replace (switch out) just one small aspect of the feature I've developed with their own concrete class to change the behaviour - could they do it easily?"

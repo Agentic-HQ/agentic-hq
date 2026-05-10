@@ -33,10 +33,10 @@ commands-dir = {plugin-dir}/commands/{workflow-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
 ahq-workflow-metadata-filename = {skills-dir}/ahq-workflow.json
-workflow-creation-docs-dir = {project-root}/docs/workflow-creation-docs/{plugin-id}/{workflow-id}
-draft-workflow-spec-filename = {workflow-creation-docs-dir}/01-DRAFT-workflow-spec.md
-approved-workflow-spec-filename = {workflow-creation-docs-dir}/02a-APPROVED-workflow-spec.md
-plan-verbatim-copy-file = {workflow-creation-docs-dir}/02b-approved-workflow-plan-verbatim-copy.md
+workflow-creation-artifacts-dir = {project-root}/docs/artifacts/workflow-creation-artifacts/{plugin-id}/{workflow-id}
+draft-workflow-spec-filename = {workflow-creation-artifacts-dir}/01-DRAFT-workflow-spec.md
+approved-workflow-spec-filename = {workflow-creation-artifacts-dir}/02a-APPROVED-workflow-spec.md
+plan-verbatim-copy-file = {workflow-creation-artifacts-dir}/02b-approved-workflow-plan-verbatim-copy.md
 example-workflow-commands-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow
 example-workflow-skill-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow
 example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-demo-cli.ts
@@ -49,7 +49,7 @@ example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-wo
 Read the following to gain full context:
 
 1. **Previous command file**: `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md` — to understand what Command 01 did
-2. **All files in `{workflow-creation-docs-dir}`** — the DRAFT spec and any other docs created so far. **While reading the DRAFT spec, extract the values from the "Plugin Metadata" section** — they will be used in Step 4f to ensure the plugin manifest exists:
+2. **All files in `{workflow-creation-artifacts-dir}`** — the DRAFT spec and any other docs created so far. **While reading the DRAFT spec, extract the values from the "Plugin Metadata" section** — they will be used in Step 4f to ensure the plugin manifest exists:
    - `plugin-description`
    - `plugin-version`
    - `plugin-author-name`
@@ -136,7 +136,7 @@ Each command file should follow this structure:
 
 Commands beyond the first should include a context-loading step that reads:
 - Previous command files (to understand the overall workflow)
-- All files in `{workflow-creation-docs-dir}` (process docs)
+- All files in `{workflow-creation-artifacts-dir}` (process docs)
 - Any generated workflow code
 
 #### Keep input/output variables simple
