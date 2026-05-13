@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a new feature or enhancement
+title: 'feat: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an idea. Please describe the **problem** first — it helps us discuss alternatives. For larger features, expect a conversation here before any code is written.
+
+        For open-ended chat or "is this a good idea?" style questions, prefer Discord (link in the New Issue chooser).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem you're trying to solve
+      description: What's the situation that prompted this idea?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+    validations:
+      required: false
+  - type: textarea
+    id: audience
+    attributes:
+      label: Who else would benefit (optional)
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope-ack
+    attributes:
+      label: Scope acknowledgement
+      options:
+        - label: I have read CONTRIBUTING.md and understand large features should be discussed here before a PR is opened.
+          required: true

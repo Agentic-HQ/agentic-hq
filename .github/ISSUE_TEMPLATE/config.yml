@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  # The Agentic HQ Discord server is being set up under AHQ-139
+  # (https://agentic-hq.atlassian.net/browse/AHQ-139). Before the repo goes
+  # public, replace "<DISCORD_INVITE_URL>" below with the permanent invite link.
+  - name: Community chat, questions, "show your workflow"
+    url: '<DISCORD_INVITE_URL>'
+    about: Join the Agentic HQ Discord community for open-ended questions, ideas, and "show what you built". The invite URL will be added before the repo goes public.
+  - name: Report a security vulnerability
+    url: https://github.com/Agentic-HQ/agentic-hq/security/policy
+    about: Do not file public issues for security vulnerabilities. See SECURITY.md for private reporting channels.

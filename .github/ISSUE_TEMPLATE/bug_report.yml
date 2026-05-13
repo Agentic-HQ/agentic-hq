@@ -1,0 +1,75 @@
+name: Bug report
+description: Report a bug you encountered while using Agentic HQ
+title: 'bug: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report.
+
+        Before submitting, please make sure you've read [CONTRIBUTING.md](https://github.com/Agentic-HQ/agentic-hq/blob/main/CONTRIBUTING.md) — especially **The One Rule**: you should be able to defend your diagnosis if asked.
+
+        If you're asking a question rather than reporting a bug, please use our Discord community instead (link in the New Issue chooser).
+  - type: input
+    id: summary
+    attributes:
+      label: Short summary
+      description: One-line summary of the bug.
+      placeholder: 'agentic-hq reversal crashes with X when input contains Y'
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps a reviewer can follow to see the bug.
+      placeholder: |
+        1. Run `agentic-hq reversal -- --string-to-reverse="..."`
+        2. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected to happen (after following the steps)
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened (after following the steps)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Please include:
+        - macOS version (e.g. 15.5)
+        - Node version (`node --version`)
+        - pnpm version (`pnpm --version`)
+        - AHQ commit / version
+      value: |
+        - macOS:
+        - Node:
+        - pnpm:
+        - AHQ commit/version:
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Relevant output / error snippet (optional)
+      description: Paste any failing `pnpm validate` output, error stack, or relevant log lines.
+      render: shell
+    validations:
+      required: false
+  - type: checkboxes
+    id: one-rule
+    attributes:
+      label: The One Rule
+      options:
+        - label: I have investigated this enough to defend the diagnosis if asked.
+          required: true

@@ -225,4 +225,4 @@ Support will be provided via Question and Bug Jiras on the Agentic HQ Jira proje
 
 While this repo is still private please contact Steve (the repo owner) using the contact form at https://agentichq.ai/ if you're interested in working on the project.
 
-Before making the repo public we'll be adding a CONTRIBUTING.md detailing how developer's can contribute to the project - see https://agentic-hq.atlassian.net/browse/AHQ-133 - "Create CONTRIBUTING.md"
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to file issues, propose changes, and submit pull requests. Security vulnerabilities → [SECURITY.md](SECURITY.md). Community conduct → [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
