@@ -58,7 +58,11 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
         getShortName: () => ({ toString: () => 'test-wf' }),
         getDescription: () => ({ toString: () => 'A test workflow' }),
         getFullClaudeSkillCommand: () => ({ toString: () => '/test-plugin:test-skill' }),
-        getWorkflowListingEntryString: () => 'test-wf',
+        getExampleCommand: () => ({
+          getCommandPart: () => 'agentic-hq test-wf',
+          getArgsPart: () => '',
+          toString: () => 'agentic-hq test-wf',
+        }),
       });
     });
 
@@ -76,7 +80,11 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
         getShortName: () => ({ toString: () => 'test-wf' }),
         getDescription: () => ({ toString: () => 'A test workflow' }),
         getFullClaudeSkillCommand: () => ({ toString: () => '/test-plugin:test-skill' }),
-        getWorkflowListingEntryString: () => 'test-wf',
+        getExampleCommand: () => ({
+          getCommandPart: () => 'agentic-hq test-wf',
+          getArgsPart: () => '',
+          toString: () => 'agentic-hq test-wf',
+        }),
       });
     });
 

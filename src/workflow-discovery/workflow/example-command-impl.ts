@@ -7,16 +7,17 @@ import { ExampleParametersImpl } from './example-parameters-impl.js';
 import { WorkflowShortNameImpl } from './workflow-short-name-impl.js';
 
 const AGENTIC_HQ_COMMAND_NAME = 'agentic-hq';
+const ARGS_SEPARATOR_SPACE = ' ';
 
 /**
  * ExampleCommandImpl — Concrete ExampleCommand composed of a
  * WorkflowShortName and ExampleParameters, formatted as
  * `agentic-hq {shortName} {params}`.
  *
- * SRP Does: Compose a WorkflowShortName and ExampleParameters into
- * the `agentic-hq {shortName} {params}` string (trimming trailing
- * space when params are empty), built via `createFrom(metadata)`
- * delegating to child createFroms.
+ * SRP Does: Compose a WorkflowShortName and ExampleParameters and
+ * expose the example command as a whole or split into command-half
+ * (`agentic-hq {shortName}`) and args-half (` {params}`), built via
+ * `createFrom(metadata)` delegating to child createFroms.
  *
  * SRP Knows About: The `agentic-hq` command name, the formatting
  * rule, and its WorkflowShortName and ExampleParameters children.
@@ -37,8 +38,17 @@ export class ExampleCommandImpl implements ExampleCommand {
       ExampleParametersImpl.createFrom(metadata)
     );
   }
-  /** Return the example command string (trims trailing space when params are empty). */
+  /** Return the `agentic-hq {shortName}` half (no trailing space, no args). */
+  getCommandPart(): string {
+    return `${AGENTIC_HQ_COMMAND_NAME} ${this.shortName.toString()}`;
+  }
+  /** Return the args half with its leading separator space, or `""` when there are no params. */
+  getArgsPart(): string {
+    const params = this.params.toString();
+    return params.length === 0 ? '' : ARGS_SEPARATOR_SPACE + params;
+  }
+  /** Return the full example command string. */
   toString(): string {
-    return `${AGENTIC_HQ_COMMAND_NAME} ${this.shortName.toString()} ${this.params.toString()}`.trimEnd();
+    return this.getCommandPart() + this.getArgsPart();
   }
 }

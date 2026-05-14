@@ -1,9 +1,11 @@
 /**
- * Tests CurrentUserWorkspaceImpl — the user's current workspace based on process.cwd().
- * Implements Workspace by delegating to a WorkspaceImpl created on the fly (cwd as rootDir).
- * When cwd equals the AHQ workspace root, returns a "same as" message instead of listing.
- * For the four root/path methods (getRoot/getTempDir/getDotAgenticHqDir/isAhqWorkspace),
- * delegates straight through to WorkspaceImpl — no overrides.
+ * Tests CurrentUserWorkspaceImpl — the user's current workspace based on
+ * process.cwd(). Implements Workspace by delegating to a WorkspaceImpl
+ * created on the fly (cwd as rootDir, "Local Workspace" display name).
+ * For the four root/path methods (getRoot/getTempDir/getDotAgenticHqDir/
+ * isAhqWorkspace), delegates straight through to WorkspaceImpl — no
+ * overrides. registerWorkflowsWith() keeps a same-as-AHQ early-return so
+ * workflows aren't registered twice (a domain concern, not formatting).
  * No fields stored — WorkspaceImpl is created fresh each call.
  * Variables typed as Workspace interface; CurrentUserWorkspaceImpl used only for construction.
  */
@@ -25,49 +27,23 @@ describe('CurrentUserWorkspaceImpl', () => {
     delete process.env.AGENTIC_HQ_WORKSPACE_ROOT;
   });
 
-  tmpdirTest('should delegate to WorkspaceImpl and return plugin-grouped listing', ({ tmpdir }) => {
+  tmpdirTest('should return "Local Workspace" via getDisplayName()', ({ tmpdir }) => {
+    process.cwd = () => tmpdir;
+    process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
+    const workspace: Workspace = new CurrentUserWorkspaceImpl();
+    expect(workspace.getDisplayName()).toBe('Local Workspace');
+  });
+
+  tmpdirTest('should discover plugins under cwd and expose them via getPlugins()', ({ tmpdir }) => {
     createTestWorkspaceFixture(tmpdir);
     process.cwd = () => tmpdir;
-    // Set AHQ root to a different directory so it doesn't trigger "same as" message
     process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
 
     const workspace: Workspace = new CurrentUserWorkspaceImpl();
-    const output = workspace.getWorkflowListingString();
+    const pluginNames = workspace.getPlugins().map((p) => p.getName());
 
-    expect(output).toContain('Local Workspace');
-    expect(output).toContain('Plugin: test-plugin-alpha');
-    expect(output).toContain('reversal');
+    expect(pluginNames).toContain('test-plugin-alpha');
   });
-
-  tmpdirTest(
-    'should return "Same as Agentic HQ Workspace" message when cwd equals AGENTIC_HQ_WORKSPACE_ROOT',
-    ({ tmpdir }) => {
-      createTestWorkspaceFixture(tmpdir);
-      process.cwd = () => tmpdir;
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
-
-      const workspace: Workspace = new CurrentUserWorkspaceImpl();
-      const output = workspace.getWorkflowListingString();
-
-      expect(output).toContain('Same as Agentic HQ Workspace');
-      expect(output).not.toContain('Plugin:');
-    }
-  );
-
-  tmpdirTest(
-    'should return listing with "Local Workspace" header when different from AHQ workspace',
-    ({ tmpdir }) => {
-      createTestWorkspaceFixture(tmpdir);
-      process.cwd = () => tmpdir;
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
-
-      const workspace: Workspace = new CurrentUserWorkspaceImpl();
-      const output = workspace.getWorkflowListingString();
-
-      expect(output).toContain('Local Workspace');
-      expect(output).toContain(`(directory: ${tmpdir})`);
-    }
-  );
 
   tmpdirTest(
     'should register no workflows when same as AHQ workspace (no duplicates)',
@@ -85,7 +61,24 @@ describe('CurrentUserWorkspaceImpl', () => {
     }
   );
 
-  // Coverage of the four new Workspace methods: pure delegation through to WorkspaceImpl
+  tmpdirTest(
+    'should register workflows when cwd differs from AGENTIC_HQ_WORKSPACE_ROOT',
+    ({ tmpdir }) => {
+      createTestWorkspaceFixture(tmpdir);
+      process.cwd = () => tmpdir;
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = '/some/other/path';
+
+      const workspace: Workspace = new CurrentUserWorkspaceImpl();
+      const registry = new StubWorkflowRegistry();
+
+      workspace.registerWorkflowsWith(registry);
+
+      // test-plugin-alpha has 2 workflows, test-plugin-beta has 1 = 3 total
+      expect(registry.registered).toHaveLength(3);
+    }
+  );
+
+  // Coverage of the four root/path methods: pure delegation through to WorkspaceImpl
   // (cwd becomes rootDir). isAhqWorkspace compares cwd to env var per Q5 (simple string equality).
   tmpdirTest('should return process.cwd() via getRoot()', ({ tmpdir }) => {
     process.cwd = () => tmpdir;

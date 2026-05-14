@@ -17,7 +17,8 @@ import { ClaudeWorkflowCommandBuilder } from '../../../../src/workflow/claude/cl
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 
 const mockWorkspace: Workspace = {
-  getWorkflowListingString: () => '',
+  getDisplayName: () => 'Mock',
+  getPlugins: () => [],
   registerWorkflowsWith: () => {},
   getRoot: () => '/mock/project-root',
   getTempDir: () => '/mock/project-root/.agentic-hq/temp',

@@ -1,8 +1,10 @@
 /**
  * Tests AhqWorkflowImpl — a workflow entity that constructs itself from an
- * ahq-workflow.json AhqFile, and returns its listing entry line via
- * getWorkflowListingEntryString(). Also exposes getShortName(), getDescription(),
- * and getFullClaudeSkillCommand() for CLI subcommand registration and execution.
+ * ahq-workflow.json AhqFile and exposes its metadata: short name,
+ * description, full Claude skill command, and example invocation command.
+ * The CLI listing formatter reads `getExampleCommand()` to display the
+ * example invocation; the registry reads the other getters for subcommand
+ * registration.
  * Variables typed as AhqWorkflow/AhqFile interfaces; Impls used only for construction.
  */
 import * as fs from 'node:fs';
@@ -38,19 +40,19 @@ const VALID_WORKFLOW_JSON = {
 
 describe('AhqWorkflowImpl', () => {
   tmpdirTest(
-    'should return a listing entry string containing all value-object pieces',
+    'should return the example invocation command via getExampleCommand() including short name and example parameters',
     ({ tmpdir }) => {
       const file: AhqFile = new AhqFileImpl(writeTempJsonPath(tmpdir, VALID_WORKFLOW_JSON));
       const workflow: AhqWorkflow = new AhqWorkflowImpl(file);
-      const display = workflow.getWorkflowListingEntryString();
+      const example = workflow.getExampleCommand().toString();
 
-      expect(display).toContain('agentic-hq math -- --input-number=11');
-      expect(display).toContain('   What it does: Solves a math problem using an agent team');
+      expect(example).toContain('agentic-hq math');
+      expect(example).toContain('-- --input-number=11');
     }
   );
 
   tmpdirTest(
-    'should throw when the listing entry is requested with missing shortId',
+    'should throw when getExampleCommand() is called with missing shortId',
     ({ tmpdir }) => {
       const file: AhqFile = new AhqFileImpl(
         writeTempJsonPath(tmpdir, {
@@ -61,7 +63,7 @@ describe('AhqWorkflowImpl', () => {
         })
       );
       const workflow: AhqWorkflow = new AhqWorkflowImpl(file);
-      expect(() => workflow.getWorkflowListingEntryString()).toThrow();
+      expect(() => workflow.getExampleCommand()).toThrow();
     }
   );
 

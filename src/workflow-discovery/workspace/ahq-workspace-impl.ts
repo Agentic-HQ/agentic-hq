@@ -1,5 +1,6 @@
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
+import type { Plugin } from '../plugin/plugin.js';
 
 import { WorkspaceImpl } from './workspace-impl.js';
 
@@ -9,22 +10,26 @@ const AHQ_WORKSPACE_DISPLAY_NAME = 'Agentic HQ Workspace';
 /**
  * AhqWorkspaceImpl — Concrete Workspace that reads the root path
  * from the `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegates
- * listing/registration to a WorkspaceImpl.
+ * everything to a WorkspaceImpl.
  *
  * SRP Does: Read the workspace root path from the
- * `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegate
- * listing/registration to a WorkspaceImpl.
+ * `AGENTIC_HQ_WORKSPACE_ROOT` env var and delegate to a WorkspaceImpl.
  *
- * SRP Knows About: The `AGENTIC_HQ_WORKSPACE_ROOT` env var name
- * and the WorkspaceImpl constructor.
+ * SRP Knows About: The `AGENTIC_HQ_WORKSPACE_ROOT` env var name,
+ * the AHQ display name, and the WorkspaceImpl constructor.
  *
  * SRP Knows Nothing About: How plugins are discovered or how
  * listings are formatted.
  */
 export class AhqWorkspaceImpl implements Workspace {
-  /** Return the AHQ workspace's full listing section (delegates to WorkspaceImpl). */
-  getWorkflowListingString(): string {
-    return this.createDelegate().getWorkflowListingString();
+  /** Return the AHQ workspace display name (delegates to WorkspaceImpl). */
+  getDisplayName(): string {
+    return this.createDelegate().getDisplayName();
+  }
+
+  /** Return the AHQ workspace's plugins (delegates to WorkspaceImpl). */
+  getPlugins(): Plugin[] {
+    return this.createDelegate().getPlugins();
   }
 
   /** Register all AHQ workspace workflows with the registry (delegates to WorkspaceImpl). */

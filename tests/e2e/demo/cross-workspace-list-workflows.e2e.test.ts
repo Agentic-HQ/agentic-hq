@@ -1,21 +1,14 @@
 /**
  * E2E Test: Cross-Workspace `agentic-hq list` via globally-linked agentic-hq binary
  *
- * Verifies that `agentic-hq list` discovers and displays workflows in the new
- * 2-line-per-workflow format when run from a SEPARATE workspace via the
- * globally-linked binary:
+ * Verifies that `agentic-hq list` discovers and displays workflows when run
+ * from a SEPARATE workspace via the globally-linked binary:
  * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Run: agentic-hq list
- * 4. Assert: Output contains `Available workflows:` header
+ * 4. Assert: Output contains `Available workflows` title
  * 5. Assert: Output contains `create-workflow` (stable core workflow — confirms discovery)
- * 6. Assert: Output contains `What it does: Create` (partial match — confirms new format)
- *
- * This is the e2e-phase RED test for AHQ-104. The current CLI produces the OLD
- * hardcoded aligned format (does NOT contain `What it does:` lines), so the
- * third assertion fails until the GREEN-phase refactor wires in the dynamic
- * discovery subsystem and updates `AhqWorkflowImpl.getWorkflowListingEntryString()`
- * to the new 2-line format.
+ * 6. Assert: Output contains create-workflow's description (confirms it's rendered, not just listed)
  *
  * NOTE: The setup code is intentionally duplicated across the cross-workspace
  * e2e tests — see AHQ-82 REFACTOR discussion.
@@ -101,16 +94,16 @@ describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary'
         throw error;
       }
 
-      // Assert — `Available workflows:` header is present (proves CLI ran successfully)
-      expect(output).toContain('Available workflows:');
+      // Assert — title line is present (proves CLI ran successfully)
+      expect(output).toContain('Available workflows');
 
       // Assert — `create-workflow` is present (stable core workflow; confirms discovery ran)
       expect(output).toContain('create-workflow');
 
-      // Assert — `What it does: Create` is present (partial match; confirms new 2-line format
-      // is in use and is tied to create-workflow's description, without being brittle to
-      // future wording tweaks to the full description)
-      expect(output).toContain('What it does: Create');
+      // Assert — create-workflow's description is shown (confirms the 2-line entry format wires
+      // the description in under the command). Asserting on the description text rather than a
+      // literal "What it does:" prefix keeps this resilient to UI presentation changes.
+      expect(output).toContain('Create a new Agentic HQ workflow');
 
       // Log — temp workspace won't be cleaned (auto-cleaned by OS from /tmp)
       process.stdout.write(

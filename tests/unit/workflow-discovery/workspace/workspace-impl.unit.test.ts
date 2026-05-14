@@ -1,12 +1,14 @@
 /**
  * Tests WorkspaceImpl — the generic workspace that does all the real work.
- * Takes a display name and root directory path. When told to getWorkflowListingString(),
- * dynamically scans for plugins, creates PluginImpl for each, tells each to format itself.
- * When told to registerWorkflowsWith(registry), dynamically discovers plugins and tells
- * each to register its workflows with the registry. Also owns the mechanical logic for
- * Workspace's four root/path methods: getRoot, getTempDir, getDotAgenticHqDir, isAhqWorkspace.
- * No stored state beyond constructor args — everything is discovered, created, and used
- * within each method call.
+ * Takes a display name and root directory path. Exposes the display name and
+ * a list of discovered Plugin entities (via `getDisplayName()` / `getPlugins()`)
+ * that downstream consumers (the CLI listing formatter, the registry
+ * registration loop) read as plain data. When told to
+ * registerWorkflowsWith(registry), dynamically discovers plugins and tells
+ * each to register its workflows. Also owns the mechanical logic for
+ * Workspace's four root/path methods: getRoot, getTempDir, getDotAgenticHqDir,
+ * isAhqWorkspace. No stored state beyond constructor args — everything is
+ * discovered fresh within each method call.
  * Variables typed as Workspace interface; WorkspaceImpl used only for construction.
  */
 import * as path from 'node:path';
@@ -30,38 +32,49 @@ describe('WorkspaceImpl', () => {
     }
   });
 
-  tmpdirTest(
-    'should format listing with workspace header containing display name and directory path',
-    ({ tmpdir }) => {
-      createTestWorkspaceFixture(tmpdir);
-      const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
-      const output = workspace.getWorkflowListingString();
-
-      expect(output).toContain('Test Workspace');
-      expect(output).toContain(`(directory: ${tmpdir})`);
-    }
-  );
-
-  tmpdirTest('should discover plugins and include per-plugin sections in listing', ({ tmpdir }) => {
-    createTestWorkspaceFixture(tmpdir);
+  tmpdirTest('should return the constructor display name via getDisplayName()', ({ tmpdir }) => {
     const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
-    const output = workspace.getWorkflowListingString();
+    expect(workspace.getDisplayName()).toBe('Test Workspace');
+  });
 
-    expect(output).toContain('Plugin: test-plugin-alpha');
-    expect(output).toContain('Plugin: test-plugin-beta');
-    expect(output).toContain('reversal');
-    expect(output).toContain('math');
-    expect(output).toContain('quick');
+  tmpdirTest('should return the constructor root directory via getRoot()', ({ tmpdir }) => {
+    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+    expect(workspace.getRoot()).toBe(tmpdir);
   });
 
   tmpdirTest(
-    'should return empty listing body when no plugins exist in workspace',
+    'should discover plugins from `.agentic-hq/plugins/` and expose them via getPlugins()',
+    ({ tmpdir }) => {
+      createTestWorkspaceFixture(tmpdir);
+      const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+      const pluginNames = workspace.getPlugins().map((p) => p.getName());
+
+      expect(pluginNames).toContain('test-plugin-alpha');
+      expect(pluginNames).toContain('test-plugin-beta');
+    }
+  );
+
+  tmpdirTest(
+    "should expose each discovered plugin's workflows so they reach the formatter",
+    ({ tmpdir }) => {
+      createTestWorkspaceFixture(tmpdir);
+      const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
+      const allShortNames = workspace
+        .getPlugins()
+        .flatMap((plugin) => plugin.getWorkflows())
+        .map((workflow) => workflow.getShortName().toString());
+
+      expect(allShortNames).toContain('reversal');
+      expect(allShortNames).toContain('math');
+      expect(allShortNames).toContain('quick');
+    }
+  );
+
+  tmpdirTest(
+    'should return an empty plugin list when no plugins exist in workspace',
     ({ tmpdir }) => {
       const workspace: Workspace = new WorkspaceImpl('Empty Workspace', tmpdir);
-      const output = workspace.getWorkflowListingString();
-
-      expect(output).toContain('Empty Workspace');
-      expect(output).not.toContain('Plugin:');
+      expect(workspace.getPlugins()).toEqual([]);
     }
   );
 
@@ -81,11 +94,6 @@ describe('WorkspaceImpl', () => {
 
   // Direct coverage of the mechanical logic WorkspaceImpl owns for the four new Workspace
   // methods (getRoot/getTempDir/getDotAgenticHqDir/isAhqWorkspace). Outer impls delegate here.
-  tmpdirTest('should return rootDir via getRoot()', ({ tmpdir }) => {
-    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
-    expect(workspace.getRoot()).toBe(tmpdir);
-  });
-
   tmpdirTest('should return {root}/.agentic-hq/temp via getTempDir()', ({ tmpdir }) => {
     const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir);
     expect(workspace.getTempDir()).toBe(path.join(tmpdir, '.agentic-hq', 'temp'));

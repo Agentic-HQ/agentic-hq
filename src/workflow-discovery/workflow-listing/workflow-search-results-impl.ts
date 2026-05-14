@@ -1,25 +1,26 @@
+import { ListingFormatter } from '../../cli/listing/listing-formatter.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { WorkflowSearchResults } from '../interfaces/workflow-search-results.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import { AhqWorkspaceImpl } from '../workspace/ahq-workspace-impl.js';
 import { CurrentUserWorkspaceImpl } from '../workspace/current-user-workspace-impl.js';
 
-const WORKFLOWS_LIST_HEADER = 'Available workflows:\n\n';
-
 /**
  * WorkflowSearchResultsImpl — Concrete WorkflowSearchResults that
- * wires up the AHQ workspace and current user workspace, then
- * prepends the listing header.
+ * wires up the AHQ workspace and current user workspace, and hands
+ * them to a ListingFormatter for the listing string or registers
+ * their workflows directly with a WorkflowRegistry.
  *
- * SRP Does: Wire up AhqWorkspaceImpl and CurrentUserWorkspaceImpl
- * and prepend the `Available workflows:` header to the combined
- * workspace listings.
+ * SRP Does: Compose AhqWorkspaceImpl + CurrentUserWorkspaceImpl, and
+ * delegate listing-string rendering to ListingFormatter and
+ * registration to each workspace.
  *
- * SRP Knows About: The listing header text and the default
- * AhqWorkspaceImpl + CurrentUserWorkspaceImpl composition.
+ * SRP Knows About: The default AhqWorkspaceImpl + CurrentUserWorkspaceImpl
+ * composition and the ListingFormatter dependency.
  *
- * SRP Knows Nothing About: Where the workspace roots are resolved
- * from, how plugins are discovered, or how entry lines are formatted.
+ * SRP Knows Nothing About: Where workspace roots are resolved from,
+ * how plugins are discovered, what the listing looks like, or how
+ * entry lines are formatted.
  *
  * Future: a rename to `WorkspacesImpl` is captured in
  * docs/jira-docs/AHQ-106/workflow-files/jiras-for-later/rename-WorkflowSearchResults-to-Workspaces-jira-description.md.
@@ -27,15 +28,15 @@ const WORKFLOWS_LIST_HEADER = 'Available workflows:\n\n';
 export class WorkflowSearchResultsImpl implements WorkflowSearchResults {
   private readonly ahqWorkspace: Workspace;
   private readonly currentUserWorkspace: Workspace;
+  private readonly formatter: ListingFormatter;
   constructor() {
     this.ahqWorkspace = new AhqWorkspaceImpl();
     this.currentUserWorkspace = new CurrentUserWorkspaceImpl();
+    this.formatter = new ListingFormatter();
   }
-  /** Return the full listing string: header + both workspace sections. */
+  /** Return the full listing string (formatter assembles title + both workspace sections). */
   getWorkflowsListingString(): string {
-    const ahqSection = this.ahqWorkspace.getWorkflowListingString();
-    const userSection = this.currentUserWorkspace.getWorkflowListingString();
-    return `${WORKFLOWS_LIST_HEADER}${ahqSection}\n\n${userSection}`;
+    return this.formatter.formatWorkflowsListing(this.ahqWorkspace, this.currentUserWorkspace);
   }
   /** Register all workflows from both workspaces with the registry. */
   registerWorkflowsWith(registry: WorkflowRegistry): void {

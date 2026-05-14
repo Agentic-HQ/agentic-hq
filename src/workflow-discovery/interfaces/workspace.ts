@@ -1,21 +1,25 @@
+import type { Plugin } from '../plugin/plugin.js';
+
 import type { WorkflowRegistry } from './workflow-registry.js';
 
 /**
  * Workspace — A workspace containing plugins whose workflows can be
  * listed and registered for CLI execution.
  *
- * SRP Does: Return the workspace's workflow listing string and
- * register its workflows with a registry.
+ * SRP Does: Expose this workspace's display name, plugins, root path,
+ * and AHQ-workspace identity, and register its workflows with a registry.
  *
- * SRP Knows About: That a workspace has a displayable listing and
- * workflows that can be registered.
+ * SRP Knows About: That a workspace has a display name, plugins, and
+ * a root directory under which `.agentic-hq/` lives.
  *
  * SRP Knows Nothing About: How plugins are discovered, how listings
  * are formatted, or how registration works.
  */
 export interface Workspace {
-  /** Return this workspace's full listing section (header + per-plugin entries). */
-  getWorkflowListingString(): string;
+  /** Return this workspace's display name (e.g. `Agentic HQ Workspace`, `Local Workspace`). */
+  getDisplayName(): string;
+  /** Return this workspace's plugins in discovery order. */
+  getPlugins(): Plugin[];
   /** Tell each plugin in this workspace to register its workflows with the registry. */
   registerWorkflowsWith(registry: WorkflowRegistry): void;
   /** Return the absolute path of this workspace's root directory. */

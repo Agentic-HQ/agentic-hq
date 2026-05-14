@@ -12,23 +12,20 @@ import { FullClaudeSkillCommandImpl } from './full-claude-skill-command-impl.js'
 import { WorkflowDescriptionImpl } from './workflow-description-impl.js';
 import { WorkflowShortNameImpl } from './workflow-short-name-impl.js';
 
-const WHAT_IT_DOES_LINE_PREFIX = '\n   What it does: ';
-
 /**
  * AhqWorkflowImpl — Concrete AhqWorkflow backed by a single workflow
  * metadata file; delegates to value-object `createFrom` factories.
  *
- * SRP Does: Assemble a single workflow's listing entry (example command
- * + description) by delegating to value-object createFroms over a
- * JsonFileWorkflowMetadata view of an AhqFile, and expose metadata
- * for CLI registration and execution.
+ * SRP Does: Expose a single workflow's metadata (short name,
+ * description, example command, full Claude skill command) by
+ * delegating to value-object createFroms over a JsonFileWorkflowMetadata
+ * view of an AhqFile.
  *
- * SRP Knows About: The listing entry format (example + description
- * composition), the JsonFileWorkflowMetadata binding, and the
+ * SRP Knows About: The JsonFileWorkflowMetadata binding and the
  * value-object createFrom factories.
  *
  * SRP Knows Nothing About: Where the AhqFile came from, the listing
- * header, or how multiple workflows combine into the full listing.
+ * format, or how multiple workflows combine into the full listing.
  */
 export class AhqWorkflowImpl implements AhqWorkflow {
   private readonly metadata: WorkflowMetadata;
@@ -49,13 +46,7 @@ export class AhqWorkflowImpl implements AhqWorkflow {
     return FullClaudeSkillCommandImpl.createFrom(this.metadata);
   }
   /** Return the example invocation command (delegates to ExampleCommandImpl.createFrom). */
-  private getExampleCommand(): ExampleCommand {
+  getExampleCommand(): ExampleCommand {
     return ExampleCommandImpl.createFrom(this.metadata);
-  }
-  /** Return the workflow's listing entry — two lines: example command + "What it does: {description}". */
-  getWorkflowListingEntryString(): string {
-    const example = this.getExampleCommand();
-    const description = this.getDescription();
-    return `${example}${WHAT_IT_DOES_LINE_PREFIX}${description}`;
   }
 }

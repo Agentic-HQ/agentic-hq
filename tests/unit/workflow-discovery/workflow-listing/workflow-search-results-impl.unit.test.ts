@@ -1,8 +1,10 @@
 /**
  * Tests WorkflowSearchResultsImpl — aggregates workspace search results and displays them.
- * Contains two Workspaces (AhqWorkspaceImpl + CurrentUserWorkspaceImpl).
- * getWorkflowsListingString() tells each Workspace to getWorkflowListingString() — delegation chain.
- * registerWorkflowsWith(registry) tells each Workspace to registerWorkflowsWith(registry) — tell don't ask.
+ * Contains two Workspaces (AhqWorkspaceImpl + CurrentUserWorkspaceImpl) and a
+ * ListingFormatter. getWorkflowsListingString() hands both workspaces to the
+ * formatter, which reads their getDisplayName/getPlugins data and assembles
+ * the string. registerWorkflowsWith(registry) tells each Workspace directly to
+ * register its workflows — tell don't ask.
  * Variables typed as WorkflowSearchResults interface; Impl used only for construction.
  */
 import { afterEach, describe, expect } from 'vitest';
@@ -30,43 +32,37 @@ describe('WorkflowSearchResultsImpl', () => {
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
       const output = searchResults.getWorkflowsListingString();
 
-      expect(output).toMatch(/^Available workflows:/);
+      expect(output).toContain('Available workflows');
       expect(output).toContain('agentic-hq reversal');
-      expect(output).toContain('   What it does: Reverses a string');
+      expect(output).toContain('Reverses a string');
     }
   );
 
-  tmpdirTest('should include a "What it does:" line for each workflow', ({ tmpdir }) => {
+  tmpdirTest('should include each workflow description from the fixture', ({ tmpdir }) => {
     createTestWorkspaceFixture(tmpdir);
     process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
     process.cwd = () => tmpdir;
     const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
     const output = searchResults.getWorkflowsListingString();
-    const whatItDoesLines = output
-      .split('\n')
-      .filter((l: string) => l.startsWith('   What it does:'));
-    expect(whatItDoesLines).toHaveLength(3);
+    expect(output).toContain('Reverses a string');
+    expect(output).toContain('Solves math problems');
+    expect(output).toContain('Quick task runner');
   });
 
-  tmpdirTest('should include at least one line starting with "   What it does: "', ({ tmpdir }) => {
-    createTestWorkspaceFixture(tmpdir);
-    process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
-    process.cwd = () => tmpdir;
-    const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
-    const output = searchResults.getWorkflowsListingString();
-    const whatItDoesLines = output
-      .split('\n')
-      .filter((l: string) => l.startsWith('   What it does: '));
-    expect(whatItDoesLines.length).toBeGreaterThan(0);
-  });
+  tmpdirTest(
+    'should return only headers (no plugin sections) when no workflows are discovered',
+    ({ tmpdir }) => {
+      // Empty tmpdir — no plugins exist in either workspace
+      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
+      process.cwd = () => tmpdir;
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
+      const output = searchResults.getWorkflowsListingString();
 
-  tmpdirTest('should return just header when no workflows found', ({ tmpdir }) => {
-    process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
-    process.cwd = () => tmpdir;
-    const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
-    const output = searchResults.getWorkflowsListingString();
-    expect(output).toMatch(/^Available workflows:/);
-  });
+      expect(output).toContain('Available workflows');
+      // The behavioural property: with no workflows, no plugin sections are rendered.
+      expect(output).not.toContain('Plugin:');
+    }
+  );
 
   tmpdirTest(
     'should include both AHQ and user workspace sections with headers in getWorkflowsListingString',

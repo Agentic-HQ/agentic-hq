@@ -16,7 +16,8 @@ import type { Workspace } from '../../../../src/workflow-discovery/interfaces/wo
 const TEST_TEMP_DIR = '/tmp/test-io-marshaller';
 
 const mockWorkspace: Workspace = {
-  getWorkflowListingString: () => '',
+  getDisplayName: () => 'Mock',
+  getPlugins: () => [],
   registerWorkflowsWith: () => {},
   getRoot: () => '/mock/project',
   getTempDir: () => TEST_TEMP_DIR,

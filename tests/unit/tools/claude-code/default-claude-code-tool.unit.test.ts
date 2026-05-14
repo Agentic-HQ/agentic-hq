@@ -33,7 +33,8 @@ vi.mock('../../../../src/tools/marshalled-io-tools/claude-code/claude-command-bu
 
 function fakeWorkspace(root: string, isAhq: boolean): Workspace {
   return {
-    getWorkflowListingString: () => '',
+    getDisplayName: () => 'Mock',
+    getPlugins: () => [],
     registerWorkflowsWith: () => {},
     getRoot: () => root,
     getTempDir: () => `${root}/.agentic-hq/temp`,

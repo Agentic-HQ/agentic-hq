@@ -18,7 +18,11 @@ function createStubWorkflow(shortName: string, description: string, fullCommand:
     getShortName: () => ({ toString: () => shortName }),
     getDescription: () => ({ toString: () => description }),
     getFullClaudeSkillCommand: () => ({ toString: () => fullCommand }),
-    getWorkflowListingEntryString: () => `agentic-hq ${shortName}\n   What it does: ${description}`,
+    getExampleCommand: () => ({
+      getCommandPart: () => `agentic-hq ${shortName}`,
+      getArgsPart: () => '',
+      toString: () => `agentic-hq ${shortName}`,
+    }),
   };
 }
 

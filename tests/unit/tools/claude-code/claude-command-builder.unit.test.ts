@@ -34,7 +34,8 @@ afterEach(() => {
 
 function mockAhqWorkspace(): Workspace {
   return {
-    getWorkflowListingString: () => '',
+    getDisplayName: () => 'Agentic HQ Workspace',
+    getPlugins: () => [],
     registerWorkflowsWith: () => {},
     getRoot: () => path.dirname(ahqConfigDir),
     getTempDir: () => path.join(ahqConfigDir, 'temp'),
@@ -47,7 +48,8 @@ function mockUserWorkspace(root?: string): Workspace {
   const r = root ?? userWorkspaceRoot;
   const dotDir = path.join(r, '.agentic-hq');
   return {
-    getWorkflowListingString: () => '',
+    getDisplayName: () => 'Local Workspace',
+    getPlugins: () => [],
     registerWorkflowsWith: () => {},
     getRoot: () => r,
     getTempDir: () => path.join(dotDir, 'temp'),

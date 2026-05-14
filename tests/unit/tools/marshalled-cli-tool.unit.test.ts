@@ -19,7 +19,8 @@ import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marsha
 import type { Workspace } from '../../../src/workflow-discovery/interfaces/workspace.js';
 
 const mockWorkspace: Workspace = {
-  getWorkflowListingString: () => '',
+  getDisplayName: () => 'Mock',
+  getPlugins: () => [],
   registerWorkflowsWith: () => {},
   getRoot: () => '/mock/project',
   getTempDir: () => '/mock/project/.agentic-hq/temp',

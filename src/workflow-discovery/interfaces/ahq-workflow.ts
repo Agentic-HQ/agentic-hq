@@ -1,29 +1,29 @@
+import type { ExampleCommand } from './example-command.js';
 import type { FullClaudeSkillCommand } from './full-claude-skill-command.js';
 import type { WorkflowDescription } from './workflow-description.js';
 import type { WorkflowShortName } from './workflow-short-name.js';
 
 /**
- * AhqWorkflow — A discoverable workflow entity that returns its
- * listing entry line and exposes metadata for CLI subcommand
- * registration and execution.
+ * AhqWorkflow — A discoverable workflow entity that exposes its
+ * metadata (short name, description, example command, full claude
+ * skill command) for the CLI to list and register.
  *
- * SRP Does: Return this single workflow's line for the workflow
- * listing, and expose its short name, description, and full Claude
- * skill command for execution.
+ * SRP Does: Expose this single workflow's short name, description,
+ * example invocation command, and full Claude skill command.
  *
- * SRP Knows About: That each workflow contributes one entry line to
- * the listing and has metadata needed for CLI registration.
+ * SRP Knows About: That a workflow has metadata that downstream
+ * formatters / registrars can read.
  *
- * SRP Knows Nothing About: The full listing, the listing header, other
- * workflows, or how the entry line is assembled.
+ * SRP Knows Nothing About: The listing format, the listing header,
+ * other workflows, or how its entry line is assembled.
  */
 export interface AhqWorkflow {
-  /** Return this workflow's single line for the workflow listing. */
-  getWorkflowListingEntryString(): string;
   /** Return the workflow's short name for CLI subcommand registration. */
   getShortName(): WorkflowShortName;
   /** Return the workflow's human-readable description. */
   getDescription(): WorkflowDescription;
   /** Return the full `/pluginId:skillId` command for Claude execution. */
   getFullClaudeSkillCommand(): FullClaudeSkillCommand;
+  /** Return the example CLI invocation command (e.g. `agentic-hq math -- --input-number=11`). */
+  getExampleCommand(): ExampleCommand;
 }

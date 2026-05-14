@@ -1,8 +1,9 @@
 /**
- * Tests AhqWorkspaceImpl — reads root from AGENTIC_HQ_WORKSPACE_ROOT env var (falling
- * back to process.cwd() when unset) and implements Workspace by delegating to
- * WorkspaceImpl, except isAhqWorkspace() which is overridden to always return true
- * (semantic: AhqWorkspaceImpl is the AHQ workspace by definition).
+ * Tests AhqWorkspaceImpl — reads root from AGENTIC_HQ_WORKSPACE_ROOT env var
+ * (falling back to process.cwd() when unset) and implements Workspace by
+ * delegating to WorkspaceImpl, except isAhqWorkspace() which is overridden to
+ * always return true (semantic: AhqWorkspaceImpl is the AHQ workspace by
+ * definition).
  * Variables typed as Workspace interface; AhqWorkspaceImpl used only for construction.
  */
 import * as path from 'node:path';
@@ -28,18 +29,22 @@ describe('AhqWorkspaceImpl', () => {
     process.cwd = originalCwd;
   });
 
+  tmpdirTest('should return "Agentic HQ Workspace" via getDisplayName()', ({ tmpdir }) => {
+    process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
+    const workspace: Workspace = new AhqWorkspaceImpl();
+    expect(workspace.getDisplayName()).toBe('Agentic HQ Workspace');
+  });
+
   tmpdirTest(
-    'should implement Workspace and return listing with "Agentic HQ Workspace" header via getWorkflowListingString',
+    'should discover plugins under the env-var root and expose them via getPlugins()',
     ({ tmpdir }) => {
       createTestWorkspaceFixture(tmpdir);
       process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
       const workspace: Workspace = new AhqWorkspaceImpl();
-      const output = workspace.getWorkflowListingString();
+      const pluginNames = workspace.getPlugins().map((p) => p.getName());
 
-      expect(output).toContain('Agentic HQ Workspace');
-      expect(output).toContain(`(directory: ${tmpdir})`);
-      expect(output).toContain('Plugin: test-plugin-alpha');
-      expect(output).toContain('reversal');
+      expect(pluginNames).toContain('test-plugin-alpha');
+      expect(pluginNames).toContain('test-plugin-beta');
     }
   );
 
@@ -55,7 +60,7 @@ describe('AhqWorkspaceImpl', () => {
     expect(registry.registered).toHaveLength(3);
   });
 
-  // Coverage of the four new Workspace methods: delegation for getRoot/getTempDir and
+  // Coverage of the four root/path methods: delegation for getRoot/getTempDir and
   // semantic override for isAhqWorkspace. Q2: getRoot falls back to process.cwd() when
   // env var is unset. Q5: isAhqWorkspace is always true (override, not delegation).
   tmpdirTest(
