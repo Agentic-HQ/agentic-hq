@@ -44,6 +44,13 @@ const DEFAULT_ALLOWED_TOOLS = [
   'mcp__mcp-atlassian__jira_transition_issue',
   'mcp__mcp-atlassian__jira_search',
   'mcp__mcp-atlassian__jira_update_issue',
+  // Since roughly version 2.1.141 Claude Code suddenly needs explicit approval to run
+  // a skill from within another skill.  e.g. the self-termination skill being called
+  // from within the string-reversal skill - see AHQ-142 bug
+  // To get round this adding that skill to this list of allowedTools here.  Need to
+  // audit all workflows/skill for any other skills or commands that are called from
+  // within skills or commands.
+  'Skill(agentic-hq-core-plugin:self-termination)',
 ];
 
 export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {

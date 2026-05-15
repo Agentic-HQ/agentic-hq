@@ -159,7 +159,7 @@ temp/
 # Claude settings configuration.
 # NOTE: Need other directories with commands
 # etc to be committed to the repo.
-.claude/settings.local.json
+.claude/settings.local.json*
 .claude/settings.json
 .claude/backups/
 
