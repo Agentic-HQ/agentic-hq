@@ -132,10 +132,15 @@ This step fills in the **"Generated TS CLI installs and typechecks cleanly"** ro
 Run:
 
 ```bash
-cd {ts-workflow-dir} && pnpm install --ignore-workspace
+cd {ts-workflow-dir} && pnpm install
 ```
 
-`--ignore-workspace` keeps this install isolated from any parent pnpm workspace.
+A plain `pnpm install` is used (NOT `--ignore-workspace`). Each `ts-workflow`
+directory carries its own `pnpm-workspace.yaml`, so pnpm stops at that nearest
+workspace file and treats the `ts-workflow` directory as its own workspace root
+— isolated from the repo-root workspace. `--ignore-workspace` must NOT be used:
+under pnpm 11 it makes pnpm skip the local `pnpm-workspace.yaml`, so the
+`allowBuilds` approvals are not applied and `strictDepBuilds` fails the install.
 
 This creates two things on disk:
 - **`{ts-workflow-dir}/node_modules/`** — gitignored by convention (every existing `ts-workflow/` directory in the repo follows this).

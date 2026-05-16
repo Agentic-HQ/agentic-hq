@@ -1,0 +1,29 @@
+# =============================================================================
+# pnpm Workspace Configuration — standalone ts-workflow sub-project
+# =============================================================================
+#
+# This ts-workflow is a self-contained single-package project. It carries its
+# own pnpm-workspace.yaml so that a plain `pnpm install` run in this directory
+# treats THIS directory as the workspace root (pnpm stops at the nearest
+# pnpm-workspace.yaml and never walks up to the repo root).
+#
+# pnpm 11 no longer reads the `pnpm` field of package.json, so build-script
+# approvals must live here in pnpm-workspace.yaml. Note: `--ignore-workspace`
+# must NOT be used — it makes pnpm treat the install as non-workspace and skip
+# this file's allowBuilds, causing strictDepBuilds to fail the install.
+#
+# Why these packages need build scripts:
+# - agentic-hq: local link: dependency with a postinstall (chmod fix for node-pty)
+# - node-pty:   compiles native binaries for PTY terminal emulation
+# - esbuild:    compiles native binaries for fast JS/TS bundling
+#
+# See: https://pnpm.io/11.x/migration
+# =============================================================================
+
+packages:
+  - '.'
+
+allowBuilds:
+  agentic-hq: true
+  node-pty: true
+  esbuild: true

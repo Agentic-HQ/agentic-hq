@@ -14,12 +14,5 @@
     "agentic-hq": "link:REPO_ROOT_PLACEHOLDER",
     "tsx": "^4.20.6",
     "commander": "^14.0.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "agentic-hq",
-      "node-pty",
-      "esbuild"
-    ]
   }
 }

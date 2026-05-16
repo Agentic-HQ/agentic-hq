@@ -62,6 +62,7 @@ Read the following to gain full context:
    - `{example-workflow-cli-file}` — TS CLI **propagation** pattern (each command's output → next command's input)
    - `{example-workflow-skill-dir}/SKILL.md` — SKILL.md pattern
    - `{example-workflow-skill-dir}/ts-workflow/package.json` — package.json pattern
+   - `{example-workflow-skill-dir}/ts-workflow/pnpm-workspace.yaml` — pnpm-workspace.yaml pattern (per-directory `packages: ['.']` + `allowBuilds` map)
 
    **B. Substantial workflow — create-workflow** (multiple commands with user interaction, plan mode, file-system gating, no output-propagation):
    - All `.md` files in `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/` — command file patterns for substantial workflows
@@ -96,7 +97,7 @@ Use the `EnterPlanMode` tool to plan the implementation. Your plan should cover:
 2. **`ahq-workflow.json`** — the workflow metadata file, placed at `{ahq-workflow-metadata-filename}`, containing the 7 required fields
 3. **What the TypeScript CLI looks like** — command constants, linear flow, variable passing
 4. **SKILL.md** — returns the shell command to run the CLI
-5. **package.json** — dependencies (agentic-hq via link:, tsx, commander)
+5. **package.json + pnpm-workspace.yaml** — dependencies (agentic-hq via link:, tsx, commander); plus a per-directory `pnpm-workspace.yaml` carrying `packages: ['.']` and the `allowBuilds` map (required by pnpm 11 for build-script approval)
 6. **tsconfig.json** — standard config
 7. **Plugin manifest (`{plugin-manifest-filename}`)** — created from the "Plugin Metadata" section of the APPROVED spec only if `{plugin-manifest-filename}` does not already exist (idempotent — never clobbers an existing manifest). Required for Claude Code's `--plugin-dir` flag to load the plugin's commands/skills.
 
@@ -214,9 +215,11 @@ Create `{skills-dir}/SKILL.md` following the math-workflow SKILL.md pattern:
 - `disable-model-invocation: true`
 - Returns shell command to install deps and run CLI via tsx
 
-### 4e. Create package.json and tsconfig.json
+### 4e. Create package.json, pnpm-workspace.yaml and tsconfig.json
 
-Create `{skills-dir}/ts-workflow/package.json` and `{skills-dir}/ts-workflow/tsconfig.json` following the existing patterns.
+Create `{skills-dir}/ts-workflow/package.json`, `{skills-dir}/ts-workflow/pnpm-workspace.yaml` and `{skills-dir}/ts-workflow/tsconfig.json` following the existing patterns.
+
+The `pnpm-workspace.yaml` is **required** under pnpm 11: each `ts-workflow` is a self-contained single-package project, and pnpm 11 reads build-script approvals (`allowBuilds`) only from `pnpm-workspace.yaml`, never from the `pnpm` field of `package.json`. Follow the math-workflow `ts-workflow/pnpm-workspace.yaml` pattern — it declares `packages: ['.']` (so the directory is its own workspace root, isolated from the repo-root workspace) and an `allowBuilds` map approving the native-build dependencies (`agentic-hq`, `node-pty`, `esbuild`). The workflow is installed with a plain `pnpm install` run from the `ts-workflow` directory — **not** `pnpm install --ignore-workspace`, which would make pnpm skip the local `pnpm-workspace.yaml` and fail the install under pnpm 11's `strictDepBuilds` default.
 
 ### 4f. Ensure Plugin Manifest Exists
 
@@ -256,7 +259,7 @@ Tell the user, in this order:
 1. **What was built** — the workflow-id and plugin-id, plus a one-line confirmation that scaffolding finished cleanly.
 2. **Files written** — a flat list with absolute paths, grouped:
    - **Command files**: every `{commands-dir}/NN-...md` written in Step 4a.
-   - **Skill files**: `{ahq-workflow-metadata-filename}`, the TypeScript CLI, `{skills-dir}/SKILL.md`, the `ts-workflow/package.json`, the `ts-workflow/tsconfig.json`.
+   - **Skill files**: `{ahq-workflow-metadata-filename}`, the TypeScript CLI, `{skills-dir}/SKILL.md`, the `ts-workflow/package.json`, the `ts-workflow/pnpm-workspace.yaml`, the `ts-workflow/tsconfig.json`.
    - **Plugin manifest**: either the path to the newly-created `{plugin-manifest-filename}` (if Step 4f created it) **or** the literal note "left untouched (already existed)".
    - **Plan-verbatim copy**: `{plan-verbatim-copy-file}`.
 3. **APPROVED spec location**: `{approved-workflow-spec-filename}` — point the user there in case they want to re-read the spec while reviewing the generated files.

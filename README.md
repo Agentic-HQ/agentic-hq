@@ -42,7 +42,7 @@ To enable corepack and then confirm the pnpm version do:
 # Enable corepack (one-time setup, does NOT modify shell config files)
 corepack enable
 
-# Verify — should show the version from package.json (currently 10.33.0)
+# Verify — should show the version from package.json (currently 11.1.2)
 pnpm --version
 ```
 
@@ -73,7 +73,10 @@ pnpm --version
    scripts/infra/install-dev-agentic-hq.sh
    ```
 
-   The script uses `pnpm link --global` to symlink the CLI into your global pnpm bin directory; it does not require `sudo` and does not modify your shell config.
+   The script uses `pnpm add -g .` to register the CLI globally as a live symlink to this repo — no `sudo` needed.
+
+   > [!NOTE]
+   > If the script fails with `global bin directory "…" is not in PATH`, run `pnpm setup` (it adds pnpm's global bin directory to your shell config), open a fresh terminal, then re-run the script.
 
 4. Verify everything works by running checks and quick unit tests:
 

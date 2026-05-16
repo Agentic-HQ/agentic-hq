@@ -265,6 +265,9 @@ All questions resolved, test types confirmed. This summary is complete.
 
 ## Step 12: Present to Human
 
+**🛑 CRITICAL — The summary DOCUMENT is where the human answers questions.**
+Do NOT use the `AskUserQuestion` tool (the multiple-choice UI selector) to gather answers. All questions live in the summary file under their `**Human's Response**` placeholders, and the human writes their answers directly into that file. Your job here is only to point them at the file and wait.
+
 After creating the file, tell the human:
 
 > "I've read {jira-id} and created my summary at:
@@ -274,12 +277,14 @@ After creating the file, tell the human:
 >
 > **Questions**: {number} questions need your input before we proceed.
 >
-> Please review the summary file, add your responses to any questions inline, and let me know when you're ready to continue to the next step."
+> Please open the summary file and write your answers directly into the document — there is a `**Human's Response**` placeholder under each question for you to fill in. When you've added your responses, let me know and I'll read them and continue to the next step."
 
 
 ## Step 13: Read And Discuss Answers With Human
 
-Read and discuss the answers with the human. 
+Once the human tells you they have filled in their answers, **re-read the summary file** to pick up the responses they wrote into the `**Human's Response**` placeholders, then read and discuss those answers with the human in the chat.
+
+Do NOT use the `AskUserQuestion` tool at any point in this step — discussion happens in normal chat, and any answers the human gives belong in the summary document.
 
 Once everything is resolved, update the file to clarify what the agreed answers were and move on to step 14.
 

@@ -8,24 +8,27 @@
 # own pnpm.overrides that triggers warnings (overrides only work at workspace root).
 #
 # BUILD SCRIPT APPROVALS:
-# pnpm 10.x blocks postinstall/build scripts by default for security.
-# Packages listed in onlyBuiltDependencies are TRUSTED to run their build scripts.
+# pnpm 11.x blocks postinstall/build scripts by default for security
+# (strictDepBuilds is true by default). Packages set to `true` in the
+# allowBuilds map are TRUSTED to run their build scripts.
 #
 # Why these packages need build scripts:
 # - node-pty: Compiles native binaries for PTY terminal emulation
 # - esbuild: Compiles native binaries for fast JS/TS bundling (used by tsx, vite, vitest)
 # - unrs-resolver: Native resolver for eslint-import-resolver-typescript
 #
-# See: https://socket.dev/blog/pnpm-10-0-0-blocks-lifecycle-scripts-by-default
+# See: https://pnpm.io/11.x/migration
 # =============================================================================
 
 packages:
   # Exclude spike project (has legacy pnpm.overrides that triggers warnings)
   - '!docs/project-docs/project-spikes/**/project'
-  # Exclude plugin ts-workflow directories (self-contained mini projects, use --ignore-workspace)
+  # Exclude plugin ts-workflow directories — each is a self-contained mini
+  # project with its OWN pnpm-workspace.yaml, installed with a plain
+  # `pnpm install` run from its own directory (NOT --ignore-workspace).
   - '!.agentic-hq/plugins/**'
 
-onlyBuiltDependencies:
-  - node-pty
-  - esbuild
-  - unrs-resolver
+allowBuilds:
+  node-pty: true
+  esbuild: true
+  unrs-resolver: true

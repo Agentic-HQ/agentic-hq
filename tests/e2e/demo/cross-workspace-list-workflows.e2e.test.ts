@@ -26,7 +26,7 @@ import { describe, it, expect } from 'vitest';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
 const TEST_TIMEOUT_MS = 60_000; // 60s — no Claude invocation, just install script + CLI startup
-const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + link --global
+const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + pnpm add -g .
 const LOG_FILE_LABEL = 'cross-workspace-list-workflows';
 const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
 
@@ -39,10 +39,10 @@ describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary'
   it(
     'should list workflows in the new 2-line format from a separate workspace via the globally-linked binary',
     () => {
-      // WARNING: This is smelly! pnpm link --global mutates global pnpm state on
+      // WARNING: This is smelly! pnpm add -g . mutates global pnpm state on
       // your machine. See: https://agentic-hq.atlassian.net/browse/AHQ-79 (Known Smell section)
       process.stdout.write(
-        '⚠️  SMELLY: This test runs pnpm link --global which mutates global pnpm state.\n' +
+        '⚠️  SMELLY: This test runs pnpm add -g . which mutates global pnpm state.\n' +
           '   See: https://agentic-hq.atlassian.net/browse/AHQ-79 (Known Smell section)\n\n'
       );
 
@@ -53,11 +53,13 @@ describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary'
         timeout: INSTALL_SCRIPT_TIMEOUT_MS,
       });
 
-      // Ensure the pnpm global bin directory is on PATH for this process,
-      // so the 'agentic-hq' binary installed by pnpm link --global can be found.
+      // Ensure pnpm's global bin directory is on PATH for this process, so the
+      // 'agentic-hq' binary registered by pnpm add -g . can be found.
+      // pnpm 11 places global binaries in $PNPM_HOME/bin.
       const pnpmHome = process.env.PNPM_HOME ?? path.join(process.env.HOME!, 'Library', 'pnpm');
-      if (!process.env.PATH?.includes(pnpmHome)) {
-        process.env.PATH = `${pnpmHome}:${process.env.PATH}`;
+      const pnpmBinDir = path.join(pnpmHome, 'bin');
+      if (!process.env.PATH?.includes(pnpmBinDir)) {
+        process.env.PATH = `${pnpmBinDir}:${process.env.PATH}`;
       }
 
       // Arrange — create a unique temp workspace
