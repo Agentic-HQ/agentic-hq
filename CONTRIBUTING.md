@@ -67,9 +67,9 @@ You do not need to ask for permission to work on an existing open issue. If you'
 
 The full setup is in the [`README.md`](./README.md) Quick Start section. Summarised here:
 
-- **macOS 15.5** (other platforms are untested but contributions to support them are welcome)
-- **Node.js v22.x (LTS)** or higher — install via [nvm](https://github.com/nvm-sh/nvm)
-- **pnpm** via `corepack enable` (corepack ships with Node 22; it auto-installs the pinned pnpm version from `package.json`)
+- **macOS 15.7.5** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it); other platforms are untested but contributions to support them are welcome
+- **Node.js 24 LTS** (default/recommended) — Node 22 and 24 LTS are both supported (not Node 23); install via [nvm](https://github.com/nvm-sh/nvm) (the repo has a root `.nvmrc` pinned to Node 24, currently `24.15.0`)
+- **pnpm** via `corepack enable` (corepack ships with Node 22 and 24; it auto-installs the pinned pnpm version from `package.json`)
 - Then `pnpm install` to install dependencies
 
 If anything in the Quick Start fails, see [`docs/user-docs/troubleshooting-quickstart.md`](./docs/user-docs/troubleshooting-quickstart.md). If it's not covered there, that's a documentation bug — please report it.

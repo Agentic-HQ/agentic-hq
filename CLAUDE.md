@@ -10,6 +10,7 @@ Agentic HQ is a thin Typescript wrapper around Claude Code that allows you to cr
 
 - **TDD MANDATORY**: All code will follow Red-Green-Refactor cycle - write failing test first, verify it fails correctly, then implement, then refactor.
 - **WATCH MODE BANNED**: NEVER create `test:watch` scripts or use `--watch` flags - they hang AI test execution. Always use `vitest run` (never `vitest` alone), `jest --no-watch` (never `jest --watch`)
+- **NODE VERSION**: Defaults to **Node.js 24 LTS**; supports the Node 22 and 24 LTS lines only (not Node 23). Root `.nvmrc` pins Node 24 (currently `24.15.0`).
 
 
 ## If You're Not Sure, Or Need Help/Research - Use Perplexity

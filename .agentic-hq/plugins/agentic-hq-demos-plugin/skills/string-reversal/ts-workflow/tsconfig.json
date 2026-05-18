@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ES2022",
+    // ES2023: safe baseline for the lowest supported Node LTS (Node 22). See AHQ-145.
+    "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,

@@ -99,8 +99,8 @@ Highest-leverage items if you only do one pass:
 - **Severity:** WRONG
 - **Location:** README.md L29 + `package.json` `engines`
 - **Issue:** "Requires Node.js v22.x (LTS) or higher" — `package.json` `engines` is `"node": ">=22.0.0 <23.0.0"`, so Node 23/24/25 all fail the engines check despite the README implying they'd work. Separately: as of May 2026, **Node 22 is Maintenance LTS** (EOL 2027-04-30) and **Node 24 is Active LTS** (EOL 2028-04-30). For an open-source TypeScript CLI going public in 2026, the conventional posture is to support **both LTS lines simultaneously**, not Node 22 alone.
-- **Status:** ✅ **Tracked in [AHQ-135](https://agentic-hq.atlassian.net/browse/AHQ-135) — to be done before public launch.** Solution: attempt the Node 22 + 24 dual-LTS upgrade per the plan in [`Jira-description-for-node-24-upgrade-reasoning-and-plan.md`](./Jira-description-for-node-24-upgrade-reasoning-and-plan.md), and update all affected docs accordingly (`README.md` L29, L31, L51 — covering Findings 6, 7, 8 in one pass — plus `package.json` `engines`, plus CI matrix if applicable). If the smoke test reveals `node-pty` is blocked on Node 24, the fallback is to keep `engines` at Node 22 only and document the block (README still gets corrected).
-- **Human Decision And Optional Comment:** approve — handled in AHQ-135
+- **Status:** ✅ **RESOLVED under [AHQ-145](https://agentic-hq.atlassian.net/browse/AHQ-145) (2026-05-17).** The Node 22 + 24 dual-LTS upgrade was carried out. `package.json` `engines.node` is now `"^22.0.0 || ^24.0.0"` (the two supported LTS lines, Node 22 and 24 — Node 23 deliberately excluded as an EOL Current-only line), and the affected docs were corrected in the same pass — `README.md` (Node.js + Mac OS sections), `CONTRIBUTING.md`, `docs/dev/npm-commands.md`, `docs/user-docs/troubleshooting-quickstart.md` and `CLAUDE.md` — covering Findings 6, 7 and 8 together. The `node-pty`-on-Node-24 smoke test passed earlier (2026-05-16), so no Node-22-only fallback was needed. (Originally tracked in AHQ-135; delivered under AHQ-145.)
+- **Human Decision And Optional Comment:** approve — resolved under AHQ-145
 
 ### Finding 7 — "to install to go https://nodejs.org…" typo and wrong claim about nvm
 
@@ -108,7 +108,7 @@ Highest-leverage items if you only do one pass:
 - **Location:** README.md L31
 - **Issue:** "to install to go https://nodejs.org/en/download and follow the instructions to install nvm". Two issues: typo ("to install to go"), and the nodejs.org page does not "install nvm" — nvm is a separate project.
 - **Claude Recommendation:** Replace with: *"To install Node.js v22 LTS or v24 LTS, see <https://nodejs.org/en/download> or use a version manager like nvm / fnm / asdf."*
-- **Status:** ✅ **Tracked in [AHQ-135](https://agentic-hq.atlassian.net/browse/AHQ-135)** — bundled into the Node-24 upgrade pass since this README paragraph is being touched anyway.
+- **Status:** ✅ **RESOLVED — re-verified under [AHQ-145](https://agentic-hq.atlassian.net/browse/AHQ-145) (2026-05-17).** The `README.md` Node.js paragraph has no doubled-word typo, and it was reviewed and reworded in the AHQ-145 Node-24 pass. No further work needed.
 - **Human Decision And Optional Comment:** human fixed
 
 ### Finding 8 — pnpm version pinned in prose, will drift
@@ -117,8 +117,8 @@ Highest-leverage items if you only do one pass:
 - **Location:** README.md L51
 - **Issue:** "currently 10.33.0" hard-codes a version that drifts.
 - **Claude Recommendation:** Replace with "the version pinned by `packageManager` in `package.json`" (which is the source of truth).
-- **Status:** ✅ **Tracked in [AHQ-135](https://agentic-hq.atlassian.net/browse/AHQ-135)** — bundled into the Node-24 upgrade pass since this README paragraph is being touched anyway.
-- **Human Decision And Optional Comment:** approve — handled in AHQ-135
+- **Status:** ✅ **RESOLVED — re-verified under [AHQ-145](https://agentic-hq.atlassian.net/browse/AHQ-145) (2026-05-17).** `README.md` now reads "should show the version from `package.json`" (pointing at the source of truth) rather than hard-coding a version as a standalone claim. No further work needed.
+- **Human Decision And Optional Comment:** approve — resolved under AHQ-145
 
 ### Finding 9 — Caution + soft "we recommend" mix
 

@@ -16,33 +16,40 @@ Agentic HQ (AHQ) could also be used to create an AI Based Software System that e
 
 ### Mac OS
 
-These instructions have **only** been created for and tested on MacOS 15.5.  Other operating systems haven't yet been tested, but may work with small modifications (Linux is most likely to work with minimal or zero changes, and if you're running Windows then Windows Subsystem for Linux (WSL) may be worth trying first)
+These instructions have **only** been created for and tested on macOS 15.7.5.  **macOS 13.5 or newer is required** — the `node-pty` dependency ships prebuilt native binaries that need macOS 13.5+, so older macOS versions will hit install or runtime failures.  Other operating systems haven't yet been tested, but may work with small modifications (Linux is most likely to work with minimal or zero changes, and if you're running Windows then Windows Subsystem for Linux (WSL) may be worth trying first)
 
-### Node.js
+### Node.js & pnpm (Package Manager)
 
-Requires Node.js v22.x (LTS) or higher.
+Agentic HQ defaults to **Node.js 24 LTS** (the recommended runtime). **Node.js 22 LTS** is also supported — Node 22 and 24 are the two supported LTS lines (Node 23 is not supported).
 
 To install go to https://nodejs.org/en/download and follow the instructions to install nvm (Node Version Manager) with npm.
+
+The repo includes a root `.nvmrc` pinned to Node 24 (currently `24.15.0`). Once nvm is installed run the following command to install Node 24 (if not already installed) and switch to it:
+
+```bash
+nvm install
+```
 
 After installing run: 
 ```bash
 node --version
 ```
-to confirm version 22 or higher.
+to confirm you are on Node 24.
 
-### pnpm (Package Manager)
-
-This project requires pnpm, which is already included in Node.js 22 or higher, but needs to be enabled using corepack using the following commands.
-
-Corepack automatically manages the pnpm version used by the project, which is set in `package.json` file.
-
-To enable corepack and then confirm the pnpm version do:
+This project's package manager, `pnpm`, is provided through Corepack, which ships with Node.js. Enable it for the Node version you just installed:
 
 ```bash
-# Enable corepack (one-time setup, does NOT modify shell config files)
 corepack enable
+```
 
-# Verify — should show the version from package.json (currently 11.1.2)
+> [!NOTE]
+> If you later switch to a different Node version remember to run `corepack enable` again.
+
+Corepack (enabled in the step above) automatically manages the pnpm version used by the project, which is pinned by the `packageManager` field in `package.json` — it does **not** modify your shell config.
+
+Confirm pnpm is available and on the expected, pinned 11.1.2 version by running:
+
+```bash
 pnpm --version
 ```
 

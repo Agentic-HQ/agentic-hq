@@ -3,6 +3,8 @@
 This document covers the main npm scripts in the project, organised by category.
 
 > **One-time setup:** on a fresh checkout, run `pnpm install` (not `npm install`) to install dependencies. Corepack auto-fetches the pinned pnpm version from `package.json`'s `packageManager` field.
+>
+> **Node.js version:** Agentic HQ defaults to **Node.js 24 LTS** (recommended); **Node.js 22 LTS** is also supported (Node 22 and 24 only — not Node 23). The repo's root `.nvmrc` pins Node 24 (currently `24.15.0`) — run `nvm use` to switch to it.
 
 For the full, authoritative list (including every individual test runner), use:
 

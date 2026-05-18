@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "engines": {
-    "node": ">=22.0.0"
+    "node": "^22.0.0 || ^24.0.0"
   },
   "// TEMPORARY-LOCAL-DEPENDENCY": {
     "summary": "The agentic-hq dependency uses link: protocol (symlink) for local dev. Will be replaced with a registry-based versioned dependency later.",

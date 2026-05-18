@@ -23,9 +23,11 @@ section of the main README.
 ### `Unsupported engine` warning or hard error
 
 - **Cause:** Your Node.js version doesn't match the project's `engines`
-  constraint (`>=22.0.0 <23.0.0`).
-- **Fix:** Install Node v22 LTS. Confirm with `node --version`. If you use a
-  version manager (nvm / fnm / asdf), switch to the v22 line.
+  constraint (`^22.0.0 || ^24.0.0` — Node 22 or 24 LTS).
+- **Fix:** Install Node 24 LTS (recommended) or Node 22 LTS. Confirm with
+  `node --version`. If you use a version manager (nvm / fnm / asdf), switch
+  to the v22 or v24 line — the repo's root `.nvmrc` pins Node 24
+  (currently `24.15.0`), so `nvm use` selects it automatically.
 
 ### `EACCES` / permission errors
 
@@ -33,6 +35,17 @@ section of the main README.
   by root inside `~/.npm` or the project's `node_modules`.
 - **Fix:** Delete the offending directory and re-run `pnpm install`. Don't
   use `sudo` with pnpm.
+
+### `node-pty` install fails / `posix_spawnp failed` at runtime (older macOS)
+
+- **Cause:** Your macOS version is older than **13.5**. The `node-pty`
+  dependency ships prebuilt native binaries that require macOS 13.5 or
+  newer; on older macOS the install fails to produce a working `node-pty`,
+  or you hit a runtime `Error: posix_spawnp failed` when a workflow starts
+  Claude Code.
+- **Fix:** Agentic HQ requires **macOS 13.5 or newer**. Check your version
+  with `sw_vers --productVersion`; if it is below 13.5, upgrade macOS or
+  use a machine that meets the floor.
 
 ---
 

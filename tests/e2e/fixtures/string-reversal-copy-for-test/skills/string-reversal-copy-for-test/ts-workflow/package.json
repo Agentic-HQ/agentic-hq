@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "engines": {
-    "node": ">=22.0.0"
+    "node": "^22.0.0 || ^24.0.0"
   },
   "// DYNAMIC-LINK-PATH": "The agentic-hq dependency uses link: protocol. The placeholder REPO_ROOT_PLACEHOLDER is replaced at test runtime with the real absolute path to the agentic-hq repo root.",
   "scripts": {
