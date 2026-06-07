@@ -12,10 +12,17 @@
 # must NOT be used — it makes pnpm treat the install as non-workspace and skip
 # this file's allowBuilds, causing strictDepBuilds to fail the install.
 #
-# Why these packages need build scripts:
+# Why these packages are listed:
 # - agentic-hq: local link: dependency with a postinstall (chmod fix for node-pty)
 # - node-pty:   compiles native binaries for PTY terminal emulation
 # - esbuild:    compiles native binaries for fast JS/TS bundling
+#
+# SECURITY (AHQ-152): https://agentic-hq.atlassian.net/browse/AHQ-152
+# Third-party native-binary deps (node-pty, esbuild) are set to `false` to BLOCK
+# their install/postinstall scripts and avoid supply-chain attacks. They ship
+# prebuilt binaries for every supported platform, so this is safe. agentic-hq is
+# kept `true`: it is FIRST-PARTY code and its postinstall applies the chmod fix
+# that node-pty's spawn-helper needs.
 #
 # See: https://pnpm.io/11.x/migration
 # =============================================================================
@@ -24,6 +31,14 @@ packages:
   - '.'
 
 allowBuilds:
-  agentic-hq: true
-  node-pty: true
-  esbuild: true
+  agentic-hq: true # AHQ-152: first-party (our code) — runs the chmod fix for node-pty
+  node-pty: false # AHQ-152: block third-party install scripts (prebuilt binaries used)
+  esbuild: false # AHQ-152: block third-party install scripts (prebuilt binaries used)
+
+# MINIMUM RELEASE AGE (AHQ-152): https://agentic-hq.atlassian.net/browse/AHQ-152
+# Supply-chain cooldown — refuse to resolve any version published < this many MINUTES
+# ago (10080 = 7 days). Matches the repo root. pnpm settings do NOT cascade across
+# nested pnpm-workspace.yaml boundaries, so each install root must set it explicitly.
+# Only affects new resolution (pnpm update / --no-frozen-lockfile); frozen installs are
+# unaffected. pnpm 11 already defaults this to 1440 (1 day); this extends it to 7 days.
+minimumReleaseAge: 10080

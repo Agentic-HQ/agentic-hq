@@ -115,6 +115,16 @@ pnpm --version
 
 If any of the steps above fail, see [Quick Start Troubleshooting](docs/user-docs/troubleshooting-quickstart.md).
 
+### Hello World CLI
+
+A tiny standalone CLI is included as a minimal example. Run it with:
+
+```bash
+pnpm hello
+```
+
+It prints `Hello World!!!` to standard output. Source: [`src/hello-world/`](src/hello-world).
+
 ### Create Your Own Workflow
 
 To create your own workflow run:

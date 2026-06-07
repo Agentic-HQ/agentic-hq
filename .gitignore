@@ -39,6 +39,8 @@ build/Release
 
 # Dependency directories
 node_modules/
+# Local pnpm store created during Codex analysis; never commit.
+.pnpm-store/
 
 # Lock files for package managers we don't use (project uses pnpm)
 package-lock.json
@@ -169,3 +171,7 @@ temp/
 
 # Playwright MCP development screenshots
 .playwright-mcp/
+
+# Python bytecode caches (e.g. from docs/.../doc-conversion-scripts utilities)
+__pycache__/
+*.py[cod]

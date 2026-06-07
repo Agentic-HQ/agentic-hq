@@ -325,7 +325,7 @@ Linear:
 
 ### Initial input string passed to Command 01
 
-The exact string the CLI will pass to `tool.execute(COMMAND_01, ...)`:
+The exact string the CLI will pass to `tool.execute(COMMAND_01_{DESCRIPTIVE_NAME}, ...)` (see the constant-naming convention below):
 
 ```
 {e.g. "The variables used in this workflow are: agentic-hq-workspace-root-dir=${agenticHqWorkspaceRoot}."}
@@ -334,17 +334,20 @@ The exact string the CLI will pass to `tool.execute(COMMAND_01, ...)`:
 ### Output handling
 
 {Describe what the CLI does with each command's output:
-- **Re-inject** (matches `create-workflow-cli.ts`): CLI ignores command outputs; each command receives the same constructed input string. Each command outputs `"Completed"` (or similar — value is unused).
+- **Re-inject** (matches `create-workflow-cli.ts`): the CLI constructs Command 01's input (from env vars / CLI params), then **captures Command 01's output** — a combined variables string — and re-injects that **same** string as the input to every subsequent command (02..N), **ignoring 02..N's outputs**. Note this means Command 01's output *is* used (it's the whole source of the broadcast string); only the later commands' outputs are ignored. Commands 02..N each output `"Completed"` (or similar — their return value is unused). Use when Command 01 establishes the full variable set and later commands are stateless w.r.t. each other (any gating done via filesystem state).
 - **Propagate** (matches math-workflow): CLI feeds each command's output as the next command's input. Each command outputs the variables it wants downstream commands to see.
 - **Hybrid** — describe per command.}
 
 ### Command name constants
 
-The CLI uses fully-qualified command paths of the form `/{plugin-id}:{workflow-id}:{NN-command-name}`. The `NN-` numbering prefix is part of the filename and MUST be included (otherwise Claude returns "Unknown skill"). Example:
+The CLI uses fully-qualified command paths of the form `/{plugin-id}:{workflow-id}:{NN-command-name}`. The `NN-` numbering prefix is part of the filename and MUST be included (otherwise Claude returns "Unknown skill").
+
+**Constant naming convention:** each constant name MUST carry **both the number and a descriptive name** — `COMMAND_{NN}_{DESCRIPTIVE_NAME}` (e.g. `COMMAND_01_TICKET_CREATOR`), NOT a bare `COMMAND_01`. This matches the real `create-workflow-cli.ts`, where the constants are `COMMAND_01_EXPLAIN_AND_GET_DETAILS`, `COMMAND_02_CONFIRM_AND_BUILD`, `COMMAND_03_RUN_CHECKS`, etc. The descriptive suffix makes the linear flow readable at the call sites. Example:
 
 ```typescript
-const COMMAND_01 = '/{plugin-id}:{workflow-id}:01-{command-name}';
-const COMMAND_02 = '/{plugin-id}:{workflow-id}:02-{command-name}';
+const COMMAND_01_{DESCRIPTIVE_NAME} = '/{plugin-id}:{workflow-id}:01-{command-name}';
+const COMMAND_02_{DESCRIPTIVE_NAME} = '/{plugin-id}:{workflow-id}:02-{command-name}';
+// … one per command, through the final command
 ```
 
 ---

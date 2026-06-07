@@ -12,10 +12,17 @@
 # (strictDepBuilds is true by default). Packages set to `true` in the
 # allowBuilds map are TRUSTED to run their build scripts.
 #
-# Why these packages need build scripts:
-# - node-pty: Compiles native binaries for PTY terminal emulation
-# - esbuild: Compiles native binaries for fast JS/TS bundling (used by tsx, vite, vitest)
-# - unrs-resolver: Native resolver for eslint-import-resolver-typescript
+# SECURITY (AHQ-152): https://agentic-hq.atlassian.net/browse/AHQ-152
+# All third-party deps below are set to `false` to BLOCK their install/postinstall
+# scripts and avoid supply-chain attacks (a malicious release would otherwise run
+# arbitrary code on `pnpm install`). This is safe: node-pty, esbuild and
+# unrs-resolver all ship prebuilt native binaries for every platform we support,
+# so blocking their build scripts changes nothing on a supported platform.
+#
+# Original "need build scripts" rationale (superseded — kept for context):
+# - node-pty: native binaries for PTY terminal emulation (now via bundled prebuilds)
+# - esbuild: native binaries for fast JS/TS bundling (now via @esbuild/<platform> pkg)
+# - unrs-resolver: native resolver for eslint-import-resolver-typescript (prebuilt pkg)
 #
 # See: https://pnpm.io/11.x/migration
 # =============================================================================
@@ -28,7 +35,14 @@ packages:
   # `pnpm install` run from its own directory (NOT --ignore-workspace).
   - '!.agentic-hq/plugins/**'
 
-allowBuilds:
-  node-pty: true
-  esbuild: true
-  unrs-resolver: true
+allowBuilds: { esbuild: false, node-pty: false, unrs-resolver: false }
+
+# MINIMUM RELEASE AGE (AHQ-152): https://agentic-hq.atlassian.net/browse/AHQ-152
+# Supply-chain "cooldown": refuse to resolve any dependency version published less
+# than this many MINUTES ago, giving the ecosystem time to detect and yank a
+# malicious release before we adopt it. 10080 = 7 days.
+# Note: pnpm 11 already defaults this to 1440 (1 day); we extend it to 7 days.
+# Only affects NEW resolution (pnpm update / --no-frozen-lockfile) — frozen installs
+# of the existing lockfile are unaffected. Use minimumReleaseAgeExclude for an urgent
+# hotfix that must bypass the wait.
+minimumReleaseAge: 10080

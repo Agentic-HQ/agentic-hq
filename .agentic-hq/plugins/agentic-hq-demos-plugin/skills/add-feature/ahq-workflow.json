@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "add-feature",
+  "shortId": "add-feature",
+  "description": "Add a feature to a codebase via a collaborative 7-step plan/execute/refactor/validate sequence",
+  "exampleParameters": "-- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-123",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

@@ -127,13 +127,32 @@ This preserves an immutable record of the approved implementation plan before bu
 For each command defined in the approved spec, create a `.md` file in `{commands-dir}/`.
 
 Each command file should follow this structure:
-- Introduction explaining what this command does
+- `## Intro To Give The Agent Context` — agent-facing context (see "#### The `## Intro To Give The Agent Context` section" below for the full convention — **required in every command of every workflow**)
 - `command-input-output-files-directory = $0`
-- Step 0a: Read Input (parse variables from command-input.json)
-- Step 0b: Establish Variables (full self-contained variable chain)
-- Steps 1-N: The actual work
+- `## Step 0a: Read Input` (parse variables from command-input.json)
+- `## Step 0b: Establish Variables` (full self-contained variable chain)
+- `## Step 1: Validate Input`, `## Step 2: Check Pre-requisites`, then `## Step 3…N` — the actual work
 - Write Output step
 - Self-Terminate step (`/agentic-hq-core-plugin:self-termination`)
+
+#### The `## Intro To Give The Agent Context` section (required in every command)
+
+Every command's opening section MUST be a heading literally titled `## Intro To Give The Agent Context`. This replaces the old free-form "introduction" paragraph and is **mandatory for every command in every workflow from now on**.
+
+**What it is — and is NOT:**
+- It is **context written for the agent** (the fresh Claude session running this command), **NOT** copy to be shown to the user. The wording addresses the agent ("Your responsibility is…", "You are the 3rd of 5 agents…").
+- It is **NOT an instruction or a Step**. `## Step 0a: Read Input` is the first actual step the agent performs. The Intro carries no numbered steps and no task instructions — those all live under the `## Step …` headings.
+
+**The point of it:** each command runs in a brand-new Claude session with no memory of the other commands. The Intro is what orients that fresh agent — it tells it what situation it has woken up into, where it sits in the overall chain (which agents ran before it and which come after), and what it is responsible for — *before* it starts doing any work. A well-written Intro is the difference between an agent that understands its place in the workflow and one that blindly follows steps.
+
+**Rules for every command's Intro:**
+- It **must begin with one sentence explaining what the workflow is and what system runs it** — what this whole workflow does, and that it is run by the **Agentic HQ framework, which automates AI command workflows** (chaining multiple Claude Code commands together so each agent does its part and hands its work on to the next). Keep this opening sentence the **same in every command** of the workflow, so a fresh agent — which has no memory of the other commands — always knows what it has woken up into.
+- It then states this agent's single responsibility, beginning "**As the &lt;Agent Name&gt; your responsibility is …**" — a crisp statement of the agent's single responsibility, naming the agent so a fresh session immediately knows which role it is playing (e.g. "As the Planner your responsibility is to work with the human to produce the Implementation Plan — the tests, and the minimal code those tests drive — without writing any production code yourself").
+- It then gives the background and where this agent sits in the flow: state the total count and this agent's position (e.g. "the **third** of 7 agents"), and name the agents immediately before and after it **together with what each contributes** — what the previous agent has handed this one, and what the next agent does with this one's output (e.g. "the Interrogator before you has established a shared understanding of the feature, and the Executor after you turns the plan you write into working code"). This hand-off framing orients the agent far better than a bare list of names.
+- It must contain **no** task instructions or numbered steps.
+- It **ends by instructing the agent to introduce itself to the user** with a **single sentence** describing its role.
+
+**Worked example — read this before writing your Intros:** `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature/03-planner.md` contains a complete, real `## Intro To Give The Agent Context` section that follows every rule above — its opening workflow + Agentic-HQ-framework sentence, its "As the Planner your responsibility is …" line, and its before/after hand-off framing. Read that file's Intro and mirror its shape for each command you build. (The inline examples in the bullets above are quoted verbatim from that file — keep them in sync if it changes.)
 
 Commands beyond the first should include a context-loading step that reads:
 - Previous command files (to understand the overall workflow)

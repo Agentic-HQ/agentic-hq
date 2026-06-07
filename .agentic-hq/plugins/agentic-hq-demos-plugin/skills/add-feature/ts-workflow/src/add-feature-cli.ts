@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+/**
+ * CLI: Add Feature — adds a single small feature to an existing codebase via a
+ * collaborative 7-agent sequence.
+ *
+ * Runs 7 commands sequentially:
+ *   01 — Ticket Creator        (optionally splits the feature; establishes ticket-id)
+ *   02 — Interrogator          (builds shared understanding of the feature)
+ *   03 — Planner               (produces the tests-first Implementation Plan)
+ *   04 — Executor              (executes the plan into working code)
+ *   05 — Refactoring Planner   (plans the refactoring)
+ *   06 — Refactoring Executor  (executes the approved refactors)
+ *   07 — Validator             (final double-check that the feature is Done)
+ *
+ * Re-inject / broadcast pattern (same as create-workflow-cli.ts): the CLI reads
+ * AGENTIC_HQ_WORKSPACE_ROOT, parses the passthrough params, and builds Command 01's
+ * input string. Command 01 returns the combined variables string (now guaranteed to
+ * carry ticket-id). That same string is captured as `allVariables` and re-injected
+ * into Commands 02-07, whose own outputs are ignored.
+ *
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-143
+ */
+
+import { Command } from 'commander';
+
+import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+
+const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME = 'AGENTIC_HQ_WORKSPACE_ROOT';
+const ERROR_EXIT_CODE_VALUE = 1;
+
+const DEFAULT_VERBOSITY = 'low';
+const DEFAULT_SUGGEST_LARGE_REFACTOR = 'false';
+
+const COMMAND_01_TICKET_CREATOR =
+  '/agentic-hq-demos-plugin:add-feature:01-ticket-creator';
+const COMMAND_02_INTERROGATOR =
+  '/agentic-hq-demos-plugin:add-feature:02-interrogator';
+const COMMAND_03_PLANNER =
+  '/agentic-hq-demos-plugin:add-feature:03-planner';
+const COMMAND_04_EXECUTOR =
+  '/agentic-hq-demos-plugin:add-feature:04-executor';
+const COMMAND_05_REFACTORING_PLANNER =
+  '/agentic-hq-demos-plugin:add-feature:05-refactoring-planner';
+const COMMAND_06_REFACTORING_EXECUTOR =
+  '/agentic-hq-demos-plugin:add-feature:06-refactoring-executor';
+const COMMAND_07_VALIDATOR =
+  '/agentic-hq-demos-plugin:add-feature:07-validator';
+
+const program = new Command();
+
+program
+  .name('add-feature-cli')
+  .description('Add a feature to a codebase via a collaborative 7-agent sequence')
+  .option('--verbosity <level>', 'How much each agent narrates (low | medium)', DEFAULT_VERBOSITY)
+  .option(
+    '--suggest-large-refactor <bool>',
+    'Whether the Refactoring Planner should also produce a large structural refactor suggestion',
+    DEFAULT_SUGGEST_LARGE_REFACTOR
+  )
+  .option('--ticket-id <id>', 'Existing ticket id; generated/obtained by Command 01 if omitted')
+  .action(
+    async (options: {
+      verbosity: string;
+      suggestLargeRefactor: string;
+      ticketId?: string;
+    }) => {
+      const agenticHqWorkspaceRoot = process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME];
+      if (!agenticHqWorkspaceRoot) {
+        console.error(
+          'Error: AGENTIC_HQ_WORKSPACE_ROOT environment variable is not set.'
+        );
+        process.exit(ERROR_EXIT_CODE_VALUE);
+      }
+
+      const tool = new DefaultClaudeCodeTool();
+
+      // Build Command 01's input string from the env var + parsed passthrough params.
+      // ticket-id is appended ONLY when supplied — Command 01 generates/obtains it otherwise.
+      let command01Input =
+        `The variables used in this workflow are: agentic-hq-workspace-root-dir=${agenticHqWorkspaceRoot}` +
+        ` and verbosity=${options.verbosity}` +
+        ` and suggest-large-refactor=${options.suggestLargeRefactor}`;
+      if (options.ticketId) {
+        command01Input += ` and ticket-id=${options.ticketId}`;
+      }
+
+      // Step 1: Command 01 establishes ticket-id and returns the combined variables string.
+      const allVariables = await tool.execute(COMMAND_01_TICKET_CREATOR, command01Input);
+
+      // Steps 2-7: broadcast the same string to each later command (ignore their outputs).
+      await tool.execute(COMMAND_02_INTERROGATOR, allVariables);
+      await tool.execute(COMMAND_03_PLANNER, allVariables);
+      await tool.execute(COMMAND_04_EXECUTOR, allVariables);
+      await tool.execute(COMMAND_05_REFACTORING_PLANNER, allVariables);
+      await tool.execute(COMMAND_06_REFACTORING_EXECUTOR, allVariables);
+      await tool.execute(COMMAND_07_VALIDATOR, allVariables);
+    }
+  );
+
+program.parse();
