@@ -1,13 +1,21 @@
-# Add Feature Workflow — User Help
+# Add Feature Detailed Example Workflow — User Help
 
-This is the main user help doc for the **Add Feature workflow**. It explains what the workflow is for,
-how it's structured, and the thinking behind how it works — the things worth understanding while you're
-running it (or just before). Each of the seven agents also has its own help doc, linked below. Open any
-of these in a Markdown-friendly viewer (e.g. VS Code).
+> **This workflow is a "worked example", not the recommended starting point for a developer new to Agentic HQ.** The detailed example add-feature
+> workflow is included as a worked example of a heavily customized development workflow. It is
+> intentionally opinionated around the creator's own process. **Most users should start with the simple
+> `add-feature` workflow** (`agentic-hq add-feature`), then customize that workflow to fit their own
+> process with `agentic-hq create-workflow --using=add-feature`. Use this detailed example to see how far
+> an Agentic HQ workflow can go once it has been shaped around one creator's personal way of building
+> software.
 
-## What The Add Feature Workflow Does
+This is the main user help doc for the **Add Feature Detailed Example workflow**. It explains what the
+workflow is for, how it's structured, and the thinking behind how it works — the things worth
+understanding while you're running it (or just before). Each of the seven agents also has its own help
+doc, linked below. Open any of these in a Markdown-friendly viewer (e.g. VS Code).
 
-The Add Feature workflow adds a **single, small feature** to an existing codebase, as a linear sequence
+## What The Add Feature Detailed Example Workflow Does
+
+The Add Feature Detailed Example workflow adds a **single, small feature** to an existing codebase, as a linear sequence
 of 7 collaborative AI agents. It is run by the **Agentic HQ framework**, which automates AI command
 workflows — chaining multiple Claude Code commands together so each agent does its part and hands its
 work on to the next.
@@ -44,7 +52,7 @@ important decision is recorded on disk rather than lost when an agent's context 
 Run the following command from the root directory of the project you want to add the feature to:
 
 ```
-agentic-hq add-feature -- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-123
+agentic-hq add-feature-detailed-example -- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-123
 ```
 
 All three parameters are **optional**:

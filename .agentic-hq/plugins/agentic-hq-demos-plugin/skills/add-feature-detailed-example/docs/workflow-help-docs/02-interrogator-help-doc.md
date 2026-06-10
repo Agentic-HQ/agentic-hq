@@ -1,6 +1,6 @@
 # 02 — Interrogator — Help
 
-This is the help doc for the **Interrogator**, the second of the seven agents in the Add Feature
+This is the help doc for the **Interrogator**, the second of the seven agents in the Add Feature Detailed Example
 workflow. The agent reads this doc when you run with `verbosity=medium` or say "Tell Me More", so it
 can explain its reasoning in more depth. You can also read it yourself in a Markdown-friendly viewer
 (e.g. VS Code) any time.
@@ -113,7 +113,7 @@ To avoid wasting your attention, this decision is **asymmetric**:
   (its recommendation, pre-selected) or **Don't Split**.
 
 If you split, the original ticket is rewritten as an **Epic** listing the Sub-Tasks, the workflow ends
-here, and you run the Add Feature workflow on each Sub-Task individually (stop the workflow with Ctrl-C
+here, and you run the Add Feature Detailed Example workflow on each Sub-Task individually (stop the workflow with Ctrl-C
 first). If you don't split, the AI records the decision and the workflow carries on to the Planner.
 
 ## What Happens Next

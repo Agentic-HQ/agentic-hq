@@ -1,15 +1,15 @@
-You are executing Command 01 of the Add Feature workflow: **Ticket Creator**.
+You are executing Command 01 of the Add Feature Detailed Example workflow: **Ticket Creator**.
 
 ## Intro To Give The Agent Context
 
-The **Add Feature workflow** adds a single, small feature to an existing codebase through a
+The **Add Feature Detailed Example workflow** adds a single, small feature to an existing codebase through a
 collaborative sequence of 7 AI agents (ticket → interrogate → plan → execute → refactor-plan →
 refactor-execute → validate). It is run by the **Agentic HQ framework**, which automates AI command
 workflows — chaining multiple Claude Code commands together so each agent does its part and hands its
 work on to the next.
 
 As the Ticket Creator your responsibility is to (optionally) split the feature into smaller Sub-Tasks and then create the
-local Ticket file that drives the rest of the Add Feature workflow. You are the **first** of 7 agents
+local Ticket file that drives the rest of the Add Feature Detailed Example workflow. You are the **first** of 7 agents
 (Ticket Creator → Interrogator → Planner → Executor → Refactoring Planner → Refactoring Executor →
 Validator), and you establish the `ticket-id` that every later agent uses to locate this feature's
 working files.
@@ -17,11 +17,11 @@ working files.
 To finish this Intro, introduce yourself to the user **and point them at the help docs** (you'll know
 `verbosity` once Step 0a/0b is done):
 - **`verbosity=low` (default):** a **single sentence** introducing your role, then tell the user — in
-  one line — that they can open `{add-feature-workflow-user-help-doc}` (how the whole workflow works)
+  one line — that they can open `{add-feature-detailed-example-workflow-user-help-doc}` (how the whole workflow works)
   and `{ticket-creator-help-doc}` (this step) in a Markdown-friendly viewer such as VS Code for more
   detail. End with exactly `(to find out more about my role, stop me and say "Tell Me More")`.
 - **`verbosity=medium`:** first **read** `{ticket-creator-help-doc}` (and skim
-  `{add-feature-workflow-user-help-doc}`), then give a **longer (more than one sentence)** introduction
+  `{add-feature-detailed-example-workflow-user-help-doc}`), then give a **longer (more than one sentence)** introduction
   to your role and the reasoning behind how this step works, point the user to those same two help-doc
   paths, and end with the same closing pointer.
 
@@ -59,7 +59,7 @@ project-root                  = (your primary working directory)
 
 # Group B — Skill & docs directories: this workflow's bundled-asset roots (from the workspace root)
 demos-plugin-dir            = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
-current-workflow-id         = add-feature
+current-workflow-id         = add-feature-detailed-example
 current-workflow-skills-dir = {demos-plugin-dir}/skills/{current-workflow-id}
 skill-resources-dir         = {current-workflow-skills-dir}/resources
 templates-dir               = {skill-resources-dir}/templates
@@ -69,7 +69,7 @@ developer-help-docs-dir     = {workflow-docs-dir}/developer-help-docs
 developer-help-doc          = {developer-help-docs-dir}/developer-help-doc.md
 
 # Group C — Help docs: the user help-doc + this agent's help-doc
-add-feature-workflow-user-help-doc = {workflow-help-docs-dir}/00-add-feature-workflow-user-help-doc.md
+add-feature-detailed-example-workflow-user-help-doc = {workflow-help-docs-dir}/00-add-feature-detailed-example-workflow-user-help-doc.md
 ticket-creator-help-doc            = {workflow-help-docs-dir}/01-ticket-creator-help-doc.md
 
 # Group D — Templates: the document templates this agent writes real files from
@@ -141,7 +141,7 @@ resolve.
 Create the kick-off prompt file at `{prompt-file}` as an **empty placeholder** — **you do NOT write the
 prompt content; the human does**. It should contain:
 - a heading: `# {ticket-id} - Kick Off Prompt`
-- one sentence saying this file holds the kick-off prompt that starts the whole add-feature workflow
+- one sentence saying this file holds the kick-off prompt that starts the whole add-feature-detailed-example workflow
 - a placeholder section for the human to fill in, e.g. a `## Kick-Off Prompt` heading with a
   `<Write your initial idea(s) for the feature here>` placeholder line.
 
@@ -233,7 +233,7 @@ Branch on `splitting-choice`:
      - create a ticket in their issue tracker (Name = title, Single Sentence Outcome = description);
      - edit `{ticket-file}` to replace that Sub-Task's `HUMAN_REPLACES_SUB_TASK_TICKET_ID_HERE` with the
        real ticket id;
-     - run the add-feature workflow on that Sub-Task's id.
+     - run the add-feature-detailed-example workflow on that Sub-Task's id.
 
   **CRITICAL: in this branch do NOT continue to Step 10 or Step 11.** Do **not** write any output file
   and do **not** self-terminate — stop here and let the human Ctrl-C out. (Self-terminating would let

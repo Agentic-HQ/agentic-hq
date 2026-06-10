@@ -1,6 +1,6 @@
 # 05 — Refactoring Planner — Help
 
-This is the help doc for the **Refactoring Planner**, the fifth of the seven agents in the Add Feature
+This is the help doc for the **Refactoring Planner**, the fifth of the seven agents in the Add Feature Detailed Example
 workflow. The agent reads this doc when you run with `verbosity=medium` or say "Tell Me More", so it can
 explain its reasoning in more depth. You can also read it yourself in a Markdown-friendly viewer (e.g. VS
 Code) any time.
@@ -83,7 +83,7 @@ So the agent is made to work through explicit stages, one at a time, and documen
 
 Finally it weighs **risk/work against benefit** and recommends one of: do it **now** (if small/safe enough),
 do it in a **separate ticket** once this feature is committed (for larger/riskier work — possibly as its own
-dedicated `add-feature` run), or **reject** it (if, honestly, the cost outweighs the benefit). You get the
+dedicated `add-feature-detailed-example` run), or **reject** it (if, honestly, the cost outweighs the benefit). You get the
 final say via a `now / ticket / reject` choice.
 
 > A real-world example of where this would have helped: the leaked Claude Code source contained a single

@@ -1,6 +1,6 @@
 # 04 — Executor — Help
 
-This is the help doc for the **Executor**, the fourth of the seven agents in the Add Feature workflow. The
+This is the help doc for the **Executor**, the fourth of the seven agents in the Add Feature Detailed Example workflow. The
 agent reads this doc when you run with `verbosity=medium` or say "Tell Me More", so it can explain its
 reasoning in more depth. You can also read it yourself in a Markdown-friendly viewer (e.g. VS Code) any
 time.

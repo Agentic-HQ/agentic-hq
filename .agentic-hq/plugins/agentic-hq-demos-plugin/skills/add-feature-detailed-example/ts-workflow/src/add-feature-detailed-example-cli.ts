@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
- * CLI: Add Feature — adds a single small feature to an existing codebase via a
- * collaborative 7-agent sequence.
+ * CLI: Add Feature Detailed Example — a worked example of a detailed, opinionated
+ * seven-stage add-feature workflow based on one creator's development process. It adds
+ * a single small feature to an existing codebase via a collaborative 7-agent sequence.
+ * (Most users should start with the simple `add-feature` workflow; this is the showcase
+ * of how far an AHQ workflow can be customised.)
  *
  * Runs 7 commands sequentially:
  *   01 — Ticket Creator        (optionally splits the feature; establishes ticket-id)
@@ -32,25 +35,27 @@ const DEFAULT_VERBOSITY = 'low';
 const DEFAULT_SUGGEST_LARGE_REFACTOR = 'false';
 
 const COMMAND_01_TICKET_CREATOR =
-  '/agentic-hq-demos-plugin:add-feature:01-ticket-creator';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:01-ticket-creator';
 const COMMAND_02_INTERROGATOR =
-  '/agentic-hq-demos-plugin:add-feature:02-interrogator';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:02-interrogator';
 const COMMAND_03_PLANNER =
-  '/agentic-hq-demos-plugin:add-feature:03-planner';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:03-planner';
 const COMMAND_04_EXECUTOR =
-  '/agentic-hq-demos-plugin:add-feature:04-executor';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:04-executor';
 const COMMAND_05_REFACTORING_PLANNER =
-  '/agentic-hq-demos-plugin:add-feature:05-refactoring-planner';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:05-refactoring-planner';
 const COMMAND_06_REFACTORING_EXECUTOR =
-  '/agentic-hq-demos-plugin:add-feature:06-refactoring-executor';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:06-refactoring-executor';
 const COMMAND_07_VALIDATOR =
-  '/agentic-hq-demos-plugin:add-feature:07-validator';
+  '/agentic-hq-demos-plugin:add-feature-detailed-example:07-validator';
 
 const program = new Command();
 
 program
-  .name('add-feature-cli')
-  .description('Add a feature to a codebase via a collaborative 7-agent sequence')
+  .name('add-feature-detailed-example-cli')
+  .description(
+    'Worked example of a detailed, opinionated seven-stage add-feature workflow based on one creator\'s development process'
+  )
   .option('--verbosity <level>', 'How much each agent narrates (low | medium)', DEFAULT_VERBOSITY)
   .option(
     '--suggest-large-refactor <bool>',

@@ -1,6 +1,6 @@
 # 01 — Ticket Creator — Help
 
-This is the help doc for the **Ticket Creator**, the first of the seven agents in the Add Feature
+This is the help doc for the **Ticket Creator**, the first of the seven agents in the Add Feature Detailed Example
 workflow. The agent reads this doc when you run with `verbosity=medium` or say "Tell Me More", so it
 can explain its reasoning in more depth. You can also read it yourself in a Markdown-friendly viewer
 (e.g. VS Code) any time.
@@ -29,8 +29,8 @@ communicate with any of those systems directly. Instead, every feature is identi
 itself is written as a **local Markdown file** under `docs/tickets/{ticket-id}/`. You can mirror that
 into your real tracker if you use one — or use the workflow with no tracker at all.
 
-If you do use an issue tracker system, create a new ticket on it, copy the ticket id and start the add-feature 
-workflow passing in that ticket id (see usage instructions in [00-add-feature-workflow-user-help-doc.md](00-add-feature-workflow-user-help-doc.md))
+If you do use an issue tracker system, create a new ticket on it, copy the ticket id and start the add-feature-detailed-example 
+workflow passing in that ticket id (see usage instructions in [00-add-feature-detailed-example-workflow-user-help-doc.md](00-add-feature-detailed-example-workflow-user-help-doc.md))
 
 If you don't pass `--ticket-id` when you start the workflow, the Ticket Creator offers two ways to get
 one:
@@ -171,7 +171,7 @@ seems to need lots of detail is a strong sign the feature should be **split**.
 
 - **If you split into an Epic**, the workflow ends here. You stop the workflow (Ctrl-C multiple times), create a ticket
   for each Sub-Task, replace each `HUMAN_REPLACES_SUB_TASK_TICKET_ID_HERE` placeholder with the real id,
-  and run the Add Feature workflow on each Sub-Task individually (some may split again).
+  and run the Add Feature Detailed Example workflow on each Sub-Task individually (some may split again).
 - **If you don't split**, you copy the ticket into your tracker (if you use one) and press Enter. The
   workflow continues to the **Interrogator** (agent 02), which builds a shared understanding of the
   feature and asks you any clarifying questions before the Planner plans the implementation.

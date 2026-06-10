@@ -1,4 +1,4 @@
-# Add Feature Workflow — Developer Help
+# Add Feature Detailed Example Workflow — Developer Help
 
 This Developer Help Doc has not been written yet — it will be created under a **future** Jira:
 

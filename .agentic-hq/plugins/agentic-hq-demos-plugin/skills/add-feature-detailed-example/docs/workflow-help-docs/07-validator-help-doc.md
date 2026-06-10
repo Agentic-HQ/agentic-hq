@@ -1,6 +1,6 @@
 # 07 — Validator — Help
 
-The Validator is the **seventh and final** of the add-feature workflow's 7 agents
+The Validator is the **seventh and final** of the add-feature-detailed-example workflow's 7 agents
 (Ticket Creator → Interrogator → Planner → Executor → Refactoring Planner → Refactoring Executor →
 **Validator**). The Refactoring Executor (06) before it has finished the code and the refactors; there is no
 agent after it. The Validator closes out the workflow once the human is happy the feature is Done.
@@ -67,4 +67,4 @@ the how-it-was-implemented summary and the per-Acceptance-Criterion list, the hu
 the tests / code / docs are all good, optionally does the manual and regression checks above, and then
 confirms they are happy. The agent **stops and waits** for that explicit confirmation — iterating on anything
 the human raises — and only then records it in the `Human Confirmation Of Done` section of the Validator
-Summary. Once that confirmation is recorded, the add-feature workflow is complete.
+Summary. Once that confirmation is recorded, the add-feature-detailed-example workflow is complete.

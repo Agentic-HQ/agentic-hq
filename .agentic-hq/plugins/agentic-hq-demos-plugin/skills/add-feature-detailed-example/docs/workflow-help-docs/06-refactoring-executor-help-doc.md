@@ -1,6 +1,6 @@
 # 06 — Refactoring Executor — Help
 
-The Refactoring Executor is the **sixth** of the add-feature workflow's 7 agents
+The Refactoring Executor is the **sixth** of the add-feature-detailed-example workflow's 7 agents
 (Ticket Creator → Interrogator → Planner → Executor → Refactoring Planner → **Refactoring Executor** →
 Validator). It is the partner of the Refactoring Planner (05): the Planner **decided** which refactors to
 do and got your approval; this agent **does them**. After it, the Validator (07) does the final check that

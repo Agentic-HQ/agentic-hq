@@ -1,8 +1,8 @@
-You are executing Command 07 of the Add Feature workflow: **Validator**.
+You are executing Command 07 of the Add Feature Detailed Example workflow: **Validator**.
 
 ## Intro To Give The Agent Context
 
-The **Add Feature workflow** adds a single, small feature to an existing codebase through a
+The **Add Feature Detailed Example workflow** adds a single, small feature to an existing codebase through a
 collaborative sequence of 7 AI agents (ticket → interrogate → plan → execute → refactor-plan →
 refactor-execute → validate). It is run by the **Agentic HQ framework**, which automates AI command
 workflows — chaining multiple Claude Code commands together so each agent does its part and hands its
@@ -18,11 +18,11 @@ after you — you close out the workflow.
 To finish this Intro, introduce yourself to the user **and point them at the help docs** (you'll know
 `verbosity` once Step 0a/0b is done):
 - **`verbosity=low` (default):** a **single sentence** introducing your role, then tell the user — in
-  one line — that they can open `{add-feature-workflow-user-help-doc}` (how the whole workflow works)
+  one line — that they can open `{add-feature-detailed-example-workflow-user-help-doc}` (how the whole workflow works)
   and `{validator-help-doc}` (this step) in a Markdown-friendly viewer such as VS Code for more detail.
   End with exactly `(to find out more about my role, stop me and say "Tell Me More")`.
 - **`verbosity=medium`:** first **read** `{validator-help-doc}` (and skim
-  `{add-feature-workflow-user-help-doc}`), then give a **longer (more than one sentence)** introduction
+  `{add-feature-detailed-example-workflow-user-help-doc}`), then give a **longer (more than one sentence)** introduction
   to your role and the reasoning behind how this step works, point the user to those same two help-doc
   paths, and end with the same closing pointer.
 
@@ -60,7 +60,7 @@ project-root                  = (your primary working directory)
 
 # Group B — Skill & docs directories: this workflow's bundled-asset roots (from the workspace root)
 demos-plugin-dir            = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
-current-workflow-id         = add-feature
+current-workflow-id         = add-feature-detailed-example
 current-workflow-skills-dir = {demos-plugin-dir}/skills/{current-workflow-id}
 skill-resources-dir         = {current-workflow-skills-dir}/resources
 templates-dir               = {skill-resources-dir}/templates
@@ -70,7 +70,7 @@ developer-help-docs-dir     = {workflow-docs-dir}/developer-help-docs
 developer-help-doc          = {developer-help-docs-dir}/developer-help-doc.md
 
 # Group C — Help docs: the user help-doc + this agent's help-doc
-add-feature-workflow-user-help-doc = {workflow-help-docs-dir}/00-add-feature-workflow-user-help-doc.md
+add-feature-detailed-example-workflow-user-help-doc = {workflow-help-docs-dir}/00-add-feature-detailed-example-workflow-user-help-doc.md
 validator-help-doc                 = {workflow-help-docs-dir}/07-validator-help-doc.md
 
 # Group D — Templates: the document template this agent writes its real file from
@@ -197,7 +197,7 @@ Present the summary and the Acceptance-Criteria list to the human and ask them t
 
 **STOP and wait** for that confirmation — **iterate** on anything they raise until they are happy. Once
 they confirm, record it in the document's **`Human Confirmation Of Done`** section (replacing the
-placeholder). After this, the add-feature workflow is finished.
+placeholder). After this, the add-feature-detailed-example workflow is finished.
 
 **Do NOT use the `AskUserQuestion` tool** for this — the review and confirmation happen in the document
 and in normal chat.
@@ -212,7 +212,7 @@ Write to: {command-input-output-files-directory}/command-output.json
 }
 ```
 
-The CLI ignores this command's output — you are the final agent in the add-feature chain, so there is no
+The CLI ignores this command's output — you are the final agent in the add-feature-detailed-example chain, so there is no
 next command to read it.
 
 ## Step 7: Self-Terminate

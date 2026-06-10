@@ -162,6 +162,9 @@ Recommendation:
 - Include it in `pnpm validate` or `pnpm validate:all`.
 - If you intentionally keep root `validate` fast, document clearly that `validate:all` is required before release.
 
+HUMAN COMMENT: Worth bearing in mind for the long run, but workflows are very undeterministic and hard to test mostly, so I wouldn't want automated tests for each of them.  I already have a (10 minutes long) slow test for the Jira TDD Quick workflow. I think that's enough for now.  So I won't be following this recommendation for the moment.
+
+
 ### 7. The launch trust story is hurt by broad auto-approved permissions
 
 You are honest about this in `README.md` and `docs/user-docs/WARNING-re-auto-approved-claude-permissions.md`, which is good.
@@ -184,6 +187,9 @@ Recommendation:
 - Make per-workflow permissions a launch-priority feature, not a later nicety.
 - At minimum, split "generic local-code workflows" from "Jira workflows" in the permission set.
 - Print the permission set before first run, or provide `agentic-hq explain-permissions <workflow>`.
+
+HUMAN COMMENT: Yes - pre public launch I think this needs to be considered seriously.  I'll find out from some private people first what they think and get "real" feedback from them about this.
+
 
 ### 8. The dev install story knowingly mutates global machine state
 

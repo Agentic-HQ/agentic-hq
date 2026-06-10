@@ -1,5 +1,5 @@
 ---
-description: Returns the command to run the add-feature TypeScript workflow
+description: Returns the command to run the add-feature-detailed-example TypeScript workflow
 disable-model-invocation: true
 ---
 
@@ -17,7 +17,7 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/add-feature-cli.ts"
+  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/add-feature-detailed-example-cli.ts"
 }
 ```
 Tell the user:

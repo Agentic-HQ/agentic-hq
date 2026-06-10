@@ -107,17 +107,16 @@ The Researcher works in `docs/tickets/{ticket-id}/workflow-files/01-feature-brie
 - Inspects the relevant code
 - Reads local project docs
 - Web/Perplexity Research section - Optionally: does external web or Perplexity research - only when local context is not enough to understand an external API, library, framework, standard, or domain concept. Any external research should be short, targeted, and recorded in the feature brief with source links or a short note about what was checked.  If no research required "Web/Perplexity Research" section just has a single short sentence explaining why none required.
-- Write up it's finding in a Research Findings section under the Human Prompt
+- Creates a section under the Human Prompt: "My Understanding of This Task" - Contains a paragraph (maximum 2) with its understanding of the task of implementing this feature (can refer to Research Finding for full details of anything it discovered)
+- Creates a section: "Research Findings" sections under the Human Prompt with the details of what it discovered that is relevant to the task/feature during research: e.g. relevant code, relevant docs, relevant constraints discovered, relevant web/Perplexity research results etc.
 
-If the Researcher needs answers from the Human, it writes questions into a section under the Research Findings section called:
+If the Researcher needs answers from the Human, it writes questions into a `Questions And Answer List` below the `Research Findings` section.
 
-`Questions And Answer List`
+It then pauses, and asks the human to answer by filling in the answers in the doc.
 
-then pauses, and asks the human to answer by filling in the answers in the doc.
+Questions should be usually be limited to 2-3, but for genuinely complex or underspecified feature up to 8 are acceptable.
 
-Questions should be bounded: usually 2-3, but up to roughly 8 when the feature is genuinely complex or underspecified. 
-
-Each question includes an `AI Recommendation` so the human gets a useful default rather than a blank decision.
+Each question must include an `AI Recommendation` which the human can default to by saying "Yes".
 
 Use this format inside `Questions And Answer List`:
 
@@ -128,12 +127,12 @@ Use this format inside `Questions And Answer List`:
 
 **AI Recommendation:** Start with Y only. It keeps this feature small, testable, and easier to validate in one run.
 
-**Human Answer:** 
+**Human Answer ('Yes' means follow AI Recommendation):** 
 ```
 NOTE: These questions and answers should never be edited or "Folded In" to the rest of the doc - they should be retained verbatim (they can have additional clarifications/update added if necessary).  Same for "Human Prompt" - should be preserved verbatim, and if AI deems necessary - can have UPDATES added to it.
 
 Once the human has answered, the Researcher reads the updated file and:
-- Optionally fixes/updates any parts of the Research Findings based on the answers, referring to the Question Index if necessary (don't duplicate answers - as that just creates extra, unnecessary reading for the human)
+- Optionally fixes/updates any parts of the "My Understanding of This Task" or "Research Findings" sections based on the answers, referring to the Question Index if necessary (don't duplicate text from answers - as that just creates extra, unnecessary reading for the human)
 - Does any additional work/research based on answers, and even asked more Questions if necessary - then updates Research Finding etc.
 
 Once it has everything it needs it adds to the top of the document the following:-

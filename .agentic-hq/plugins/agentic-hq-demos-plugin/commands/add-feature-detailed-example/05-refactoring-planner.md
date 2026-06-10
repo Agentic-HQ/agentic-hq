@@ -1,8 +1,8 @@
-You are executing Command 05 of the Add Feature workflow: **Refactoring Planner**.
+You are executing Command 05 of the Add Feature Detailed Example workflow: **Refactoring Planner**.
 
 ## Intro To Give The Agent Context
 
-The **Add Feature workflow** adds a single, small feature to an existing codebase through a
+The **Add Feature Detailed Example workflow** adds a single, small feature to an existing codebase through a
 collaborative sequence of 7 AI agents (ticket → interrogate → plan → execute → refactor-plan →
 refactor-execute → validate). It is run by the **Agentic HQ framework**, which automates AI command
 workflows — chaining multiple Claude Code commands together so each agent does its part and hands its
@@ -17,11 +17,11 @@ you carries out the refactors you propose here.
 To finish this Intro, introduce yourself to the user **and point them at the help docs** (you'll know
 `verbosity` once Step 0a/0b is done):
 - **`verbosity=low` (default):** a **single sentence** introducing your role, then tell the user — in
-  one line — that they can open `{add-feature-workflow-user-help-doc}` (how the whole workflow works)
+  one line — that they can open `{add-feature-detailed-example-workflow-user-help-doc}` (how the whole workflow works)
   and `{refactoring-planner-help-doc}` (this step) in a Markdown-friendly viewer such as VS Code for
   more detail. End with exactly `(to find out more about my role, stop me and say "Tell Me More")`.
 - **`verbosity=medium`:** first **read** `{refactoring-planner-help-doc}` (and skim
-  `{add-feature-workflow-user-help-doc}`), then give a **longer (more than one sentence)** introduction
+  `{add-feature-detailed-example-workflow-user-help-doc}`), then give a **longer (more than one sentence)** introduction
   to your role and the reasoning behind how this step works, point the user to those same two help-doc
   paths, and end with the same closing pointer.
 
@@ -59,7 +59,7 @@ project-root                  = (your primary working directory)
 
 # Group B — Skill & docs directories: this workflow's bundled-asset roots (from the workspace root)
 demos-plugin-dir            = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
-current-workflow-id         = add-feature
+current-workflow-id         = add-feature-detailed-example
 current-workflow-skills-dir = {demos-plugin-dir}/skills/{current-workflow-id}
 skill-resources-dir         = {current-workflow-skills-dir}/resources
 templates-dir               = {skill-resources-dir}/templates
@@ -69,7 +69,7 @@ developer-help-docs-dir     = {workflow-docs-dir}/developer-help-docs
 developer-help-doc          = {developer-help-docs-dir}/developer-help-doc.md
 
 # Group C — Help docs: the user help-doc + this agent's help-doc
-add-feature-workflow-user-help-doc = {workflow-help-docs-dir}/00-add-feature-workflow-user-help-doc.md
+add-feature-detailed-example-workflow-user-help-doc = {workflow-help-docs-dir}/00-add-feature-detailed-example-workflow-user-help-doc.md
 refactoring-planner-help-doc       = {workflow-help-docs-dir}/05-refactoring-planner-help-doc.md
 
 # Group D — Templates: the document templates agents write real files from
@@ -239,7 +239,7 @@ Determine whether a **large, structural** refactoring should be suggested. Check
   - **now** — small/safe enough to do as part of this work;
   - **ticket** — large/complex: recommend it be done in a **separate** refactoring ticket once this feature is
     committed (and, if large+complex, recommend producing a prompt file that could drive a future
-    `add-feature` run dedicated to this refactoring);
+    `add-feature-detailed-example` run dedicated to this refactoring);
   - **reject** — in your honest opinion the work and risk outweigh the benefit at this stage.
 
 ## Step 5: Write The Refactoring Plan

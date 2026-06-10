@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "add-feature-detailed-example",
+  "shortId": "add-feature-detailed-example",
+  "description": "Worked example of a detailed, opinionated seven-stage add-feature workflow based on one creator's development process",
+  "exampleParameters": "-- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-123",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

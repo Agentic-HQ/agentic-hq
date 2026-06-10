@@ -152,7 +152,7 @@ Every command's opening section MUST be a heading literally titled `## Intro To 
 - It must contain **no** task instructions or numbered steps.
 - It **ends by instructing the agent to introduce itself to the user** with a **single sentence** describing its role.
 
-**Worked example — read this before writing your Intros:** `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature/03-planner.md` contains a complete, real `## Intro To Give The Agent Context` section that follows every rule above — its opening workflow + Agentic-HQ-framework sentence, its "As the Planner your responsibility is …" line, and its before/after hand-off framing. Read that file's Intro and mirror its shape for each command you build. (The inline examples in the bullets above are quoted verbatim from that file — keep them in sync if it changes.)
+**Worked example — read this before writing your Intros:** `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature-detailed-example/03-planner.md` contains a complete, real `## Intro To Give The Agent Context` section that follows every rule above — its opening workflow + Agentic-HQ-framework sentence, its "As the Planner your responsibility is …" line, and its before/after hand-off framing. Read that file's Intro and mirror its shape for each command you build. (The inline examples in the bullets above are quoted verbatim from that file — keep them in sync if it changes.)
 
 Commands beyond the first should include a context-loading step that reads:
 - Previous command files (to understand the overall workflow)
