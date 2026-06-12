@@ -1,5 +1,7 @@
 # Naming And Shape Of The New Simple add-feature Workflow
 
+> **Build spec for AHQ-157.** This is `02-codex-new-simple-add-feature-workflow.md` with the agreed Decision Register changes from `06-fables-self-prompt-response.md` applied as minimal edits. Review the changes with: `git diff --no-index docs/jira-docs/AHQ-157/01-initial-chats/02-codex-new-simple-add-feature-workflow.md docs/jira-docs/AHQ-157/01-initial-chats/07-final-build-spec.md`
+
 ## Purpose
 
 This document expands the recommendation from the [main Codex report](01-codex-report-on-what-im-doing-wrong-etc.md): Agentic HQ should not launch with the current seven-agent, highly opinionated `add-feature` workflow as the universal default.
@@ -97,12 +99,23 @@ The README.md should just state that the human must provide a ticket id, and if 
 
 `agentic-hq add-feature -- --ticket-id=PROJ-123`
 
+### Stage Outcome Contract (Researcher → TypeScript Program)
+
+The TypeScript program builds the variables string itself (workspace root + ticket-id) and passes the **same string** to all four commands. The outputs of commands 02-04 are ignored. Command 01's (the Researcher's) returned output is the stage outcome: after trimming whitespace it must be exactly one of:
+
+- `CONTINUE_WORKFLOW` — the program proceeds to run agents 02, 03, 04 in order.
+- `TERMINATE_WORKFLOW` — the program prints a clear, friendly message (the workflow ended at the user's request following a split suggestion; rerun `add-feature` for each Sub-Task) and exits 0. Termination is a success path, not an error.
+- Any other value — the program prints an error **including the actual value received** and exits 1. No silent fallback.
+
+The Researcher must return one of the two values in **every** run, including the ordinary no-split happy path (which returns `CONTINUE_WORKFLOW`).
+
+The build must include behavioural tests for the TypeScript program using the existing fake-claude-cli fixture pattern from the test suite (no real Claude invocations), covering: the continue branch (all four commands invoked in order with the same variables string), the terminate branch (commands 02-04 never invoked; exit 0), an unexpected outcome value (exit 1, error names the received value), and a missing `AGENTIC_HQ_WORKSPACE_ROOT` (exit 1, clear message). This branch is the only real logic in the TypeScript program and requires no engine changes — the existing detailed-example CLI already receives each command's output string from `tool.execute(...)`.
 
 ### Agent 01: Researcher
 
 Responsibility: turn the human's feature request into `01-feature-brief.md` using bounded research, document-based clarification, and an explicit size decision.
 
-The Researcher works in `docs/tickets/{ticket-id}/workflow-files/01-feature-brief.md`. The human writes the initial request in a `Human Prompt` section, and the Researcher then:
+The Researcher works in `docs/tickets/{ticket-id}/workflow-files/01-feature-brief.md`. On start, if that file already exists with a non-empty `Human Prompt` section, the Researcher uses it. Otherwise the Researcher creates the directory and the file, asks the human in chat to describe the feature, and records the description verbatim into the `Human Prompt` section — the human never has to create directories or files by hand. The Researcher then:
 - Reads the Human Prompt
 - Inspects the relevant code
 - Reads local project docs
@@ -110,7 +123,7 @@ The Researcher works in `docs/tickets/{ticket-id}/workflow-files/01-feature-brie
 - Creates a section under the Human Prompt: "My Understanding of This Task" - Contains a paragraph (maximum 2) with its understanding of the task of implementing this feature (can refer to Research Finding for full details of anything it discovered)
 - Creates a section: "Research Findings" sections under the Human Prompt with the details of what it discovered that is relevant to the task/feature during research: e.g. relevant code, relevant docs, relevant constraints discovered, relevant web/Perplexity research results etc.
 
-If the Researcher needs answers from the Human, it writes questions into a `Questions And Answer List` below the `Research Findings` section.
+If the Researcher needs answers from the Human, it writes questions into a `Questions And Answers` section below the `Research Findings` section.
 
 It then pauses, and asks the human to answer by filling in the answers in the doc.
 
@@ -118,7 +131,7 @@ Questions should be usually be limited to 2-3, but for genuinely complex or unde
 
 Each question must include an `AI Recommendation` which the human can default to by saying "Yes".
 
-Use this format inside `Questions And Answer List`:
+Use this format inside `Questions And Answers`:
 
 ```markdown
 ### Question 1
@@ -145,7 +158,7 @@ and adds to the bottom of the file:
 - Relevant Files Reviewed (order by decreasing relevance)
 - Open Assumptions
 
-The Researcher then decides whether the feature is a good size for one run. If it is, the feature brief does not include `Split Suggestion`; the Planner ends and the workflow continues to the Planner.
+The Researcher then decides whether the feature is a good size for one run. If it is, the feature brief does not include `Split Suggestion`; the Researcher ends, returns `CONTINUE_WORKFLOW` to the TypeScript workflow program, and the workflow continues to the Planner.
 
 If the feature is obviously too large/complex to do easily in one hit, the Researcher pauses, explains why, and add to the end of `01-feature-brief.md` a `Split Suggestion` section. That section suggests 2-6 smaller Sub-Tasks, usually with an early or first slice labelled `Tracer Bullet / Walking Skeleton` when that framing fits. It then tell the human the following (the Why and Split Suggestion must be updated depending on the situation):
 
@@ -187,7 +200,7 @@ If the human chooses option 2:
 - Important information from human in chat should be added as UPDATE entries to their Human Prompt - quoting them verbatim.
 
 
-#### Things Planner Does Not Do That add-feature-detailed-example Did
+#### Things The Researcher Does Not Do That add-feature-detailed-example Did
 
 - Design the implementation or do deep implementation planning.  It's main focus is on researching what code exists that is already relevant to the feature, and (minimally and at a a high level) how it could be changed to implement the feature.
 - Create an Epic/Sub-Task system or actual Sub-Task artifacts.
@@ -238,12 +251,13 @@ Implementer starts by re-reading the approved implementation plan. It writes or 
 
 Implementer follows the approved plan. It implements planned work only. If implementation reveals useful work outside the plan, it records that as a follow-up.
 
+If the planned tests will not go green within the scope of the approved plan, Implementer keeps iterating within plan scope; if still blocked, it stops and asks the human to agree a plan change (recorded as an UPDATE in `02-implementation-plan.md` and under Approved Deviations From The Plan) rather than deviating silently. Implementer never weakens, deletes, or skips a failing test to make it pass — a failing test is information for the human, not an obstacle for the agent.
+
 At the end, Implementer writes `docs/tickets/{ticket-id}/workflow-files/03-implementation-summary.md` with the following sections:
 
 - Summary Of Work Done
 - Files Changed/Added/Deleted
-- Tests Added/Updated And Test Results
-- Manual Testing Done By AI (e.g. running CLI manually to test it - "None" if none)
+- Tests Added/Updated And Test Results (include any manual testing done by AI, e.g. running the CLI by hand to test it)
 - Approved Deviations From The Plan ("None" in none)
 - Out Of Plan Follow-up Ideas/Concerns ("None" in none)
 
@@ -253,6 +267,7 @@ Teams that want more ceremony can later split this stage into more granular stag
 
 - Broaden scope beyond the approved plan.
 - Deviate from the plan without stopping and getting human consent to modify the plan.
+- Weaken, delete, or skip failing tests to force a pass.
 
 ### Agent 04: Reviewer
 
@@ -291,8 +306,8 @@ Short outcome summary.
 | Test evidence | Exact command, automated test, or manual check and result | Pass / Fail / Not run | Do now / defer / do nothing |
 | Regression coverage gaps | Changed areas reviewed; where regression tests were missing or insufficient; suggested concrete tests | Good enough / Weak / Missing | Do now / defer / do nothing |
 | Highest-risk changed area | Specific changed file, behavior, or dependency, and why it is the riskiest part of the change | Low / Medium / High, with reason | Do now / defer / do nothing |
-| Improvement suggestion 1 | Specific possible improvement | Worth doing / not worth it, with reason | Do now / defer / do nothing |
-| Improvement suggestion 2 | Specific possible improvement | Worth doing / not worth it, with reason | Do now / defer / do nothing |
+| Improvement suggestion 1 (RECOMMENDED) | Specific possible improvement | Worth doing / not worth it, with reason | Do now / defer / do nothing |
+| Improvement suggestion 2 (NOT RECOMMENDED) | Specific possible improvement | Worth doing / not worth it, with reason | Do now / defer / do nothing |
 
 ## Selected Fixes Applied
 
@@ -311,7 +326,7 @@ Record the human's final decision.
 If this workflow was useful but too minimal, customize it for your own process. Recommended next step: run `agentic-hq create-workflow --using=add-feature` to make a copy and add your own stages, rules, and approval gates. To see a worked example of a very detailed personal workflow, inspect or try out `agentic-hq add-feature-detailed-example`.
 
 ```
-The table must include all acceptance criteria, one test evidence row, one regression coverage gaps row, one highest-risk changed area row, and at least two possible improvement suggestions. The regression coverage gaps row must not merely repeat the test commands. It must name the changed areas Reviewer inspected; if regression coverage is missing or weak, it must suggest concrete tests; if it is good enough, it must explain why. If Reviewer cannot point to evidence, it must say `Not validated`. If it recommends "do nothing", it must explain why the risk/cost does not justify more work.
+The table must include all acceptance criteria, one test evidence row, one regression coverage gaps row, one highest-risk changed area row, and at least two possible improvement suggestions. Each improvement suggestion's Area label must end with `(RECOMMENDED)` or `(NOT RECOMMENDED)` so the human can quickly skip the ones that are not recommended. The regression coverage gaps row must not merely repeat the test commands. It must name the changed areas Reviewer inspected; if regression coverage is missing or weak, it must suggest concrete tests; if it is good enough, it must explain why. If Reviewer cannot point to evidence, it must say `Not validated`. If it recommends "do nothing", it must explain why the risk/cost does not justify more work.
 
 
 
@@ -354,11 +369,11 @@ Being kept, but simplifing:
 - Splitting/decomposition: reduce to "this is too big; here are 2-6 informal slice suggestions; recommended action is to stop and rerun add-feature for each smaller slice" rather than more complex Epic/Sub-Task handling.
 - TDD: present test-first as the recommended safe path, not as a mandatory doctrine.
 - Scope discipline: Implementer follows the approved plan and implements planned work only. No refactoring stage. If the human wants a refactor phase, they add it using `agentic-hq create-workflow --using=add-feature`.  Reviewer fixes missing requirements or missing/limited tests or anything else that is broken.
-- Research: allow permitted if necessary
+- External research: allowed when local context is insufficient, but bounded and recorded.
 
 ## What Gets Ditched From The Simple Workflow
 
-The following elements of add-workflow-detailed-example are being ditched in this simple add-feature workflow:
+The following elements of add-feature-detailed-example are being ditched in this simple add-feature workflow:
 
 - Seven mandatory agents.
 - Separate initial discovery stages.
@@ -366,9 +381,9 @@ The following elements of add-workflow-detailed-example are being ditched in thi
 - Epic/Sub-Task ticket rewriting.
 - Long project design requirements audit.
 - English Language Description appendix.
-- Acceptance criteria audit table.
+- Acceptance criteria audit table (replaced by the Reviewer's slimmer Evidence And Recommendations table).
 - Heavy TDD terminology.
-- Instructions to hit Ctrl-C multiple times to control branching.
+- Instructions to hit Ctrl-C multiple times to control branching (replaced by the Stage Outcome Contract).
 - Wording that implies Steve's design philosophy is the default requirement.
 
 ## Proposed File Layout
@@ -406,4 +421,3 @@ agentic-hq add-feature-detailed-example -- --verbosity=low --suggest-large-refac
 ```
 
 This makes the difference obvious without apologizing for the detailed example workflow or implying most users should adopt it directly.
-
