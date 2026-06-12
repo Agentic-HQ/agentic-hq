@@ -1,5 +1,7 @@
 # Fable's Response: Independent Assessment
 
+> **Comment doc only — NOT part of the spec for the add-feature build (AHQ-157).** The build input is `07-final-build-spec.md` and nothing in this document overrides it. This is Fable's independent audit, kept for its context and strategy value. Its spec findings (S1–S8) were all resolved via a Decision Register and applied to 07; the F-findings carry Steve's decisions inline below. See `05-06-docs-summarised.md` for what happened to the intermediate docs.
+
 ## Scope And Method
 
 This response is based on my own exploration of the repository on `main` (after the AHQ-155 rename was merged as PR #36), not on trusting Codex's report. I read the Codex report (01), your notes (01b), the new workflow spec (02), and your prompt with the two-phase launch update (03). I then independently verified the load-bearing claims:

@@ -1,6 +1,6 @@
 # Naming And Shape Of The New Simple add-feature Workflow
 
-> **Build spec for AHQ-157.** This is `02-codex-new-simple-add-feature-workflow.md` with the agreed Decision Register changes from `06-fables-self-prompt-response.md` applied as minimal edits. Review the changes with: `git diff --no-index docs/jira-docs/AHQ-157/01-initial-chats/02-codex-new-simple-add-feature-workflow.md docs/jira-docs/AHQ-157/01-initial-chats/07-final-build-spec.md`
+> **Build spec for AHQ-157.** This is the Codex spec (formerly `02-codex-new-simple-add-feature-workflow.md`, renamed to this file) with the agreed Decision Register changes applied as minimal edits. (The register lived in `06-fables-self-prompt-response.md`, since deleted — see `05-06-docs-summarised.md`; original in git history.)
 
 ## Purpose
 
@@ -9,7 +9,7 @@ This document expands the recommendation from the [main Codex report](01-codex-r
 The new recommendation is:
 
 - `agentic-hq add-feature` should be a simple flagship starter workflow (Jira created: https://agentic-hq.atlassian.net/browse/AHQ-157 - "Create Minimal add-feature Workflow")
-- The current seven-agent workflow should become `add-feature-detailed-example`: a detailed, opinionated worked example of a highly personalized workflow, not a recommended escalation path for most users. (Jira created: https://agentic-hq.atlassian.net/browse/AHQ-155 "Rename add-feature Workflow To add-feature-detailed-example")
+- The current seven-agent workflow should become `add-feature-detailed-example`: a detailed, opinionated worked example of a highly personalized workflow, not a recommended escalation path for most users. (COMPLETED: https://agentic-hq.atlassian.net/browse/AHQ-155 "Rename add-feature Workflow To add-feature-detailed-example" — merged to main)
 - `create-workflow --using=add-feature` should be added before launch as the supported workflow-customization path and suggested to users when they complete the simple add-feature workflow (Jira created: https://agentic-hq.atlassian.net/browse/AHQ-159 - "Add --using Option To create-workflow To Allow It To Use Existing Workflow")
 
 ## One-Line Summary
@@ -104,18 +104,18 @@ The README.md should just state that the human must provide a ticket id, and if 
 The TypeScript program builds the variables string itself (workspace root + ticket-id) and passes the **same string** to all four commands. The outputs of commands 02-04 are ignored. Command 01's (the Researcher's) returned output is the stage outcome: after trimming whitespace it must be exactly one of:
 
 - `CONTINUE_WORKFLOW` — the program proceeds to run agents 02, 03, 04 in order.
-- `TERMINATE_WORKFLOW` — the program prints a clear, friendly message (the workflow ended at the user's request following a split suggestion; rerun `add-feature` for each Sub-Task) and exits 0. Termination is a success path, not an error.
+- `TERMINATE_WORKFLOW` — the program prints exactly "Got TERMINATE_WORKFLOW response from agent. Terminating workflow." and exits 0. Termination is a success path, not an error. The Researcher explains everything to the user (why the workflow ended, rerunning `add-feature` for each Sub-Task) before returning this value — none of that logic or reasoning is duplicated into the TypeScript code.
 - Any other value — the program prints an error **including the actual value received** and exits 1. No silent fallback.
 
 The Researcher must return one of the two values in **every** run, including the ordinary no-split happy path (which returns `CONTINUE_WORKFLOW`).
 
-The build must include behavioural tests for the TypeScript program using the existing fake-claude-cli fixture pattern from the test suite (no real Claude invocations), covering: the continue branch (all four commands invoked in order with the same variables string), the terminate branch (commands 02-04 never invoked; exit 0), an unexpected outcome value (exit 1, error names the received value), and a missing `AGENTIC_HQ_WORKSPACE_ROOT` (exit 1, clear message). This branch is the only real logic in the TypeScript program and requires no engine changes — the existing detailed-example CLI already receives each command's output string from `tool.execute(...)`.
+No tests for individual TypeScript workflow code (for now) — workflow CLIs are mind-numbingly simple and none of the existing ones have tests; this can be revisited later if deemed a good idea. Verification is by actually running the workflow. This branch is the only real logic in the TypeScript program and requires no engine changes — the existing detailed-example CLI already receives each command's output string from `tool.execute(...)`.
 
 ### Agent 01: Researcher
 
 Responsibility: turn the human's feature request into `01-feature-brief.md` using bounded research, document-based clarification, and an explicit size decision.
 
-The Researcher works in `docs/tickets/{ticket-id}/workflow-files/01-feature-brief.md`. On start, if that file already exists with a non-empty `Human Prompt` section, the Researcher uses it. Otherwise the Researcher creates the directory and the file, asks the human in chat to describe the feature, and records the description verbatim into the `Human Prompt` section — the human never has to create directories or files by hand. The Researcher then:
+The Researcher works in `docs/tickets/{ticket-id}/workflow-files/01-feature-brief.md`. As a verification check near the start, that file must not exist: if it does, that's a signal the whole workflow is being run again for this ticket-id — the Researcher must flag this and ask the human what to do before proceeding. The Researcher creates the directory and the file with the empty `Human Prompt` section if they don't exist. The human writes the initial request in a `Human Prompt` section, and the Researcher then:
 - Reads the Human Prompt
 - Inspects the relevant code
 - Reads local project docs
@@ -199,16 +199,6 @@ If the human chooses option 2:
 - Substantive questions must go in the Q&A section of the file, not chat. Quick approvals/choices in chat are fine, but must be recorded in the doc.
 - Important information from human in chat should be added as UPDATE entries to their Human Prompt - quoting them verbatim.
 
-
-#### Things The Researcher Does Not Do That add-feature-detailed-example Did
-
-- Design the implementation or do deep implementation planning.  It's main focus is on researching what code exists that is already relevant to the feature, and (minimally and at a a high level) how it could be changed to implement the feature.
-- Create an Epic/Sub-Task system or actual Sub-Task artifacts.
-- Force issue-tracker behavior.
-- Do open-ended research or broad investigation.
-
-Those heavier behaviors belong in `add-feature-detailed-example`, or in customized workflows that add richer ticketing, decomposition, or issue-tracker sync.
-
 ### Agent 02: Planner
 
 Responsibility: turn `01-feature-brief.md` into an approved `02-implementation-plan.md` before any code is written.
@@ -236,13 +226,6 @@ Planner ends by asking for human approval before code is written and recording i
 - Write code or change files.
 - Move on without explicit Human Approval and it being recorded in Human Approval Confirmation section.
 
-#### Things that are in the add-feature-detailed-example workflow that we aren't doing here:
-
-- Write long appendices.
-- Do a full project design requirements audit.
-- Add English Language Description ceremony.
-- Use mandatory TDD terminology if the user has not opted into it.
-
 ### Agent 03: Implementer
 
 Responsibility: implement the approved plan with appropriate tests and record exactly what was done and what changed in `03-implementation-summary.md`.
@@ -258,8 +241,8 @@ At the end, Implementer writes `docs/tickets/{ticket-id}/workflow-files/03-imple
 - Summary Of Work Done
 - Files Changed/Added/Deleted
 - Tests Added/Updated And Test Results (include any manual testing done by AI, e.g. running the CLI by hand to test it)
-- Approved Deviations From The Plan ("None" in none)
-- Out Of Plan Follow-up Ideas/Concerns ("None" in none)
+- Approved Deviations From The Plan ("None" if none)
+- Out Of Plan Follow-up Ideas/Concerns ("None" if none)
 
 Teams that want more ceremony can later split this stage into more granular stages with `create-workflow --using=add-feature`, but the simple workflow keeps implementation in one focused pass.
 
@@ -345,7 +328,7 @@ The table must include all acceptance criteria, one test evidence row, one regre
 | Universal for developers | Uses local Markdown files and repo-native tests; no Jira, Linear, GitHub Issues, or specific design method required. |
 | Demonstrates AHQ | Still shows fresh context per stage and artifact handoff, without overwhelming the first run. |
 
-## What Gets Kept From The Current Add Feature Workflow (Which Is Being Renamed To `add-feature-detailed-example`)
+## What Gets Kept From The Old Add Feature Workflow (Which Has Been Renamed To `add-feature-detailed-example`)
 
 The AI creating this workflow should read the Commands, the Docs and the Typescript code from the add-feature-detailed-example workflow and use similar file naming, organisation etc - but obviously with the changes/simplications detailed in this file.
 
