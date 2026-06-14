@@ -151,12 +151,11 @@ Once the human has answered, the Researcher reads the updated file and:
 Once it has everything it needs it adds to the top of the document the following:-
 - One Sentence Outcome
 - User Story (Optional)
-- Acceptance Criteria
 
-and adds to the bottom of the file:
+and adds to the bottom of the file (in this order, with Acceptance Criteria as the **very last section in the document**):
 
 - Relevant Files Reviewed (order by decreasing relevance)
-- Open Assumptions
+- Acceptance Criteria — a **short, scannable checklist** (~3–5 one-line bullets) of the **key, observable outcomes** that mean the feature is done. It is a quick checklist, **not** a re-spec: most of this detail is already in the Human Prompt and Questions And Answers, so it must not be restated at length (that just tires the human). Each bullet states *what* is observably true, not *how* it is built — file names, paths, code seams, and script names are the Planner's job. Merge near-duplicate bullets (e.g. the unit- and e2e-test versions of one requirement) into one.
 
 The Researcher then decides whether the feature is a good size for one run. If it is, the feature brief does not include `Split Suggestion`; the Researcher ends, returns `CONTINUE_WORKFLOW` to the TypeScript workflow program, and the workflow continues to the Planner.
 
@@ -176,12 +175,12 @@ Split Suggestion:
 3. Add persistence or integration behavior.
 
 Recommendation: terminate this workflow and split the feature.
-
-Options:
-1. Terminate workflow and split feature. Recommended.
-2. Continue with oversized feature implementation. Not recommended.
 ```
-Option 1 is the default (if they hit Enter).
+
+The human then chooses **using the `AskUserQuestion` tool** (not a plain-text menu). Supply exactly two options, with **Option 1 listed first and its label ending `(Recommended)`** so it is the recommended, default-highlighted choice:
+
+1. Terminate workflow and split feature `(Recommended)`.
+2. Continue with oversized feature implementation.
 
 If the human chooses option 1:
 - the agent changes the "Split Suggestion" -> "Split Suggestion (Accepted)" and records at the top of that section that Researcher flagged the feature as oversized, recommended termination/splitting, and that the human accepted the suggestion and terminated the workflow, and will perform each Sub-Task as a single feature implementation.
@@ -203,21 +202,21 @@ If the human chooses option 2:
 
 Responsibility: turn `01-feature-brief.md` into an approved `02-implementation-plan.md` before any code is written.
 
-Planner starts by reading the finalized feature brief and inspecting the most relevant code. It then decides the minimum useful implementation approach and the minimum useful tests. If the Researcher recorded a `Split Suggestion` because the human chose to continue with an oversized feature, Planner may use that split as sequencing guidance, but not as actual Sub-Task artifacts.
+Planner starts by reading the finalized feature brief and inspecting the most relevant code. It then decides the minimum useful implementation approach and the minimum useful tests needed to satisfy the brief's acceptance criteria (and anything else the brief specifies). If the Researcher recorded a `Split Suggestion` because the human chose to continue with an oversized feature, Planner may use that split as sequencing guidance, but not as actual Sub-Task artifacts.
 
 Planner writes `docs/tickets/{ticket-id}/workflow-files/02-implementation-plan.md`. The plan should stay compact and include the following sections:
 
-- Tests Being Created
+- Tests Being Created (where a test links to an acceptance criterion, make that link explicit)
 - Implementation Changes
 - Risks/Unknowns/Concerns (say "None" if none)
 - Follow-up Ideas (say "None" if none)
 - Human Approval Confirmation
 
-Planner should recommend test-first when that is the safest path, but phrase it pragmatically rather than as a doctrine:
+Planner should plan and sequence the work **test-first** when that makes sense to the Planner and the human — phrased pragmatically, not as a doctrine, and not a hard requirement. If test-first is chosen, the plan includes a brief justification and sequences the work as RED → GREEN: write/run the planned tests first to confirm they fail (RED), implement the changes, then run the code to confirm they pass (GREEN). If the human rejects the TDD element of the plan, the Planner works with them to satisfy their preferences.
 
-> The safest path is to write/confirm these tests first.
+If no automated test is practical, Planner should say so explicitly and define a concrete manual validation step (that the human or the Implementer can run) instead.
 
-If no automated test is practical, Planner should say so and define a manual validation step.
+The plan must explicitly state that it does **not** include the third REFACTOR stage of TDD: that would involve changing the implementation and adds too much complexity for this simple add-feature workflow. A team that wants a refactor step should add a Refactor agent to its own customized version of the workflow.
 
 Planner ends by asking for human approval before code is written and recording it in Human Approval Confirmation when given. Teams that want stricter methodology can later customize this stage to add design audits, stronger TDD rules, or architecture review.
 
@@ -230,7 +229,7 @@ Planner ends by asking for human approval before code is written and recording i
 
 Responsibility: implement the approved plan with appropriate tests and record exactly what was done and what changed in `03-implementation-summary.md`.
 
-Implementer starts by re-reading the approved implementation plan. It writes or updates the planned tests, and where appropriate runs them first to confirm they fail for the expected reason. It then implements the minimum code needed for the approved feature, runs the planned tests, and runs a quick validation command if one exists.
+Implementer starts by reading the approved implementation plan. It writes or updates the planned tests, and where appropriate runs them first to confirm they fail for the expected reason. It then implements the minimum code needed for the approved feature, runs the planned tests, and runs a quick validation command if one exists.
 
 Implementer follows the approved plan. It implements planned work only. If implementation reveals useful work outside the plan, it records that as a follow-up.
 
@@ -243,14 +242,30 @@ At the end, Implementer writes `docs/tickets/{ticket-id}/workflow-files/03-imple
 - Tests Added/Updated And Test Results (include any manual testing done by AI, e.g. running the CLI by hand to test it)
 - Approved Deviations From The Plan ("None" if none)
 - Out Of Plan Follow-up Ideas/Concerns ("None" if none)
+- Approval Gate Changes — added only if the Approval Gate discussion (below) results in code changes: what was discussed, what was changed, and why
+
+#### Implementor Approval Gate
+
+Before the command ends, the Implementer pauses for a brief human approval gate. The rationale: if the human sees problems with the code or has questions, the best agent to explain *why* it was built the way it was is the agent that actually built it — not the downstream Reviewer, which did not make the change and so understands it less well. This keeps the workflow fast (on most runs the human simply presses Enter to approve) while giving one cheap checkpoint with the implementing agent still in context. It is a deliberately light touch for this minimal workflow; teams wanting heavier gates add them via `create-workflow --using=add-feature`.
+
+Once the code is implemented, the tests are green, and `03-implementation-summary.md` is written, the Implementer gives the human a short recap plus the path to the summary and the changed files, then asks via `AskUserQuestion`:
+
+- **Implementation Approved** — the default, selected if the human simply presses Enter: the command finishes and hands on to the Reviewer.
+- **Implementation Not Approved - Discuss Further** — the Implementer asks the human what they would like to discuss or change, and works through it with them: answering questions about what was done and why, and making any requested changes. Changes within the approved plan's scope are made directly; a change that deviates from the approved plan is treated as a human-consented plan change (recorded as an UPDATE in `02-implementation-plan.md` and under Approved Deviations From The Plan). A failing test is still never weakened, deleted, or skipped.
+
+If the discussion results in any changes to the code, the Implementer adds a new "Approval Gate Changes" section to `03-implementation-summary.md` detailing what was discussed, what was changed, and why. The Approval Gate `AskUserQuestion` is then repeated, and keeps repeating until explicit human approval is obtained — the command must not end without it.
+
+
+#### Note On This Agent (Don't Include In Implementer Agent)
 
 Teams that want more ceremony can later split this stage into more granular stages with `create-workflow --using=add-feature`, but the simple workflow keeps implementation in one focused pass.
 
 #### Must Not Do
 
-- Broaden scope beyond the approved plan.
+- Broaden scope beyond the approved plan without explicit Human approval.
 - Deviate from the plan without stopping and getting human consent to modify the plan.
 - Weaken, delete, or skip failing tests to force a pass.
+- End the command without explicit Human Approval at the Approval Gate
 
 ### Agent 04: Reviewer
 
@@ -258,9 +273,9 @@ Responsibility: perform a concise code review, write `04-review-summary.md`, and
 
 Reviewer starts by reading the feature brief, implementation plan, implementation summary, and the actual changed files. It reviews the work like a pragmatic senior developer: did the intended behavior ship, were the tests and regression checks good enough, what is the risk of this change, and what could be improved?
 
-Reviewer is not allowed to fix issues silently. It first writes `04-review-summary.md` with findings, risks, and improvement suggestions. Then it asks the human: "Do you want me to fix any of this?"
+Reviewer is not allowed to fix issues silently. It first writes `04-review-summary.md` with its findings, risks, and improvement suggestions, split into a **Checks Passed** table (things that are fine, no `Fix?` column) and a **Potential Fixes** table (things that could be fixed or improved, with a `Fix?` column). The human then chooses what to fix by editing the file: they write `Yes` in the `Fix?` column of any Potential Fixes row they want fixed now, save, and say "done".
 
-If the human says yes, Reviewer agrees a small fix plan with the human, applies only the selected fixes, runs the relevant checks, and records what it changed in `04-review-summary.md`. If the human says no, Reviewer leaves the findings as follow-ups.
+If any rows are marked `Yes`, Reviewer agrees a small fix plan with the human, applies only those fixes, then re-runs the tests the Implementer recorded in `03-implementation-summary.md` to confirm they all still pass (the regression guard that the fixes broke nothing), and records what it changed and the test result in `04-review-summary.md`. If no rows are marked, Reviewer records that no fixes were chosen; the unmarked findings simply stand in the table and are not tracked as separate follow-ups (if the human does not want it fixed now by the Reviewer, it is forgotten).
 
 #### Does Not Do
 
@@ -281,24 +296,27 @@ Reviewer writes `docs/tickets/{ticket-id}/workflow-files/04-review-summary.md` u
 
 Short outcome summary.
 
-## Evidence And Recommendations
+## Checks Passed
 
-| Area | Evidence | Result / Risk | Recommendation |
-| --- | --- | --- | --- |
-| Acceptance criterion 1 | File, behavior, test, or manual-check evidence | Pass / Fail / Not validated | Do now / defer / do nothing |
-| Test evidence | Exact command, automated test, or manual check and result | Pass / Fail / Not run | Do now / defer / do nothing |
-| Regression coverage gaps | Changed areas reviewed; where regression tests were missing or insufficient; suggested concrete tests | Good enough / Weak / Missing | Do now / defer / do nothing |
-| Highest-risk changed area | Specific changed file, behavior, or dependency, and why it is the riskiest part of the change | Low / Medium / High, with reason | Do now / defer / do nothing |
-| Improvement suggestion 1 (RECOMMENDED) | Specific possible improvement | Worth doing / not worth it, with reason | Do now / defer / do nothing |
-| Improvement suggestion 2 (NOT RECOMMENDED) | Specific possible improvement | Worth doing / not worth it, with reason | Do now / defer / do nothing |
+| Area | Evidence | Result |
+| --- | --- | --- |
+| Acceptance criterion that passed | File, behavior, test, or manual-check evidence | Pass |
+| Test evidence | Exact command, automated test, or manual check and its result | Pass |
+| Regression coverage | Changed areas reviewed, and why existing coverage is good enough | Good enough |
+
+## Potential Fixes
+
+| Area | Evidence | Result / Risk | Recommendation | Fix? |
+| --- | --- | --- | --- | --- |
+| Acceptance criterion not fully met | File, behavior, test, or manual-check evidence | Fail / Not validated | Do now / defer / do nothing |  |
+| Regression coverage gaps | Changed areas reviewed; where regression tests were missing or insufficient; suggested concrete tests | Weak / Missing | Do now / defer / do nothing |  |
+| Highest-risk changed area | Specific changed file, behavior, or dependency, and why it is the riskiest part of the change | Low / Medium / High, with reason | Do now / defer / do nothing |  |
+| Improvement suggestion 1 (RECOMMENDED) | Specific possible improvement | Worth doing, with reason | Do now / defer / do nothing |  |
+| Improvement suggestion 2 (NOT RECOMMENDED) | Specific possible improvement | Not worth it, with reason | Do now / defer / do nothing |  |
 
 ## Selected Fixes Applied
 
-Only include if the human approved review fixes.
-
-## Remaining Follow-Ups
-
-Short list, or "None".
+What Reviewer fixed at the fix gate (files touched + check results), or "None" if the human marked no rows `Fix? = Yes`.
 
 ## Final Human Confirmation
 
@@ -309,7 +327,7 @@ Record the human's final decision.
 If this workflow was useful but too minimal, customize it for your own process. Recommended next step: run `agentic-hq create-workflow --using=add-feature` to make a copy and add your own stages, rules, and approval gates. To see a worked example of a very detailed personal workflow, inspect or try out `agentic-hq add-feature-detailed-example`.
 
 ```
-The table must include all acceptance criteria, one test evidence row, one regression coverage gaps row, one highest-risk changed area row, and at least two possible improvement suggestions. Each improvement suggestion's Area label must end with `(RECOMMENDED)` or `(NOT RECOMMENDED)` so the human can quickly skip the ones that are not recommended. The regression coverage gaps row must not merely repeat the test commands. It must name the changed areas Reviewer inspected; if regression coverage is missing or weak, it must suggest concrete tests; if it is good enough, it must explain why. If Reviewer cannot point to evidence, it must say `Not validated`. If it recommends "do nothing", it must explain why the risk/cost does not justify more work.
+Each row goes in the right table: Checks Passed for an evidence-backed pass with nothing to do, Potential Fixes for anything that could be fixed or improved. Every acceptance criterion must appear in one table or the other (Checks Passed if it passed, Potential Fixes if it failed or cannot be validated); test evidence must appear (Checks Passed if it ran and passed, Potential Fixes otherwise); regression coverage must be assessed (Checks Passed if good enough, Potential Fixes if weak or missing); and the single highest-risk changed area must appear (Checks Passed if genuinely low risk, otherwise Potential Fixes). Potential Fixes must include at least two possible improvement suggestions, and each improvement suggestion's Area label must end with `(RECOMMENDED)` or `(NOT RECOMMENDED)` so the human can quickly skip the ones that are not recommended. The regression coverage gaps row must not merely repeat the test commands. It must name the changed areas Reviewer inspected; if regression coverage is missing or weak, it must suggest concrete tests; if it is good enough, it must explain why. If Reviewer cannot point to evidence, it must say `Not validated`. If it recommends "do nothing", it must explain why the risk/cost does not justify more work. Reviewer leaves the `Fix?` column blank for the human to fill in.
 
 
 
@@ -364,7 +382,7 @@ The following elements of add-feature-detailed-example are being ditched in this
 - Epic/Sub-Task ticket rewriting.
 - Long project design requirements audit.
 - English Language Description appendix.
-- Acceptance criteria audit table (replaced by the Reviewer's slimmer Evidence And Recommendations table).
+- Acceptance criteria audit table (replaced by the Reviewer's slimmer Checks Passed / Potential Fixes tables).
 - Heavy TDD terminology.
 - Instructions to hit Ctrl-C multiple times to control branching (replaced by the Stage Outcome Contract).
 - Wording that implies Steve's design philosophy is the default requirement.
@@ -404,3 +422,66 @@ agentic-hq add-feature-detailed-example -- --verbosity=low --suggest-large-refac
 ```
 
 This makes the difference obvious without apologizing for the detailed example workflow or implying most users should adopt it directly.
+
+## Additional Details Of Implementation
+
+This will be implemented by the human running the create-workflow flow and them pointing at this spec file at when the:
+
+01-explain-to-user-how-workflows-work-and-get-workflow-details.md
+
+is run.
+
+The agent doesn't have to explain how workflows work (I wrote the system)
+
+The Spec should not duplicate all the details from this spec file - but mainly point at it (with any clarification).  I don't want to have to update in 2 places if we need to change/fix things as we go.  This file is the "source of truth" - the workflow spec should mainly defer to it (and we modify this file if we need to).
+
+### UPDATE: Rename of old workflow files
+
+When the create-workflow runs the first agent will have to git rename:
+docs/artifacts/workflow-creation-artifacts/agentic-hq-demos-plugin/add-feature
+->
+docs/artifacts/workflow-creation-artifacts/agentic-hq-demos-plugin/add-feature-detailed-example
+
+and create a file explaining the rename at:
+
+docs/artifacts/workflow-creation-artifacts/agentic-hq-demos-plugin/add-feature-detailed-example/README-RE-RENAME.md
+
+This will free up:
+docs/artifacts/workflow-creation-artifacts/agentic-hq-demos-plugin/add-feature
+for all the artefacts of this workflow creation.
+
+
+### Structure Of Each Command
+
+As is made clear in this doc - this add-feature workflow is based on the original, more complex, add-feature-detailed-example workflow.
+I want the elements that are in each of the commands, and the structure of each command, to be retained i.e.:
+- Intro To Give The Agent Context
+- Step 0a: Read Input
+- Step 0b: Establish Variables
+- Step 1: Validate Input
+- Step 2a: Read Context (if applicable)
+- Step 2b: Check Pre-requisites
+- ...
+- Step X: Write Output
+- Step X+1: Self-Terminate
+and based on those in the add-feature-detailed-example workflow
+
+### Plan For Whole Build Out
+
+So, in the 02-confirm-spec-approved-and-build.md stage, I want the Agent to build in stages:
+- Stage 0 - The typescript and all 4 agents as a skeleton structure that just pass on and build the essential variables and each Agent just gives a quick summary of what it *would* do using those basic/essential variables (the key few).  Human tests to confirm works well.
+- AI summarises for next agent what to do next into /tmp/guidance-for-agent-after-compaction.md and human compacts.
+- Stage 0b - The typescript and all 4 agents as a skeleton structure that just pass on and build *ALL* the variables and each Agent gives a quick summary of what it *would* do and lists all the variables it will use and their name, value and what it will do with them (very briefly). Human tests to confirm works well.
+- AI summarises for next agent what to do next into /tmp/guidance-for-agent-after-compaction.md and human compacts.
+- Stage 1 - Agent build in full the Researcher (including its `01-researcher-help-doc.md`). Human tests to confirm works well.
+- AI summarises for next agent what to do next into /tmp/guidance-for-agent-after-compaction.md and human compacts.
+- Stage 2 - Agent build in full the Planner (including its `02-planner-help-doc.md`). Human tests to confirm works well.
+- AI summarises for next agent what to do next into /tmp/guidance-for-agent-after-compaction.md and human compacts.
+- Stage 3 - Agent build in full the Implementer (including its `03-implementer-help-doc.md`). Human tests to confirm works well.
+- AI summarises for next agent what to do next into /tmp/guidance-for-agent-after-compaction.md and human compacts.
+- Stage 4 - Agent build in full the Reviewer (including its `04-reviewer-help-doc.md`). Human tests to confirm works well.
+- AI summarises for next agent what to do next into /tmp/guidance-for-agent-after-compaction.md and human compacts.
+- Stage 5 - Agent builds the overall `00-add-feature-user-help-doc.md` on its own (so it gets its own context). Human tests to confirm works well.
+- Build is complete.
+
+Note on help docs: each agent's help doc (`01`–`04`) is built inside that agent's own stage (Stages 1–4) so it stays in sync with the agent it documents; the overall `00-add-feature-user-help-doc.md` is built last, in its own dedicated Stage 5.

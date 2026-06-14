@@ -1,0 +1,11 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "add-feature",
+  "shortId": "add-feature",
+  "description": "Add a small feature using a simple four-stage research/plan/implement/review workflow",
+  "exampleParameters": "-- --ticket-id=PROJ-123",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agentic HQ"
+  }
+}

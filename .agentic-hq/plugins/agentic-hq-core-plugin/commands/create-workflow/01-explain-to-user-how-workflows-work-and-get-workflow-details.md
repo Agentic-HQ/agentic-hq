@@ -379,6 +379,12 @@ const COMMAND_02_{DESCRIPTIVE_NAME} = '/{plugin-id}:{workflow-id}:02-{command-na
 
 ---
 
+## Decisions Taken
+
+{Bulleted list of decisions you've taken (rather than asked about) — based on the conversation so far plus any spec/ticket/docs the user supplied and the codebase. Give each decision's source/rationale: the conversation point, the provided doc, or the code convention it came from. Or "None."}
+
+---
+
 ## AI Questions
 
 > Use **exactly** this format for every question — three labelled lines per question, separated by a blank line, with a horizontal rule between questions. The blank line after `**Human's Answer**:` is where the human types their reply, so leave it empty when you draft the section.
@@ -391,25 +397,33 @@ const COMMAND_02_{DESCRIPTIVE_NAME} = '/{plugin-id}:{workflow-id}:02-{command-na
 
 ---
 
-**AI Question 2**: {the question}
-
-**AI Recommendation**: {your recommended answer + brief rationale}
-
-**Human's Answer**:
-
----
-
-{...repeat for each question. If you have no questions, write "None." instead of this block.}
+{...repeat for each genuinely-open question. If you have none, write "None." instead of this block.}
 
 ---
 
 ## Human Additions
 
-> The human will use this section to add ad-hoc points, requirements, corrections, or clarifications that don't fit cleanly under any other section. The AI MUST scan this section every time it re-reads the spec (e.g. before each revision pass, before transitioning to plan mode in Command 02, before scaffolding command files). Every entry here must either be folded into the appropriate section of the spec (and then struck through here with a `**RESOLVED**:` pointer) or explicitly acknowledged with the human before being skipped — never silently absorbed and never silently ignored.
+> Add any ad-hoc points, requirements, corrections, or clarifications here that don't fit cleanly under another section — the AI will read these and fold them into the spec.
 
 _(No human additions yet. Human: add bullets below this line as needed.)_
 
 ```
+
+### Avoid Pointless Questions (guidance for you — do NOT copy into the spec)
+
+When you fill in the spec's "Decisions Taken" and "AI Questions" sections, decide what belongs where. Before asking the user anything, apply the **stun test**: if you would be _stunned_ by any answer other than your recommendation, it is not a real question — don't ask it.
+
+- **>95% sure with no reasonable alternative** → it's a pointless question. Put it in the spec's "Decisions Taken" section (with its source/rationale); don't ask.
+- **Genuinely unsure** (an assumption, or a real choice with plausible alternatives) → put it in the spec's "AI Questions" section as a real question. Don't silently bake an assumption into the plan — if you're not sure enough to simply decide it, ask.
+
+### Processing The Human Additions Section (guidance for you — do NOT copy into the spec)
+
+The spec's "Human Additions" section is where the human drops ad-hoc points for you to act on. Re-read it in full every time you re-read the spec — before every revision pass, and again before exiting Command 01. For each bullet not already struck through / RESOLVED:
+
+a. **Apply** the addition: edit the appropriate section of the spec (a new step in a command's behaviour, a new constraint in the Workflow Overview, a new variable, etc.) so the change is actually made. If the addition is unclear, conflicts with another section, or needs more input, **ask the human first** — do not guess, do not silently skip.
+b. **Mark as RESOLVED**: strike through the bullet (`~~- ...~~`) and append `**RESOLVED**:` plus a pointer to where the change was applied (e.g. *"folded into Command 03's behaviour as new step 5"*).
+
+Never silently absorb (apply the change but skip the strike-through + RESOLVED marker) and never silently ignore (skip the bullet without asking the human). Both leave the Human Additions section out of sync with the spec body.
 
 ### Collaboration Process
 
@@ -419,11 +433,7 @@ _(No human additions yet. Human: add bullets below this line as needed.)_
 4. Include an empty "Human Additions" section (per the template above) as a designated landing spot for the human's ad-hoc additions.
 5. Ask the user to review, answer questions, and suggest changes
 6. Revise the spec based on feedback. As each question is resolved, mark it by striking through the question line (`~~**AI Question N**: ...~~`) and adding a `**RESOLVED**:` line summarising the outcome plus a pointer to where the resolution was applied in the spec.
-7. **Processing the Human Additions section** — before every revision pass, and again before exiting Command 01, re-read the "Human Additions" section in full. For each bullet that is not already struck through / RESOLVED, follow this two-step procedure in order:
-   a. **Apply** the addition: edit the appropriate section of the spec (a new step in a command's Behaviour outline, a new constraint in the Workflow Overview, a new variable in the canonical block, etc.) so the change is actually made. If the addition is unclear, conflicts with another section, or needs more input, **ask the human first** — do not guess, do not silently skip.
-   b. **Mark as RESOLVED**: strike through the bullet (`~~- ...~~`) and append `**RESOLVED**:` plus a pointer to where in the spec the change was applied (e.g. *"folded into Command 03's Behaviour outline as new step 5"*).
-
-   Never silently absorb (apply the change but skip the strike-through + RESOLVED marker) and never silently ignore (skip the bullet without asking the human). Both leave the Human Additions section out of sync with the spec body.
+7. **Process the "Human Additions" section** at every revision pass (and before exiting Command 01) — see the "Processing The Human Additions Section" guidance above for the full procedure.
 8. **Present an explicit gate prompt at the end of every revision pass — using the `AskUserQuestion` tool, not free-form text.** Once you've applied the user's answers and any Human Additions, do **not** hand the ball back with vague wording like "ready for your next pass" or "ready for approval" — the human shouldn't have to guess whether they're meant to act, acknowledge, or just nod. Invoke `AskUserQuestion` so the user gets a proper choice menu they can click rather than having to type a reply:
 
    ```
