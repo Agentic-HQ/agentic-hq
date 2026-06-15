@@ -4,7 +4,7 @@
 > workflow is included as a worked example of a heavily customized development workflow. It is
 > intentionally opinionated around the creator's own process. **Most users should start with the simple
 > `add-feature` workflow** (`agentic-hq add-feature`), then customize that workflow to fit their own
-> process with `agentic-hq create-workflow --using=add-feature`. Use this detailed example to see how far
+> process with `agentic-hq create-workflow -- --using=add-feature`. Use this detailed example to see how far
 > an Agentic HQ workflow can go once it has been shaped around one creator's personal way of building
 > software.
 
@@ -12,6 +12,10 @@ This is the main user help doc for the **Add Feature Detailed Example workflow**
 workflow is for, how it's structured, and the thinking behind how it works — the things worth
 understanding while you're running it (or just before). Each of the seven agents also has its own help
 doc, linked below. Open any of these in a Markdown-friendly viewer (e.g. VS Code).
+
+> **Modifying or extending this workflow?** See the
+> [Developer Help Doc](../developer-help-docs/developer-help-doc.md) for the deeper "why" behind how it was
+> built.
 
 ## What The Add Feature Detailed Example Workflow Does
 
