@@ -233,6 +233,7 @@ Follow the math-workflow-demo-cli.ts pattern:
 Create `{skills-dir}/SKILL.md` following the math-workflow SKILL.md pattern:
 - `disable-model-invocation: true`
 - Returns shell command to install deps and run CLI via tsx
+- Includes the `ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq` step right after `pnpm install` (as in every workflow's SKILL.md) so the new workflow resolves `agentic-hq` from any workspace
 
 ### 4e. Create package.json, pnpm-workspace.yaml and tsconfig.json
 
