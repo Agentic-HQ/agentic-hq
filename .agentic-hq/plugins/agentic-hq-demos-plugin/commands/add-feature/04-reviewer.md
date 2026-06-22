@@ -168,7 +168,7 @@ Record the human's final decision.
 
 ## Customization Next Step
 
-If this workflow was useful but too minimal, customize it for your own process. Recommended next step: run `agentic-hq create-workflow --using=add-feature` to make a copy and add your own stages, rules, and approval gates. To see a worked example of a very detailed personal workflow, inspect or try out `agentic-hq add-feature-detailed-example`.
+If this workflow was useful but too minimal, customize it for your own process. Recommended next step: run `agentic-hq create-workflow -- --using=add-feature` to make a copy and add your own stages, rules, and approval gates. To see a worked example of a very detailed personal workflow, inspect or try out `agentic-hq add-feature-detailed-example`.
 ```
 
 **Table rules — the review only adds value if it produces evidence-backed judgment; a generic

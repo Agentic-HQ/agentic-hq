@@ -74,6 +74,6 @@ review of *this* change.
 The Reviewer is the **last** agent, so once you've made your decision at the gate, the workflow ends.
 
 If this workflow was useful but felt **too minimal** for your process, that's by design — it's a small
-starting point. To make it your own, run `agentic-hq create-workflow --using=add-feature` to copy it and
+starting point. To make it your own, run `agentic-hq create-workflow -- --using=add-feature` to copy it and
 add your own stages, rules, and approval gates. For a worked example of a heavily-customized personal
 workflow, inspect or try out `agentic-hq add-feature-detailed-example`.

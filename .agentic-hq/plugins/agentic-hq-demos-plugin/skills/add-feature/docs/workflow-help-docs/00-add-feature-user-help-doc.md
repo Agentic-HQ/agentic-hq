@@ -112,7 +112,7 @@ This workflow is a deliberately **small starting point**. If it's useful but fee
 your process, make it your own: run
 
 ```
-agentic-hq create-workflow --using=add-feature
+agentic-hq create-workflow -- --using=add-feature
 ```
 
 to copy it and add your own stages, rules, and approval gates.
