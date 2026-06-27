@@ -1,80 +1,42 @@
 # Welcome to the Agentic HQ Project!
 
-Agentic HQ is a thin Typescript wrapper around Claude Code that allows you to create and run Typescript programs that chain together multiple Claude Code Skills.
+You can use Agentic HQ to build and run customised developer workflows.
 
-## Uses
+The workflows are very simple Typescript wrappers around Claude Code that chain together multiple Claude Code Skills.
 
-### Developer Workflows
-
-Automate developer workflows to give you better control of the AI and its context.  Each Skill in the workflow starts with an empty context and loads only the exact information it needs to complete its task.  Includes task-specific rules and checks to ensure the AI is always producing software that matches your standards.  Create workflows that enable you to [collaborate closely and enjoyably with the AI](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/20414465/Point+Of+AHQ+-+14th+Feb+2026), so that when the task is done you really understand well what has been built and your unique human insight has been combined with the AI's unique abilities to build the best thing possible.
-
-### AI Based Software Systems
-
-Agentic HQ (AHQ) could also be used to create an AI Based Software System that executes a multi-stage workflow process, with human in the loop for guidance/checking/control.  The human could be taken through a multi-step, complex workflow where they interact with Claude Code at the necessary stages, to achieve an arbitrarily complex task.  YouTube content creator and developer Ben Holmes talks about writing and running complex systems using markdown files on [a video on his Nerd Snipe channel](https://www.youtube.com/watch?v=EwOu8xtErEc&t=4393s).  He discusses an open source front end design tool called [Impeccable](https://github.com/pbakaus/impeccable) which includes complex, multi-step Skills like the ["teach" Skill](https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/reference/teach.md).  This 6 step Skill is an example of something that may benefit from being split into separate tasks and run using Agentic HQ.  Each of the small, separate tasks could then have fine grained control over Claude's context and load from markdown files only the instructions and information necessary to execute it.
-
-## Prerequisites
-
-### Mac OS
-
-These instructions have **only** been created for and tested on macOS 15.7.5.  **macOS 13.5 or newer is required** — the `node-pty` dependency ships prebuilt native binaries that need macOS 13.5+, so older macOS versions will hit install or runtime failures.  Other operating systems haven't yet been tested, but may work with small modifications (Linux is most likely to work with minimal or zero changes, and if you're running Windows then Windows Subsystem for Linux (WSL) may be worth trying first)
-
-### Node.js & pnpm (Package Manager)
-
-Agentic HQ defaults to **Node.js 24 LTS** (the recommended runtime). **Node.js 22 LTS** is also supported — Node 22 and 24 are the two supported LTS lines (Node 23 is not supported).
-
-To install go to https://nodejs.org/en/download and follow the instructions to install nvm (Node Version Manager) with npm.
-
-The repo includes a root `.nvmrc` pinned to Node 24 (currently `24.15.0`). Once nvm is installed run the following command to install Node 24 (if not already installed) and switch to it:
-
-```bash
-nvm install
-```
-
-After installing run: 
-```bash
-node --version
-```
-to confirm you are on Node 24.
-
-This project's package manager, `pnpm`, is provided through Corepack, which ships with Node.js. Enable it for the Node version you just installed:
-
-```bash
-corepack enable
-```
-
-> [!NOTE]
-> If you later switch to a different Node version remember to run `corepack enable` again.
-
-Corepack (enabled in the step above) automatically manages the pnpm version used by the project, which is pinned by the `packageManager` field in `package.json` — it does **not** modify your shell config.
-
-Confirm pnpm is available and on the expected, pinned 11.1.2 version by running:
-
-```bash
-pnpm --version
-```
+Run the "add-feature" workflow to try it out, then run the "create-workflow" workflow to get Claude to build one for you.
 
 ## Quick Start
 
-> [!CAUTION]
-> **Auto-approved Claude Code tool permissions.** Running workflows via the `agentic-hq` CLI automatically approves a set of Claude Code, Jira, and Confluence tools necessary for running bash commands, reading and writing files and accessing MCP servers — no permission prompt is shown.
->
-> **We recommend you check the full list at [docs/user-docs/WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md) before running any workflow to confirm you are happy with these permissions.**
+### Installation
 
+> [!NOTE]
+> Requires macOS 13.5 or newer (tested on 15.7.5). Other operating systems may work with small changes. Linux is most likely to work with little or no changes. If you have Windows then try with WSL.
 
-1. Clone the repo:
+1. **Install Node.js 24 LTS.** - using the nvm installer at https://nodejs.org/en/download After installation confirm with `node -v`. Node.js 22 is also supported.
+
+2. **Clone the repo:**
 
    ```bash
    git clone https://github.com/Agentic-HQ/agentic-hq
    cd agentic-hq
    ```
 
-2. Install dependencies (corepack auto-downloads the pinned pnpm version):
+3. **Enable pnpm via Corepack.** `pnpm` is this project's package manager. It ships with Node.js through Corepack.  Run the following to enable it:
+
+   ```bash
+   corepack enable
+   ```
+
+   Corepack auto-manages the exact pnpm version pinned in `package.json` and does **not** modify your shell config. (Re-run `corepack enable` whenever you switch Node version.)
+
+4. **Install dependencies:**
 
    ```bash
    pnpm install
    ```
 
-3. Run install-dev-agentic-hq.sh to install the dev version of the `agentic-hq` CLI to your `PATH` so you can run it from any directory:
+5. **Install the `agentic-hq` CLI onto your `PATH`** so you can run workflows from any directory:
 
    ```bash
    scripts/infra/install-dev-agentic-hq.sh
@@ -82,87 +44,59 @@ pnpm --version
 
    The script uses `pnpm add -g .` to register the CLI globally as a live symlink to this repo — no `sudo` needed.
 
-   > [!NOTE]
-   > If the script fails with `global bin directory "…" is not in PATH`, run `pnpm setup` (it adds pnpm's global bin directory to your shell config), open a fresh terminal, then re-run the script.
-
-4. Verify everything works by running checks and quick unit tests:
+6. **Run unit tests** run the unit tests and other validation (should take less than 5 seconds):
 
    ```bash
    pnpm validate
    ```
 
-5. See what workflows are available (each workflow comes with an example usage):
-
-   ```bash
-   agentic-hq list
-   ```
-
-6. Run the string reversal demo which is a single step workflow (20 seconds) that gets Claude to reverse the input string. (NOTE: The first time you run this, Claude Code will ask if you trust this folder — choose **Yes** to continue):
+7. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string. This is a quick win that confirms the CLI works and Claude Code launches *before* you point a real workflow at your own code:
 
    ```bash
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
-    To look at the code for this workflow see: [Claude Skill](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/SKILL.md), [Typescript program](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/src/string-reversal-demo-cli.ts), [Claude Command](.agentic-hq/plugins/agentic-hq-demos-plugin/commands/string-reversal/reverse-a-string.md)
+   The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
 
-7. Run the math workflow demo which is a 3 step workflow (80 seconds) that gets Claude to do 3 mathematical operations on your input number: multiply by 2, add 3, divide by 5:
+If any step above fails, see [Quick Start Troubleshooting](docs/user-docs/troubleshooting-quickstart.md).
 
-   ```bash
-   agentic-hq math -- --input-number=11
-   ```
+### Run The add-feature Workflow
 
-    To look at the code for this workflow see: [Claude Skill](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/SKILL.md), [Typescript program](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.ts), [3 Claude Commands](.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow)
+`add-feature` is the flagship workflow and the best place to start. It adds a **single, small feature** to an existing codebase as a simple **four-stage** sequence of AI agents — **research → plan → implement → review** — pausing for your approval at each key gate so nothing significant happens without your say-so.
 
-If any of the steps above fail, see [Quick Start Troubleshooting](docs/user-docs/troubleshooting-quickstart.md).
+> [!CAUTION]
+> **Auto-approved Claude Code tool permissions.** Running workflows via the `agentic-hq` CLI automatically approves a set of Claude Code, Jira, and Confluence tools necessary for running bash commands, reading and writing files and accessing MCP servers — no permission prompt is shown. This matters most here, where a workflow writes real code into a project of **your own**.
+>
+> **We recommend you check the full list at [docs/user-docs/WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md) before running any workflow to confirm you are happy with these permissions.**
 
-### Hello World CLI
-
-A tiny standalone CLI is included as a minimal example. Run it with:
-
-```bash
-pnpm hello
-```
-
-It prints `Hello World!!!` to standard output. Source: [`src/hello-world/`](src/hello-world).
-
-### Create Your Own Workflow
-
-To create your own workflow run:
+`cd` into the root of an existing project you'd like to add a small feature to, then run:
 
 ```bash
-agentic-hq create-workflow
+agentic-hq add-feature -- --ticket-id=PROJ-1
 ```
 
-This workflow works with you to specify, build, document and test a new workflow end to end.  I suggest you run this command in the Agentic HQ workspace so the workflow is created in that workspace.  You will then be able to run the workflow from any other workspace on your computer, e.g. a new or existing workspace of your own.
+- **`--ticket-id`** - set this to the ticket id from your issue tracking system, or make one up.  It is used as a directory name in (`docs/tickets/<ticket-id>/workflow-files/`).
+- **Commit first** — commit or back up your project first, since the workflow will make changes to your project that you may want to revert.
 
-If you are a software developer I suggest you try creating a workflow that follows your typical process for working on a new software feature, which could involve something like the following separate steps:
-- discover - investigate/discuss/question what doing the feature involves and create a description (for use as a Jira/Linear ticket)
-- plan - plan the details of the feature implementation based on rules human requires (stored in pre-existing file)
-- execute - implement the plan and document implementation
-- audit - audit the implementation to confirm all rules (stored in pre-existing file) adhered to and test pass and document the audit
-- plan refactoring - create a refactoring plan to improve the whole system, including the new implementation (to pay off technical debt)
-- execute refactoring - execute the refactoring plan, run tests and document the work done.
-- commit - with detailed message
+Each of the four agents reads the previous agent's document and writes its own, so the shared understanding lives on disk (under `docs/tickets/<ticket-id>/workflow-files/`) while the actual code and tests land in your codebase as normal. For the full walkthrough — what each agent does, where it pauses for you, and the files it produces — see the [Add Feature user help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/docs/workflow-help-docs/00-add-feature-user-help-doc.md).
 
-If you want to keep it simple just create a basic 3 step workflow: plan, implement, refactor
+### Build Your Own add-feature Workflow
 
-If you have existing coding rules or guidelines, or techniques you use to get the AI to refactor, be sure to supply them.  These will be bundled with the workflow in its Skill "docs" directory and referred to as the workflow progresses.
+Once you've run `add-feature`, you can make your own version of it.
 
-## Setting Up Sooperset Atlassian MCP Server For Jira
+This is the core customisation path of Agentic HQ: run a workflow you like, then copy and adapt it to your own needs.
 
-The `quick-jira` and `full-jira` demo workflows talk to Jira and Confluence via the [Sooperset Atlassian MCP server](https://github.com/sooperset/mcp-atlassian). Before running either workflow, install and configure that MCP server at **user** scope so it's available in every workspace on your machine.
-
-Full instructions, including prerequisites, troubleshooting, and what the install script does, are in:
-
-**→ [docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md)**
-
-Short version: from this repo, run
+Change directory into the root of the project you want your new workflow to live in and then run:
 
 ```bash
-scripts/mcp-scripts/install-or-update-sooperset-mcp-atlassian.sh
+agentic-hq create-workflow -- --using=add-feature
 ```
 
-and follow the prompts (you will need an Atlassian API token).
+`--using` takes the **short-id** of the workflow to base yours on. It finds the `add-feature` workflow (looking in both the Agentic HQ install directory and your own project directory).  You then it work with Claude to modify it.  You may want to add a new Agent, enforce your own rules, add approval or review gates. It copies and rewires the workflow into a new one that's genuinely yours and runnable straight away; the original is never touched.
+
+For the full details of the copy-and-modify path, see the [`--using` help doc](.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/docs/workflow-help-docs/using-existing-workflow-help-doc.md). 
+
+To build a workflow from scratch, run `create-workflow` with no `--using` (see [Further Exploration](#further-exploration)) below.
 
 ## Running Workflows From Your Own Workspaces
 
@@ -174,37 +108,9 @@ After completing the Quick Start above, the `agentic-hq` command is available gl
 agentic-hq list
 ```
 
-This shows all available workflows grouped by plugin, with example usage for each. It lists workflows from both the Agentic HQ workspace and (if different) your current local workspace:
+This shows all available workflows grouped by plugin, with example usage for each. It lists workflows from both the Agentic HQ workspace and (if different) your current local workspace.
 
-```
-Available workflows:
-
-Agentic HQ Workspace (directory: /Users/stevepersonal/dev/agentic-hq/agentic-hq):-
-Plugin: agentic-hq-core-plugin
-Workflows:
-agentic-hq create-workflow
-   What it does: Create a new Agentic HQ workflow
-Plugin: agentic-hq-demos-plugin
-Workflows:
-agentic-hq full-jira -- --jira-id=TEST-123
-   What it does: Full TDD story workflow driven by a Jira ticket
-agentic-hq math -- --input-number=11
-   What it does: Solves a math problem using an agent team
-agentic-hq quick-jira -- --jira-id=TEST-123
-   What it does: Creates and completes a Jira ticket
-agentic-hq reversal -- --string-to-reverse='hello there you'
-   What it does: Reverses a string (hello world demo)
-Plugin: agentic-hq-utilities-plugin
-Workflows:
-
-Plugin: steve-test-plugin
-Workflows:
-
-
-Local Workspace: Same as Agentic HQ Workspace (running from within the AHQ directory)
-```
-
-For a human-readable companion to this list — what each workflow does, how it runs step-by-step, and links to its source files — see [docs/user-docs/workflow-descriptions/overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md).
+For full details of all the workflows and links to their source files — see [docs/user-docs/workflow-descriptions/overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md).
 
 ### Usage
 
@@ -224,6 +130,45 @@ mkdir /tmp/my-temp-workspace
 cd /tmp/my-temp-workspace
 agentic-hq reversal -- --string-to-reverse="this is working well"
 ```
+
+## Why Use Agentic HQ?
+
+3 reasons:-
+- **Context Control** - each Skill in the workflow starts with an empty context and loads only the exact information it needs to complete its task.  
+- **Rule Enforcement** - Each Skill can include task-specific rules and checks to ensure the AI is always producing software that matches your standards.  
+- **Enjoyment** - Create workflows that enable you to [collaborate closely and enjoyably with the AI](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/20414465/Point+Of+AHQ+-+14th+Feb+2026), so that when the task is done you really understand well what has been built and your unique human insight has been combined with the AI's unique abilities to build the best thing possible.
+
+### Other Uses Of Agentic HQ: AI Based Software Systems
+
+Software development is just one example of a complex, multi-stage process that requires Human In The Loop. Agentic HQ (AHQ) could also be used to create an AI Based Software System that executes a multi-stage workflow process, with human in the loop for guidance/checking/control. YouTube content creator and developer Ben Holmes talks about writing and running complex systems using markdown files on [a video on his Nerd Snipe channel](https://www.youtube.com/watch?v=EwOu8xtErEc&t=4393s).  He discusses an open source front end design tool called [Impeccable](https://github.com/pbakaus/impeccable) which includes complex, multi-step Skills like the ["teach" Skill](https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/reference/teach.md).  This 6 step Skill is an example of something that may benefit from being split into 6 separate Skills and chained together using Agentic HQ.
+
+## Further Exploration
+
+Here's the rest of what Agentic HQ ships with:
+
+- **A detailed, opinionated workflow — `add-feature-detailed-example`.** A worked example of how far a workflow can be shaped around one developer's own way of building software: a seven-stage loop (ticket → interrogate → plan → execute → refactor-plan → refactor-execute → validate). It's deliberately overkill for most people — treat it as a showcase of what's possible, not the recommended starting point.
+
+  ```bash
+  agentic-hq add-feature-detailed-example -- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-1
+  ```
+
+  See its [developer help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/docs/developer-help-docs/developer-help-doc.md) for how it's built and how to adapt it.
+
+- **Jira-driven workflows — `quick-jira` and `full-jira`.** TDD-by-Jira workflows (one fully unattended, one human-in-the-loop) that read a ticket, drive a RED → GREEN → REFACTOR cycle per test type, and update the ticket. These were Agentic HQ's original flagship. They need a one-time MCP-server setup — see their entries in [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md), which link to the [Jira MCP setup guide](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md).
+
+- **Build a workflow from scratch.** Run `agentic-hq create-workflow` with no `--using` to design a brand-new workflow collaboratively from a blank slate (rather than copying an existing one).
+
+- **Quick demos — `reversal` and `math`.** Tiny throwaway workflows, handy for confirming things work or seeing how variables flow from one step to the next:
+
+  ```bash
+  # reversal — single-step (~20s) workflow that asks Claude to reverse the input string
+  agentic-hq reversal -- --string-to-reverse="wow this is amazing"
+
+  # math — three-step (~80s) workflow that runs a number through ×2 → +3 → ÷5
+  agentic-hq math -- --input-number=11
+  ```
+
+For the full catalogue — every shipped workflow, what it does, and links to its source — see [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md).
 
 ## Further Documentation
 

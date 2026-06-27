@@ -24,8 +24,9 @@ one or more times to get a job done. Each call gets a fresh Claude session.
 The workflow's TS program is responsible for passing the output of one step
 into the input of the next.
 
-Examples shipped in this repo: `string-reversal` (1 step), `math-workflow`
-(3 steps), `full-jira-tdd-story-workflow` (many steps).
+Examples shipped in this repo: `add-feature` (4 steps — the flagship
+workflow), `string-reversal` (1 step), `math-workflow` (3 steps),
+`full-jira-tdd-story-workflow` (many steps).
 
 ### Step
 

@@ -1,16 +1,23 @@
 # Quickstart Troubleshooting
 
-If a step in the [README Quick Start](../../README.md#quick-start) fails,
-this page lists the most common causes and what to do.
+If a step in the README's [Quick Start](../../README.md#quick-start) fails — whether
+**installing** Agentic HQ or **running a workflow** — this page lists the most common
+causes and what to do. It is grouped to mirror the Quick Start: first the
+[Installation](#installation) steps, then [Running a workflow](#running-a-workflow).
 
 If your problem isn't here, see the [Support](../../README.md#support)
 section of the main README.
 
 ---
 
-## Step 2 — `pnpm install` fails
+## Installation
 
-### `pnpm: command not found`
+Covers everything from `pnpm install` through the string-reversal smoke test at the
+end of the README's [Installation](../../README.md#installation) steps.
+
+### `pnpm install` fails
+
+#### `pnpm: command not found`
 
 - **Cause:** Corepack is not enabled. pnpm ships with Node.js 22+ but is
   inactive until you turn corepack on.
@@ -20,7 +27,7 @@ section of the main README.
   pnpm --version   # should print the version pinned in package.json
   ```
 
-### `Unsupported engine` warning or hard error
+#### `Unsupported engine` warning or hard error
 
 - **Cause:** Your Node.js version doesn't match the project's `engines`
   constraint (`^22.0.0 || ^24.0.0` — Node 22 or 24 LTS).
@@ -29,14 +36,14 @@ section of the main README.
   to the v22 or v24 line — the repo's root `.nvmrc` pins Node 24
   (currently `24.15.0`), so `nvm use` selects it automatically.
 
-### `EACCES` / permission errors
+#### `EACCES` / permission errors
 
 - **Cause:** A previous `npm install -g` or `sudo` command left files owned
   by root inside `~/.npm` or the project's `node_modules`.
 - **Fix:** Delete the offending directory and re-run `pnpm install`. Don't
   use `sudo` with pnpm.
 
-### `node-pty` install fails / `posix_spawnp failed` at runtime (older macOS)
+#### `node-pty` install fails / `posix_spawnp failed` at runtime (older macOS)
 
 - **Cause:** Your macOS version is older than **13.5**. The `node-pty`
   dependency ships prebuilt native binaries that require macOS 13.5 or
@@ -47,16 +54,15 @@ section of the main README.
   with `sw_vers --productVersion`; if it is below 13.5, upgrade macOS or
   use a machine that meets the floor.
 
----
+### Installing the `agentic-hq` CLI (`install-dev-agentic-hq.sh`) fails
 
-## Step 3 — `install-dev-agentic-hq.sh` fails
+#### `corepack is required but not found`
 
-### `corepack is required but not found`
-
-- **Cause:** Same as the Step 2 case above — corepack not on PATH.
+- **Cause:** Same as the `pnpm: command not found` case above — corepack not
+  on PATH.
 - **Fix:** Run `corepack enable` and re-run the script.
 
-### `pnpm link --global` errors about `PNPM_HOME`
+#### `pnpm link --global` errors about `PNPM_HOME`
 
 - **Cause:** pnpm's global bin directory hasn't been set up yet. This is a
   one-time-per-machine setup.
@@ -65,7 +71,7 @@ section of the main README.
   and add it to `PATH`. If you'd rather not let it touch your shell config,
   set the env vars manually with whatever mechanism you normally use.
 
-### Script exits silently or with `Permission denied`
+#### Script exits silently or with `Permission denied`
 
 - **Cause:** Script not executable.
 - **Fix:** Run via `bash` explicitly:
@@ -73,7 +79,7 @@ section of the main README.
   bash scripts/infra/install-dev-agentic-hq.sh
   ```
 
-### `agentic-hq: command not found` after script completes
+#### `agentic-hq: command not found` after the script completes
 
 - **Cause:** pnpm's global bin directory isn't on your `PATH`, or your
   current shell hasn't picked up the new symlink.
@@ -83,9 +89,7 @@ section of the main README.
   ```
   Make sure that dir is on your `PATH`.
 
----
-
-## Step 4 — `pnpm validate` fails
+### `pnpm validate` fails
 
 `pnpm validate` runs four checks: typecheck, lint, format, unit tests. The
 output names which one failed.
@@ -99,16 +103,15 @@ If the failure is unrelated to the README quickstart, see
 [`docs/dev/npm-commands.md`](../dev/npm-commands.md) for what each script
 does.
 
----
+### `agentic-hq list` shows nothing or errors
 
-## Step 5 — `agentic-hq list` shows nothing or errors
+#### `command not found: agentic-hq`
 
-### `command not found: agentic-hq`
-
-- **Cause:** Same as the *agentic-hq command not found* case in Step 3.
+- **Cause:** Same as the *`agentic-hq: command not found` after the script
+  completes* case above.
 - **Fix:** Open a new terminal; check `pnpm bin --global` is on `PATH`.
 
-### Listing is empty / missing plugins
+#### Listing is empty / missing plugins
 
 - **Cause:** You're running `agentic-hq` from a directory that isn't the AHQ
   workspace and your local workspace doesn't contain a `.agentic-hq/plugins/`
@@ -118,7 +121,10 @@ does.
 
 ---
 
-## Steps 6 & 7 — running the demo workflows
+## Running a workflow
+
+These apply to **any** workflow run — the `reversal` smoke test in the install
+steps, the flagship `add-feature` workflow, and the Jira-driven demos alike.
 
 ### `claude: command not found`
 
@@ -130,7 +136,8 @@ does.
 ### *"Do you trust the files in this folder?"*
 
 - **Cause:** First time Claude Code has been run in this workspace.
-- **Fix:** Choose **Yes**. (This is documented in step 6 of the README.)
+- **Fix:** Choose **Yes**. (The README notes this at the string-reversal
+  smoke-test step of [Installation](../../README.md#installation).)
 
 ### Workflow hangs or produces no output
 
@@ -144,7 +151,8 @@ does.
 
 ### Jira-driven workflows: `mcp__mcp-atlassian__*` not available
 
-- **Cause:** The Sooperset Atlassian MCP server isn't configured.
+- **Cause:** The Sooperset Atlassian MCP server isn't configured. The
+  `quick-jira` and `full-jira` workflows need it.
 - **Fix:** Run the install script as described in
   [setting-up-jira-mcp-server.md](workflow-descriptions/setting-up-jira-mcp-server.md).
 

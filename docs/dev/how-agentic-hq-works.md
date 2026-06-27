@@ -277,9 +277,12 @@ agentic-hq create-workflow
 ```
 
 This is itself an AHQ workflow. It walks through specifying, scaffolding,
-checking, documenting, and human-testing a brand-new workflow end to end. See
-the [Create Your Own Workflow](../../README.md#create-your-own-workflow)
-section of the top-level README for what the experience looks like.
+checking, documenting, and human-testing a brand-new workflow end to end. You
+can also copy and adapt an existing workflow with `create-workflow -- --using=<short-id>`.
+See the [Build Your Own add-feature Workflow](../../README.md#build-your-own-add-feature-workflow)
+section of the top-level README for what the experience looks like, or the
+[`create-workflow` entry](../user-docs/workflow-descriptions/overview-of-workflows.md#create-workflow--create-a-new-agentic-hq-workflow)
+in the workflow catalogue for the full step-by-step.
 
 ---
 

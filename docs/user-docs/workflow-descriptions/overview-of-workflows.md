@@ -5,6 +5,8 @@
 - [Plugin: `agentic-hq-core-plugin`](#plugin-agentic-hq-core-plugin)
   - [`create-workflow` — Create a new Agentic HQ workflow](#create-workflow--create-a-new-agentic-hq-workflow)
 - [Plugin: `agentic-hq-demos-plugin`](#plugin-agentic-hq-demos-plugin)
+  - [`add-feature` — Add a small feature to an existing codebase](#add-feature--add-a-small-feature-to-an-existing-codebase)
+  - [`add-feature-detailed-example` — A detailed, opinionated seven-stage worked example](#add-feature-detailed-example--a-detailed-opinionated-seven-stage-worked-example)
   - [`string-reversal` — Reverses a string (hello world demo)](#string-reversal--reverses-a-string-hello-world-demo)
   - [`math-workflow` — Solves a math problem using an agent team](#math-workflow--solves-a-math-problem-using-an-agent-team)
   - [`quick-jira-workflow` — Creates and completes a Jira ticket](#quick-jira-workflow--creates-and-completes-a-jira-ticket)
@@ -44,7 +46,7 @@ Run:
 agentic-hq create-workflow
 ```
 
-A workflow that builds workflows. It walks you through specifying, scaffolding, refactoring, documenting and human-testing a brand-new Agentic HQ workflow end to end.
+A workflow that builds workflows. It walks you through specifying, scaffolding, refactoring, documenting and human-testing a brand-new Agentic HQ workflow end to end. You can build from a blank page, or **copy and adapt an existing workflow** with the `--using` option (see [Basing a new workflow on an existing one](#basing-a-new-workflow-on-an-existing-one---using) below).
 
 Steps:
 
@@ -54,19 +56,79 @@ Steps:
 4. **Document** — generates a user-facing help doc for the new workflow.
 5. **Get human to test** — guides you through running the new workflow in a separate CLI session, returning to make improvements, and reloading commands in the test session.
 
+#### Basing a new workflow on an existing one (`--using`)
+
+Instead of starting from a blank page, you can copy an existing workflow — the flagship [`add-feature`](#add-feature--add-a-small-feature-to-an-existing-codebase), a colleague's, or one of your own — and make it yours:
+
+```bash
+agentic-hq create-workflow -- --using=add-feature
+```
+
+This is the core **customisation** path of Agentic HQ: run a workflow to try it, then make it your own. `--using` takes the **short-id** of the workflow to base yours on, and resolves it by searching **both** the Agentic HQ install (where bundled workflows like `add-feature` live) and your current project — so it works even from a brand-new, empty project. Leave `--using` off and Create Workflow builds from scratch instead.
+
+You describe the **point** of your new workflow and what to **add, change, or remove** (a new stage, an extra approval gate, different wording, a new name); Create Workflow then copies the source and rewires it — renaming the CLI, repointing internal command references, rewriting metadata (`ahq-workflow.json`, `package.json`, `SKILL.md`), renumbering commands if you inserted or removed any, and sweeping the copied docs and comments to describe *your* workflow. The original is never touched, and the result runs end to end straight away. If you have existing **coding rules, guidelines, or refactoring techniques**, supply them — they get bundled into the new workflow's Skill `docs/` directory and referred to as the workflow runs.
+
+For the full details, see the bundled [`--using` help doc](../../../.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/docs/workflow-help-docs/using-existing-workflow-help-doc.md).
+
 Source files:
 
 - [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow)
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/SKILL.md)
 - [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/src/create-workflow-cli.ts)
+- [Bundled help docs](../../../.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/docs/workflow-help-docs) (user help + the `--using` help doc)
 
-See also [AHQ-99](https://agentic-hq.atlassian.net/browse/AHQ-99).
+See also [AHQ-99](https://agentic-hq.atlassian.net/browse/AHQ-99) and [AHQ-159](https://agentic-hq.atlassian.net/browse/AHQ-159) (the `--using` option).
 
 ---
 
 ## Plugin: `agentic-hq-demos-plugin`
 
 Bundled demo workflows used both for hello-world testing of Agentic HQ and as working reference implementations when building your own workflows.
+
+### `add-feature` — Add a small feature to an existing codebase
+
+Run (from the root of the project you want to add the feature to):
+
+```bash
+agentic-hq add-feature -- --ticket-id=PROJ-123
+```
+
+The **flagship** workflow and the recommended starting point. It adds a **single, small feature** to an existing codebase as a deliberately minimal **four-stage** sequence of agents — **research → plan → implement → review** — small enough that you can keep the change in your head and validate it in one pass. It is **issue-tracker-agnostic**: `--ticket-id` is just a label that names the output folder (`docs/tickets/<ticket-id>/workflow-files/`), so use any tracker's id or simply make one up — no issue tracker required.
+
+How it runs — each agent reads the previous agent's document, writes its own, and pauses for you at its gate:
+
+1. **Researcher** → `01-feature-brief.md` — turns your feature request into a scoped brief with acceptance criteria, then decides whether the feature is a good size to do in one run (this size check **gates** the workflow). Waits for you to write your feature request, and to answer any clarifying questions it raises.
+2. **Planner** → `02-implementation-plan.md` — turns the brief into a compact, test-first implementation plan: the minimum-useful tests and the minimal code those tests drive. It writes **no production code** and pauses for your explicit approval before any code is written.
+3. **Implementer** → `03-implementation-summary.md` plus the actual code and tests — implements the approved plan (and nothing more), runs the tests, and records exactly what changed. Pauses for you to approve or discuss further.
+4. **Reviewer** → `04-review-summary.md` — gives a concise, evidence-backed review, then applies **only** the fixes you mark and re-runs the tests to confirm nothing broke. After it, the workflow ends.
+
+For the full walkthrough — every gate, the "Tell Me More" command, and the files it produces — see the bundled [Add Feature user help doc](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/docs/workflow-help-docs/00-add-feature-user-help-doc.md). To copy and adapt it into your own workflow, see [`create-workflow --using`](#create-workflow--create-a-new-agentic-hq-workflow).
+
+Source files:
+
+- [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature)
+- [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/SKILL.md)
+- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/ts-workflow/src/add-feature-cli.ts)
+- [Bundled help docs](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/docs/workflow-help-docs) (user help + one per agent)
+
+### `add-feature-detailed-example` — A detailed, opinionated seven-stage worked example
+
+Run (from the root of the project you want to add the feature to):
+
+```bash
+agentic-hq add-feature-detailed-example -- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-123
+```
+
+A worked example of how far an Agentic HQ workflow can go once it has been shaped around one creator's (Steve's) personal way of building software. Where [`add-feature`](#add-feature--add-a-small-feature-to-an-existing-codebase) is a minimal four stages, this is a fuller **seven-stage** loop — **ticket → interrogate → plan → execute → refactor-plan → refactor-execute → validate** — with extra gates, a built-in refactoring pass, and tunable behaviour (e.g. `--verbosity`, `--suggest-large-refactor`). Treat it as a **showcase** of what's possible, not the recommended next step: most people are better served starting from the simple `add-feature` workflow and growing it to fit. It is the practical answer to "how detailed and opinionated can a workflow get?".
+
+For the deep dive on how it's built and how to adapt it, see its [developer help doc](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/docs/developer-help-docs/developer-help-doc.md).
+
+Source files:
+
+- [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature-detailed-example)
+- [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/SKILL.md)
+- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/ts-workflow/src/add-feature-detailed-example-cli.ts)
+- [Bundled help docs](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/docs) (user help, one per agent, plus a developer help doc)
 
 ### `string-reversal` — Reverses a string (hello world demo)
 
@@ -182,4 +244,4 @@ These plugins ship with Agentic HQ but currently expose only utility skills/comm
 
 ## Adding a new workflow
 
-Use [`create-workflow`](#create-workflow--create-a-new-agentic-hq-workflow) — see the README's [Create Your Own Workflow](../../../README.md#create-your-own-workflow) section.
+Use [`create-workflow`](#create-workflow--create-a-new-agentic-hq-workflow) — either from a blank page or by [copying an existing workflow with `--using`](#basing-a-new-workflow-on-an-existing-one---using). The README walks through the copy-and-modify path in [Build Your Own add-feature Workflow](../../../README.md#build-your-own-add-feature-workflow).
