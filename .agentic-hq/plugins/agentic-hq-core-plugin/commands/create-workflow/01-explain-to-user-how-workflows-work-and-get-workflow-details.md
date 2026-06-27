@@ -10,16 +10,23 @@ Remember the following variable you will use in the rest of this command: comman
 
 Read the file: {command-input-output-files-directory}/command-input.json
 
-Extract the `command-input-string` value. It will be a string like:
+Extract the `command-input-string` value. It comes in one of two shapes.
+
+Without `--using` (the create-from-scratch path — the default):
 `The variable used in this workflow creation workflow is: agentic-hq-workspace-root-dir=/path/to/agentic-hq`
+
+With `--using=<short-id>` (the copy-an-existing-workflow path):
+`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and short-id-of-workflow-to-copy=add-feature`
 
 Parse out:
 - `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
+- `short-id-of-workflow-to-copy` — **optional**; present only when the user passed `-- --using=<short-id>`. The short-id of an existing workflow this new workflow should be based on (copied and then modified). When this clause is absent, this is a normal create-from-scratch run.
 
 ## Step 0b: Establish Variables
 
 ```
 agentic-hq-workspace-root-dir = (parsed from input)
+short-id-of-workflow-to-copy = (parsed from input; absent on a create-from-scratch run)
 project-root = (your primary working directory)
 readme-file = {agentic-hq-workspace-root-dir}/README.md
 how-agentic-hq-works-file = {agentic-hq-workspace-root-dir}/docs/dev/how-agentic-hq-works.md
@@ -30,6 +37,56 @@ example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-wo
 example-workflow-skill-file = {example-workflow-skill-dir}/SKILL.md
 example-workflow-package-json = {example-workflow-skill-dir}/ts-workflow/package.json
 ```
+
+---
+
+## Step 0c: Resolve the Source Workflow (ONLY when `short-id-of-workflow-to-copy` is supplied)
+
+**Skip this whole step on a create-from-scratch run** (no `short-id-of-workflow-to-copy`). On those runs Command 01 behaves exactly as it always has — go straight to Step 1.
+
+When `short-id-of-workflow-to-copy` IS set, the new workflow will be built by **copying and modifying** an existing workflow. Resolve that short-id to a real source workflow now, before investing in the rest of the conversation — so an unrecognised short-id stops the run immediately.
+
+### Resolve across BOTH roots
+
+There is no lookup helper exposed to you, so resolve the same way the CLI itself discovers workflows (it registers both an AHQ workspace and the current-user workspace): scan every `ahq-workflow.json` under `.agentic-hq/plugins/**` in **both** roots and match on the `shortId` field:
+
+- `{agentic-hq-workspace-root-dir}` — the AHQ install, where the bundled workflows (`add-feature`, etc.) live, **and**
+- `{project-root}` — the user's own workspace, which may hold a workflow a colleague shared.
+
+A user commonly runs `create-workflow` from a fresh, empty project, so the source is frequently present **only** under `{agentic-hq-workspace-root-dir}` — scanning `{project-root}` alone would miss it. Scan both. (For example: list every match with `find {agentic-hq-workspace-root-dir}/.agentic-hq/plugins -name ahq-workflow.json` and the same under `{project-root}`, then read each file's `shortId`.)
+
+**De-dup when the two roots are the same directory** — i.e. when `{project-root}` equals `{agentic-hq-workspace-root-dir}` (running `create-workflow` against the AHQ install itself). Don't count the same file twice.
+
+### Handle the match count
+
+- **Exactly one match** → that's the source. From its `ahq-workflow.json` read `pluginId` and `skillId`, and **record which root it was found under** — this becomes the source root in the Copy Plan (Step 5).
+- **No match** → **STOP. Do not proceed and do NOT fall back to a create-from-scratch run.** Tell the user the short-id `{short-id-of-workflow-to-copy}` matched no workflow in either root, list the short-ids you *did* find (to help them spot a typo), and ask them to fix the `--using` value and re-run `agentic-hq create-workflow -- --using=<short-id>`.
+- **More than one match** — whether across the two distinct roots, or multiple times within a single root (e.g. a real workflow and a test fixture sharing a short-id) → present **all** matches, each with its `pluginId`, `skillId`, and which root it lives under, and ask the user which one to copy.
+
+### Establish the source variables
+
+Once resolved (and disambiguated, if needed):
+
+```
+source-workspace-root = (the root the match was found under — {agentic-hq-workspace-root-dir} or {project-root})
+source-plugin-id = (pluginId from the matched ahq-workflow.json)
+source-workflow-id = (skillId from the matched ahq-workflow.json)
+source-commands-dir = {source-workspace-root}/.agentic-hq/plugins/{source-plugin-id}/commands/{source-workflow-id}
+source-skills-dir = {source-workspace-root}/.agentic-hq/plugins/{source-plugin-id}/skills/{source-workflow-id}
+```
+
+### Confirm the source to the user
+
+Present the resolved workflow's details — its short-id, `pluginId`, `skillId`, and `description` — and tell the user the new workflow will be built by **copying a copy of it and then modifying that copy**, so the original is never touched.
+
+### Read the source workflow's structure (so you can plan the copy)
+
+You are the **planner** that writes the concrete Copy Plan in Step 5, so read the source workflow's files now to understand exactly what Command 02 will copy and rewire:
+
+- `{source-commands-dir}` — every `NN-*.md` command file (note the count and numbering).
+- `{source-skills-dir}` — `SKILL.md`, `ahq-workflow.json`, `ts-workflow/src/{source-workflow-id}-cli.ts` (note its `.name(...)`, its `COMMAND_NN_*` constants, and their command-path strings), `ts-workflow/package.json` (note its `name` and any `scripts` that run the CLI), and any `docs/`.
+
+Use this structural understanding to write the resolved copy / rewire / identity-sweep / removal-renumber-addition manifests in Step 5.
 
 ---
 
@@ -137,6 +194,8 @@ Ask the user if they have any questions before proceeding.
 
 ## Step 3: Ask User for Workflow Details
 
+> **On a `--using` run** (you resolved a source workflow in Step 0c): run this step and Step 4 **exactly** as a from-scratch run does — do **not** write a parallel copy of them. The identity you collect below (`plugin-id`, `workflow-id`, `workflow-short-id`, `one-sentence-description`) is for the **new** workflow — the *destination* values, distinct from the source you're copying. The only difference is the **purpose**: rather than defining the workflow from nothing, work with the user to define what the point of the new workflow is and what to **add / change / remove relative to the source workflow**. Capture that add/change/remove intent — in Step 5 you'll turn it into the Copy Plan's manifests and fold it into the spec's Commands / TypeScript CLI / Variable Flow sections so the spec describes the **target** workflow, not the source.
+
 Ask the user for the following information:
 
 ### 3a. plugin-id
@@ -232,6 +291,17 @@ Before drafting the spec, work with the user to decide whether the new workflow 
 - **If the workflow takes NO parameters**, set `exampleParameters` to the empty string `""`. This matches the convention used by existing parameter-less workflows (e.g. `create-workflow`).
 - Record the decided value under the "Workflow Metadata" section of the DRAFT spec (see template below). Command 02 will read it from the spec when creating `ahq-workflow.json`.
 
+### Source Workflow & Copy Plan (populate ONLY on a `--using` run)
+
+If you resolved a source workflow in Step 0c, the spec must carry a concrete **plan** telling Command 02 exactly what to copy and how to rewire it. Command 01 is the **planner**; Command 02 is the doer. This plan does **not** travel through the inter-command output string (which stays unchanged — see Step 6); it lives **in the spec**, as the "Source Workflow & Copy Plan" section of the template below. Rules for that section:
+
+- **Include it ONLY when copying.** On a create-from-scratch run, **omit the entire section** — its presence in the APPROVED spec is the *only* signal Command 02 uses to enter copy mode, so a stray or empty copy-plan section on a from-scratch run would wrongly trigger a copy.
+- **Use resolved, absolute paths — real values, not placeholders.** Fill in the actual source dirs you resolved in Step 0c (`source-workspace-root`, `source-plugin-id`, `source-workflow-id`) and the new workflow's identity from Steps 3–4 (`plugin-id`, `workflow-id`, `workflow-short-id`, `one-sentence-description`). It is commonly a **cross-root copy**: bundled source under `{agentic-hq-workspace-root-dir}` → new workflow under `{project-root}`, so the source root and destination root usually differ.
+- **Keep it as a blockquote addressed to "the execution agent".** Command 02 acts on blockquote callouts addressed to the execution agent (its Step 1) — that's the mechanism this plan rides on.
+- **Place it near the top of the spec — immediately after "Workflow Metadata"** (as positioned in the template below) — so the execution agent meets it early, before the detailed Variable Flow / Commands sections.
+
+Then **capture all the modifications** the user asked for (the add / change / remove relative to the source) in the **normal** spec sections — Commands, TypeScript CLI, Variable Flow — so the spec describes the **target** workflow, not just the source. If the destination plugin doesn't exist yet (common in an empty workspace), Step 3a's *"plugin doesn't exist → create it"* path applies and Command 02's Step 4f creates the manifest.
+
 ### Spec Template
 
 The spec should include:
@@ -264,6 +334,49 @@ If the plugin does not yet exist, Command 02 will create `{plugin-manifest-filen
 - **exampleParameters**: {exampleParameters (starts with `-- ` or empty string `""`)}
 
 These values will be written to `{skills-dir}/ahq-workflow.json` in Command 02.
+
+---
+
+## Source Workflow & Copy Plan
+
+> **(Include this section ONLY on a `--using` run. OMIT it entirely — heading and all — on a create-from-scratch run; its mere presence is what tells Command 02 to copy instead of generate.)**
+>
+> **To the execution agent (Command 02):** this workflow is being built by **copying and modifying an existing workflow**. Do **NOT** generate the files from the `math-workflow` / `create-workflow` templates — copy the source workflow's own files per the Copy manifest below, then apply the Rewire, Identity-sweep, and Removal/addition manifests. The bundled reference workflows are now only a guide to *what* must be rewired, never content to copy in.
+>
+> ### Source
+> - **short-id**: {source short-id, e.g. add-feature}
+> - **pluginId**: {source-plugin-id}
+> - **workflow-id**: {source-workflow-id}
+> - **commands dir**: {source-workspace-root}/.agentic-hq/plugins/{source-plugin-id}/commands/{source-workflow-id}/
+> - **skills dir**: {source-workspace-root}/.agentic-hq/plugins/{source-plugin-id}/skills/{source-workflow-id}/
+>
+> ### Destination (the new workflow)
+> - **commands dir**: {project-root}/.agentic-hq/plugins/{plugin-id}/commands/{workflow-id}/
+> - **skills dir**: {project-root}/.agentic-hq/plugins/{plugin-id}/skills/{workflow-id}/
+> - Often a **cross-root copy** — bundled source in the AHQ install → new workflow in the user's own project — so source root and destination root commonly differ. If the destination plugin doesn't exist yet, Command 02's Step 4f creates its manifest.
+>
+> ### Copy manifest (source dir → destination dir)
+> Copy everything that makes up the source workflow:
+> - every command `NN-*.md` file from the source commands dir,
+> - `SKILL.md`,
+> - the whole `ts-workflow/` **source and config** — `src/`, `package.json`, `tsconfig.json`, `pnpm-workspace.yaml`, **`.npmrc`**, **and `pnpm-lock.yaml`**,
+> - any templates and the `docs/` directory.
+>
+> **Exclude only `node_modules/`** — it is large and holds a now-wrong `agentic-hq` symlink; the copied `SKILL.md` rebuilds deps with `pnpm install` (and re-links `agentic-hq` via the `$AGENTIC_HQ_WORKSPACE_ROOT` env-var symlink standard, AHQ-162) on first run. **Keep `.npmrc` + `pnpm-lock.yaml`** so the copy preserves the frozen-lockfile supply-chain standard (AHQ-152) and installs reproducibly — the lockfile is portable (importer key `.`, `agentic-hq` recorded as a depth-relative `link:`, no absolute paths or workflow names), so a frozen `pnpm install` still passes after the `name` rewrite below.
+>
+> ### Rewire manifest (resolved target values)
+> - Rename the CLI file `{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`.
+> - In the CLI: set `.name('{workflow-id}-cli')`, and repoint **every** `COMMAND_NN_*` constant's path string to `/{plugin-id}:{workflow-id}:NN-{command-name}`.
+> - `ahq-workflow.json`: `pluginId={plugin-id}`, `skillId={workflow-id}`, `shortId={workflow-short-id}`, `description={one-sentence-description}`.
+> - `package.json`: set `name` to the new workflow's package name, **and** update any `scripts` that still run the old CLI file (e.g. `tsx src/{source-workflow-id}-cli.ts` → `tsx src/{workflow-id}-cli.ts`).
+> - `SKILL.md`: update the CLI filename it points at (`{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`). (`skill-base-dir` is supplied at runtime, so nothing else is hardcoded there.)
+> - **No dependency rewiring needed**: `package.json`'s `agentic-hq` `link:` is depth-relative and the copied `SKILL.md`'s `ln -sfn` re-links it from any workspace (AHQ-162).
+>
+> ### Identity sweep
+> After copying, the `SKILL.md`, help docs (`docs/`), and any CLI/command-file comments still name the **source** workflow (its short-id, workflow-id, description, example invocations). Replace these with the new workflow's identity so the copy doesn't advertise the original.
+>
+> ### Removal / addition & renumber manifest
+> {Only if the user's modifications **remove** a command, or **insert** one mid-sequence. Spell out: which `NN-*.md` to delete or insert; the resulting renumber map (e.g. removing `03` → `04→03`, `05→04`; or inserting between `02` and `03` → `03→04`, `04→05`); and the matching CLI changes — the `COMMAND_NN_*` constant names, their `/{plugin-id}:{workflow-id}:NN-…` path strings, and the linear invocation order. **Mirror every one of these structural changes in the help docs** (`docs/workflow-help-docs/`): renumber/rename each affected per-command `NN-{agent}-help-doc.md` in lockstep with its command, **add** a help doc for any inserted command and **delete** the help doc of any removed one, repoint every command file's help-doc variable-block paths to the resulting set, and update the `00-{workflow-id}-user-help-doc.md` overview so its stage list and sequence match. A command **appended at the end** needs no renumber — just add its file, its CLI constant, and its help doc last. If nothing is removed or inserted, write: "No command removals or mid-sequence insertions — no renumbering needed" — and separately note any help doc whose **content** must change because its command's behaviour changed (plus the `00-{workflow-id}-user-help-doc.md` overview if that change is user-visible). Command 04 re-verifies all of this, but plan it here rather than leaving it to chance.}
 
 ---
 

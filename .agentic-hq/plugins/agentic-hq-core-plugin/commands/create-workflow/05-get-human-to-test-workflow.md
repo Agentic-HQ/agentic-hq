@@ -141,7 +141,24 @@ Read through all the files in the workspace directory the user provided. Look at
 - The command `.md` files (to understand what each step was supposed to do)
 - The CLI `.ts` file (to understand the overall flow)
 
-### 4b. Analyse and Write the Document
+### 4b. Mine the Agent Summaries — for What Worked AND What Glitched
+
+The documents the workflow's own agents wrote during the run — **especially the per-stage *summary* documents** (e.g. an implementation-summary, a refactor-summary, a review-summary) — are the single richest source of evidence about how the workflow *actually behaved*, far more telling than the user's after-the-fact recollection. Agents are candid in their own files: they record what they did well, but also where they got stuck, what they had to work around, and where an **earlier stage left them short**. Read them with two hats on:
+
+- **For "what worked well"** — the clean, confident summaries, the green test runs, the decisions that flowed smoothly. These feed the feedback doc's *What Worked Well* section (4c).
+- **For "problems / glitches"** — hunt **deliberately** for self-reported friction; each instance usually points at a concrete flaw in the *created workflow* you can fix. Pay special attention to a *downstream* agent reporting trouble caused by an *upstream* stage. Tell-tale sections and phrasings: **"Approved Deviations From The Plan"**, "Deviations", "Risks", "Concerns", "Follow-up", "Out of scope", and any "I had to…", "the plan didn't account for…", "wasn't told…", "tripped up by…".
+
+**A really simple worked example.** The workflow you just created could do *anything*, so this is only an illustration of the move — your workflow's stages and documents will differ. Picture a created workflow that builds a code feature through several stages, two of which are a **Planner** (which writes an implementation plan) and, right after it, an **Implementer** (which writes the code from that plan); the user has also given the workflow a project *Design Rules* file the code must follow. The Implementer was told to obey those rules — but the Planner was *not* told to plan against them. So the Planner produces a plan that contradicts the rules, and the Implementer has to depart from the plan to obey them. Here is how that surfaces in the documents, and the fix it points to:
+
+- **Symptom (in a document):** the Implementer's `…-implementation-summary.md` noted, under *"Approved Deviations From The Plan"*, that it had to change the plan to satisfy a design rule (e.g. making something a class that the plan had written as a plain function).
+- **Root cause (an earlier command):** the **Planner command never reads the Design Rules file**, so it can't plan in line with the rules.
+- **Fix (to the created workflow):** update the Planner command to read the Design Rules file and plan against it — so the plan no longer contradicts the rules, and the Implementer has nothing to deviate from.
+
+Make this same move for every problem you spot: trace the symptom in a stage's document back to the **command** that caused it, then propose a concrete edit to *that command `.md` file* (not merely to the code the test run produced).
+
+**Then talk it through with the user.** For each problem found this way, tell them the evidence (which document, which section), your read of the root-cause command, and your suggested workflow fix — and offer to apply it now (you can edit the workflow's command files in this session). Record each finding in the feedback document's *Potential Improvements for the Future* section (4c) as *symptom → root-cause command → suggested fix*.
+
+### 4c. Analyse and Write the Document
 
 Based on what you find, create `{human-manual-testing-feedback-file}` with the following structure:
 
@@ -153,10 +170,11 @@ Based on what you find, create `{human-manual-testing-feedback-file}` with the f
 
 ## What This Doc Is
 
-This document contains three things:
+This document contains four things:
 1. **Human feedback** — the user's own words and observations from testing the workflow
 2. **AI analysis** — the AI's examination of the workflow output files, what worked well, and what could be improved
 3. **Discussion points** — a Q&A between the AI and the human about how the new workflow performed and what to change
+4. **Details of improvements made** — the fixes the human chose to apply to the created workflow as a result of this testing (or a note that none were made)
 
 ---
 
@@ -186,10 +204,16 @@ This document contains three things:
 
 ## Q&A with the Human
 
-{See Step 4c below — this section is filled in after the conversation}
+{See Step 4d below — this section is filled in after the conversation}
+
+---
+
+## Details Of Improvements Made
+
+{Filled in by Step 4e, after the human picks which improvements to apply — lists each improvement actually made to the created workflow (what changed, in which file, and why), or a single sentence if no improvements were made and why.}
 ```
 
-### 4c. Ask the User Questions
+### 4d. Ask the User Questions
 
 After writing the initial document, ask the user 3-5 questions about how the testing went. For example:
 - Which command/step felt the most useful?
@@ -200,12 +224,44 @@ After writing the initial document, ask the user 3-5 questions about how the tes
 
 Have a short conversation, then **update the "Q&A with the Human" section** of the feedback document with a summary of the Q&A.
 
-Tell the user:
+---
 
-> "I've written the feedback document at:
-> `{human-manual-testing-feedback-file}`
->
-> The workflow creation process is now complete!"
+### 4e. Apply the Selected Improvements
+
+The feedback document now records concrete *Potential Improvements for the Future* — but a list of improvements no one acts on is wasted. This is the step where you actually **fix the created workflow**.
+
+1. **Present a numbered list.** Show the human a numbered list of the improvements from the document's *Potential Improvements for the Future* section (include any new ones that came out of the 4d conversation). Keep each item short, but show its *symptom → root-cause command → suggested fix* so they can choose with the full picture.
+
+2. **Ask which to apply.** Ask the human to reply with the numbers they want done (e.g. "1 and 3"), "all", or "none". **STOP and wait** for their answer.
+
+3. **Apply the chosen fixes.** For each number the human picked, make the concrete edit to the relevant command `.md` file (or the CLI / docs) of the **created workflow** under `{commands-dir}` / `{skills-dir}` — the same *symptom → root-cause → fix* move the 4b worked example describes. Briefly confirm to the human what you changed, and where, after each one.
+
+4. **Record what you did.** Append a new **`## Details Of Improvements Made`** section to the **end** of `{human-manual-testing-feedback-file}`. For each improvement applied, record which improvement it was (cross-reference its number), what you changed, in which file, and why. **If no improvements were made** (the human chose "none", or none were found), write a single sentence stating that no improvements were made and why.
+
+**Finally, close out — with an Approval Gate if you changed anything.**
+
+- **If you applied one or more improvements** (you edited the created workflow), give the human a chance to review and/or re-test before you finish. Tell them what you changed and where — point them at the *Details Of Improvements Made* section of `{human-manual-testing-feedback-file}` and the specific command files you edited — and remind them they can re-run the workflow (the Session B test-and-reload loop from Step 2) to try the changes for real. Then present an **Approval Gate** with the `AskUserQuestion` tool:
+
+  ```
+  AskUserQuestion({
+    questions: [{
+      question: "I've applied the improvements you selected (see the Details Of Improvements Made section of the feedback doc, and the edited command files). Review or re-test them — what would you like to do?",
+      header: "Improvements gate",
+      multiSelect: false,
+      options: [
+        { label: "Approve — finish", description: "The changes look good. Finalise and end the create-workflow process here." },
+        { label: "Discuss / change more", description: "Pause. I'll tell you what else to change; you apply it and ask again. Don't finish until I approve." }
+      ]
+    }]
+  })
+  ```
+
+  - **Approve — finish** (or an unambiguous approval via "Other") → continue to Step 5 (Write Output) and Step 6 (Self-Terminate).
+  - **Discuss / change more** → engage with their feedback, apply any further fixes, **update the *Details Of Improvements Made* section** to match, then **re-present this same gate**. Loop until they approve. **Until they approve, do NOT write `command-output.json` and do NOT run the self-termination skill** — finishing now would end the create-workflow process before the human has signed off on the changes you made.
+
+- **If you applied no improvements** (nothing about the workflow changed) → no gate is needed. Just tell the user:
+
+  > "I've written the feedback document at `{human-manual-testing-feedback-file}` (no workflow changes were made — its *Details Of Improvements Made* section says why). The workflow creation process is now complete!"
 
 ---
 

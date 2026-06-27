@@ -54,8 +54,10 @@ Read the following to gain full context:
    - `plugin-version`
    - `plugin-author-name`
 
-   Also: if the spec contains any blockquote callout addressed to **"the execution agent"**, that's instructions written specifically for YOU — read it carefully and act on it.
-3. **Example workflow files** for patterns. Two reference workflows are bundled with Agentic HQ — pick whichever matches the shape of the workflow you're building (or read both, if the workflow spans both shapes):
+   Also: if the spec contains any blockquote callout addressed to **"the execution agent"**, that's instructions written specifically for YOU — read it carefully and act on it. In particular, a **"Source Workflow & Copy Plan"** section is such a callout — its presence means this is a *copy-an-existing-workflow* run (see "Determine the creation mode" below); its absence means a normal create-from-scratch run.
+3. **Reference / source files for the build** — **what you read here depends on the creation mode** (determined just below):
+
+   **`from-scratch` mode (no Copy Plan in the spec)** — read the bundled reference workflows as **templates**. Two are bundled with Agentic HQ; pick whichever matches the shape of the workflow you're building (or read both, if it spans both shapes):
 
    **A. Simple workflow — math-workflow** (3 sequential pure-data-transform commands, no user interaction, output of one feeds input of next):
    - All `.md` files in `{example-workflow-commands-dir}` — command file patterns
@@ -63,12 +65,30 @@ Read the following to gain full context:
    - `{example-workflow-skill-dir}/SKILL.md` — SKILL.md pattern
    - `{example-workflow-skill-dir}/ts-workflow/package.json` — package.json pattern
    - `{example-workflow-skill-dir}/ts-workflow/pnpm-workspace.yaml` — pnpm-workspace.yaml pattern (per-directory `packages: ['.']` + `allowBuilds` map)
+   - `{example-workflow-skill-dir}/ts-workflow/.npmrc` — `.npmrc` pattern (the `frozen-lockfile=true` supply-chain standard, AHQ-152). Copy this file **verbatim** into the new workflow in Step 4e.
 
    **B. Substantial workflow — create-workflow** (multiple commands with user interaction, plan mode, file-system gating, no output-propagation):
    - All `.md` files in `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/` — command file patterns for substantial workflows
    - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/src/create-workflow-cli.ts` — TS CLI **re-inject** pattern (read env var once, build one input string, pass it to every command, ignore each command's output; phase gating via filesystem state)
 
    The DRAFT spec's "TypeScript CLI" section tells you which CLI pattern to follow (propagation vs re-inject). When in doubt, study both.
+
+   **`from-existing` mode (the spec has a Copy Plan)** — the **source workflow is the template**, so read **its** files at the **absolute paths the Copy Plan gives you** (the Plan's *Source* commands dir and skills dir): every `NN-*.md` command file, `SKILL.md`, `ts-workflow/src/{source-workflow-id}-cli.ts`, `ts-workflow/package.json`, and any `docs/`. Read the bundled reference workflows above **only as a guide to *what* gets rewired** (CLI constant paths, `package.json` `name`/scripts, SKILL.md CLI filename) — **never copy their content in**.
+
+---
+
+### Determine the creation mode (`from-scratch` vs `from-existing`)
+
+The `--using` short-id never reaches this command via `command-input.json` (Command 01's output string is deliberately unchanged). The **only** signal that this is a copy run is the **presence of a "Source Workflow & Copy Plan" section in the spec** you just read. So set the mode now, right after reading the spec:
+
+```
+creation-mode = (spec contains a "Source Workflow & Copy Plan" section) ? from-existing : from-scratch
+```
+
+- **`from-scratch`** — no Copy Plan section. Behave exactly as this command always has: generate every file fresh from the `math-workflow` / `create-workflow` reference patterns.
+- **`from-existing`** — the spec carries a Copy Plan. Build by **copying the source workflow's own files and rewiring them** (per that Plan), **not** by generating from the templates.
+
+The two modes diverge at exactly **three** points downstream — Step 1's reference reading (item 3 above), Step 3 (plan mode), and the file-creation block in Step 4 (4a/4c/4d/4e vs the dedicated copy block **4-COPY**). **Everything else is shared and unbranched**: Step 0a/0b, Step 2 (rename), Step 4's Step 0 (plan-copy), 4b (`ahq-workflow.json`), 4f (plugin manifest), and Steps 5–7. Carry `creation-mode` forward and consult it at those three points only.
 
 ---
 
@@ -90,14 +110,21 @@ Once approved:
 
 ## Step 3: Enter Plan Mode
 
-Use the `EnterPlanMode` tool to plan the implementation. Your plan should cover:
+Use the `EnterPlanMode` tool to plan the implementation. **The shape of your plan depends on `creation-mode`** (set in Step 1).
+
+**Item 0 is shared by both modes:**
 
 0. Copying the Plan file (once approved) **verbatim** (exact copy, no modifications) to: `{plan-verbatim-copy-file}`
+
+### If `creation-mode` = `from-scratch` — plan to generate from the templates
+
+Your plan should cover:
+
 1. **What command files to create** — one `.md` file per command defined in the spec, following the math-workflow command pattern
 2. **`ahq-workflow.json`** — the workflow metadata file, placed at `{ahq-workflow-metadata-filename}`, containing the 7 required fields
 3. **What the TypeScript CLI looks like** — command constants, linear flow, variable passing
 4. **SKILL.md** — returns the shell command to run the CLI
-5. **package.json + pnpm-workspace.yaml** — dependencies (agentic-hq via link:, tsx, commander); plus a per-directory `pnpm-workspace.yaml` carrying `packages: ['.']` and the `allowBuilds` map (required by pnpm 11 for build-script approval)
+5. **package.json + pnpm-workspace.yaml + `.npmrc`** — dependencies (agentic-hq via link:, tsx, commander); plus a per-directory `pnpm-workspace.yaml` carrying `packages: ['.']` and the `allowBuilds` map (required by pnpm 11 for build-script approval); plus a `.npmrc` carrying `frozen-lockfile=true` (the AHQ-152 supply-chain standard every workflow ships)
 6. **tsconfig.json** — standard config
 7. **Plugin manifest (`{plugin-manifest-filename}`)** — created from the "Plugin Metadata" section of the APPROVED spec only if `{plugin-manifest-filename}` does not already exist (idempotent — never clobbers an existing manifest). Required for Claude Code's `--plugin-dir` flag to load the plugin's commands/skills.
 
@@ -106,6 +133,20 @@ For each command file, outline:
 - The key steps the command performs
 - What it reads for context
 - What it outputs
+
+### If `creation-mode` = `from-existing` — plan to execute the Copy Plan
+
+Do **not** plan to generate files from the template. Plan to **execute the spec's "Source Workflow & Copy Plan"** (you'll do this in the dedicated **Step 4-COPY** block), in this order:
+
+1. **Copy** every file/dir in the Plan's *Copy manifest* from the absolute **source** dirs to the absolute **destination** dirs (a cross-root copy when the source is in the AHQ install — the Plan's paths already account for that). Exclude only `node_modules/`.
+2. **Rewire** the copied files per the Plan's *Rewire manifest*: rename the CLI file `{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`; repoint every `COMMAND_NN_*` constant path to `/{plugin-id}:{workflow-id}:NN-…`; update `package.json` `name` + any `scripts` that run the old CLI file; update the `SKILL.md` CLI filename.
+3. **Identity sweep** per the Plan: replace the source workflow's identity (short-id, workflow-id, description, example invocations) in `SKILL.md`, help docs (`docs/`), and CLI/command-file comments with the new workflow's identity.
+4. **Removal / addition & renumber** — only if the Plan's manifest lists any: delete/insert `NN-*.md` files, renumber so the sequence stays gapless, and rewire the CLI's `COMMAND_NN_*` constants + invocation order to match.
+5. Plus the **shared** steps that run in both modes: **`ahq-workflow.json` (Step 4b)** — written fresh from the new workflow's identity, **not** copied; and the **plugin manifest (Step 4f)**.
+
+Outline which source files map to which destination files, and the concrete rewire edits using the resolved target values already spelled out in the Copy Plan.
+
+### Both modes
 
 Present the plan to the user and get approval before building.
 
@@ -122,7 +163,41 @@ Before building anything, copy the **plan file** (the one created during plan mo
 
 This preserves an immutable record of the approved implementation plan before building begins. This is the **plan**, not the spec — the spec is already saved as the APPROVED spec file.
 
+### Choose the build path based on `creation-mode`
+
+- **`from-existing`** → do **Step 4-COPY** (immediately below), then **skip 4a, 4c, 4d and 4e entirely** — the source workflow's own files replace what those steps would have generated. You still do the shared **4b** (`ahq-workflow.json`) and **4f** (plugin manifest).
+- **`from-scratch`** → skip Step 4-COPY; do **4a → 4f** as written.
+
+### Step 4-COPY: Copy and Rewire the Source Workflow (`from-existing` mode only)
+
+> **Skip this entire block in `from-scratch` mode.**
+
+This single block replaces the from-scratch file-generation steps 4a/4c/4d/4e. Execute the spec's **"Source Workflow & Copy Plan"** — you are the **doer**; Command 01 already resolved every path and target value, so do **not** re-resolve the short-id or re-derive paths. Copying a TypeScript workflow is **not** a plain `cp` — copy first, then rewire.
+
+**1. Copy (the Copy manifest).** Create the destination `{commands-dir}` and `{skills-dir}` first, then copy every file/dir the Plan lists from its absolute **source** dirs to those absolute **destination** dirs — a cross-root copy when the source lives in the AHQ install (the Plan's paths already account for that). Copy: every command `NN-*.md`, `SKILL.md`, the whole `ts-workflow/` **source and config** (`src/`, `package.json`, `tsconfig.json`, `pnpm-workspace.yaml`, `.npmrc`, **and `pnpm-lock.yaml`**), any templates, and the `docs/` directory. **Exclude only `node_modules/`** — it is large and holds a now-wrong `agentic-hq` symlink; the copied `SKILL.md` rebuilds deps with `pnpm install` (and re-links `agentic-hq`) on first run. Keeping `.npmrc` + `pnpm-lock.yaml` preserves the frozen-lockfile supply-chain standard (AHQ-152) and a reproducible install.
+
+> **The copied workflow runs in the new (often non-AHQ) workspace automatically.** The standardized `SKILL.md` carries an `agentic-hq` env-var symlink step (`ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq`, run right after `pnpm install`), so the copy resolves the framework from any workspace and needs **no** special dependency rewiring. (Fixed & committed in [AHQ-162](https://agentic-hq.atlassian.net/browse/AHQ-162).)
+
+**2. Rewire (the Rewire manifest).** Apply the resolved target values from the Plan:
+- Rename the CLI file `{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`.
+- In the CLI, set `.name('{workflow-id}-cli')` and repoint **every** `COMMAND_NN_*` constant's path to `/{plugin-id}:{workflow-id}:NN-{command-name}`. (Mis-numbered or mis-named constants are the classic break — Claude returns "Unknown skill" when a constant points at a filename that no longer exists.)
+- `package.json`: set `name` to the new package name **and** update any `scripts` that still run the old CLI file (e.g. `tsx src/{source-workflow-id}-cli.ts` → `tsx src/{workflow-id}-cli.ts`).
+- `SKILL.md`: update the CLI filename it points at (`{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`). (`skill-base-dir` is supplied at runtime, so nothing else is hardcoded there.)
+- **No dependency rewiring needed**: `package.json`'s `agentic-hq` `link:` is depth-relative and the copied `SKILL.md`'s `ln -sfn` re-links it (see the callout above).
+
+**3. Identity sweep (the Identity-sweep manifest).** The copied `SKILL.md`, help docs (`docs/`), and any CLI/command-file comments still name the **source** workflow (its short-id, workflow-id, description, example invocations). Replace these with the new workflow's identity so the copy doesn't advertise the original.
+
+**4. Removal / addition & renumber (only if the Plan lists any).** Execute the Plan's manifest, using your workflow understanding to keep the result consistent:
+- **Removal**: delete the removed command's `NN-*.md` file(s); **renumber** the remaining `NN-` files so the sequence stays gapless and contiguous (e.g. removing `03` shifts `04→03`, `05→04`); rewire the CLI to match — update the `COMMAND_NN_*` constant names, their `/{plugin-id}:{workflow-id}:NN-…` path strings, and the linear invocation order; carry the renumbering through any per-command references in the help docs. (Some removals are just *within* a command — then there's no file to delete and no renumbering.)
+- **Addition**: a command **appended at the end** needs no renumber — add its `NN-*.md` and its `COMMAND_NN_*` constant last. A command **inserted mid-sequence** uses the same renumber machinery in reverse — shift the later `NN-` files up to make room (`03→04`, `04→05`, …), then rewire the CLI's `COMMAND_NN_*` constant names, path strings, and invocation order to match.
+
+**5. Apply the spec's other modifications.** Beyond the mechanical rewire, apply any additions/changes the spec's Commands / TypeScript CLI / Variable Flow sections describe (new behaviour in a command, a changed input string, etc.).
+
+After Step 4-COPY, **continue at Step 4b** (`ahq-workflow.json`) — do **not** run 4a/4c/4d/4e.
+
 ### 4a. Create Command Files
+
+> **`from-scratch` mode only.** In `from-existing` mode the command files were copied and rewired in Step 4-COPY — skip 4a.
 
 For each command defined in the approved spec, create a `.md` file in `{commands-dir}/`.
 
@@ -179,6 +254,8 @@ Each command then constructs `{session-dir}/01-check-in.md`, `{session-dir}/02-e
 
 ### 4b. Create ahq-workflow.json
 
+> **Both modes** (shared — not branched). This is the authoritative `ahq-workflow.json` step. In `from-existing` mode, write it **fresh from the new workflow's identity** here — do **not** rely on any copied source `ahq-workflow.json`; if a recursive copy brought one across, this step overwrites it. Because every field below comes from the new workflow's variables, the result is identical whether the workflow was generated or copied. (This is why `ahq-workflow.json` is **not** in the Copy Plan's copy manifest.)
+
 Create the workflow metadata file at `{ahq-workflow-metadata-filename}` (i.e. `{skills-dir}/ahq-workflow.json`).
 
 **Source for each field:**
@@ -210,6 +287,8 @@ After writing the file, verify it contains valid JSON and all seven fields are p
 
 ### 4c. Create TypeScript CLI
 
+> **`from-scratch` mode only.** In `from-existing` mode the CLI was copied and rewired (renamed file, repointed `COMMAND_NN_*` paths) in Step 4-COPY — skip 4c.
+
 Create the orchestrator CLI at `{skills-dir}/ts-workflow/src/{workflow-id}-cli.ts`.
 
 > **WARNING — Command name constants in the TypeScript CLI MUST include the numbering prefix:**
@@ -230,16 +309,22 @@ Follow the math-workflow-demo-cli.ts pattern:
 
 ### 4d. Create SKILL.md
 
+> **`from-scratch` mode only.** In `from-existing` mode `SKILL.md` was copied, rewired (CLI filename) and identity-swept in Step 4-COPY — skip 4d.
+
 Create `{skills-dir}/SKILL.md` following the math-workflow SKILL.md pattern:
 - `disable-model-invocation: true`
 - Returns shell command to install deps and run CLI via tsx
 - Includes the `ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq` step right after `pnpm install` (as in every workflow's SKILL.md) so the new workflow resolves `agentic-hq` from any workspace
 
-### 4e. Create package.json, pnpm-workspace.yaml and tsconfig.json
+### 4e. Create package.json, pnpm-workspace.yaml, .npmrc and tsconfig.json
 
-Create `{skills-dir}/ts-workflow/package.json`, `{skills-dir}/ts-workflow/pnpm-workspace.yaml` and `{skills-dir}/ts-workflow/tsconfig.json` following the existing patterns.
+> **`from-scratch` mode only.** In `from-existing` mode these were all copied (and `package.json` rewired — `name` + scripts) in Step 4-COPY — skip 4e.
+
+Create `{skills-dir}/ts-workflow/package.json`, `{skills-dir}/ts-workflow/pnpm-workspace.yaml`, `{skills-dir}/ts-workflow/.npmrc` and `{skills-dir}/ts-workflow/tsconfig.json` following the existing patterns.
 
 The `pnpm-workspace.yaml` is **required** under pnpm 11: each `ts-workflow` is a self-contained single-package project, and pnpm 11 reads build-script approvals (`allowBuilds`) only from `pnpm-workspace.yaml`, never from the `pnpm` field of `package.json`. Follow the math-workflow `ts-workflow/pnpm-workspace.yaml` pattern — it declares `packages: ['.']` (so the directory is its own workspace root, isolated from the repo-root workspace) and an `allowBuilds` map approving the native-build dependencies (`agentic-hq`, `node-pty`, `esbuild`). The workflow is installed with a plain `pnpm install` run from the `ts-workflow` directory — **not** `pnpm install --ignore-workspace`, which would make pnpm skip the local `pnpm-workspace.yaml` and fail the install under pnpm 11's `strictDepBuilds` default.
+
+The `.npmrc` carries `frozen-lockfile=true` — the AHQ-152 supply-chain standard that **every** workflow ships, so dependency-version changes stay deliberate and visible in `package.json` / `pnpm-lock.yaml` diffs. Copy it **verbatim** from the math-workflow reference (`{example-workflow-skill-dir}/ts-workflow/.npmrc`) — do not hand-write it. A freshly-scaffolded workflow has **no `pnpm-lock.yaml` yet**, and that's fine: pnpm only enforces `frozen-lockfile` against an *existing, out-of-sync* lockfile, so the first `pnpm install` (run by the workflow's `SKILL.md`) installs cleanly and generates the lockfile; later installs are then frozen against it.
 
 ### 4f. Ensure Plugin Manifest Exists
 
@@ -278,8 +363,8 @@ Tell the user, in this order:
 
 1. **What was built** — the workflow-id and plugin-id, plus a one-line confirmation that scaffolding finished cleanly.
 2. **Files written** — a flat list with absolute paths, grouped:
-   - **Command files**: every `{commands-dir}/NN-...md` written in Step 4a.
-   - **Skill files**: `{ahq-workflow-metadata-filename}`, the TypeScript CLI, `{skills-dir}/SKILL.md`, the `ts-workflow/package.json`, the `ts-workflow/pnpm-workspace.yaml`, the `ts-workflow/tsconfig.json`.
+   - **Command files**: every `{commands-dir}/NN-...md` (generated in Step 4a, or copied/renumbered in Step 4-COPY).
+   - **Skill files**: `{ahq-workflow-metadata-filename}`, the TypeScript CLI, `{skills-dir}/SKILL.md`, the `ts-workflow/package.json`, the `ts-workflow/pnpm-workspace.yaml`, the `ts-workflow/.npmrc`, the `ts-workflow/tsconfig.json`.
    - **Plugin manifest**: either the path to the newly-created `{plugin-manifest-filename}` (if Step 4f created it) **or** the literal note "left untouched (already existed)".
    - **Plan-verbatim copy**: `{plan-verbatim-copy-file}`.
 3. **APPROVED spec location**: `{approved-workflow-spec-filename}` — point the user there in case they want to re-read the spec while reviewing the generated files.
