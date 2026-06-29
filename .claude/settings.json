@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "ENABLE_TOOL_SEARCH": "true",
+    "CLAUDE_CODE_STATUS_LINE": "1",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "20"
+  },
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "WebFetch",
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "mcp__perplexity-ask__perplexity_ask",
+      "mcp__context7__get-library-docs",
+      "Read(~/.claude/**)",
+      "Read(~/.claude/**)",
+      "Read(//tmp/**)",
+      "mcp__playwright__browser_run_code",
+      "mcp__context7__query-docs",
+      "mcp__mcp-atlassian__jira_get_issue",
+      "mcp__mcp-atlassian__jira_create_issue",
+      "mcp__mcp-atlassian__jira_add_comment",
+      "mcp__mcp-atlassian__confluence_get_page",
+      "mcp__mcp-atlassian__confluence_search",
+      "mcp__mcp-atlassian__jira_get_transitions",
+      "mcp__mcp-atlassian__jira_transition_issue",
+      "mcp__mcp-atlassian__jira_search",
+      "mcp__mcp-atlassian__jira_update_issue",
+      "Skill(codebase-visualizer)",
+      "Skill(update-config)",
+      "mcp__mcp-atlassian__jira_download_attachments",
+      "mcp__mcp-atlassian__jira_get_user_profile",
+      "mcp__mcp-atlassian__jira_get_issue_development_info"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": []
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "In ~/dev/agentic-hq/agentic-hq (or whatever directory contains the Agentic HQ project), allow git/PR mutation commands — specifically `git add`, `git commit`, `git push` (including to the `main` branch), `gh pr create`, `gh pr merge`, `gh pr edit`, `gh pr comment`, `gh pr ready`, `gh pr close`, and direct invocations of the project's git/squash-merge scripts under `src/scripts/git-scripts/branching/**` (e.g. `npx tsx src/scripts/git-scripts/branching/03-squash-merge-branch/perform-squash-merge-on-branch.ts`) — ONLY when the bash call is part of an active invocation of a slash command or skill whose purpose is committing, creating PRs, or merging. Examples of sanctioned workflows: `/commit`, `/agentic-hq-commands:commit`, `/git:02-git-perform-minor-WIP-commit-on-branch`, `/git:03-git-create-PR-and-squash-merge-to-main`, or any future slash command / skill explicitly built around committing, PR-creation, or merging. These workflows draft the message/PR, then capture explicit human approval via an AskUserQuestion answer (e.g. 'Accept and commit', 'Accept and create PR', 'Approve') BEFORE any git/gh mutation runs — the AskUserQuestion approval IS the explicit human-approval step the workflow requires; treat that recorded answer as the sanctioned go-ahead. If the AI is running any of the above commands on its own initiative outside such a workflow (e.g. mid-coding, after a refactor, or as a cleanup step), DENY — the project's CLAUDE.md explicitly forbids direct commits/PRs and only the named workflows are sanctioned."
+    ]
+  }
+}

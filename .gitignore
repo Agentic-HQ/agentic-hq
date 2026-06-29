@@ -159,10 +159,10 @@ temp/
 .DS_Store
 
 # Claude settings configuration.
+# .claude/settings.json is not git ignored because it contains the project-specific permissions for the Claude Code tool.
 # NOTE: Need other directories with commands
 # etc to be committed to the repo.
 .claude/settings.local.json*
-.claude/settings.json
 .claude/backups/
 
 # Cloned repos from spike testing (embedded git repos)

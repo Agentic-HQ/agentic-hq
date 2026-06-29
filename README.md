@@ -1,10 +1,12 @@
-# Welcome to the Agentic HQ Project!
+# Welcome to the Agentic HQ Project
 
-You can use Agentic HQ to build and run customised developer workflows.
+Agentic HQ gives you control of your AI development workflow.
 
-The workflows are very simple Typescript wrappers around Claude Code that chain together multiple Claude Code Skills.
+It does this by allowing you to chain together a series of Claude Code Skills, each of which start in a new session and load only the context they need for their particlular task.
 
-Run the "add-feature" workflow to try it out, then run the "create-workflow" workflow to get Claude to build one for you.
+The workflow is run using a simple Typescript program that runs Skills and passes variables between them.  The Skills use these variables and markdown files to save and load context.
+
+To try it out follow the Quick Start to get installed, then add a feature to an existing project and create your own customised workflow.
 
 ## Quick Start
 
