@@ -57,10 +57,11 @@
     "node": "^22.0.0 || ^24.0.0",
     "pnpm": ">=11.0.0"
   },
+  "// node-pty": "Pinned to an EXACT version (no ^) on purpose — supply-chain safety. Its install/build script is ALLOWED to run on Linux (AHQ-170: node-pty ships no linux-x64 prebuild, so it compiles from source on install), which means a new release would execute its own code at install time. An auto-bumped (^) version could therefore run a compromised release's build script. Keep pinned; upgrade ONLY manually after reviewing the release. See https://agentic-hq.atlassian.net/browse/AHQ-170",
   "dependencies": {
     "commander": "^14.0.3",
     "fast-glob": "^3.3.3",
-    "node-pty": "^1.1.0"
+    "node-pty": "1.1.0"
   },
   "// @types/node": "Pinned to the LOWEST supported Node major (22), not the newest. @types/node's major should track the oldest Node LTS the project supports so typecheck reflects that runtime's API surface. See AHQ-145.",
   "devDependencies": {

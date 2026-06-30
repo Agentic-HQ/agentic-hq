@@ -13,14 +13,21 @@
 # allowBuilds map are TRUSTED to run their build scripts.
 #
 # SECURITY (AHQ-152): https://agentic-hq.atlassian.net/browse/AHQ-152
-# All third-party deps below are set to `false` to BLOCK their install/postinstall
-# scripts and avoid supply-chain attacks (a malicious release would otherwise run
-# arbitrary code on `pnpm install`). This is safe: node-pty, esbuild and
-# unrs-resolver all ship prebuilt native binaries for every platform we support,
-# so blocking their build scripts changes nothing on a supported platform.
+# Third-party deps are set to `false` to BLOCK their install/postinstall scripts and
+# avoid supply-chain attacks (a malicious release would otherwise run arbitrary code on
+# `pnpm install`). esbuild and unrs-resolver ship prebuilt native binaries for every
+# platform we support, so blocking their build scripts changes nothing.
+#
+# EXCEPTION — node-pty is set to `true` (AHQ-170):
+# https://agentic-hq.atlassian.net/browse/AHQ-170
+# node-pty ships prebuilds only for darwin + win32 (NOT linux-x64), so on Linux it must
+# compile from source on install — which requires its build script to run. We allow ONLY
+# node-pty (narrow allow-list); its version is pinned exactly in package.json, and the
+# frozen lockfile + 7-day minimumReleaseAge bound the supply-chain exposure. See the
+# supply-chain assessment in the AHQ-170 ticket.
 #
 # Original "need build scripts" rationale (superseded — kept for context):
-# - node-pty: native binaries for PTY terminal emulation (now via bundled prebuilds)
+# - node-pty: native PTY binaries — bundled prebuilds cover darwin/win32; Linux builds from source (AHQ-170)
 # - esbuild: native binaries for fast JS/TS bundling (now via @esbuild/<platform> pkg)
 # - unrs-resolver: native resolver for eslint-import-resolver-typescript (prebuilt pkg)
 #
@@ -35,7 +42,7 @@ packages:
   # `pnpm install` run from its own directory (NOT --ignore-workspace).
   - '!.agentic-hq/plugins/**'
 
-allowBuilds: { esbuild: false, node-pty: false, unrs-resolver: false }
+allowBuilds: { esbuild: false, node-pty: true, unrs-resolver: false }
 
 # MINIMUM RELEASE AGE (AHQ-152): https://agentic-hq.atlassian.net/browse/AHQ-152
 # Supply-chain "cooldown": refuse to resolve any dependency version published less
