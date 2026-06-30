@@ -1,5 +1,21 @@
 # Plan — Simplify dev install: replace `pnpm add -g .` with `npm link`
 
+> **Status update (2026-06-30) — AHQ-170 done; AHQ-169 unblocked, not yet implemented.**
+> The node-pty Linux build bug ([AHQ-170], commit `d2424cc`) was originally going
+> to be left until *after* this change, but it has now been fixed and committed
+> first. That matters here: the node-pty crash would otherwise have stopped the
+> cross-workspace e2e tests below from going green on x86_64 Linux *even after* the
+> `npm link` swap (the pnpm PATH error masked a second, deeper node-pty failure —
+> see Implementation order). With AHQ-170 resolved, the CLI starts on Linux, so
+> this plan can now be implemented cleanly and its e2e tests can actually pass on
+> Linux. **Nothing in the approach below changes — only the blocker is gone.**
+>
+> Implementation status: planning docs are committed; the code changes in this plan
+> (delete the install script, rework the 5 e2e tests to assert the install precondition,
+> update README / troubleshooting / glossary) are implemented and validated (pending commit).
+>
+> [AHQ-170]: https://agentic-hq.atlassian.net/browse/AHQ-170
+
 ## Context
 
 New users following the README hit a confusing failure at install: the dev
@@ -11,7 +27,8 @@ documented fix (`pnpm setup` → restart shell → re-run) is a fragile, multi-s
 machine-mutating dance that confused even the repo owner.
 
 **Root cause** (confirmed by two independent research passes — see
-`/tmp/web-research-q-and-a.md` and `/tmp/perplexity-q-and-a.md`): a pnpm-11
+[`03-web-research-q-and-a.md`](03-web-research-q-and-a.md) and
+[`02-perplexity-q-and-a.md`](02-perplexity-q-and-a.md)): a pnpm-11
 global-bin ergonomics quirk, not our code. **npm** does not have this problem — its
 global bin directory (especially under nvm, which this project uses) is already on
 `PATH`. The canonical Node way to run a local clone globally is **`npm link`**,
@@ -114,29 +131,60 @@ Files:
 - `tests/e2e/demo/cross-workspace-quick-jira-workflow-produces-expected-files.e2e.test.ts`
 - `tests/e2e/demo/string-reversal-workflow-in-new-workspace-lists-and-executes.e2e.test.ts`
 
-In each: remove the `INSTALL_SCRIPT` constant and the pnpm-specific Arrange block,
-and replace with an `npm link` + npm-global-bin derivation. Replacement pattern
-(the bare `agentic-hq <workflow>` invocation in each test is unchanged):
+In each: remove the `INSTALL_SCRIPT` constant and the pnpm-specific Arrange block.
+Do **not** replace it with an in-test `npm link` — putting `agentic-hq` on PATH is part
+of installing AHQ (README Quick Start step 5), **not the test's job**. Instead the test
+asserts the precondition that `agentic-hq` is already resolvable on PATH, and fails with a
+clear, install-pointing message if it isn't. (The bare `agentic-hq <workflow>` invocation
+in each test is unchanged.) Replacement pattern:
 
 ```ts
-// constants
-const NPM_LINK_TIMEOUT_MS = 60_000; // npm link (first run can be slow)
-// (delete INSTALL_SCRIPT / INSTALL_SCRIPT_TIMEOUT_MS)
+// (delete INSTALL_SCRIPT / INSTALL_SCRIPT_TIMEOUT_MS; no npm-link timeout is needed —
+// the test no longer runs npm link)
 
-// Arrange — register agentic-hq on PATH via `npm link` (uses package.json "bin").
-// Replaces the old install-dev-agentic-hq.sh / pnpm add -g . flow. node_modules
-// already exists (tests run from the installed repo), so `npm link` alone exposes
-// the CLI globally.
-execSync('npm link', { cwd: REPO_ROOT, stdio: 'pipe', timeout: NPM_LINK_TIMEOUT_MS });
-
-// Ensure npm's global bin dir is on PATH for this process so the linked
-// 'agentic-hq' command resolves (usually already on PATH under nvm).
-const npmGlobalBin = path.join(execSync('npm prefix -g').toString().trim(), 'bin');
-if (!process.env.PATH?.includes(npmGlobalBin)) {
-  process.env.PATH = `${npmGlobalBin}:${process.env.PATH}`;
-}
+// Precondition: the `agentic-hq` CLI must already be on PATH. Installation links it
+// there via `npm link` (README Quick Start step 5) — putting it on PATH is the
+// installer's job, not the test's, so we assert it rather than running `npm link`
+// here. A failure means the documented install step wasn't completed on this machine.
+const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
+const agenticHqOnPath = pathDirs.some((dir) => fs.existsSync(path.join(dir, 'agentic-hq')));
+expect(
+  agenticHqOnPath,
+  '`agentic-hq` is not on your PATH. It should have been linked during ' +
+    'installation — see README Quick Start step 5 (`npm link` from the repo ' +
+    'root). Run that, then re-run the e2e tests; if it still fails, see ' +
+    'docs/user-docs/troubleshooting-quickstart.md.'
+).toBe(true);
 ```
-Also remove each file's now-inaccurate "smelly" warning comment block.
+Also remove each file's now-inaccurate "smelly" warning comment block, and the
+now-unused `execSync` import / `REPO_ROOT` constant — except in
+`string-reversal-workflow-in-new-workspace-…`, which keeps `REPO_ROOT` to patch the
+fixture's `ts-workflow/package.json`.
+
+**Design note — installing is a precondition, not the test's job (updated twice after review).**
+This went through three shapes, each fixing the previous:
+
+1. *pnpm era:* the test ran `install-dev-agentic-hq.sh` (→ `pnpm add -g .`) then prepended
+   `$PNPM_HOME/bin` to PATH. Load-bearing (pnpm's global bin is never on PATH) but it baked
+   global-state mutation into every test run.
+2. *first npm-link cut:* the test ran `npm link` itself, then silently prepended npm's global
+   bin to PATH if missing. That prepend is a **sticking plaster** — under nvm `npm prefix -g`/bin
+   *is* the dir node/npm run from, so it's always on PATH and the prepend is a no-op; the only
+   time it fires is on a misconfigured host where a real user would *also* hit
+   `command not found`, so it would make the test pass while the documented UX is broken
+   (violating the repo's "fail fast, don't fall back" rule).
+3. *final (this change):* the test installs **nothing**. Getting `agentic-hq` onto PATH is part
+   of installing AHQ (README step 5: `npm link`), so the e2e suite treats it as a **precondition**
+   and merely asserts it, failing loudly with an install-pointing message if absent. This stops
+   re-mutating global machine state on every run, removes the redundant per-file `npm link`
+   (it ran 5× per suite), and keeps the tests honest about the real installed experience.
+
+The check is a **pure-Node PATH walk**
+(`(process.env.PATH ?? '').split(path.delimiter).some(dir => fs.existsSync(path.join(dir, 'agentic-hq')))`)
+asserted with `expect(...).toBe(true)` — deliberately **not** `execSync('which agentic-hq')`, which
+both reintroduces a child process and isn't portable to native Windows (no `which`; Windows uses
+`where`). The keep-native-Windows-open goal is the same reason `npm link` was chosen over a bash
+launcher in the first place.
 
 ### 3. README — Quick Start step 5 (`README.md:41-47`)
 Replace the script invocation + `pnpm add -g .` explanation with `npm link`:
@@ -170,15 +218,24 @@ e2e tests currently FAIL.** Their Arrange runs `install-dev-agentic-hq.sh` →
 throws before the assertion. There is **no green baseline to capture — the failing
 test _is_ the bug.** So the cycle is:
 
+> **Post-AHQ-170 note:** on x86_64 Linux there were *two stacked* failures. The
+> pnpm global-bin PATH error (this ticket) fires first, during Arrange, and masks
+> a second `node-pty` native-module crash that would surface once the CLI actually
+> ran (`agentic-hq list` loads node-pty). AHQ-170 (committed, `d2424cc`) fixed the
+> node-pty crash, so the **only** remaining failure for these e2e tests is the pnpm
+> one this plan removes — GREEN is now genuinely reachable on Linux.
+
 1. **RED (current state):** run `pnpm test:e2e:cross-workspace-list-workflows` (fast,
    no Claude launch). It fails in Arrange with the pnpm global-bin PATH error. This
    reproduces the bug *and* proves the test exercises the install path. (Per the repo
    rule "confirm tests fail first" — here they already do.)
-2. **GREEN (one test):** switch `cross-workspace-list-workflows.e2e.test.ts` to the
-   `npm link` pattern and delete `install-dev-agentic-hq.sh`; re-run → it passes
-   (npm's global bin is already on PATH under nvm — verified on this machine:
-   `/home/steve-personal/.nvm/versions/node/v24.18.0/bin`).
-3. Roll the same edit out to the other 4 e2e files; run them.
+2. **GREEN (one test):** delete `install-dev-agentic-hq.sh`; install the CLI the new
+   documented way once (`npm link` from the repo root); then change
+   `cross-workspace-list-workflows.e2e.test.ts` to drop the in-test install and instead
+   **assert the precondition** that `agentic-hq` is already on PATH; re-run → it passes
+   (the `npm link` install already put it there — under nvm npm's global bin is the same
+   dir node runs from: `/home/steve-personal/.nvm/versions/node/v24.18.0/bin`).
+3. Roll the same edit out to the other 4 e2e files; run the no-Claude ones.
 4. Update README, troubleshooting, glossary, and the install-prod comment.
 5. Run `pnpm validate` (typecheck + lint:check + format:check + unit tests; note e2e
    is separate from `validate`). Use `format:fix`/`lint:fix` only if `*:check` shows
@@ -201,8 +258,9 @@ test _is_ the bug.** So the cycle is:
 - **npm global bin not on PATH** on a non-nvm/system-Node setup (rare). Mitigated by
   the new troubleshooting entry (`npm prefix -g`). Far less likely than the pnpm case.
 - **`npm link` in a pnpm repo** may print a benign warning (packageManager pinned to
-  pnpm); it still links via the `bin` field. pnpm keeps owning `node_modules`. Verify
-  no error during step 3.
+  pnpm) when a developer runs it to install; it still links via the `bin` field, and
+  pnpm keeps owning `node_modules`. (The e2e tests no longer run `npm link` — they only
+  assert it was done — so this affects the install step, not the test run.)
 - **`private: true`** does not block `npm link` (only blocks publish). Fine.
 
 ## Out of scope (future)
@@ -210,4 +268,4 @@ test _is_ the bug.** So the cycle is:
   compiled `dist/`, `tsx` → devDependency only, `prepublishOnly`, ship the
   `.agentic-hq` plugins inside the package, decide ESM/CJS. Captured for a future
   ticket; full write-up in
-  `/tmp/updated-simple-description-and-research-summary-and-proposed-solution.md`.
+  [`04-updated-simple-description-and-research-summary-and-proposed-solution.md`](04-updated-simple-description-and-research-summary-and-proposed-solution.md).

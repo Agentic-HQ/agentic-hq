@@ -1,7 +1,9 @@
 # Agentic HQ install — simple description, research summary, and proposed solution
 
-*This supersedes the earlier `/tmp/problem.md` (which proposed a hand-rolled
-launcher script — now dropped; see "What changed" at the end).*
+*This supersedes an earlier draft (the hand-rolled-launcher `problem.md`, not
+retained in the repo), which proposed a hand-rolled launcher script — now
+dropped; see "What changed" at the end. The problem statement itself now lives in
+[`01-problem-description.md`](01-problem-description.md).*
 
 ---
 
@@ -70,8 +72,9 @@ One important refinement I'd add on top of both: it must be **`npm link`**, *not
 `pnpm link --global` — because pnpm's link command *also* uses `$PNPM_HOME/bin`
 and would hit the exact same PATH footgun. `npm link` is what sidesteps it.
 
-*(Full write-ups with citations: `/tmp/web-research-q-and-a.md` and the answer in
-`/tmp/perplexity-q-and-a.md`.)*
+*(Full write-ups with citations:
+[`03-web-research-q-and-a.md`](03-web-research-q-and-a.md) and the answer in
+[`02-perplexity-q-and-a.md`](02-perplexity-q-and-a.md).)*
 
 ---
 
@@ -149,9 +152,10 @@ pnpm-11 caveat block in the script header also goes.
 
 ---
 
-## What changed since `/tmp/problem.md`
+## What changed since the earlier draft
 
-`/tmp/problem.md` proposed a **hand-rolled launcher script** placed into a
+The earlier draft (`problem.md`, the hand-rolled-launcher proposal — not retained
+in the repo) proposed a **hand-rolled launcher script** placed into a
 PATH directory we detect. The research (both sources) advised against that — it's
 non-idiomatic, Unix-only, and reinvents what the `bin` field already does. **The
 launcher idea is dropped in favour of `npm link`.** Everything else (the PATH

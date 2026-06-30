@@ -54,40 +54,28 @@ end of the README's [Installation](../../README.md#installation) steps.
   with `sw_vers --productVersion`; if it is below 13.5, upgrade macOS or
   use a machine that meets the floor.
 
-### Installing the `agentic-hq` CLI (`install-dev-agentic-hq.sh`) fails
+### Installing the `agentic-hq` CLI (`npm link`) fails
 
-#### `corepack is required but not found`
+#### `agentic-hq: command not found` after `npm link`
 
-- **Cause:** Same as the `pnpm: command not found` case above — corepack not
-  on PATH.
-- **Fix:** Run `corepack enable` and re-run the script.
-
-#### `pnpm link --global` errors about `PNPM_HOME`
-
-- **Cause:** pnpm's global bin directory hasn't been set up yet. This is a
-  one-time-per-machine setup.
-- **Fix:** The standard fix is to run `pnpm setup`, but be aware: it will
-  modify your shell config (`~/.zshrc` or `~/.bashrc`) to set `PNPM_HOME`
-  and add it to `PATH`. If you'd rather not let it touch your shell config,
-  set the env vars manually with whatever mechanism you normally use.
-
-#### Script exits silently or with `Permission denied`
-
-- **Cause:** Script not executable.
-- **Fix:** Run via `bash` explicitly:
+- **Cause:** npm's global bin directory isn't on your `PATH`, or your current
+  shell hasn't picked up the new symlink. Under nvm this dir is the active
+  Node version's `bin` and is normally already on `PATH`; on a system-Node
+  setup it occasionally isn't.
+- **Fix:** Open a new terminal window and try again. If it still fails, check
+  where npm puts global binaries and confirm that dir is on your `PATH`:
   ```bash
-  bash scripts/infra/install-dev-agentic-hq.sh
+  npm prefix -g   # the global bin dir is <that path>/bin
   ```
+  Make sure `<npm prefix -g>/bin` is on your `PATH`.
 
-#### `agentic-hq: command not found` after the script completes
+#### `npm link` prints a `packageManager` / pnpm warning
 
-- **Cause:** pnpm's global bin directory isn't on your `PATH`, or your
-  current shell hasn't picked up the new symlink.
-- **Fix:** Open a new terminal window and try again. If it still fails:
-  ```bash
-  pnpm bin --global   # prints the global bin dir
-  ```
-  Make sure that dir is on your `PATH`.
+- **Cause:** This repo pins pnpm via the `packageManager` field, so npm may
+  print a benign warning when you run `npm link`. This is expected.
+- **Fix:** Ignore it. `npm link` only registers the global `agentic-hq`
+  command via the package's `bin` field; pnpm still owns `node_modules`. To
+  undo the link later, run `npm unlink -g agentic-hq`.
 
 ### `pnpm validate` fails
 
@@ -107,9 +95,10 @@ does.
 
 #### `command not found: agentic-hq`
 
-- **Cause:** Same as the *`agentic-hq: command not found` after the script
-  completes* case above.
-- **Fix:** Open a new terminal; check `pnpm bin --global` is on `PATH`.
+- **Cause:** Same as the *`agentic-hq: command not found` after `npm link`*
+  case above.
+- **Fix:** Open a new terminal; check that `<npm prefix -g>/bin` is on
+  `PATH`.
 
 #### Listing is empty / missing plugins
 

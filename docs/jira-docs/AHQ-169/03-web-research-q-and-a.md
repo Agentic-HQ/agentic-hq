@@ -1,8 +1,8 @@
 # Web Research Q&A — globally runnable TypeScript CLI (dev install + npm publishing)
 
 My own answer, from web research (June 2026), to the same questions posed to
-Perplexity in `/tmp/perplexity-q-and-a.md`. Sources are linked inline and listed
-at the bottom.
+Perplexity in [`02-perplexity-q-and-a.md`](02-perplexity-q-and-a.md). Sources are
+linked inline and listed at the bottom.
 
 ---
 

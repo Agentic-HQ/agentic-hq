@@ -89,7 +89,7 @@ design — see *Two-workspace plugin search* in
 ### `agentic-hq` install dir
 
 The directory containing the `agentic-hq` CLI on your machine. After running
-`scripts/infra/install-dev-agentic-hq.sh`, this is the path of the local
+`npm link`, this is the path of the local
 `agentic-hq` repo (because dev mode symlinks the live source). Used in the
 auto-appended `Read(<agentic-hq install dir>/.agentic-hq)` permission so
 Claude can read shipped command files from outside the user's local

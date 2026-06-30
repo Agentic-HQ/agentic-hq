@@ -3,7 +3,7 @@
  *
  * Verifies that the math workflow (3-step chain: x2, +3, /5) works from a
  * SEPARATE workspace via the globally-linked agentic-hq binary:
- * 1. Setup: Run install-dev-agentic-hq.sh to globally link the binary
+ * 1. Precondition: `agentic-hq` is already on PATH (installed via README `npm link`)
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Run: agentic-hq math -- --input-number=11
  * 4. Assert: Output contains "Output number: 5" (11 x2=22, +3=25, /5=5)
@@ -20,7 +20,6 @@
  * See: https://agentic-hq.atlassian.net/browse/AHQ-81
  */
 
-import { execSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -30,7 +29,6 @@ import { describe, it, expect } from 'vitest';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
 const TEST_TIMEOUT_MS = 1000_000; // 1000s: as claude can be really slow.
-const INSTALL_SCRIPT_TIMEOUT_MS = 30_000; // 30s for pnpm install + pnpm add -g .
 const LOG_FILE_LABEL = 'cross-workspace-math-workflow';
 const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
 
@@ -39,8 +37,6 @@ const TEST_INPUT_NUMBER = 11;
 const EXPECTED_OUTPUT_NUMBER = 5; // 11 x2=22, +3=25, /5=5
 
 // Paths
-const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
-const INSTALL_SCRIPT = path.join(REPO_ROOT, 'scripts', 'infra', 'install-dev-agentic-hq.sh');
 const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
 const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
@@ -50,28 +46,19 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', 
   it(
     'should process input number through math workflow from a separate workspace via the globally-linked binary',
     () => {
-      // WARNING: This is smelly! pnpm add -g . mutates global pnpm state on
-      // your machine. See: https://agentic-hq.atlassian.net/browse/AHQ-79 (Known Smell section)
-      process.stdout.write(
-        '⚠️  SMELLY: This test runs pnpm add -g . which mutates global pnpm state.\n' +
-          '   See: https://agentic-hq.atlassian.net/browse/AHQ-79 (Known Smell section)\n\n'
-      );
-
-      // Arrange — run install-dev-agentic-hq.sh to put agentic-hq on PATH
-      execSync(`bash ${INSTALL_SCRIPT}`, {
-        cwd: REPO_ROOT,
-        stdio: 'pipe',
-        timeout: INSTALL_SCRIPT_TIMEOUT_MS,
-      });
-
-      // Ensure pnpm's global bin directory is on PATH for this process, so the
-      // 'agentic-hq' binary registered by pnpm add -g . can be found.
-      // pnpm 11 places global binaries in $PNPM_HOME/bin.
-      const pnpmHome = process.env.PNPM_HOME ?? path.join(process.env.HOME!, 'Library', 'pnpm');
-      const pnpmBinDir = path.join(pnpmHome, 'bin');
-      if (!process.env.PATH?.includes(pnpmBinDir)) {
-        process.env.PATH = `${pnpmBinDir}:${process.env.PATH}`;
-      }
+      // Precondition: the `agentic-hq` CLI must already be on PATH. Installation links it
+      // there via `npm link` (README Quick Start step 5) — putting it on PATH is the
+      // installer's job, not the test's, so we assert it rather than running `npm link`
+      // here. A failure means the documented install step wasn't completed on this machine.
+      const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
+      const agenticHqOnPath = pathDirs.some((dir) => fs.existsSync(path.join(dir, 'agentic-hq')));
+      expect(
+        agenticHqOnPath,
+        '`agentic-hq` is not on your PATH. It should have been linked during ' +
+          'installation — see README Quick Start step 5 (`npm link` from the repo ' +
+          'root). Run that, then re-run the e2e tests; if it still fails, see ' +
+          'docs/user-docs/troubleshooting-quickstart.md.'
+      ).toBe(true);
 
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);

@@ -41,10 +41,14 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 5. **Install the `agentic-hq` CLI onto your `PATH`** so you can run workflows from any directory:
 
    ```bash
-   scripts/infra/install-dev-agentic-hq.sh
+   npm link
    ```
 
-   The script uses `pnpm add -g .` to register the CLI globally as a live symlink to this repo — no `sudo` needed.
+   Verify it's on your `PATH`:
+
+   ```bash
+   agentic-hq list
+   ```
 
 6. **Run unit tests** run the unit tests and other validation (should take less than 5 seconds):
 
