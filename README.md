@@ -10,6 +10,17 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 
 ## Quick Start
 
+### Prerequisites
+
+The following are prerequisites:
+- Claude Code - https://code.claude.com/docs/en/quickstart
+- git - https://git-scm.com/install/
+- gh - The GitHub CLI from https://cli.github.com/
+- **Linux only** — a C/C++ build toolchain (`make`, a compiler, and Python) so `node-pty` can compile from source during `pnpm install`. On Ubuntu/Debian: `sudo apt-get update && sudo apt-get install -y build-essential python3`
+
+If you're installing Linux from scratch in VMWare these are all included in the instructions at:
+https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMWare#Required-Dev-Tools
+
 ### Installation
 
 > [!NOTE]
@@ -43,6 +54,10 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
    ```bash
    npm link
    ```
+
+   > [!NOTE]
+   > **Linux users:** `npm link` prints two warnings — an *"Unknown project config `frozen-lockfile`"* and an *allow-scripts* note about a `darwin-*` `postinstall`. Both are expected and safe to ignore (the config is a pnpm key npm doesn't read; the postinstall is a macOS-only step that no-ops on Linux).
+
 
    Verify it's on your `PATH`:
 

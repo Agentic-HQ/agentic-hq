@@ -43,6 +43,22 @@ end of the README's [Installation](../../README.md#installation) steps.
 - **Fix:** Delete the offending directory and re-run `pnpm install`. Don't
   use `sudo` with pnpm.
 
+#### `node-pty` build fails on Linux — `gyp ERR! ... not found: make` (or "Could not find any Python")
+
+- **Cause:** On Linux `node-pty` has no prebuilt binary, so it compiles from
+  source via `node-gyp` — which needs a C/C++ build toolchain. A clean Linux
+  box (or a minimal/container image) is missing `make`/`gcc`/`g++`
+  (`not found: make`) and/or `python3` (`Could not find any Python
+  installation to use`).
+- **Fix (Ubuntu/Debian):** install the toolchain, then re-run the install:
+  ```bash
+  sudo apt-get update && sudo apt-get install -y build-essential python3
+  rm -rf node_modules && pnpm install
+  ```
+  `build-essential` provides `make`/`gcc`/`g++`/`libc6-dev`; `python3` is
+  needed by node-gyp's configure step. Verify the binary was produced:
+  `ls node_modules/.pnpm/node-pty@*/node_modules/node-pty/build/Release/pty.node`.
+
 #### `node-pty` install fails / `posix_spawnp failed` at runtime (older macOS)
 
 - **Cause:** Your macOS version is older than **13.5**. The `node-pty`
@@ -68,6 +84,19 @@ end of the README's [Installation](../../README.md#installation) steps.
   npm prefix -g   # the global bin dir is <that path>/bin
   ```
   Make sure `<npm prefix -g>/bin` is on your `PATH`.
+
+#### `npm link` prints `Unknown project config "frozen-lockfile"` and/or an `allow-scripts` warning (Linux)
+
+- **Cause:** Two benign warnings from running `npm` in a pnpm repo:
+  - *`Unknown project config "frozen-lockfile"`* — `frozen-lockfile` is a
+    **pnpm** key in the shared `.npmrc`; npm doesn't recognise it and warns.
+    pnpm still enforces it; npm ignores it.
+  - *`allow-scripts … postinstall: chmod +x … node-pty/prebuilds/darwin-*/…`*
+    — npm's supply-chain gate deferring the project's `postinstall`. That
+    script only marks the **macOS** node-pty prebuild executable; on Linux the
+    `darwin-*` glob matches nothing, so it's a no-op. No need to approve it.
+- **Fix:** None needed — ignore both. `npm link` still succeeds ("added 1
+  package") and `agentic-hq` is on your `PATH`.
 
 #### `npm link` prints a `packageManager` / pnpm warning
 
