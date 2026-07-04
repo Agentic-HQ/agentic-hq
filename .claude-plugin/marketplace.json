@@ -4,7 +4,8 @@
   "version": "0.0.2",
   "description": "Bundled plugins for Agentic HQ including test plugins (to start with)",
   "owner": {
-    "name": "Steve"
+    "name": "Steve",
+    "email": "ahq-claude-plugins@agentichq.ai"
   },
   "plugins": [
     {
