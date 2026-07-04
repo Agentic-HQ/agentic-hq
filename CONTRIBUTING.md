@@ -24,7 +24,7 @@ AI-assisted contributions are welcome, but the human submitting the PR is expect
 
 Agentic HQ is **pre-1.0** (currently v0.1.0). Expect rough edges, evolving APIs, and the occasional rename.
 
-It is **tested on macOS only** at the moment. Linux is likely to work with minimal changes; Windows is best-effort via WSL. Platform-expansion contributions are explicitly invited — see "Ways to contribute" below.
+It is **tested on macOS (13.5+) and Linux (Ubuntu 24.04 LTS)**. Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
 
 It is **maintained by one person** right now, so please calibrate expectations:
 
@@ -32,7 +32,7 @@ It is **maintained by one person** right now, so please calibrate expectations:
 - High-signal bug reports and well-scoped PRs will be reviewed first.
 - Incomplete or low-effort reports may be closed, or left untriaged until additional detail is provided.
 
-If your contribution lands well, we'll do our best to respond promptly. If you're proposing something large, talk to us first via an issue so you don't invest a week on something we'd ultimately decline.  Once Discord is up and running (at project launch) that will be the best place for you to propose and discuss your new feature and get an idea of whether it's worth investing the time in.
+If your contribution lands well, we'll do our best to respond promptly. If you're proposing something large, talk to us first via an issue so you don't invest a week on something we'd ultimately decline.  The [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) is the best place for you to propose and discuss your new feature and get an idea of whether it's worth investing the time in.
 
 ## Ways to contribute
 
@@ -43,16 +43,16 @@ Ways you can contribute (ordered by how likely they are to get merged/considered
 - **Behaviour-preserving refactors** that genuinely improve readability or remove duplication.
 - **Fix bugs** with a regression test that fails before your fix and passes after.
 - **Propose features** — open an issue first to scope it out before writing code (see "Proposing changes").
-- **Platform expansion** — Linux compatibility, WSL fixes, Windows support. Particularly valuable; coordinate via an issue first to avoid duplicate work.
-- **Share what you built with AHQ** — pop into Discord and tell us. Real-world use shapes the roadmap.
+- **Platform expansion** — native Windows support and WSL fixes. Particularly valuable; coordinate via an issue first to avoid duplicate work.
+- **Share what you built with AHQ** — pop into the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) and tell us. Real-world use shapes the roadmap.
 
 ## Reporting issues
 
-For **bugs**, use [GitHub Issues](https://github.com/Agentic-HQ/agentic-hq/issues/new/choose) with the bug-report template. The template asks for steps to reproduce, expected vs. actual behaviour, and your environment (macOS / Node / pnpm versions). Issues without reproduction steps are hard to action and may be closed with a request for more detail.
+For **bugs**, use [GitHub Issues](https://github.com/Agentic-HQ/agentic-hq/issues/new/choose) with the bug-report template. The template asks for steps to reproduce, expected vs. actual behaviour, and your environment (OS and version — e.g. macOS or Ubuntu — plus Node / pnpm versions). Issues without reproduction steps are hard to action and may be closed with a request for more detail.
 
 For **feature ideas**, use the feature-request template. Describe the problem you're trying to solve before proposing a solution — it helps us discuss alternatives.
 
-For **questions, ideas, or community chat**, please use our Discord server once it is set up (`<DISCORD_INVITE_URL>` to be put here) rather than filing an issue. Discussion-style threads belong there.
+For **questions, ideas, or community chat**, please use the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) rather than filing an issue. Discussion-style threads belong there.
 
 For **security vulnerabilities**, do **not** file a public issue. See [`SECURITY.md`](./SECURITY.md) for private reporting channels.
 
@@ -67,7 +67,7 @@ You do not need to ask for permission to work on an existing open issue. If you'
 
 The full setup is in the [`README.md`](./README.md) Quick Start section. Summarised here:
 
-- **macOS 15.7.5** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it); other platforms are untested but contributions to support them are welcome
+- **macOS 15.7.5** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it); Ubuntu is also supported and tested; other platforms are untested but contributions to support them are welcome
 - **Node.js 24 LTS** (default/recommended) — Node 22 and 24 LTS are both supported (not Node 23); install via [nvm](https://github.com/nvm-sh/nvm) (the repo has a root `.nvmrc` pinned to Node 24, currently `24.15.0`)
 - **pnpm** via `corepack enable` (corepack ships with Node 22 and 24; it auto-installs the pinned pnpm version from `package.json`)
 - Then `pnpm install` to install dependencies
@@ -138,8 +138,14 @@ Participation in this project is governed by the [Code of Conduct](./CODE_OF_CON
 
 Agentic HQ is licensed under the [MIT License](./LICENSE). By submitting a contribution you agree that your code is provided under the same licence.
 
+## GitHub Issues Vs Jira
+
+Pre-launch this project was developed using Jira as the issue tracking system and there are still many outstanding Tasks/Features logged in Jira.  The Jira server is currently private but an application has been made to make it public as an Open Source project.  
+
+In the first phase of this project contributors will be asked to raise bugs on GitHub because AI can do that easily and automatically using the `gh` command line tool. As the project matures we will decide whether to continue using both GitHub and Jira, or to align on only one issue tracking system.
+
 ## FAQ
 
 **Why must I disclose AI use?** Because the project's *subject matter* is AI-assisted development. We owe contributors and users honesty about how the code was built — and we want to see real-world patterns of AI-assisted contribution.
 
-**Why is macOS the only tested platform?** That's where the maintainer develops. Linux/WSL/Windows contributions and bug reports are explicitly welcome (see "Ways to contribute").
+**Which platforms are tested?** macOS (15.7.5) - that's where the maintainer develops. Installs and runs on Linux (Ubuntu 24.04 LTS). Windows is unsupported; the tested route for Windows users is VMware + Ubuntu 24.04 LTS, and WSL/Windows contributions and bug reports are explicitly welcome (see "Ways to contribute").

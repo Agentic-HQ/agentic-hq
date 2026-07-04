@@ -45,7 +45,7 @@ The hello-world demos (`string-reversal`, `math-workflow`) and the `create-workf
 
 1. **An Atlassian account** with access to the Jira/Confluence site you want to use.
 2. **An Atlassian API token.** Create one at <https://id.atlassian.com/manage-profile/security/api-tokens> following the instructions at <https://github.com/sooperset/mcp-atlassian#1-get-your-api-token>. Keep it on screen until you are ready to copy and paste it while following the instructions below (WARNING: Once you dismiss the screen you won't ever be able to get it again, and will have to delete it and generate a new token)
-3. **`uvx`** must be installed and on your `PATH` — the MCP server is launched by `uvx mcp-atlassian`. If you do not have `uv`/`uvx`, install per the official instructions at <https://docs.astral.sh/uv/>. macOS quick-start: `brew install uv`.
+3. **`uvx`** must be installed and on your `PATH` — the MCP server is launched by `uvx mcp-atlassian`. If you do not have `uv`/`uvx`, install per the official instructions at <https://docs.astral.sh/uv/>. macOS quick-start: `brew install uv`; on Ubuntu/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`.
 4. **Claude Code CLI** must be installed (since the script uses `claude mcp add-json`).
 
 ## Installation

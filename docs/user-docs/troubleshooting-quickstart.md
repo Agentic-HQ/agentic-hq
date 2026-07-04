@@ -70,6 +70,17 @@ end of the README's [Installation](../../README.md#installation) steps.
   with `sw_vers --productVersion`; if it is below 13.5, upgrade macOS or
   use a machine that meets the floor.
 
+### On Windows: install fails or behaves unexpectedly
+
+- **Cause:** Windows is unsupported. Agentic HQ is tested on macOS (13.5+)
+  and Linux (Ubuntu 24.04 LTS); native Windows path handling is likely to
+  break during install or at runtime.
+- **Fix:** Run Agentic HQ on a supported OS. The tested route for Windows
+  users is free **VMware + Ubuntu 24.04 LTS**, which works out of the box.
+  **WSL** is untested but may work if paths behave the same as native Linux
+  — if you try it, please report back on the
+  [Discord server](https://discord.gg/fnR7SJt2d7).
+
 ### Installing the `agentic-hq` CLI (`npm link`) fails
 
 #### `agentic-hq: command not found` after `npm link`

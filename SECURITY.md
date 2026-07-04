@@ -24,7 +24,7 @@ A useful report typically contains:
 - A clear description of the vulnerability and its impact.
 - Steps to reproduce, or a proof-of-concept.
 - The version / commit of Agentic HQ you tested against.
-- Your environment (macOS version, Node version, pnpm version).
+- Your environment (OS and version — e.g. macOS 15.5 or Ubuntu 24.04 — Node version, pnpm version).
 - Whether the issue is already public anywhere, and if so, where.
 
 ## Response expectations

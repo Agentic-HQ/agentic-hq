@@ -10,38 +10,50 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 
 ## Quick Start
 
+### Operating Systems Supported
+
+Supported and tested:
+- **Mac OS** - requires macOS 13.5 or newer (AHQ was developered and tested on 15.7.5).
+- **Linux** - tested on Ubuntu LTS 24.04
+
+Unsupported:
+- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to eithe:
+   - Install free VMware and set up Ubuntu 24.04 LTS.  This is fully tested and works. A guide will be available [here](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMware#Required-Dev-Tools) once Confluence is publicly available (should be less than 1 week after going public)
+   - Try on Windows Subsystem for Linux. Untested, but if the paths work the same as Linux it's likely to work.  Please let us know how this went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7)
+   - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING](CONTRIBUTING)
+
 ### Prerequisites
 
 The following are prerequisites:
 - Claude Code - https://code.claude.com/docs/en/quickstart
 - git - https://git-scm.com/install/
 - gh - The GitHub CLI from https://cli.github.com/
-- **Linux only** — a C/C++ build toolchain (`make`, a compiler, and Python) so `node-pty` can compile from source during `pnpm install`. On Ubuntu/Debian: `sudo apt-get update && sudo apt-get install -y build-essential python3`
 
-If you're installing Linux from scratch in VMWare these are all included in the instructions at:
-https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMWare#Required-Dev-Tools
+Linux only:
+- A C/C++ build toolchain (`make`, a compiler, and Python). This is for compiling `node-pty` from source during `pnpm install`. On Ubuntu/Debian simply run:
+   - `sudo apt-get update && sudo apt-get install -y build-essential python3`
 
 ### Installation
 
-> [!NOTE]
-> Requires macOS 13.5 or newer (tested on 15.7.5). Other operating systems may work with small changes. Linux is most likely to work with little or no changes. If you have Windows then try with WSL.
+1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it version 22 or higher (version 23 is unsupported). After installation confirm installation successful with:
+   ```bash
+   node -v
+   ```
 
-1. **Install Node.js 24 LTS.** - using the nvm installer at https://nodejs.org/en/download After installation confirm with `node -v`. Node.js 22 is also supported.
-
-2. **Clone the repo:**
+2. **Clone the repo and cd into the directory:**
 
    ```bash
    git clone https://github.com/Agentic-HQ/agentic-hq
    cd agentic-hq
    ```
 
-3. **Enable pnpm via Corepack.** `pnpm` is this project's package manager. It ships with Node.js through Corepack.  Run the following to enable it:
+3. **Enable pnpm via Corepack.**
 
    ```bash
    corepack enable
    ```
 
-   Corepack auto-manages the exact pnpm version pinned in `package.json` and does **not** modify your shell config. (Re-run `corepack enable` whenever you switch Node version.)
+   NOTE: Corepack auto-manages the exact pnpm version pinned in `package.json` and so you must re-run `corepack enable` if you switch to a different Node version.
 
 4. **Install dependencies:**
 
@@ -65,19 +77,19 @@ https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agent
    agentic-hq list
    ```
 
-6. **Run unit tests** run the unit tests and other validation (should take less than 5 seconds):
+6. **Run unit tests and other validation** (should take less than 10 seconds):
 
    ```bash
    pnpm validate
    ```
 
-7. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string. This is a quick win that confirms the CLI works and Claude Code launches *before* you point a real workflow at your own code:
+7. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
    ```bash
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
-   The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
+   NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
 
 If any step above fails, see [Quick Start Troubleshooting](docs/user-docs/troubleshooting-quickstart.md).
 
@@ -165,6 +177,8 @@ Software development is just one example of a complex, multi-stage process that 
 
 ## Further Exploration
 
+Join us on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) to discuss the project and meet other developers working on it.
+
 Here's the rest of what Agentic HQ ships with:
 
 - **A detailed, opinionated workflow — `add-feature-detailed-example`.** A worked example of how far a workflow can be shaped around one developer's own way of building software: a seven-stage loop (ticket → interrogate → plan → execute → refactor-plan → refactor-execute → validate). It's deliberately overkill for most people — treat it as a showcase of what's possible, not the recommended starting point.
@@ -203,12 +217,14 @@ You can also:
 
 ## Support
 
-While this repo is still private please contact Steve (the repo owner) for support using the contact form at https://agentichq.ai/. 
+Contact Steve (the repo owner) for support on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) or by filling in the contact form at https://agentichq.ai/
 
-Support will be provided via Question and Bug Jiras on the Agentic HQ Jira project at https://agentic-hq.atlassian.net/browse/AHQ once the repo is live.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details of how to submit GitHub Bug Reports
 
 ## Developer Documentation
 
-While this repo is still private please contact Steve (the repo owner) using the contact form at https://agentichq.ai/ if you're interested in working on the project.
+If you're interested in working on the project contact Steve (the repo owner) on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) or by filling in the contact form at https://agentichq.ai/ and read [CONTRIBUTING.md](CONTRIBUTING.md) to see how to file issues, propose changes, and submit pull requests. 
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to file issues, propose changes, and submit pull requests. Security vulnerabilities → [SECURITY.md](SECURITY.md). Community conduct → [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Security vulnerabilities → [SECURITY.md](SECURITY.md). 
+
+Community conduct → [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

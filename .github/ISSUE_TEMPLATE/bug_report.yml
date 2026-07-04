@@ -47,12 +47,12 @@ body:
       label: Environment
       description: |
         Please include:
-        - macOS version (e.g. 15.5)
+        - OS and version (e.g. macOS 15.5, or Ubuntu 24.04)
         - Node version (`node --version`)
         - pnpm version (`pnpm --version`)
         - AHQ commit / version
       value: |
-        - macOS:
+        - OS (macOS / Linux distro):
         - Node:
         - pnpm:
         - AHQ commit/version:
