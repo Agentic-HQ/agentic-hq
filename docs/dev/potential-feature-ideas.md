@@ -25,7 +25,7 @@ At the moment we just duplicate the instructions across the Skill files, and the
 
 An alternative is to ask the AI to load the instructions from a single, shared file - but that complicates the Skill and requires the Agent to do more work.  It also makes the instructions harder to read and edit for the human.
 
-A useful feature in AHQ could be something that parses the Skill file to detect included files and then dynamically includes them and provides them to the Agent.  When the human reads the files the includes should automatically be included.  This is something that Steve has experimented with in the partially completed [Spike-02 - Dynamic Prompt Runtime](../project-docs/project-spikes/spike-02-dynamic-prompt-runtime) in which a working example of an expandable prompt fragment viewer was created using VSCode's Markdown Preview Enhanced (MPE) extension. This allowed viewing nested, collapsible prompt fragments with up to 10 levels of depth.
+A useful feature in AHQ could be something that parses the Skill file to detect included files and then dynamically includes them and provides them to the Agent.  When the human reads the files the includes should automatically be included.  This is something that Steve has experimented with in the partially completed [Spike-02 - Dynamic Prompt Runtime](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-02-dynamic-prompt-runtime) (this material lives in the project's archive repo) in which a working example of an expandable prompt fragment viewer was created using VSCode's Markdown Preview Enhanced (MPE) extension. This allowed viewing nested, collapsible prompt fragments with up to 10 levels of depth.
 
 **What was completed:**
 - Expandable/collapsible fragments using HTML `<details>` elements
@@ -48,7 +48,7 @@ To avoid this problem it could be good to have some means of resuming the workfl
 
 This type of failure doesn't happen very often, and so it doesn't seem a high priority at the moment, but if we end up with long, complex, business critical workflows it will become more important.
 
-**Background:** We initially used Camunda as a workflow engine in [Spike-00](../project-docs/project-spikes/spike-00-fail-fast-minimal-whole-system) but found it wasn't a good fit because:-
+**Background:** We initially used Camunda as a workflow engine in [Spike-00](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-00-fail-fast-minimal-whole-system) (in the project's archive repo) but found it wasn't a good fit because:-
 - BPMN/XML has a steep learning curve
 - Workflow-as-diagrams doesn't align with our developer-centric approach - Typescript seems a much simpler/better fit for building workflows.
 - Lots of things about how Camunda deals with failures, errors and timeouts that were very hard to manage/understand/code around.
@@ -63,7 +63,7 @@ IMPORTANT: This idea is just "from my head" and I don't actually have a strong n
 
 ## Very Low Priority - Slack / Human-In-The-Loop Notifications
 
-There's an early spike at [`docs/project-docs/project-spikes/spike-01-slack`](../project-docs/project-spikes/spike-01-slack) that explored hooking a workflow up to Slack so the human gets a notification when the workflow needs review or finishes a long-running step. See [`spike-01-slack/README.md`](../project-docs/project-spikes/spike-01-slack/README.md) for where the original spike was paused and a May 2026 update describing a working one-shot Codex implementation on the `experiments/codex-slack-spike-one-shot-01` branch (plus the [`notify-human-via-slack.sh`](../../.agentic-hq/agent-files/spike-agent-files/scripts/notify-human-via-slack.sh) helper already in `main`) — that's the most likely starting point if this gets picked up.
+There's an early spike at [`docs/project-docs/project-spikes/spike-01-slack`](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-01-slack) (this material lives in the project's archive repo) that explored hooking a workflow up to Slack so the human gets a notification when the workflow needs review or finishes a long-running step. See [`spike-01-slack/README.md`](https://github.com/Agentic-HQ/agentic-hq-archive-001/blob/main/docs/project-docs/project-spikes/spike-01-slack/README.md) for where the original spike was paused and a May 2026 update describing a working one-shot Codex implementation on the archive repo's `experiments/codex-slack-spike-one-shot-01` branch (plus the [`notify-human-via-slack.sh`](https://github.com/Agentic-HQ/agentic-hq-archive-001/blob/main/.agentic-hq/agent-files/spike-agent-files/scripts/notify-human-via-slack.sh) helper, also in the archive repo) — that's the most likely starting point if this gets picked up.
 
 Marked **very low priority** because I no longer think long, fire-and-forget chunks of AI work are a good development model. The interaction I want when developing is close, continuous collaboration between the human and the AI — the human staying aware of what the AI is doing, steering it as it goes. "Fire off a workflow, walk away, come back when Slack pings me" trades the steering for nothing useful in return.
 
