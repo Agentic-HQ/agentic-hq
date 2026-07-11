@@ -21,6 +21,8 @@ pnpm run | grep test:e2e    # filter to a category
 
 These commands ensure code quality before committing. **Always run `pnpm validate` before committing.**
 
+CI (GitHub Actions) runs `pnpm validate` automatically on every PR targeting `main` and every push to `main` — see [ci-configuration.md](ci-configuration.md). Running it locally first is much faster feedback.
+
 ```bash
 # Run all checks: typecheck + lint + format + unit tests (REQUIRED before commits)
 pnpm validate

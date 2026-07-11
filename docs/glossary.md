@@ -24,6 +24,11 @@ one or more times to get a job done. Each call gets a fresh Claude session.
 The workflow's TS program is responsible for passing the output of one step
 into the input of the next.
 
+(Not to be confused with a _GitHub Actions_ workflow — the repo's CI
+configuration in `.github/workflows/`; see
+[dev/ci-configuration.md](dev/ci-configuration.md). "Workflow" on its own
+always means an Agentic HQ workflow in these docs.)
+
 Examples shipped in this repo: `add-feature` (4 steps — the flagship
 workflow), `string-reversal` (1 step), `math-workflow` (3 steps),
 `full-jira-tdd-story-workflow` (many steps).

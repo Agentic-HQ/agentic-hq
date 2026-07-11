@@ -1,5 +1,7 @@
 # Welcome to the Agentic HQ Project
 
+[![CI](https://github.com/Agentic-HQ/agentic-hq/actions/workflows/ci.yml/badge.svg)](https://github.com/Agentic-HQ/agentic-hq/actions/workflows/ci.yml)
+
 Agentic HQ gives you control of your AI development workflow.
 
 It does this by allowing you to chain together a series of Claude Code Skills, each of which start in a new session and load only the context they need for their particlular task.
@@ -20,7 +22,7 @@ Unsupported:
 - **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to eithe:
    - Install free VMware and set up Ubuntu 24.04 LTS.  This is fully tested and works. A guide will be available [here](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMware#Required-Dev-Tools) once Confluence is publicly available (should be less than 1 week after going public)
    - Try on Windows Subsystem for Linux. Untested, but if the paths work the same as Linux it's likely to work.  Please let us know how this went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7)
-   - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING](CONTRIBUTING)
+   - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ### Prerequisites
 
@@ -224,6 +226,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details of how to submit GitHub Bug R
 ## Developer Documentation
 
 If you're interested in working on the project contact Steve (the repo owner) on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) or by filling in the contact form at https://agentichq.ai/ and read [CONTRIBUTING.md](CONTRIBUTING.md) to see how to file issues, propose changes, and submit pull requests. 
+
+Every PR runs CI (GitHub Actions) automatically and a green check is required before merge — see [docs/dev/ci-configuration.md](docs/dev/ci-configuration.md) for what CI runs and how to view run logs.
 
 Security vulnerabilities → [SECURITY.md](SECURITY.md). 
 
