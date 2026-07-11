@@ -28,8 +28,10 @@ the README's `npm link` install step — see §4.
 pushed on `feature/ahq-176-minimal-ci`; draft PR
 [#1](https://github.com/Agentic-HQ/agentic-hq/pull/1) opened to trigger CI;
 the **first run was green on the first attempt** (41 seconds — see §7).
-The follow-up documentation work (§9) was completed 2026-07-11 and rides in
-the same PR. Remaining: Steve re-titles and squash-merges the PR (`git:03`).
+The follow-up documentation work (§9) was completed 2026-07-11 and rides on
+the same branch. Draft PR #1 was closed after serving its purpose (CI test
+harness — all runs green). Remaining: Steve runs `git:03`, which creates the
+real PR and squash-merges it — giving `main` its first green CI run.
 
 ## 2. CI Primer (for someone new to CI)
 

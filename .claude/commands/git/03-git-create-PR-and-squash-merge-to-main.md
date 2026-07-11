@@ -116,11 +116,17 @@ Show the user:
 
 Then use the AskUserQuestion tool to present these options:
 
-**Question:** "Review the branch analysis above. Would you like to continue creating the PR?"
+**Question:** "Review the branch analysis. Would you like to continue creating the PR?"
 **Header:** "Continue?"
 **Options:**
 1. "Continue" - Proceed with creating the PR
 2. "Abort" - Cancel the entire command
+
+**⚠️ CRITICAL — embed the content INSIDE the AskUserQuestion:** the dialog
+takes over the terminal UI, so text printed before the tool call is NOT
+visible while the user is answering. Put the key contents of
+branch-summary-info.md (branch name, commit count, files changed summary) in
+the `preview` field of **every** option.
 
 ### If user selects "Abort":
 - Inform them: "✓ Command cancelled. Temp files are preserved at [path] if you want to review them."
@@ -191,6 +197,11 @@ Then use the AskUserQuestion tool:
 1. "Accept and create PR" - Create the PR with this title and body
 2. "Edit PR" - Provide feedback to modify the PR draft
 3. "Abort" - Cancel the entire command
+
+**⚠️ CRITICAL — embed the PR draft INSIDE the AskUserQuestion:** the dialog
+takes over the terminal UI, so the draft printed before the tool call is NOT
+visible while the user is answering — they cannot approve a PR they cannot
+see. Put the full PR title + body in the `preview` field of **every** option.
 
 ### Handle User's Choice:
 
@@ -310,6 +321,12 @@ Then use the AskUserQuestion tool:
 1. "Approve" - Squash-merge, push to remote, and archive branch
 2. "Edit commit body" - Modify the merge commit body
 3. "Abandon" - Cancel this merge commit process
+
+**⚠️ CRITICAL — embed the commit message INSIDE the AskUserQuestion:** the
+dialog takes over the terminal UI, so the message printed before the tool
+call is NOT visible while the user is answering — they cannot approve a
+commit message they cannot see. Put the PR title + full commit body in the
+`preview` field of **every** option.
 
 ### Handle User's Choice:
 
