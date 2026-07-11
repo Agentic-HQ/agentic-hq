@@ -114,13 +114,25 @@ Show the user:
 2. The full path to the temp directory
 3. The list of all files in the temp directory
 
-Then use the AskUserQuestion tool to present these options:
+Then, directly below the analysis, present these options as PLAIN TEXT in
+the chat and STOP — the user replies by typing a number:
 
-**Question:** "Review the branch analysis above. Would you like to continue creating the PR?"
-**Header:** "Continue?"
-**Options:**
-1. "Continue" - Proceed with creating the PR
-2. "Abort" - Cancel the entire command
+```
+Review the branch analysis above. Would you like to continue creating the PR?
+
+  1. Continue — proceed with creating the PR
+  2. Abort    — cancel the entire command
+
+Enter 1 or 2:
+```
+
+**⚠️ NEVER use the AskUserQuestion tool in this command** (here or in Steps
+5, 7 and 8). Its dialog hides all text printed before it and its previews
+truncate at ~25 lines with no scrolling — the user cannot review what they
+are approving. Both are Claude Code bugs closed "not planned" upstream
+(anthropics/claude-code #58207, #38674). Plain-text menus keep everything
+visible and scrollable. WAIT for the user's typed reply — do not proceed
+without it.
 
 ### If user selects "Abort":
 - Inform them: "✓ Command cancelled. Temp files are preserved at [path] if you want to review them."
@@ -183,14 +195,19 @@ Present the draft PR to the user in this format:
 [full body with template]
 ```
 
-Then use the AskUserQuestion tool:
+Then, directly below the draft, present these options as PLAIN TEXT in the
+chat and STOP — the user replies by typing a number (NEVER AskUserQuestion —
+see Step 4):
 
-**Question:** "What would you like to do with this PR draft?"
-**Header:** "PR Draft"
-**Options:**
-1. "Accept and create PR" - Create the PR with this title and body
-2. "Edit PR" - Provide feedback to modify the PR draft
-3. "Abort" - Cancel the entire command
+```
+What would you like to do with this PR draft?
+
+  1. Accept and create PR — create the PR with this title and body
+  2. Edit PR              — tell me what to change in the title or body
+  3. Abort                — cancel the entire command
+
+Enter 1, 2 or 3:
+```
 
 ### Handle User's Choice:
 
@@ -250,7 +267,8 @@ Analyze the files that were changed/added in this branch to determine if any sho
 - These files should genuinely not be committed (logs, build artifacts, credentials, etc.)
 
 **If there are new files that should be in .gitignore:**
-- STOP and use AskUserQuestion to ask the user for approval
+- STOP and ask the user for approval with a plain-text numbered menu (NEVER
+  AskUserQuestion — see Step 4); wait for their typed reply
 - Show them which files/patterns you want to add
 - If approved: add them to .gitignore and continue
 - If not approved: continue without changes
@@ -302,14 +320,19 @@ Present the commit message draft in this format:
 [full commit body here]
 ```
 
-Then use the AskUserQuestion tool:
+Then, directly below the message draft, present these options as PLAIN TEXT
+in the chat and STOP — the user replies by typing a number (NEVER
+AskUserQuestion — see Step 4):
 
-**Question:** "What would you like to do with this merge commit message?"
-**Header:** "Commit Message"
-**Options:**
-1. "Approve" - Squash-merge, push to remote, and archive branch
-2. "Edit commit body" - Modify the merge commit body
-3. "Abandon" - Cancel this merge commit process
+```
+What would you like to do with this merge commit message?
+
+  1. Approve          — squash-merge, push to remote, and archive branch
+  2. Edit commit body — tell me what to change in the merge commit body
+  3. Abandon          — cancel this merge commit process
+
+Enter 1, 2 or 3:
+```
 
 ### Handle User's Choice:
 
@@ -399,5 +422,7 @@ Show the path to the temp analysis directory in case they want to review it late
 **ALWAYS:**
 - Show script outputs to the user so they can see what's happening
 - Use heredoc format for multi-line PR bodies and commit messages
-- Present clear choices to the user with the AskUserQuestion tool
+- Present choices as plain-text numbered menus and wait for the user's typed
+  reply (NEVER the AskUserQuestion tool — its dialog hides the content being
+  approved; see Step 4)
 - Handle errors gracefully and inform the user what went wrong

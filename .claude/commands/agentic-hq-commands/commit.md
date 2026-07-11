@@ -130,6 +130,17 @@ Use the file info, the recent AI conversation history and the context from the p
     1. Approve - Stage, commit and push changes
     2. Edit commit message - Modify the commit message
     3. Abandon commit - Cancel this commit process
+- **⚠️ NEVER use the AskUserQuestion tool for this menu (or any other menu in this command).** Its dialog hides all text printed before it (I cannot see the commit message I am approving) and its option previews truncate at ~25 lines with no scrolling. Both are Claude Code bugs closed "not planned" upstream (anthropics/claude-code #58207, #38674). Present the menu as PLAIN TEXT in the chat, numbered, directly below the commit message, then STOP and WAIT for me to type the number:
+
+```
+What would you like to do?
+
+  1. Approve             — stage, commit and push changes
+  2. Edit commit message — tell me what to change
+  3. Abandon commit      — cancel this commit process
+
+Enter 1, 2 or 3:
+```
 - If I select Edit and explain what I want changed, please just do that.  If I just select Edit without specifying then please ask me what I want changed and I will tell you, then please update the commit message and present to me for approval again and present the above Menu to me again.
 
 - If I select Approve please

@@ -1,0 +1,81 @@
+# =============================================================================
+# Minimal launch CI (AHQ-176): https://agentic-hq.atlassian.net/browse/AHQ-176
+# Full documentation: docs/dev/ci-configuration.md
+# =============================================================================
+#
+# Principle: follow, as closely as possible, what a real dev does on a fresh
+# Ubuntu machine following the README Quick Start — WITHOUT real Claude Code.
+# The job's steps map onto the README's numbered steps:
+#
+#   README step 1 (install Node 24 LTS)   -> actions/setup-node + .nvmrc
+#   README step 2 (git clone + cd)        -> actions/checkout
+#   README step 3 (corepack enable)       -> identical command
+#   README step 4 (pnpm install)          -> identical command
+#   README step 5 (npm link + verify)     -> identical commands (smoke test)
+#   README step 6 (pnpm validate)         -> identical command
+#   README step 7 (reversal workflow)     -> OUT OF SCOPE: needs real Claude.
+#      A separate optional/manual workflow for Claude/Jira e2e tests is
+#      AHQ-177: https://agentic-hq.atlassian.net/browse/AHQ-177
+#
+# The README's Linux-only prerequisite (build-essential + python3, for the
+# node-pty source compile) is already preinstalled on GitHub's ubuntu-24.04
+# runner image (verified against the actions/runner-images manifest), so there
+# is deliberately no apt-get step — on a provisioned image it would either
+# no-op or silently upgrade the toolchain mid-run, which conflicts with the
+# project's pinning philosophy (AHQ-152).
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Read-only token: this workflow only builds and tests (AHQ-152 supply-chain posture).
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    # Guard against hangs (e.g. a test accidentally entering watch mode).
+    timeout-minutes: 15
+    steps:
+      # README step 2: get the code.
+      - uses: actions/checkout@v7
+
+      # README step 1: Node version read from .nvmrc — the same single source
+      # of truth a real dev's nvm uses.
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      # README step 3: Corepack reads packageManager from package.json and
+      # installs that exact pnpm version, verified against its sha512 hash.
+      - name: Enable Corepack (installs pinned pnpm)
+        run: corepack enable
+
+      # README step 4: .npmrc sets frozen-lockfile=true, so this installs
+      # exactly pnpm-lock.yaml. node-pty compiles from source here — no
+      # linux-x64 prebuild (AHQ-170); its build script is the only one
+      # allow-listed in pnpm-workspace.yaml.
+      - name: Install dependencies
+        run: pnpm install
+
+      # README step 5: install the CLI onto PATH. The exact path where Linux
+      # issues surfaced before (AHQ-169, AHQ-172). On Linux it prints two
+      # documented, harmless warnings — they do not fail the step.
+      - name: Install CLI onto PATH (npm link)
+        run: npm link
+
+      # README step 5 verification, and our non-Claude smoke test: exercises
+      # real CLI startup (Commander parsing, plugin/workflow discovery),
+      # which unit tests never touch.
+      - name: Smoke test CLI (no Claude required)
+        run: agentic-hq list
+
+      # README step 6: the hard gate — typecheck + lint + format + unit tests.
+      - name: Validate (typecheck + lint + format + unit tests)
+        run: pnpm validate

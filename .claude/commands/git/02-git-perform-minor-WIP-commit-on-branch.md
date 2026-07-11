@@ -103,14 +103,26 @@ BODY:
 [body lines if any, or "None" if simple change]
 ```
 
-Then use the AskUserQuestion tool to present these options:
+Then, directly below the commit message, present these options as PLAIN TEXT
+in the chat and STOP — the user replies by typing a number:
 
-**Question:** "What would you like to do with this commit message?"
-**Header:** "Commit action"
-**Options:**
-1. "Accept and commit" - Stage all changes, commit with this message, and push to remote
-2. "Edit message" - Provide feedback and I'll revise the message
-3. "Abort" - Cancel this commit entirely
+```
+What would you like to do with this commit message?
+
+  1. Accept and commit  — stage all changes, commit with this message, push to remote
+  2. Edit message       — tell me what to change and I'll revise it
+  3. Abort              — cancel this commit entirely
+
+Enter 1, 2 or 3:
+```
+
+**⚠️ NEVER use the AskUserQuestion tool in this command.** Its dialog hides
+all text printed before it (the user cannot see the commit message they are
+approving) and its option previews truncate at ~25 lines with no way to
+scroll. Both are long-standing Claude Code bugs closed "not planned"
+upstream (anthropics/claude-code #58207, #38674). A plain-text menu keeps
+everything visible and scrollable. WAIT for the user's typed reply — do not
+proceed without it.
 
 ---
 
