@@ -34,8 +34,9 @@ For people working on the AHQ codebase or building their own workflows.
 - [`glossary.md`](glossary.md) — Definitions of terms used across the docs
   (workflow, plugin, skill, command, step, marshalling, etc.).
 - Previous technical spikes exploring architectural decisions and feature
-  directions (this material lives in the project's
-  [archive repo](https://github.com/Agentic-HQ/agentic-hq-archive-001)):
+  directions (this material lives in the project's private
+  [archive repo](https://github.com/Agentic-HQ/agentic-hq-archive-001) —
+  [contact the project founder](../README.md#support) for access):
   [00 - fail-fast minimal system using Camunda](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-00-fail-fast-minimal-whole-system),
   [01 - Slack integration](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-01-slack),
   [02 - dynamic prompt runtime](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-02-dynamic-prompt-runtime).
@@ -55,8 +56,9 @@ hand.
 
 The project's full historical material — early planning docs, technical
 spikes, workflow-run artifacts, deferred ideas, and pre-plugin-era archives —
-is preserved (scrubbed of personal data) in the read-only
+is preserved (scrubbed of personal data) in the
 [`agentic-hq-archive-001`](https://github.com/Agentic-HQ/agentic-hq-archive-001)
 archive repo: a complete snapshot of this project's docs before the repo was
-slimmed for go-live. Read it with the assumption that paths, decisions, and
-terminology may be out of date.
+slimmed for go-live. The archive is **private** — if you'd like access to
+anything in it, [contact the project founder](../README.md#support). Read it
+with the assumption that paths, decisions, and terminology may be out of date.
