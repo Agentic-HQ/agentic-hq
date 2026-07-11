@@ -130,6 +130,7 @@ Use the file info, the recent AI conversation history and the context from the p
     1. Approve - Stage, commit and push changes
     2. Edit commit message - Modify the commit message
     3. Abandon commit - Cancel this commit process
+- **⚠️ CRITICAL — if you use the AskUserQuestion tool for this menu:** the dialog takes over the terminal UI, so any text printed before the tool call (including the commit message) is NOT visible while I am answering — and I cannot approve a message I cannot see. You MUST embed the full commit message (title + body) in the `preview` field of **every** option so it is displayed inside the dialog whichever option is focused.
 - If I select Edit and explain what I want changed, please just do that.  If I just select Edit without specifying then please ask me what I want changed and I will tell you, then please update the commit message and present to me for approval again and present the above Menu to me again.
 
 - If I select Approve please

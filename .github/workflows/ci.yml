@@ -1,5 +1,6 @@
 # =============================================================================
 # Minimal launch CI (AHQ-176): https://agentic-hq.atlassian.net/browse/AHQ-176
+# Full documentation: docs/dev/ci-configuration.md
 # =============================================================================
 #
 # Principle: follow, as closely as possible, what a real dev does on a fresh

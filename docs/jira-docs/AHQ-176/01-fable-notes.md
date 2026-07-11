@@ -24,11 +24,12 @@ This supersedes the ticket's original smoke-test suggestion
 (`node bin/agentic-hq.cjs list`), which exercised the CLI code but bypassed
 the README's `npm link` install step — see §4.
 
-**Current status:** file created and verified as far as locally possible
-(see §5). Awaiting Steve's review, first WIP commit, and the first real run on
-GitHub (see §6). The follow-up documentation work (docs/dev/ci-configuration.md,
-CONTRIBUTING.md updates, cross-links) is parked in the session task list until
-that's done.
+**Current status (2026-07-11):** reviewed, WIP-committed (`4b0bb89`) and
+pushed on `feature/ahq-176-minimal-ci`; draft PR
+[#1](https://github.com/Agentic-HQ/agentic-hq/pull/1) opened to trigger CI;
+the **first run was green on the first attempt** (41 seconds — see §7).
+The follow-up documentation work (§9) was completed 2026-07-11 and rides in
+the same PR. Remaining: Steve re-titles and squash-merges the PR (`git:03`).
 
 ## 2. CI Primer (for someone new to CI)
 
@@ -227,7 +228,47 @@ rejected on those grounds.
   (AHQ-169, AHQ-172), and it's the one command not exercised locally. Either
   way, the failed-step log will name the missing tool or error directly.
 
-## 7. Relationship to Other Tickets
+## 7. First Run Results and Where the CI Logs Live (2026-07-11)
+
+### 7.1 First run: green on the first attempt
+
+- Draft PR [#1](https://github.com/Agentic-HQ/agentic-hq/pull/1) (created with
+  `gh pr create --draft`) triggered run
+  [29162968525](https://github.com/Agentic-HQ/agentic-hq/actions/runs/29162968525).
+- **Every step passed; the whole `validate` job took 41 seconds** — including
+  the node-pty source compile (the preinstalled toolchain did its job) and
+  `npm link` (the historically risky step — clean).
+- Observed in the logs: `npm link` printed the README-documented
+  `npm warn Unknown project config "frozen-lockfile"` warning (harmless, as
+  documented); `pnpm validate` ran 32 test files / 146 unit tests, all green —
+  the suite's first pass on Linux CI.
+
+### 7.2 Where the logs live (nothing extra needed in the workflow)
+
+GitHub auto-captures the **full stdout/stderr of every step** — no
+`echo`/logging steps need adding to the workflow. The PR's `/checks` tab only
+shows a summary panel, which is easy to mistake for "no logs". To reach them:
+
+- **UI route:** PR → Checks tab → click the **`validate` job name in the left
+  sidebar** → each step is an expandable row containing that command's full
+  log (live-streaming while a run is in progress). The gear icon (top right)
+  offers "View raw logs" and a download.
+- **Direct URLs:** run page
+  `https://github.com/Agentic-HQ/agentic-hq/actions/runs/<run-id>`; the
+  Actions tab lists all runs.
+- **Per-workflow page (Steve's preferred route):**
+  <https://github.com/Agentic-HQ/agentic-hq/actions/workflows/ci.yml> — lists
+  only CI runs. Click a run → click the **validate** job → all stages with
+  tick marks, each expandable to its full log.
+- **CLI route (what Claude uses):** `gh run list` (runs + status),
+  `gh run watch <id>` (follow live), `gh run view <id> --log` (full logs),
+  `gh run view <id> --log-failed` (failed steps only).
+
+Deliberately NOT added: a "show versions" / extra-output step (`node -v`,
+`pnpm -v`, etc.). The logs already show every command and its complete
+output; add such a step later only if a real debugging need appears.
+
+## 8. Relationship to Other Tickets
 
 - **AHQ-160** — the Codex report that spawned this ticket (finding #5).
 - **AHQ-170** — node-pty supply-chain decision; why its build script is the
@@ -237,13 +278,18 @@ rejected on those grounds.
 - **AHQ-177** — OUT OF SCOPE here: the separate optional/manual workflow for
   slow e2e tests needing real Claude/Jira credentials.
 
-## 8. Follow-Up Work (Parked Until the WIP Commit)
+## 9. Follow-Up Work (Completed 2026-07-11)
 
-Held in the session task list until Steve has reviewed, tested, and
-WIP-committed the workflow:
+All items below were completed on 2026-07-11, on the same branch as the
+workflow:
 
 1. Create `docs/dev/ci-configuration.md` — maintained developer doc for the CI
-   (this file is a working note, not the maintained doc).
+   (this file is a working note, not the maintained doc). MUST include a
+   "Viewing CI runs and logs" section covering the material in §7.2: full
+   per-step logs are auto-captured; UI navigation from a PR's Checks tab
+   (click the `validate` job in the left sidebar, expand steps); direct
+   Actions URLs; and the `gh run list` / `watch` / `view --log` /
+   `--log-failed` CLI routes.
 2. `CONTRIBUTING.md` — add a CI section linking to that doc; state that CI must
    pass on PRs before merge; fix the now-stale line "There is no CI running
    this automatically yet."

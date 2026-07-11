@@ -4,7 +4,7 @@ Author: Claude Code, with human assistance.  Based on a selection of existing Op
 
 Welcome, and thank you for your interest in Agentic HQ. This is a small, opinionated project built collaboratively with [Claude Code](https://www.anthropic.com/claude-code), and we're glad to have you here.
 
-**tl;dr.** Agentic HQ welcomes human and AI-assisted contributions. Create issues on GitHub. Include tests. Run `pnpm validate` before submission. Human oversight and understanding of AI generated submissions is required.
+**tl;dr.** Agentic HQ welcomes human and AI-assisted contributions. Create issues on GitHub. Include tests. Run `pnpm validate` before submission. CI must pass on your PR. Human oversight and understanding of AI generated submissions is required.
 
 This document describes:
 - The One Rule (Human understanding of PRs)
@@ -12,6 +12,7 @@ This document describes:
 - Ways You Contribute
 - How to report issues and propose new features
 - How to set up your local environment
+- Continuous Integration (CI must pass before merge)
 - How PRs are reviewed.
 
 ## The One Rule
@@ -91,9 +92,17 @@ This is a **hard gate**. It runs, in sequence:
 
 All four must pass. If your PR doesn't pass `pnpm validate` locally, it will not pass review.
 
-There is no CI running this automatically yet. Until that lands, the burden is on you to run it before pushing. Reviewers will run it again on their machine before merging.
+CI runs this same gate automatically on your PR (see "Continuous Integration (CI)" below) — but please still run it locally before pushing: it's much faster feedback than CI, and it keeps review focused on your change rather than a broken build.
 
 If `pnpm validate` fails on `format:check`, please run `pnpm format:check` to confirm only your in-progress files would be reformatted, then run `pnpm format:fix` to fix those files. Mixing unrelated whole-repo formatting into a code PR makes the diff impossible to review, and so it will be rejected.
+
+## Continuous Integration (CI)
+
+Every PR targeting `main` (and every push to `main`) automatically runs the CI workflow on a fresh Ubuntu VM via GitHub Actions. It follows the same steps a new contributor follows in the README Quick Start — pinned pnpm via Corepack, frozen `pnpm install`, `npm link`, an `agentic-hq list` smoke test, and `pnpm validate` — everything except the Claude-dependent steps.
+
+**A green "CI / validate" check is required before a PR is merged.** If CI fails, open the failing step's log from the PR's Checks tab (click the `validate` job in the left sidebar, then expand the red step), fix, and push again — CI re-runs automatically on every push to the PR branch.
+
+Full details — exactly what CI runs and why, what's deliberately absent, the security posture, and how to view run logs — are in [`docs/dev/ci-configuration.md`](./docs/dev/ci-configuration.md).
 
 ## TDD
 
@@ -114,7 +123,8 @@ Reviewer judgement decides whether test coverage is appropriate and meaningful.
 1. **Fork** the repo, create a branch, push your changes.
 2. **PR title** — use [Conventional Commits](https://www.conventionalcommits.org/) format: `fix:`, `feat:`, `docs:`, `refactor:`, `test:`, `chore:`. The PR title becomes the squashed commit message on `main`. Include the GitHub issue number followed by the issue summary e.g. "refactor: #123 Move Claude-specific wiring into DefaultClaudeCodeTool"
 3. **Fill in the PR template checkboxes** honestly — including the AI-assistance disclosure. We don't penalise AI use; we do penalise opaque AI use.
-4. **Be ready to discuss.** Reviewers will ask questions. If you can't answer them, that's the One Rule biting — please slow down, understand the code, and respond.
+4. **Wait for CI to go green.** The CI workflow runs automatically when you open the PR; a green check is required before merge (see "Continuous Integration (CI)" above).
+5. **Be ready to discuss.** Reviewers will ask questions. If you can't answer them, that's the One Rule biting — please slow down, understand the code, and respond.
 
 PRs are merged via **squash and merge**, so commit history inside the PR is flattened. Don't worry about producing a clean commit history during development.
 

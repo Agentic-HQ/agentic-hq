@@ -112,6 +112,22 @@ Then use the AskUserQuestion tool to present these options:
 2. "Edit message" - Provide feedback and I'll revise the message
 3. "Abort" - Cancel this commit entirely
 
+**⚠️ CRITICAL — embed the commit message INSIDE the AskUserQuestion:**
+The AskUserQuestion dialog takes over the terminal UI, so any text printed
+before the tool call is NOT visible while the user is answering. The user
+cannot approve a message they cannot see. You MUST put the full commit
+message (title + body) in the `preview` field of **every** option, so it is
+displayed inside the dialog whichever option is focused. Preview content for
+each option:
+
+```
+TITLE:
+WIP: [your title here]
+
+BODY:
+[body lines if any, or "None" if simple change]
+```
+
 ---
 
 ## Step 5: Handle User's Choice
