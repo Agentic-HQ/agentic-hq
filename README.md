@@ -91,7 +91,7 @@ Linux only:
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
-   NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
+   NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
 
 If any step above fails, see [Quick Start Troubleshooting](docs/user-docs/troubleshooting-quickstart.md).
 
@@ -100,9 +100,9 @@ If any step above fails, see [Quick Start Troubleshooting](docs/user-docs/troubl
 `add-feature` is the flagship workflow and the best place to start. It adds a **single, small feature** to an existing codebase as a simple **four-stage** sequence of AI agents — **research → plan → implement → review** — pausing for your approval at each key gate so nothing significant happens without your say-so.
 
 > [!CAUTION]
-> **Auto-approved Claude Code tool permissions.** Running workflows via the `agentic-hq` CLI automatically approves a set of Claude Code, Jira, and Confluence tools necessary for running bash commands, reading and writing files and accessing MCP servers — no permission prompt is shown. This matters most here, where a workflow writes real code into a project of **your own**.
+> **Auto-approved Claude Code tool permissions.** Running workflows via the `agentic-hq` CLI automatically approves a fixed list of Claude Code, Jira, and Confluence tools necessary for running bash commands, reading and writing files and accessing MCP servers — no permission prompt is shown. This matters most here, where a workflow writes real code into a project of **your own**. The approval applies only to the Claude Code sessions the CLI launches for that run — it never changes your Claude Code settings — and tools outside the curated list still prompt for permission as normal.
 >
-> **We recommend you check the full list at [docs/user-docs/WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md) before running any workflow to confirm you are happy with these permissions.**
+> **We recommend you check the full list — and what it does and doesn't mean for your machine — at [docs/user-docs/WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md) before running any workflow to confirm you are happy with these permissions.**
 
 `cd` into the root of an existing project you'd like to add a small feature to, then run:
 

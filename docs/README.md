@@ -17,8 +17,9 @@ workspaces.
   Atlassian MCP server used by the Jira workflows). The authoritative list of live
   workflows can be seen by running `agentic-hq list`; this doc is the human-readable companion.
 - [`user-docs/WARNING-re-auto-approved-claude-permissions.md`](user-docs/WARNING-re-auto-approved-claude-permissions.md) —
-  Important warning listing the Claude Code, Jira, and Confluence tools that
-  AHQ auto-approves when running workflows via the CLI.
+  The Claude Code, Jira, and Confluence tools that AHQ auto-approves when
+  running workflows via the CLI — what's on the list, why, and what it does
+  and doesn't mean for your machine.
 - [`user-docs/troubleshooting-quickstart.md`](user-docs/troubleshooting-quickstart.md) —
   What to do if a step in the README Quick Start fails.
 
