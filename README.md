@@ -19,7 +19,7 @@ Supported and tested:
 - **Linux** - tested on Ubuntu 24.04 LTS
 
 Unsupported:
-- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to either:
+- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to do one of the following:
    - Install free VMware and set up Ubuntu 24.04 LTS.  This is fully tested and works. A guide will be available [here](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMware#Required-Dev-Tools) once Confluence is publicly available (should be less than 1 week after going public)
    - Try on Windows Subsystem for Linux. Untested, but if the paths work the same as Linux it's likely to work.  Please let us know how this went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7)
    - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -37,7 +37,7 @@ Linux only:
 
 ### Installation
 
-1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it is version 22 or higher (version 23 is unsupported). After installation confirm success by running:
+1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it is version 22 or 24 (the only supported lines — other versions, including 23 and 25+, are unsupported). After installation confirm success by running:
    ```bash
    node -v
    ```

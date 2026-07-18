@@ -114,7 +114,7 @@ In practical terms for contributors:
 - **Pure refactors** (behaviour unchanged) and **documentation-only changes** are exempt — the existing test suite is enough to confirm you didn't break anything.
 - **Bug fixes** must include a test that demonstrates the bug before the fix.  Additional regression tests that show the fix didn't break any functionality related to the code changes are also welcome.
 
-Please avoid submitting unnecessary tests.   The RED stage in TDD involves writing a single test that must fail, and GREEN involve writing only enough code (no more) to make that test pass.  This keeps tests to the absolute minimum and code to the absolute minimum.  It prevents AI from being overly verbose.  A PR can (of course) contain multiple tests that cover all the functionality added for that PR (one RED->GREEN->REFACTOR cycle at a time).
+Please avoid submitting unnecessary tests.   The RED stage in TDD involves writing a single test that must fail, and GREEN involves writing only enough code (no more) to make that test pass.  This keeps tests to the absolute minimum and code to the absolute minimum.  It prevents AI from being overly verbose.  A PR can (of course) contain multiple tests that cover all the functionality added for that PR (one RED->GREEN->REFACTOR cycle at a time).
 
 Reviewer judgement decides whether test coverage is appropriate and meaningful.
 

@@ -19,8 +19,9 @@ end of the README's [Installation](../../README.md#installation) steps.
 
 #### `pnpm: command not found`
 
-- **Cause:** Corepack is not enabled. pnpm ships with Node.js 22+ but is
-  inactive until you turn corepack on.
+- **Cause:** Corepack is not enabled. Corepack ships with Node.js 22+ but is
+  inactive until you turn it on; once enabled it provides the pnpm version
+  pinned in `package.json`.
 - **Fix:**
   ```bash
   corepack enable

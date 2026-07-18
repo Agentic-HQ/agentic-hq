@@ -22,7 +22,7 @@ The source of truth for the list is the `DEFAULT_ALLOWED_TOOLS` constant in [`cl
 
 These are the same capabilities you would be approving prompt-by-prompt if you asked Claude Code interactively to implement a feature; the workflow approves them up front so it isn't interrupted at every command and file edit.
 
-## Jira (via Sooperset MCP Atlassian MCP Tool)
+## Jira (via the Sooperset Atlassian MCP server)
 
 Used by the Jira workflows (e.g. `full-jira-tdd-story-workflow`) to read stories, post progress comments, and move issues between statuses. These entries are inert unless you have configured the Atlassian MCP server.
 
@@ -34,7 +34,7 @@ Used by the Jira workflows (e.g. `full-jira-tdd-story-workflow`) to read stories
 - `mcp__mcp-atlassian__jira_search` — Run a JQL search.
 - `mcp__mcp-atlassian__jira_update_issue` — Update fields on an existing issue (summary, description, labels, etc.).
 
-## Confluence (via Sooperset MCP Atlassian MCP Tool)
+## Confluence (via the Sooperset Atlassian MCP server)
 
 Lets the Jira workflows read specs linked from a story. Also inert unless the Atlassian MCP server is configured.
 

@@ -103,7 +103,7 @@ for(entry : list){
 }
 
 In this example we have used fields/variables **twice** to temporarily cache/store values:
-- The list fields is used to temporarily store the list from the search until it used to print
+- The list field is used to temporarily store the list from the search until it is used to print
 - The entry variable is used to temporarily store the entry until it is printed
 
 AI (and developers) love to write code this way.  We can see what's happening and it all seems obvious.  But it can be simpler if we just *push* what we want done (if we are "lazy" in a good way) to the things that can do it for us.
@@ -133,7 +133,7 @@ In the constructor of WorkflowSearchResult we know we want to search two sets of
 ahqWorkspaceWorkflowSearchResult = new AHQWorkspaceWorkflowSearchResult();
 currentWorkspaceWorkflowSearchResult = new CurrentWorkspaceWorkflowSearchResult();
 
-then in displaySearchResults we "push"/delegate the work of displaying to the results to the individual workspaces result objects:
+then in displayToUser() we "push"/delegate the work of displaying the results to the individual workspace result objects:
 
 console.output("Workflows Available:");
 ahqWorkspaceWorkflowSearchResult.display()

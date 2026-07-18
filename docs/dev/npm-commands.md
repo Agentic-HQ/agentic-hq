@@ -78,7 +78,7 @@ pnpm demo:agentic-hq-cli:string-reversal
 
 # Override the default string:
 pnpm demo:agentic-hq-cli:string-reversal -- --string-to-reverse="hello there"
-# (equivalent: agentic-hq reversal --string-to-reverse="hello there")
+# (equivalent: agentic-hq reversal -- --string-to-reverse="hello there")
 
 # Run a plugin's workflow directly (bypasses the agentic-hq CLI):
 pnpm demo:plugin-direct:string-reversal
