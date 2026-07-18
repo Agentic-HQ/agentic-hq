@@ -6,12 +6,8 @@ Thank you for helping keep Agentic HQ and its users safe. This document explains
 
 **Please do not file a public GitHub issue for security vulnerabilities.** Use one of the private channels below.
 
-NOTE: Until the Agentic HQ repo has been made public, it isn't possible to enable "Private Vulnerability Reporting".  This is due to be done under Jira:
-https://agentic-hq.atlassian.net/browse/AHQ-137 - PostLaunch: When GitHub Repo Goes Public: Enable Privately reporting a security vulnerability
-as soon as the project is made public.  If the links below don't work, please report this via the contact form at https://agentichq.ai/
-
 **Preferred — GitHub Private Vulnerability Reporting:**
-- Go to the repository's [Security tab](https://github.com/Agentic-HQ/agentic-hq/security) and click **"Report a vulnerability"**.
+- Go to the repository's [Security tab](https://github.com/Agentic-HQ/agentic-hq/security) (likely this page) and click the green **"Report a vulnerability"** button at the top.
 - This routes your report privately to the maintainers and does not expose your contact details publicly.
 
 **Alternative — agentichq.ai contact form:**
