@@ -2,7 +2,7 @@
   "pluginId": "agentic-hq-demos-plugin",
   "skillId": "math-workflow",
   "shortId": "math",
-  "description": "Solves a math problem using an agent team",
+  "description": "Passes a number through three chained math steps",
   "exampleParameters": "-- --input-number=11",
   "version": "1.0.0",
   "author": {

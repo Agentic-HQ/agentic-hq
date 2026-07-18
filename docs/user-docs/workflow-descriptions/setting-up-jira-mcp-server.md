@@ -36,7 +36,7 @@ If/when the official server's macOS auth issue is fixed, this is the place we wi
 
 You only need this if you plan to run a workflow that talks to Jira or Confluence. The workflows that do are:
 
-- [`quick-jira-workflow`](overview-of-workflows.md#quick-jira-workflow--creates-and-completes-a-jira-ticket) — short Jira-driven TDD demo
+- [`quick-jira-workflow`](overview-of-workflows.md#quick-jira-workflow--reads-a-jira-ticket-and-completes-it-via-tdd) — short Jira-driven TDD demo
 - [`full-jira-tdd-story-workflow`](overview-of-workflows.md#full-jira-tdd-story-workflow--full-tdd-story-workflow-driven-by-a-jira-ticket) — full TDD-by-Jira workflow
 
 The hello-world demos (`string-reversal`, `math-workflow`) and the `create-workflow` workflow do **not** require this server.

@@ -2,7 +2,7 @@
 
 ## About This Doc
 
-This doc contains the design requirement for this Agentic HQ project.
+This doc contains the design requirements for this Agentic HQ project.
 
 It is used by all the agents in the Full Jira TDD Story Workflow to ensure the requirements are kept to when developing software in the Agentic HQ project.  See:
 
@@ -13,7 +13,7 @@ and the other commands in that workflow.
 
 ## How Code Should Be Designed
 
-Code in this project should be created in highly object oriented way, with each component having it’s own:
+Code in this project should be created in highly object oriented way, with each component having its own:
 
 - class
 - interface
@@ -29,14 +29,14 @@ We use the convention that the interface gets the concept name (e.g. `WorkflowSe
 As an example for:
 https://agentic-hq.atlassian.net/browse/AHQ-103 - 
 
-we to do O-O design with the following concepts which have been mentioned in this spec:
+we want to do O-O design with the following concepts which have been mentioned in this spec:
 
 - Workflow - a workflow that exists within a plugin and can be run
 - Plugin - a Claude Plugin that contains one or more AHQ Workflows in subdirectories
-- Skill - a Claude Skill that can be run by Claude, lives inside a Plugin, can contains the typescript code that is run by agentic-hq in order to execute a workflow and also contains the "skill" that returns the CLI command that runs this typescript workflow code.
+- Skill - a Claude Skill that can be run by Claude, lives inside a Plugin, can contain the TypeScript code that is run by agentic-hq in order to execute a workflow and also contains the "skill" that returns the CLI command that runs this typescript workflow code.
 - Workspace - A place where Plugins can live - either the current project workspace or the AHQ workspace.
 - WorkflowListing - A listing of all the available workflows that a user can run, including instructions for running them and what each workflow does.
-- ExampleCommand - an example command that tell the user how to run that workflow (as an example)
+- ExampleCommand - an example command that tells the user how to run that workflow (as an example)
 - ExampleParameters - the parameters that are added to "agentic-hq <workflowsShortName>" to create an ExampleCommand
 - WorkflowVersion
 - WorkflowDescription
@@ -46,7 +46,7 @@ we to do O-O design with the following concepts which have been mentioned in thi
 We want a class/interface pair for every concept used.  Even if it’s just a String we are moving about, we want:
 - The String to immediately be encapsulated by a Class (e.g. WorkflowVersion) as soon as it’s parsed from a file.
 - It stays as a WorkflowVersion object (via the interface) until it is written out to the user or to a file, using toString (which is at the edge of the system)
-- Any interaction with or use of a WorkflowVersion inside the system happens **through it’s interface**
+- Any interaction with or use of a WorkflowVersion inside the system happens **through its interface**
 
 This will create a lot of classes/interfaces/objects - but hopefully create code that is very easy to understand (so long as you can understand the many, many concepts that are represented by the objects and the structure of the system).  It also should mean that any functionality linked to an object should (where possible) be pushed into that object so instead of:
 
@@ -62,13 +62,13 @@ This is the “tell, don’t ask” method of coding.
 
 So while developing this feature, think always:
 
-"If someone want to replace (switch out) just one small aspect of the feature I've developed with their own concrete class to change the behaviour - could they do it easily?"
+"If someone wants to replace (switch out) just one small aspect of the feature I've developed with their own concrete class to change the behaviour - could they do it easily?"
 
-If the answer is "No, because that small aspect is mixed up with other things inside a function somewhere" - then we've failed to extract that things as a "concept" into a class/inteface.  This means we need to rethink and extract it.
+If the answer is "No, because that small aspect is mixed up with other things inside a function somewhere" - then we've failed to extract that thing as a "concept" into a class/interface.  This means we need to rethink and extract it.
 
 
 Question: Is this overkill and does it make the system **harder** to understand and change?
-Answer: There are valid arguments that if you spread out a system *entirely* into object/interfaces you are making the code harder to understand and change because to understand one thing you may have to read 12 files, rather than one or two procedural methods.  This is a valid concern.  If you do anything in design that is **extreme** you cause problems.  If you push this idea to it's extreme then everywhere you look you will only see "bits" that interact and nothing seems to do anything.  The functionality has moved from procedures into the *structure* of the objects and how they interact.  So, we want to achieve some kind of balance where we may clump together functionality so it's easier to read/understand, at the expense of the fact that something in the middle of that method **won't** be easily replaceable.  This has to be based on an assessement and judgement of how likely someone is going to want to extract and replace that little bit of functionality. This is where design "taste" and "judgement" are valuable. As has been known for 50 years in software design (see Fred Brooks - https://www.cs.unc.edu/techreports/86-020.pdf) there is "no silver bullet" for software design/systems.  In summary - we are **leaning** more towards providing future developers the classes they can override/replace for a lot of our system, but we aren't going to fracture our system to the extreme to achieve this at the expense of readability and elegance.  NOTE: We are **still** going to have a class for **every** "thing" in our system and not pass around primitive (ints, strings etc) - but we may choose *not* to push some functionality into that class if it's more readable to keep it in a bigger function...
+Answer: There are valid arguments that if you spread out a system *entirely* into object/interfaces you are making the code harder to understand and change because to understand one thing you may have to read 12 files, rather than one or two procedural methods.  This is a valid concern.  If you do anything in design that is **extreme** you cause problems.  If you push this idea to its extreme then everywhere you look you will only see "bits" that interact and nothing seems to do anything.  The functionality has moved from procedures into the *structure* of the objects and how they interact.  So, we want to achieve some kind of balance where we may clump together functionality so it's easier to read/understand, at the expense of the fact that something in the middle of that method **won't** be easily replaceable.  This has to be based on an assessment and judgement of how likely someone is going to want to extract and replace that little bit of functionality. This is where design "taste" and "judgement" are valuable. As has been known for 50 years in software design (see Fred Brooks - https://www.cs.unc.edu/techreports/86-020.pdf) there is "no silver bullet" for software design/systems.  In summary - we are **leaning** more towards providing future developers the classes they can override/replace for a lot of our system, but we aren't going to fracture our system to the extreme to achieve this at the expense of readability and elegance.  NOTE: We are **still** going to have a class for **every** "thing" in our system and not pass around primitive (ints, strings etc) - but we may choose *not* to push some functionality into that class if it's more readable to keep it in a bigger function...
 
 I want a complete audit done at the end of this plan and of the implementation of what parts people could switch out to change behaviour (or fix a bit with a class, without having to get it merged into the main branch).
 
@@ -103,7 +103,7 @@ for(entry : list){
 }
 
 In this example we have used fields/variables **twice** to temporarily cache/store values:
-- The list fields is used to temporarily store the list from the search until it used to print
+- The list field is used to temporarily store the list from the search until it is used to print
 - The entry variable is used to temporarily store the entry until it is printed
 
 AI (and developers) love to write code this way.  We can see what's happening and it all seems obvious.  But it can be simpler if we just *push* what we want done (if we are "lazy" in a good way) to the things that can do it for us.
@@ -123,7 +123,7 @@ Here we have *pushed* the responsibility for doing the search into the WorkflowS
 
 Next question: How can we make WorkflowSearchResult "lazy" (in a good way) as well?
 
-Answer: We make WorkflowSearchResult just an agreggator of of two workspace workflow search results, with fields:  
+Answer: We make WorkflowSearchResult just an aggregator of two workspace workflow search results, with fields:  
 
 WorkspaceWorkflowSearchResult ahqWorkspaceWorkflowSearchResult
 WorkspaceWorkflowSearchResult currentWorkspaceWorkflowSearchResult
@@ -133,7 +133,7 @@ In the constructor of WorkflowSearchResult we know we want to search two sets of
 ahqWorkspaceWorkflowSearchResult = new AHQWorkspaceWorkflowSearchResult();
 currentWorkspaceWorkflowSearchResult = new CurrentWorkspaceWorkflowSearchResult();
 
-then in displaySearchResults we "push"/delagate the work of displaying to the results to the individual workspaces result objects:
+then in displayToUser() we "push"/delegate the work of displaying the results to the individual workspace result objects:
 
 console.output("Workflows Available:");
 ahqWorkspaceWorkflowSearchResult.display()
@@ -142,9 +142,9 @@ currentWorkspaceWorkflowSearchResult.display()
 
 What we have done here:
 - We have avoided storing/caching state that we then have to interact with or change (e.g. the list object containing the list of workflows)
-- Instead the only thing we are storing in our new WorkflowSearchResult class is just other objects that get **told** to do stuff.  Notice that our WorkflowSearchResult doesn't obtain any state from these objects. It delagates (lazily) the work to them, and just prints out a little header before it does that.
+- Instead the only thing we are storing in our new WorkflowSearchResult class is just other objects that get **told** to do stuff.  Notice that our WorkflowSearchResult doesn't obtain any state from these objects. It delegates (lazily) the work to them, and just prints out a little header before it does that.
 
-When we do this with all our code it becomes massively simpler.  It becomes a network of cooperating / delagating objects where very little state is passed around or manipulated.  State is maintained and manipulated in very isolated and well understood and well controlled little areas and the main logic is carried out by different objects asking each other to do higher level things like "displayYourself()".  In this example above:
+When we do this with all our code it becomes massively simpler.  It becomes a network of cooperating / delegating objects where very little state is passed around or manipulated.  State is maintained and manipulated in very isolated and well understood and well controlled little areas and the main logic is carried out by different objects asking each other to do higher level things like "displayYourself()".  In this example above:
 
 currentWorkspaceWorkflowSearchResult.display()
 
@@ -174,11 +174,11 @@ This table serves as a quick reference for anyone reading or modifying the code,
 
 When doing planning, in order to be sure we are mapping all concepts to a class/interface two additional sections must be created:
 - A "Data Dictionary" section containing a table of all the concepts we are working with and their planned Class and Interface names.
-- An "English Language Description Using Concepts" section - which describes in a paragraph how the system will work with the class or interface names slotted in so they read like English.   The class/interface names should be **bolded** to stand out in markdown format.  Verbs that represent actual method calls / messages between objects must be highlighted as *italic* e.g. *getWorkflowListingString*.  Plain narrative verbs that describe internal behavior or flow (e.g. "creates", "checks", "delegates to") should NOT be in italics — only verbs that correspond to real method names on the public interface of a class.  The ELD should walk through the system's main scenarios step by step (e.g. listing, execution) showing start-to-finish mechanics.  If this paragraph doesn't read fluently and easily as English, then this is a sign the design doesn't reflect well how the system works.  Example sentence: "The **WorkflowSearchResults** asks each **Workspace** to *getWorkflowListingString*. The **AhqWorkspaceImpl** creates a **WorkspaceImpl** with the env var root and delegates to it."  ANTI-PATTERN: "*delegatesToAWorkspaceImpl*" — this is NOT a method name, it's narrative description of what happens internally. It should be plain text: "delegates to a WorkspaceImpl". Only use italics for things that will be actual method calls like *getWorkflowListingString*, *registerWorkflowsWith*, *findWorkflowFiles* etc.  PHRASING: Use "asks X to *doThing*" not "asks X for its *doThing*" — the former reads as natural English ("asks the **Workspace** to *getWorkflowListingString*") while the latter sounds like you're asking for a property rather than sending a message.
+- An "English Language Description Using Concepts" section - which describes in a paragraph how the system will work with the class or interface names slotted in so they read like English.   The class/interface names should be **bolded** to stand out in markdown format.  Verbs that represent actual method calls / messages between objects must be highlighted as *italic* e.g. *getWorkflowListingString*.  Plain narrative verbs that describe internal behaviour or flow (e.g. "creates", "checks", "delegates to") should NOT be in italics — only verbs that correspond to real method names on the public interface of a class.  The ELD should walk through the system's main scenarios step by step (e.g. listing, execution) showing start-to-finish mechanics.  If this paragraph doesn't read fluently and easily as English, then this is a sign the design doesn't reflect well how the system works.  Example sentence: "The **WorkflowSearchResults** asks each **Workspace** to *getWorkflowListingString*. The **AhqWorkspaceImpl** creates a **WorkspaceImpl** with the env var root and delegates to it."  ANTI-PATTERN: "*delegatesToAWorkspaceImpl*" — this is NOT a method name, it's narrative description of what happens internally. It should be plain text: "delegates to a WorkspaceImpl". Only use italics for things that will be actual method calls like *getWorkflowListingString*, *registerWorkflowsWith*, *findWorkflowFiles* etc.  PHRASING: Use "asks X to *doThing*" not "asks X for its *doThing*" — the former reads as natural English ("asks the **Workspace** to *getWorkflowListingString*") while the latter sounds like you're asking for a property rather than sending a message.
 
 ## Important Caveat
 
-Designing a well structured and well balanced set of classes and interfaces to make an object oriented system that is easy to understand and easy to change is **hard work** and you won't get it right first time.  You have to try, see where it looks bad, looks complicated, could be simplified, could be consolidated, and **iterate** until you have something that is **good enough** (NOT perfect, as that will use up far to much time and energy).  It's all about balance and assessing risk/reward for work done.
+Designing a well structured and well balanced set of classes and interfaces to make an object oriented system that is easy to understand and easy to change is **hard work** and you won't get it right first time.  You have to try, see where it looks bad, looks complicated, could be simplified, could be consolidated, and **iterate** until you have something that is **good enough** (NOT perfect, as that will use up far too much time and energy).  It's all about balance and assessing risk/reward for work done.
 
 ## STEVE TO DO LATER — Design Rules Captured In Memory, Not Yet Folded Into This Doc
 

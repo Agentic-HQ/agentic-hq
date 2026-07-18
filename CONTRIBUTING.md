@@ -25,7 +25,7 @@ AI-assisted contributions are welcome, but the human submitting the PR is expect
 
 Agentic HQ is **pre-1.0** (currently v0.1.0). Expect rough edges, evolving APIs, and the occasional rename.
 
-It is **tested on macOS (13.5+) and Linux (Ubuntu 24.04 LTS)**. Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
+It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5) and **Linux** (tested on Ubuntu 24.04 LTS). Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
 
 It is **maintained by one person** right now, so please calibrate expectations:
 
@@ -68,7 +68,7 @@ You do not need to ask for permission to work on an existing open issue. If you'
 
 The full setup is in the [`README.md`](./README.md) Quick Start section. Summarised here:
 
-- **macOS 15.7.5** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it); Ubuntu is also supported and tested; other platforms are untested but contributions to support them are welcome
+- **macOS or Ubuntu** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it; the maintainer develops on 15.7.5); Ubuntu 24.04 LTS is also supported and tested; other platforms are untested but contributions to support them are welcome
 - **Node.js 24 LTS** (default/recommended) — Node 22 and 24 LTS are both supported (not Node 23); install via [nvm](https://github.com/nvm-sh/nvm) (the repo has a root `.nvmrc` pinned to Node 24, currently `24.15.0`)
 - **pnpm** via `corepack enable` (corepack ships with Node 22 and 24; it auto-installs the pinned pnpm version from `package.json`)
 - Then `pnpm install` to install dependencies
@@ -114,7 +114,7 @@ In practical terms for contributors:
 - **Pure refactors** (behaviour unchanged) and **documentation-only changes** are exempt — the existing test suite is enough to confirm you didn't break anything.
 - **Bug fixes** must include a test that demonstrates the bug before the fix.  Additional regression tests that show the fix didn't break any functionality related to the code changes are also welcome.
 
-Please avoid submitting unnecessary tests.   The RED stage in TDD involves writing a single test that must fail, and GREEN involve writing only enough code (no more) to make that test pass.  This keeps tests to the absolute minimum and code to the absolute minimum.  It prevents AI from being overly verbose.  A PR can (of course) contain multiple tests that cover all the functionality added for that PR (one RED->GREEN->REFACTOR cycle at a time).
+Please avoid submitting unnecessary tests.   The RED stage in TDD involves writing a single test that must fail, and GREEN involves writing only enough code (no more) to make that test pass.  This keeps tests to the absolute minimum and code to the absolute minimum.  It prevents AI from being overly verbose.  A PR can (of course) contain multiple tests that cover all the functionality added for that PR (one RED->GREEN->REFACTOR cycle at a time).
 
 Reviewer judgement decides whether test coverage is appropriate and meaningful.
 
@@ -138,7 +138,7 @@ This project was built collaboratively with Claude Code. Contributions where AI 
 2. **You disclose meaningful AI assistance** in the PR description. By "meaningful" we mean Claude/Copilot/Cursor/etc. shaped the design or wrote substantial code — not routine autocomplete or formatting suggestions. There's no penalty for disclosure; there is for hiding it.
 3. **You've actually run and manually tested the code.** This catches the dominant failure mode of AI contributions, which is plausible-looking diffs that don't actually work.
 
-**If you built your contribution using an Agentic HQ workflow** — please mention it. We'd love to understand whether the project is being used on itself ("dog fooding").
+**If you built your contribution using an Agentic HQ workflow** — please mention it. We'd love to understand whether the project is being used on itself ("dogfooding").
 
 ## Code of Conduct
 

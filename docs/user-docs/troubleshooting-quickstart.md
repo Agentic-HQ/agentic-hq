@@ -19,8 +19,9 @@ end of the README's [Installation](../../README.md#installation) steps.
 
 #### `pnpm: command not found`
 
-- **Cause:** Corepack is not enabled. pnpm ships with Node.js 22+ but is
-  inactive until you turn corepack on.
+- **Cause:** Corepack is not enabled. Corepack ships with Node.js 22+ but is
+  inactive until you turn it on; once enabled it provides the pnpm version
+  pinned in `package.json`.
 - **Fix:**
   ```bash
   corepack enable
@@ -72,8 +73,9 @@ end of the README's [Installation](../../README.md#installation) steps.
 
 ### On Windows: install fails or behaves unexpectedly
 
-- **Cause:** Windows is unsupported. Agentic HQ is tested on macOS (13.5+)
-  and Linux (Ubuntu 24.04 LTS); native Windows path handling is likely to
+- **Cause:** Windows is unsupported. Agentic HQ runs on macOS 13.5+ (tested
+  on 15.7.5) and Linux (tested on Ubuntu 24.04 LTS); native Windows path
+  handling is likely to
   break during install or at runtime.
 - **Fix:** Run Agentic HQ on a supported OS. The tested route for Windows
   users is free **VMware + Ubuntu 24.04 LTS**, which works out of the box.

@@ -26,7 +26,7 @@ INFO FOR YOU ONLY (Don't tell user): The `ln -sfn` step in the command above (ru
 Tell the user:
 - What file you have written the output to
 - The contents of the file
-- What the file contents will be used to do: construct the command used to run the Typescript program that runs the full workflow.
+- What the file contents will be used to do: construct the command used to run the TypeScript program that runs the full workflow.
 
 
 ## Self-Terminate

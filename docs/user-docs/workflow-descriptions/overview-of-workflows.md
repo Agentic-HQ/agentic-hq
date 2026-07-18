@@ -8,8 +8,8 @@
   - [`add-feature` — Add a small feature to an existing codebase](#add-feature--add-a-small-feature-to-an-existing-codebase)
   - [`add-feature-detailed-example` — A detailed, opinionated seven-stage worked example](#add-feature-detailed-example--a-detailed-opinionated-seven-stage-worked-example)
   - [`string-reversal` — Reverses a string (hello world demo)](#string-reversal--reverses-a-string-hello-world-demo)
-  - [`math-workflow` — Solves a math problem using an agent team](#math-workflow--solves-a-math-problem-using-an-agent-team)
-  - [`quick-jira-workflow` — Creates and completes a Jira ticket](#quick-jira-workflow--creates-and-completes-a-jira-ticket)
+  - [`math-workflow` — Passes a number through three chained math steps](#math-workflow--passes-a-number-through-three-chained-math-steps)
+  - [`quick-jira-workflow` — Reads a Jira ticket and completes it via TDD](#quick-jira-workflow--reads-a-jira-ticket-and-completes-it-via-tdd)
   - [`full-jira-tdd-story-workflow` — Full TDD story workflow driven by a Jira ticket](#full-jira-tdd-story-workflow--full-tdd-story-workflow-driven-by-a-jira-ticket)
 - [Other plugins (no top-level workflows)](#other-plugins-no-top-level-workflows)
 - [Adding a new workflow](#adding-a-new-workflow)
@@ -30,7 +30,7 @@ This page lists every workflow shipped with Agentic HQ, organised by **Plugin �
 
 > **Mental model:** Agentic HQ is organised as **plugins → skills → workflows → commands** — a plugin bundles related skills; each skill packages one workflow; the workflow's TypeScript program runs by chaining a sequence of commands (Claude Code prompt files), one fresh Claude session per step. See [how-agentic-hq-works.md](../../dev/how-agentic-hq-works.md) for the full architecture (marshalling, plugin discovery, design principles).
 
-> **Naming convention:** This page identifies each workflow by its **full skill id** (e.g. `string-reversal`) — the directory name under `skills/` and the `skillId` field in its `ahq-workflow.json`. To **run** a workflow you use its **short id** (e.g. `reversal`) — the `shortId` field, which is what `agentic-hq list` prints and the only form the `agentic-hq` CLI accepts. The two are usually different (only `create-workflow` happens to share the same value for both).
+> **Naming convention:** This page identifies each workflow by its **full skill id** (e.g. `string-reversal`) — the directory name under `skills/` and the `skillId` field in its `ahq-workflow.json`. To **run** a workflow you use its **short id** (e.g. `reversal`) — the `shortId` field, which is what `agentic-hq list` prints and the only form the `agentic-hq` CLI accepts. For some workflows the two are different (e.g. `string-reversal` runs as `reversal`); for others (`create-workflow`, `add-feature`, `add-feature-detailed-example`) the short id is identical to the skill id.
 
 ---
 
@@ -146,7 +146,7 @@ Source files:
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/SKILL.md)
 - [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/src/string-reversal-demo-cli.ts)
 
-### `math-workflow` — Solves a math problem using an agent team
+### `math-workflow` — Passes a number through three chained math steps
 
 Run:
 
@@ -162,7 +162,7 @@ Source files:
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/SKILL.md)
 - [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.ts)
 
-### `quick-jira-workflow` — Creates and completes a Jira ticket
+### `quick-jira-workflow` — Reads a Jira ticket and completes it via TDD
 
 Run:
 
@@ -209,7 +209,7 @@ agentic-hq full-jira -- --jira-id=TEST-123
 
 The fuller TDD-by-Jira workflow. Use this to execute a complete TDD story for a Jira ticket using Agentic HQ. Requires the Sooperset Atlassian MCP server — see [Setting Up the Sooperset Atlassian MCP Server (Jira + Confluence)](setting-up-jira-mcp-server.md).
 
-**Very interactive — human-in-the-loop at multiple stages.** If you want a fully unattended Jira workflow, use [`quick-jira-workflow`](#quick-jira-workflow--creates-and-completes-a-jira-ticket) instead.
+**Very interactive — human-in-the-loop at multiple stages.** If you want a fully unattended Jira workflow, use [`quick-jira-workflow`](#quick-jira-workflow--reads-a-jira-ticket-and-completes-it-via-tdd) instead.
 
 How it runs:
 
@@ -223,7 +223,7 @@ How it runs:
 
 Net effect: a single Jira ticket can describe a feature that needs full plans, implementations and tests at *each* level — unit, then integration, then e2e — and you get a complete TDD pass per level rather than mixing them up. Test types you don't list on the Jira are simply skipped.
 
-> **Real-world usage in this repo:** the majority of features in Agentic HQ itself were implemented using this workflow. Each run leaves a per-Jira folder of plans, RED/GREEN/REFACTOR notes and validation results under [`docs/jira-docs/`](../../../docs/jira-docs) (37 such folders at time of writing) — handy as worked examples of the workflow in action. The first one was [AHQ-6](https://agentic-hq.atlassian.net/browse/AHQ-6); see its [AI summary of the Jira and questions for the human](../../../docs/jira-docs/AHQ-6/workflow-files/ai-summary-of-jiras-and-questions-for-human.md) as a starting-point example.
+> **Real-world usage in this repo:** the majority of features in Agentic HQ itself were implemented using this workflow. Each run leaves a per-Jira folder of plans, RED/GREEN/REFACTOR notes and validation results under [`docs/jira-docs/`](../../../docs/jira-docs) — handy as worked examples of the workflow in action. The first one was [AHQ-6](https://agentic-hq.atlassian.net/browse/AHQ-6); see its [AI summary of the Jira and questions for the human](../../../docs/jira-docs/AHQ-6/workflow-files/ai-summary-of-jiras-and-questions-for-human.md) as a starting-point example.
 
 Source files:
 

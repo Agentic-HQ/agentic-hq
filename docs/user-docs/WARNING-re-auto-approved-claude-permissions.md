@@ -22,7 +22,7 @@ The source of truth for the list is the `DEFAULT_ALLOWED_TOOLS` constant in [`cl
 
 These are the same capabilities you would be approving prompt-by-prompt if you asked Claude Code interactively to implement a feature; the workflow approves them up front so it isn't interrupted at every command and file edit.
 
-## Jira (via Sooperset MCP Atlassian MCP Tool)
+## Jira (via the Sooperset Atlassian MCP server)
 
 Used by the Jira workflows (e.g. `full-jira-tdd-story-workflow`) to read stories, post progress comments, and move issues between statuses. These entries are inert unless you have configured the Atlassian MCP server.
 
@@ -34,7 +34,7 @@ Used by the Jira workflows (e.g. `full-jira-tdd-story-workflow`) to read stories
 - `mcp__mcp-atlassian__jira_search` — Run a JQL search.
 - `mcp__mcp-atlassian__jira_update_issue` — Update fields on an existing issue (summary, description, labels, etc.).
 
-## Confluence (via Sooperset MCP Atlassian MCP Tool)
+## Confluence (via the Sooperset Atlassian MCP server)
 
 Lets the Jira workflows read specs linked from a story. Also inert unless the Atlassian MCP server is configured.
 
@@ -51,7 +51,7 @@ In addition to `DEFAULT_ALLOWED_TOOLS` above, the CLI appends one extra permissi
 
 - `Read(<agentic-hq install dir>/.agentic-hq)` — explicit Read approval for the `.agentic-hq` directory in the Agentic HQ workspace where the `agentic-hq` binary is installed.
 
-This is needed because workflow command `.md` files and reference docs live inside the `.agentic-hq` dir inside the Agentic HQ workspace.  If you run the agentic-hq CLI from a different workspace Claude will not have access to this directory and so won't be able to read the Documentation it needs for the different workflow skills.
+This is needed because workflow command `.md` files and reference docs live inside the `.agentic-hq` dir inside the Agentic HQ workspace.  Without this permission, if you ran the agentic-hq CLI from a different workspace, Claude would not have access to this directory and so wouldn't be able to read the documentation it needs for the different workflow skills.
 
 NOTE: this is a temporary measure until [AHQ-102](https://agentic-hq.atlassian.net/browse/AHQ-102) is implemented.  After that has been implemented all resources and documents required to run a Skill will be bundled with that Skill and this extra permission will be removed.
 

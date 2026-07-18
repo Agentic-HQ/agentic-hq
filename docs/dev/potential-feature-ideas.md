@@ -1,6 +1,6 @@
 # Potential Feature Ideas
 
-This doc contains some idea on features that could be added to AHQ.  This isn't a Roadmap because we want to add features that are useful to people as we go along, so we can get good feedback on them, rather than thinking up and implementing ideas that *may* be useful.
+This doc contains some ideas on features that could be added to AHQ.  This isn't a Roadmap because we want to add features that are useful to people as we go along, so we can get good feedback on them, rather than thinking up and implementing ideas that *may* be useful.
 
 ## High Priority - Talk To People About Their Current Uses Of AI And Find The Problems AHQ Could Solve - Then Solve Them
 
@@ -17,7 +17,7 @@ The book [The Mom Test](https://www.momtestbook.com/) says that asking people wh
 
 This technique seems the most fun, and possibly most useful, way of finding the features to work on next.  The ideas in the sections below are from me thinking "That would be useful!" - but as I don't really need them I would be working in a vacuum creating them and I wouldn't be able to get real feedback on whether they are useful.  So they are marked as Lower Priority.
 
-## Lower Priority - Composible Commands/Skills (Partially Completed)
+## Lower Priority - Composable Commands/Skills (Partially Completed)
 
 We often use the exact same set of instructions in multiple Skills, for example the instructions to load and parse input from the input file at the start of every Skill in a Workflow.
 
@@ -42,15 +42,15 @@ IMPORTANT: This idea is just "from my head" and I don't actually have a strong n
 
 ## Lower Priority - Resumable Workflows
 
-If you're in the middle of a Workflow and something goes wrong that causes the current Skill to abort/die or your computer crashes, it's hard to work out how to resume the Workflow.  You have to work out what state things were in and then either run the remaining Skills manually, or modify your Typescript to resume, or just start the Workflow again from the start.
+If you're in the middle of a Workflow and something goes wrong that causes the current Skill to abort/die or your computer crashes, it's hard to work out how to resume the Workflow.  You have to work out what state things were in and then either run the remaining Skills manually, or modify your TypeScript to resume, or just start the Workflow again from the start.
 
-To avoid this problem it could be good to have some means of resuming the workflow from where you left off.  This could some kind of custom AHQ code that you add to your Typescript Workflow program if you want this resumable workflow?  It could use a library like https://temporal.io/ - although that could involve quite a large number of limiting changes to the project, which may make it more complex or harder to add other features to.  Ideally any change to AHQ that allows this to be implemented would require zero changes to the core workflow engine, and just be an optional add-on that people can use (or not use) in the Agent Implementation.
+To avoid this problem it could be good to have some means of resuming the workflow from where you left off.  This could be some kind of custom AHQ code that you add to your TypeScript Workflow program if you want this resumable workflow?  It could use a library like https://temporal.io/ - although that could involve quite a large number of limiting changes to the project, which may make it more complex or harder to add other features to.  Ideally any change to AHQ that allows this to be implemented would require zero changes to the core workflow engine, and just be an optional add-on that people can use (or not use) in the Agent Implementation.
 
 This type of failure doesn't happen very often, and so it doesn't seem a high priority at the moment, but if we end up with long, complex, business critical workflows it will become more important.
 
 **Background:** We initially used Camunda as a workflow engine in [Spike-00](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-00-fail-fast-minimal-whole-system) (in the project's private archive repo — [contact the project founder](../../README.md#support) for access) but found it wasn't a good fit because:-
 - BPMN/XML has a steep learning curve
-- Workflow-as-diagrams doesn't align with our developer-centric approach - Typescript seems a much simpler/better fit for building workflows.
+- Workflow-as-diagrams doesn't align with our developer-centric approach - TypeScript seems a much simpler/better fit for building workflows.
 - Lots of things about how Camunda deals with failures, errors and timeouts that were very hard to manage/understand/code around.
 
 **Potential Library:** [Temporal](https://temporal.io/) because:

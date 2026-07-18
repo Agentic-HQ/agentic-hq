@@ -295,7 +295,7 @@ in the workflow catalogue for the full step-by-step.
    Steps are kept focused and minimal so that context contains just the 
    required info and compaction is less likely.
 3. **Markdown command instructions.** The per-step prompts are markdown
-   files in the plugin — version-controlled, reviewable, edit-able like any
+   files in the plugin — version-controlled, reviewable, editable like any
    other code.
 4. **Single-responsibility classes.** The execution engine
    (`MarshalledCLITool`, `JsonFileIOMarshallerSession`, `PtyCLIWrapper`,
