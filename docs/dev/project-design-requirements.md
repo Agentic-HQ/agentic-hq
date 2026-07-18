@@ -2,7 +2,7 @@
 
 ## About This Doc
 
-This doc contains the design requirement for this Agentic HQ project.
+This doc contains the design requirements for this Agentic HQ project.
 
 It is used by all the agents in the Full Jira TDD Story Workflow to ensure the requirements are kept to when developing software in the Agentic HQ project.  See:
 
@@ -29,14 +29,14 @@ We use the convention that the interface gets the concept name (e.g. `WorkflowSe
 As an example for:
 https://agentic-hq.atlassian.net/browse/AHQ-103 - 
 
-we to do O-O design with the following concepts which have been mentioned in this spec:
+we want to do O-O design with the following concepts which have been mentioned in this spec:
 
 - Workflow - a workflow that exists within a plugin and can be run
 - Plugin - a Claude Plugin that contains one or more AHQ Workflows in subdirectories
-- Skill - a Claude Skill that can be run by Claude, lives inside a Plugin, can contains the typescript code that is run by agentic-hq in order to execute a workflow and also contains the "skill" that returns the CLI command that runs this typescript workflow code.
+- Skill - a Claude Skill that can be run by Claude, lives inside a Plugin, can contain the TypeScript code that is run by agentic-hq in order to execute a workflow and also contains the "skill" that returns the CLI command that runs this typescript workflow code.
 - Workspace - A place where Plugins can live - either the current project workspace or the AHQ workspace.
 - WorkflowListing - A listing of all the available workflows that a user can run, including instructions for running them and what each workflow does.
-- ExampleCommand - an example command that tell the user how to run that workflow (as an example)
+- ExampleCommand - an example command that tells the user how to run that workflow (as an example)
 - ExampleParameters - the parameters that are added to "agentic-hq <workflowsShortName>" to create an ExampleCommand
 - WorkflowVersion
 - WorkflowDescription
@@ -62,9 +62,9 @@ This is the “tell, don’t ask” method of coding.
 
 So while developing this feature, think always:
 
-"If someone want to replace (switch out) just one small aspect of the feature I've developed with their own concrete class to change the behaviour - could they do it easily?"
+"If someone wants to replace (switch out) just one small aspect of the feature I've developed with their own concrete class to change the behaviour - could they do it easily?"
 
-If the answer is "No, because that small aspect is mixed up with other things inside a function somewhere" - then we've failed to extract that things as a "concept" into a class/interface.  This means we need to rethink and extract it.
+If the answer is "No, because that small aspect is mixed up with other things inside a function somewhere" - then we've failed to extract that thing as a "concept" into a class/interface.  This means we need to rethink and extract it.
 
 
 Question: Is this overkill and does it make the system **harder** to understand and change?
