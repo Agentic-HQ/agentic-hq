@@ -25,7 +25,7 @@ AI-assisted contributions are welcome, but the human submitting the PR is expect
 
 Agentic HQ is **pre-1.0** (currently v0.1.0). Expect rough edges, evolving APIs, and the occasional rename.
 
-It is **tested on macOS (13.5+) and Linux (Ubuntu 24.04 LTS)**. Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
+It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5) and **Linux** (tested on Ubuntu 24.04 LTS). Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
 
 It is **maintained by one person** right now, so please calibrate expectations:
 
@@ -68,7 +68,7 @@ You do not need to ask for permission to work on an existing open issue. If you'
 
 The full setup is in the [`README.md`](./README.md) Quick Start section. Summarised here:
 
-- **macOS 15.7.5** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it); Ubuntu is also supported and tested; other platforms are untested but contributions to support them are welcome
+- **macOS or Ubuntu** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it; the maintainer develops on 15.7.5); Ubuntu 24.04 LTS is also supported and tested; other platforms are untested but contributions to support them are welcome
 - **Node.js 24 LTS** (default/recommended) — Node 22 and 24 LTS are both supported (not Node 23); install via [nvm](https://github.com/nvm-sh/nvm) (the repo has a root `.nvmrc` pinned to Node 24, currently `24.15.0`)
 - **pnpm** via `corepack enable` (corepack ships with Node 22 and 24; it auto-installs the pinned pnpm version from `package.json`)
 - Then `pnpm install` to install dependencies

@@ -51,7 +51,7 @@ In addition to `DEFAULT_ALLOWED_TOOLS` above, the CLI appends one extra permissi
 
 - `Read(<agentic-hq install dir>/.agentic-hq)` — explicit Read approval for the `.agentic-hq` directory in the Agentic HQ workspace where the `agentic-hq` binary is installed.
 
-This is needed because workflow command `.md` files and reference docs live inside the `.agentic-hq` dir inside the Agentic HQ workspace.  If you run the agentic-hq CLI from a different workspace Claude will not have access to this directory and so won't be able to read the Documentation it needs for the different workflow skills.
+This is needed because workflow command `.md` files and reference docs live inside the `.agentic-hq` dir inside the Agentic HQ workspace.  Without this permission, if you ran the agentic-hq CLI from a different workspace, Claude would not have access to this directory and so wouldn't be able to read the documentation it needs for the different workflow skills.
 
 NOTE: this is a temporary measure until [AHQ-102](https://agentic-hq.atlassian.net/browse/AHQ-102) is implemented.  After that has been implemented all resources and documents required to run a Skill will be bundled with that Skill and this extra permission will be removed.
 
