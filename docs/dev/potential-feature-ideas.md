@@ -17,7 +17,7 @@ The book [The Mom Test](https://www.momtestbook.com/) says that asking people wh
 
 This technique seems the most fun, and possibly most useful, way of finding the features to work on next.  The ideas in the sections below are from me thinking "That would be useful!" - but as I don't really need them I would be working in a vacuum creating them and I wouldn't be able to get real feedback on whether they are useful.  So they are marked as Lower Priority.
 
-## Lower Priority - Composible Commands/Skills (Partially Completed)
+## Lower Priority - Composable Commands/Skills (Partially Completed)
 
 We often use the exact same set of instructions in multiple Skills, for example the instructions to load and parse input from the input file at the start of every Skill in a Workflow.
 

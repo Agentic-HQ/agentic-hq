@@ -138,7 +138,7 @@ This project was built collaboratively with Claude Code. Contributions where AI 
 2. **You disclose meaningful AI assistance** in the PR description. By "meaningful" we mean Claude/Copilot/Cursor/etc. shaped the design or wrote substantial code — not routine autocomplete or formatting suggestions. There's no penalty for disclosure; there is for hiding it.
 3. **You've actually run and manually tested the code.** This catches the dominant failure mode of AI contributions, which is plausible-looking diffs that don't actually work.
 
-**If you built your contribution using an Agentic HQ workflow** — please mention it. We'd love to understand whether the project is being used on itself ("dog fooding").
+**If you built your contribution using an Agentic HQ workflow** — please mention it. We'd love to understand whether the project is being used on itself ("dogfooding").
 
 ## Code of Conduct
 

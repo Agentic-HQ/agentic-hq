@@ -60,7 +60,7 @@ returns the shell command that runs the workflow's TypeScript program.
 
 One per-step instruction file — a markdown file under a plugin's `commands/`
 directory that tells Claude exactly what to do for one step (read input, do
-the thing, write output). Versioned, reviewable, edit-able like any other
+the thing, write output). Versioned, reviewable, editable like any other
 code.
 
 ### Agent
