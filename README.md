@@ -115,6 +115,11 @@ agentic-hq add-feature -- --ticket-id=PROJ-1
 
 Each of the four agents reads the previous agent's document and writes its own, so the shared understanding lives on disk (under `docs/tickets/<ticket-id>/workflow-files/`) while the actual code and tests land in your codebase as normal. For the full walkthrough — what each agent does, where it pauses for you, and the files it produces — see the [Add Feature user help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/docs/workflow-help-docs/00-add-feature-user-help-doc.md).
 
+> [!TIP]
+> If you're not sure what feature to add or what project to add it to, you can just run the above command from within the Agentic HQ workspace and fill in the following as the Human Prompt in the `docs/tickets/PROJ-1/workflow-files/01-feature-brief.md` file once the agent has created it:
+>
+> _"A TypeScript hello world program that runs using `pnpm hello`, with a unit test that runs using `pnpm test:unit:hello` and an e2e test that runs using `pnpm test:e2e:hello`"_
+
 ### Build Your Own add-feature Workflow
 
 Once you've run `add-feature`, you can make your own version of it.
