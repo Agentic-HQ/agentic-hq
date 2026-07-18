@@ -42,15 +42,15 @@ IMPORTANT: This idea is just "from my head" and I don't actually have a strong n
 
 ## Lower Priority - Resumable Workflows
 
-If you're in the middle of a Workflow and something goes wrong that causes the current Skill to abort/die or your computer crashes, it's hard to work out how to resume the Workflow.  You have to work out what state things were in and then either run the remaining Skills manually, or modify your Typescript to resume, or just start the Workflow again from the start.
+If you're in the middle of a Workflow and something goes wrong that causes the current Skill to abort/die or your computer crashes, it's hard to work out how to resume the Workflow.  You have to work out what state things were in and then either run the remaining Skills manually, or modify your TypeScript to resume, or just start the Workflow again from the start.
 
-To avoid this problem it could be good to have some means of resuming the workflow from where you left off.  This could some kind of custom AHQ code that you add to your Typescript Workflow program if you want this resumable workflow?  It could use a library like https://temporal.io/ - although that could involve quite a large number of limiting changes to the project, which may make it more complex or harder to add other features to.  Ideally any change to AHQ that allows this to be implemented would require zero changes to the core workflow engine, and just be an optional add-on that people can use (or not use) in the Agent Implementation.
+To avoid this problem it could be good to have some means of resuming the workflow from where you left off.  This could some kind of custom AHQ code that you add to your TypeScript Workflow program if you want this resumable workflow?  It could use a library like https://temporal.io/ - although that could involve quite a large number of limiting changes to the project, which may make it more complex or harder to add other features to.  Ideally any change to AHQ that allows this to be implemented would require zero changes to the core workflow engine, and just be an optional add-on that people can use (or not use) in the Agent Implementation.
 
 This type of failure doesn't happen very often, and so it doesn't seem a high priority at the moment, but if we end up with long, complex, business critical workflows it will become more important.
 
 **Background:** We initially used Camunda as a workflow engine in [Spike-00](https://github.com/Agentic-HQ/agentic-hq-archive-001/tree/main/docs/project-docs/project-spikes/spike-00-fail-fast-minimal-whole-system) (in the project's private archive repo — [contact the project founder](../../README.md#support) for access) but found it wasn't a good fit because:-
 - BPMN/XML has a steep learning curve
-- Workflow-as-diagrams doesn't align with our developer-centric approach - Typescript seems a much simpler/better fit for building workflows.
+- Workflow-as-diagrams doesn't align with our developer-centric approach - TypeScript seems a much simpler/better fit for building workflows.
 - Lots of things about how Camunda deals with failures, errors and timeouts that were very hard to manage/understand/code around.
 
 **Potential Library:** [Temporal](https://temporal.io/) because:

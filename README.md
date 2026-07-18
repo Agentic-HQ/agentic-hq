@@ -4,9 +4,9 @@
 
 Agentic HQ gives you control of your AI development workflow.
 
-It does this by allowing you to chain together a series of Claude Code Skills, each of which start in a new session and load only the context they need for their particlular task.
+It does this by allowing you to chain together a series of Claude Code Skills, each of which starts in a new session and loads only the context it needs for its particular task.
 
-The workflow is run using a simple Typescript program that runs Skills and passes variables between them.  The Skills use these variables and markdown files to save and load context.
+The workflow is run using a simple TypeScript program that runs Skills and passes variables between them.  The Skills use these variables and markdown files to save and load context.
 
 To try it out follow the Quick Start to get installed, then add a feature to an existing project and create your own customised workflow.
 
@@ -15,11 +15,11 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 ### Operating Systems Supported
 
 Supported and tested:
-- **Mac OS** - requires macOS 13.5 or newer (AHQ was developered and tested on 15.7.5).
-- **Linux** - tested on Ubuntu LTS 24.04
+- **macOS** - requires macOS 13.5 or newer (AHQ was developed and tested on 15.7.5).
+- **Linux** - tested on Ubuntu 24.04 LTS
 
 Unsupported:
-- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to eithe:
+- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to either:
    - Install free VMware and set up Ubuntu 24.04 LTS.  This is fully tested and works. A guide will be available [here](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMware#Required-Dev-Tools) once Confluence is publicly available (should be less than 1 week after going public)
    - Try on Windows Subsystem for Linux. Untested, but if the paths work the same as Linux it's likely to work.  Please let us know how this went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7)
    - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -37,7 +37,7 @@ Linux only:
 
 ### Installation
 
-1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it version 22 or higher (version 23 is unsupported). After installation confirm installation successful with:
+1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it is version 22 or higher (version 23 is unsupported). After installation confirm success by running:
    ```bash
    node -v
    ```
@@ -127,11 +127,11 @@ Change directory into the root of the project you want your new workflow to live
 agentic-hq create-workflow -- --using=add-feature
 ```
 
-`--using` takes the **short-id** of the workflow to base yours on. It finds the `add-feature` workflow (looking in both the Agentic HQ install directory and your own project directory).  You then it work with Claude to modify it.  You may want to add a new Agent, enforce your own rules, add approval or review gates. It copies and rewires the workflow into a new one that's genuinely yours and runnable straight away; the original is never touched.
+`--using` takes the **short-id** of the workflow to base yours on. It finds the `add-feature` workflow (looking in both the Agentic HQ install directory and your own project directory).  You then work with Claude to modify it.  You may want to add a new Agent, enforce your own rules, add approval or review gates. It copies and rewires the workflow into a new one that's genuinely yours and runnable straight away; the original is never touched.
 
 For the full details of the copy-and-modify path, see the [`--using` help doc](.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/docs/workflow-help-docs/using-existing-workflow-help-doc.md). 
 
-To build a workflow from scratch, run `create-workflow` with no `--using` (see [Further Exploration](#further-exploration)) below.
+To build a workflow from scratch, run `create-workflow` with no `--using` (see [Further Exploration](#further-exploration) below).
 
 ## Running Workflows From Your Own Workspaces
 
@@ -168,14 +168,14 @@ agentic-hq reversal -- --string-to-reverse="this is working well"
 
 ## Why Use Agentic HQ?
 
-3 reasons:-
-- **Context Control** - each Skill in the workflow starts with an empty context and loads only the exact information it needs to complete its task.  
+3 reasons:
+- **Context Control** - Each Skill in the workflow starts with an empty context and loads only the exact information it needs to complete its task.  
 - **Rule Enforcement** - Each Skill can include task-specific rules and checks to ensure the AI is always producing software that matches your standards.  
 - **Enjoyment** - Create workflows that enable you to [collaborate closely and enjoyably with the AI](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/20414465/Point+Of+AHQ+-+14th+Feb+2026), so that when the task is done you really understand well what has been built and your unique human insight has been combined with the AI's unique abilities to build the best thing possible.
 
 ### Other Uses Of Agentic HQ: AI Based Software Systems
 
-Software development is just one example of a complex, multi-stage process that requires Human In The Loop. Agentic HQ (AHQ) could also be used to create an AI Based Software System that executes a multi-stage workflow process, with human in the loop for guidance/checking/control. YouTube content creator and developer Ben Holmes talks about writing and running complex systems using markdown files on [a video on his Nerd Snipe channel](https://www.youtube.com/watch?v=EwOu8xtErEc&t=4393s).  He discusses an open source front end design tool called [Impeccable](https://github.com/pbakaus/impeccable) which includes complex, multi-step Skills like the ["teach" Skill](https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/reference/teach.md).  This 6 step Skill is an example of something that may benefit from being split into 6 separate Skills and chained together using Agentic HQ.
+Software development is just one example of a complex, multi-stage process that requires human in the loop. Agentic HQ (AHQ) could also be used to create an AI Based Software System that executes a multi-stage workflow process, with human in the loop for guidance/checking/control. YouTube content creator and developer Ben Holmes talks about writing and running complex systems using markdown files in [a video on his Nerd Snipe channel](https://www.youtube.com/watch?v=EwOu8xtErEc&t=4393s).  He discusses an open source front end design tool called [Impeccable](https://github.com/pbakaus/impeccable) which includes complex, multi-step Skills like the ["teach" Skill](https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/reference/teach.md).  This 6-step Skill is an example of something that may benefit from being split into 6 separate Skills and chained together using Agentic HQ.
 
 ## Further Exploration
 
@@ -223,9 +223,21 @@ Contact Steve (the repo owner) for support on the [Agentic HQ Discord Server](ht
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details of how to submit GitHub Bug Reports
 
+## Forking This Repo
+
+Forking is encouraged — join us on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) and tell us what you're building.
+
+One clarification: Agentic HQ is released under the MIT License, which requires that all copies of the software (whether the whole thing or substantial portions of it) retain the copyright notice — `Copyright (c) 2025-2026 Stephen Halsey` — and the license text itself. In practice that just means keeping the [LICENSE](LICENSE) file in place in your fork.  
+
+If you're going to maintain a completely new, forked version of the project we'd appreciate it (but it's not a requirement) if you add the following to your README.md:
+
+"This project is a fork of the [Agentic HQ](https://github.com/Agentic-HQ/agentic-hq) project, originally created by Stephen Halsey and licensed under MIT."
+
+The simplest way to publish the project and maintain the same MIT license is to just add a new copyright line with your name/organisation to the existing LICENSE file under the original copyright notice.
+
 ## Developer Documentation
 
-If you're interested in working on the project contact Steve (the repo owner) on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) or by filling in the contact form at https://agentichq.ai/ and read [CONTRIBUTING.md](CONTRIBUTING.md) to see how to file issues, propose changes, and submit pull requests. 
+If you're interested in working on the project, contact Steve (the repo owner) on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) or via the contact form at https://agentichq.ai/. Then read [CONTRIBUTING.md](CONTRIBUTING.md) to see how to file issues, propose changes, and submit pull requests.
 
 Every PR runs CI (GitHub Actions) automatically and a green check is required before merge — see [docs/dev/ci-configuration.md](docs/dev/ci-configuration.md) for what CI runs and how to view run logs.
 

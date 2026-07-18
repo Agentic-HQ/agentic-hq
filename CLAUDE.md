@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Agentic HQ is a thin Typescript wrapper around Claude Code that allows you to create and run Typescript programs that chain together multiple Claude Code Skills. Main use (currently): Automate developer workflows to give you better control of the AI and its context.
+Agentic HQ is a thin TypeScript wrapper around Claude Code that allows you to create and run TypeScript programs that chain together multiple Claude Code Skills. Main use (currently): Automate developer workflows to give you better control of the AI and its context.
 
 ## Development And Testing Rules
 
