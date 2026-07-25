@@ -26,6 +26,8 @@ AHQ-192 started as deep research into John Ousterhout's **Homa** datacenter tran
 
 ## Key state facts (as of 2026-07-25)
 
+- **Environment: ALL work now happens inside the Ubuntu 24.04 VM** (VMware on Steve's Mac). `gh` and `claude` are preinstalled and authed; Agentic HQ is set up. **No agent memory was migrated from the Mac** — this folder + the repo CLAUDE.md are your entire context; check in Phase 1 whether the VM has a `~/.claude/CLAUDE.md` and which MCP servers exist. Steve operates VMware snapshots **only when you instruct him** — see the Golden Rules in the plan doc, especially the Snapshot Law: nothing survives a restore except what's pushed to GitHub, and sessions are disposable (every restore ends in a fresh `claude` + the standard kickoff message).
+
 - **TailCut** named and collision-checked; **tailcut.dev registered** (£15/yr); repo destined for the Agentic-HQ GitHub namespace.
 - Spec renamed `pias-lite-benchmark-spec.md` → `tailcut-benchmark-spec.md` and substantively revised (bulk-goodput ≤10% criterion; deadline-miss metric at 100/200 ms; S5+S6 now required; idle re-promotion now core). Originals backed up locally by Steve (outside the repo).
 - The **birgitta-ousterhout-dev workflow does not exist yet** — building it is plan step 4; base it on `.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/ts-workflow/src/add-feature-detailed-example-cli.ts` (7 sequential skills, re-inject pattern — note it's per-small-feature; TailCut needs a greenfield adaptation).
