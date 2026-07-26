@@ -14,7 +14,7 @@
 
 ## TL;DR
 
-**Goal:** build **TailCut** twice — Arm 1: one-shot Fable in an empty workspace; Arm 2: the **birgitta-ousterhout-full-build** workflow (built first, under AHQ-193) — then blind-judge both against a rubric frozen *before* any run, write a comparison report, and send the package to John Ousterhout.
+**Goal:** build **TailCut** twice — Arm 1: one shot in an empty workspace, no workflow; Arm 2: the **birgitta-ousterhout-full-build** workflow (built first, under AHQ-193) — then blind-judge both against a rubric frozen *before* any run, write a comparison report, and send the package to John Ousterhout.
 
 **Split by machine:** Part A (Phases 1–3) on the **Mac** — all the typing-heavy interactive work: the rubric, the guidance doc, and the create-workflow session. Part B (Phases 4–7) in the **Ubuntu VM** — only what needs it: eBPF/netns installs, the two runs, the judges re-running the benchmark. The VM has lagging keystrokes (per AHQ-193); that's the whole reason for the split. The bridge is **git**: Part A is pushed on the Mac, pulled in the VM at 4.2.
 
@@ -43,7 +43,7 @@ STEVE give me exact instructions at the moment each one is needed.
 
 1. **Proportionality — this is a quick test, not a scientific study.** Steve's decision, 2026-07-26. The point is a practical read on whether AHQ improves design quality. It is n=1, fully automated, and nobody's life depends on it. **Experimental purity is explicitly NOT a concern:** repo names that give the game away, git history, commit authorship, the arms sitting next to this repo, workflow-generated files, an arm that could in principle read the research — all **acceptable**. Do not raise them as blockers, do not design elaborate isolation, and do not ask Steve to pick between purity options. Take the cheap route, note it in one sentence in doc 15, move on. **Only two controls are worth keeping, because both are cheap and load-bearing:** (a) the rubric is frozen before either arm runs — it's the difference between measuring and marking your own homework; (b) arm 1 can actually work (permission parity, step 5.3) — without it there is no second arm to compare. Everything else: don't gold-plate it.
 2. **Know which machine you are on.** Phases 1–3 on the **Mac**; Phases 4–7 in the **Ubuntu 26.04 VM**, where `gh`, `claude` and Agentic HQ are already set up. Never move interactive, question-and-answer work into the VM to "save a step" — the keystroke lag is why the split exists.
-3. **The Snapshot Law (Part B): nothing survives a snapshot restore except what has been pushed to GitHub.** Before instructing any restore: commit + push everything, verify with `git log origin/<branch>` / `gh repo view`, then say "✅ safe to restore" — never instruct a restore without that sentence. **Never restore over an unsnapshotted state**: every restore is immediately preceded by snapshotting the current state. Three snapshots: `tailcut-01-baseline` (5.6), `tailcut-02-arm1-complete` (6.2), `tailcut-03-arm2-complete` (6.5).
+3. **The Snapshot Law (Part B): nothing survives a snapshot restore except what has been pushed to GitHub.** Before instructing any restore: commit + push everything, verify with `git log origin/<branch>` / `gh repo view`, then say "✅ safe to restore" — never instruct a restore without that sentence. **Never restore over an unsnapshotted state**: every restore is immediately preceded by snapshotting the current state. Three snapshots: `tailcut-01-baseline` (5.6), `tailcut-02-arm1-complete` (6.2), `tailcut-03-arm2-complete` (6.5). **Plus one pre-existing fallback, taken by Steve 2026-07-26 before any experiment work: `Snapshot 7 — MCP added, claude updated, sudo granted`.** It is not part of the experiment sequence; it is the restore point for "the VM got broken before `tailcut-01-baseline` existed", and it already contains Claude Code 2.1.220, the MCP config and the passwordless-sudo drop-in.
 4. **VM sessions are disposable.** Snapshots are taken powered-off: push → shutdown → snapshot/restore in VMware → boot → fresh `claude` + the kickoff message (4.3). State lives in files and GitHub, never in a conversation. **Every snapshot instruction gives Steve both VMware fields:** a **Name** (`tailcut-NN-<slug>`, indexed) and a **Description** (2–3 sentences: which phase, what's inside, what it's safe to restore for).
 5. **Git discipline: all work stays on the feature branch until the very end.** There is no mid-plan merge to main — the single squash-merge happens at 7.4, once everything is done. Commits only via Steve running `/git:02` (WIP) and `/git:03` (final PR); the agent prompts at each commit point but never runs `git add/commit/push` in this repo. (Arm-output repos are governed by doc 13, not this rule.) **Part A must end pushed** — the VM gets Part A by `git pull`, so anything uncommitted on the Mac does not exist in Part B.
 6. **Installs need one approval:** present the spec-§2 package list once, get a yes, install, verify. No other unapproved installs.
@@ -72,7 +72,7 @@ STEVE give me exact instructions at the moment each one is needed.
 2.1 🤖 Write `13-experiment-protocol-and-judging-rubric.md`, closing doc-09 Q5–Q10 (arm environments, web-access parity, judging mechanics, runs per arm, John email shape). Contents:
    - **Objective gates first** — builds; `run_all.sh` completes unattended; S1 tail is real (P99 ≥ 10× P50); spec acceptance criteria 1–7; the four traps (ECN mask `0xFC`, TSO/GSO/GRO off, RED `bandwidth` param, S6 idle re-promotion).
    - **Then design-quality scoring** — APoSD criteria **plus** framework-neutral ones.
-   - **Blind judging** — 2–3 fresh sessions, randomised repo-a/repo-b, order swapped, judges re-run the benchmark.
+   - **Blind judging** — 3 fresh sessions, randomised repo-a/repo-b, order counterbalanced. Judges run `verify.sh` + one scenario per repo; **the full benchmark reproduction is an objective gate the driving agent runs**, not a judge task (doc 13 §5.3 — trimmed 2026-07-26 to keep the rigour on design quality and off the hours).
    - **Per-arm capture** — the arm's own `RESULTS.md` and benchmark output. **No tokens or cost** (Golden Rule 8).
    - **Pre-register how performance numbers are treated** — each arm's figures are read *within its own rig* and are **not** cross-comparable, because each arm builds its own harness (see 7.2). Decide this now: deciding it after the numbers arrive would look like explaining away an unwelcome result.
 2.2 🧑 Review and approve doc 13 (answer open questions in-place, doc-01 style).
@@ -115,7 +115,7 @@ Done by **Steve manually running create-workflow on the Mac** — "the workflow 
 4.2 🧑 Get the repo current (first time `git clone https://github.com/Agentic-HQ/agentic-hq.git`), check out the working branch, `git pull` — **this is how Part A's docs and the new workflow arrive**. `git branch -r` if the branch name has moved on.
 4.3 🧑 Start a fresh `claude` in the repo root and paste the standard kickoff message (see *Starting a session*, top of this file). Same message every time, including after every snapshot restore.
 4.4 🤖 Orient: read this plan, docs 13 and 14; check git state. Confirm docs 13/14 and the new workflow are present — if not, Part A wasn't pushed; stop and tell Steve.
-4.5 🤖 Survey the VM: `gh auth status`; `claude --version`; Atlassian MCP check (gotchas per 1.3); `ls -al ~/.claude` and `cat ~/.claude/settings.json`. **Verified 2026-07-26: no `~/.claude/CLAUDE.md` on the VM** — Steve's global rules were never copied — but re-confirm rather than assume. **Also inspect `~/.claude.json`** (user-scope config; sits *beside* `~/.claude/`, so `ls ~/.claude` misses it) and list which **MCP servers** it configures — that's a contamination question, not just a config one (see 5.3).
+4.5 🤖 Survey the VM: `gh auth status`; `claude --version` (**expected `2.1.220`**); Atlassian MCP check (gotchas per 1.3); `ls -al ~/.claude` and `cat ~/.claude/settings.json`. **Record the default model and the reasoning effort** — expected **Opus 5 / high**, set by Steve on 2026-07-26; both arms and all judges inherit them, so they are the parity contract (doc 13 §2.2), not trivia. **Verified 2026-07-26: no `~/.claude/CLAUDE.md` on the VM** — Steve's global rules were never copied — but re-confirm rather than assume. **Also inspect `~/.claude.json`** (user-scope config; sits *beside* `~/.claude/`, so `ls ~/.claude` misses it) and list which **MCP servers** it configures — that's a contamination question, not just a config one (see 5.3). **Steve added MCP to the VM on 2026-07-26, so expect servers to be present.** Two things to confirm, not assume: (a) **which** servers; (b) that they are configured at **user scope**, not in a project-scoped `.mcp.json` inside a repo — user scope is what makes both arms see the identical set, and a repo-scoped config would be a silent asymmetry (doc 13 §2.2).
 4.6 🤖 **Survey the AHQ toolchain — the VM must now *run* a workflow, not just a benchmark.** `node -v` (22 or 24 LTS line), `corepack enable`, `pnpm install` at the repo root, `npm link`, then `agentic-hq list` and confirm **`birgitta-ousterhout-full-build` appears**. Also `pnpm install` in the new workflow's own `ts-workflow/`. Report gaps to Steve rather than fixing silently — finding this broken now is the entire point of doing it before Phase 6.
 4.7 🤖 Survey against spec §2: `uname -r` (≥ 6.8), which packages are present. **Install nothing yet** — that's Phase 5.
 4.8 🤖 Report state to Steve.
@@ -128,7 +128,7 @@ Done by **Steve manually running create-workflow on the Mac** — "the workflow 
 
 | Arm | What it is | GitHub repo (Agentic-HQ org) | Workspace in the VM |
 |---|---|---|---|
-| **Arm 1** | one-shot Fable, no workflow | `tailcut-no-workflow` | `~/dev/claude/agentic-hq/tailcut-no-workflow` |
+| **Arm 1** | one shot, no workflow | `tailcut-no-workflow` | `~/dev/claude/agentic-hq/tailcut-no-workflow` |
 | **Arm 2** | `birgitta-ousterhout-full-build` | `tailcut` | `~/dev/claude/agentic-hq/tailcut` |
 
 Arm 2 takes the plain `tailcut` name because it is the candidate real product. Both sit next door to the AHQ repo at `~/dev/claude/agentic-hq/agentic-hq` — see the open decision.
@@ -137,13 +137,15 @@ Arm 2 takes the plain `tailcut` name because it is the candidate real product. B
 5.3 🤖 Set up each arm's run environment per doc 13. **The requirement changed on 2026-07-26 after two checks — read before designing it:**
 
    - ✅ **The `~/.claude/CLAUDE.md` problem is moot** — verified absent on the VM, so there is nothing for the arms to inherit.
-   - ⚠️ **The live fairness risk is permission parity, in the opposite direction.** Arm 2 runs via the `agentic-hq` CLI, which passes `--allowedTools` granting `Bash`, `Edit`, `Write`, `MultiEdit`, eight Atlassian MCP tools, `Skill(agentic-hq-core-plugin:self-termination)` and `Read(<workspace>/.agentic-hq)` (verified in `src/tools/marshalled-io-tools/claude-code/claude-command-builder.ts`). Arm 1, as a plain `claude`, gets **none** of it and stalls on its first permission prompt. **Arm 1 needs a matched grant via explicit `--allowedTools`.**
+   - ⚠️ **The live fairness risk is permission parity, in the opposite direction.** Arm 2 runs via the `agentic-hq` CLI, which passes `--allowedTools` granting `Bash`, `Edit`, `Write`, `MultiEdit`, **nine** Atlassian MCP tools, `Skill(agentic-hq-core-plugin:self-termination)` and `Read(<workspace>/.agentic-hq)` (verified in `src/tools/marshalled-io-tools/claude-code/claude-command-builder.ts`; the verbatim list is in doc 13 §2.2). Arm 1, as a plain `claude`, gets **none** of it and stalls on its first permission prompt. **Arm 1 needs a matched grant via explicit `--allowedTools`.**
    - ❌ **Not `--dangerously-skip-permissions`** — arm 2 is *confined* to that list, so a blanket flag would give arm 1 strictly more freedom. Match the list, don't exceed it.
    - ℹ️ The granted list includes Atlassian MCP tools, so an arm could in principle search Jira and find AHQ-192. **Per Golden Rule 1, accepted — no need to neutralise it.** Just give both arms the same grant so they're on equal footing, and mention it in doc 15's limitations sentence.
+   - ✅ **Web tools (decided, doc 13 Q1):** write an identical `.claude/settings.local.json` granting `WebSearch` + `WebFetch` into **each** arm workspace — same mechanism both sides. Without it, both arms stall on a permission prompt mid-run.
+   - ✅ **Passwordless sudo (decided, doc 13 Q4): already done — `/etc/sudoers.d/99-tailcut-nopasswd`, applied and verified on the VM 2026-07-26**, long before the `tailcut-01-baseline` snapshot, so both arms inherit it. Re-confirm with `sudo -k && sudo -n true` in the 5.5 pre-flight rather than trusting this line — a sudoers rule can be valid, read, and still never match.
    - 🤖 Record the grant used in doc 13, so doc 15 can state what each arm was allowed to do.
 
 5.4 🤖 Stage each arm's workspace: the stripped handoff spec + that arm's exact kickoff prompt, written to a file now so run-day is copy-paste only.
-5.5 🤖 Pre-flight: both repos pushable; arm permissions matched and MCP neutralised; arm 2 can run the workflow end to end; doc-13 boxes ticked. Then 🧑 `/git:02`, verify pushed.
+5.5 🤖 Pre-flight: both repos pushable; arm permissions **matched** (matched, *not* neutralised — per Golden Rule 1 and doc 13 §2.2, both arms simply get the identical grant, MCP tools included); arm 2 can run the workflow end to end; doc-13 boxes ticked. Then 🧑 `/git:02`, verify pushed.
 5.6 🤖→🧑 **SNAPSHOT POINT.** "✅ safe to snapshot. Steve: exit claude, `sudo shutdown now`; in VMware snapshot the powered-off VM with —
    - **Name:** `tailcut-01-baseline`
    - **Description:** *AHQ-192 experiment baseline. End of Phase 5 prep: spec §2 packages installed, both arm workspaces staged, arm GitHub repos created, all work pushed. Restore this for an identical clean starting state for each arm (6.1 and 6.4).*
@@ -165,7 +167,7 @@ Arm 2 takes the plain `tailcut` name because it is the candidate real product. B
 
 ## Phase 7 — 🐧 Judging, report, John
 
-7.1 🤖→🧑 Blind judging per doc 13: fresh `claude` sessions with zero AHQ-192 context, agent-prepared judge prompts, repos presented as randomised repo-a/repo-b, judges re-run the benchmark.
+7.1 🤖→🧑 Blind judging per doc 13: three fresh `claude` sessions with zero AHQ-192 context, agent-prepared judge prompts, repos presented as randomised repo-a/repo-b. Judges run `verify.sh` + one scenario per repo — not the full benchmark (doc 13 §5.3).
 
 > Copy each repo's working tree to `repo-a`/`repo-b` (randomised) so the judge isn't reading `tailcut-no-workflow` in the prompt. That's the extent of the blinding — per Golden Rule 1, don't scrub git history, authorship or workflow-generated files; just note in doc 15 that the blinding was light.
 
@@ -205,8 +207,8 @@ That adjacency is deliberate: AHQ finds workflows by scanning `.agentic-hq/plugi
 
 | Phase | Machine | What | Status |
 |---|---|---|---|
-| 1 | 💻 | Orientation | ☐ not started |
-| 2 | 💻 | Doc 13 frozen; stripped handoff spec created | ☐ not started — **first real task** |
+| 1 | 💻 | Orientation | ✅ done 2026-07-26 — Mac, branch in sync with origin, MCP verified |
+| 2 | 💻 | Doc 13 frozen; stripped handoff spec created | ✅ agent work done 2026-07-26 — doc 13 written (2.1), **approved by Steve with all four open questions agreed (2.2)**, stripped handoff spec created (2.3). **Frozen by the `/git:02` at 2.4.** |
 | 3 | 💻 | `birgitta-ousterhout-full-build` built via create-workflow (from scratch) under AHQ-193; pushed | ☐ not started |
 | 4 | 🐧 | VM start-up, survey, proof the workflow runs there | ☐ blocked on 3 |
 | 5 | 🐧 | Arm repos + environment prep + `tailcut-01-baseline` | ☐ blocked on 4 |
