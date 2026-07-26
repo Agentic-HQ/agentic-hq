@@ -30,7 +30,7 @@ All documents live in the agentic-hq repo under [docs/jira-docs/AHQ-192/](https:
 1. Freeze the experiment protocol + blind-judging rubric **before any run** (doc 13).
 2. De-contaminate the spec handoff (arms get the spec only, in clean workspaces).
 3. Build the birgitta-ousterhout-dev workflow (Guides/Sensors mapping; greenfield adaptation; no-HITL policy) — possibly its own ticket.
-4. Prep environments (Ubuntu 24.04 VM per spec §2; clean arm-1 HOME).
+4. Prep environments (Ubuntu 26.04 VM per spec §2; clean arm-1 HOME).
 5. Run both arms → blind judging → comparison report → email package to John Ousterhout.
 
 **Done when:** both arms have run against the identical spec, the blind-judged comparison report exists, and the package has been sent to John.

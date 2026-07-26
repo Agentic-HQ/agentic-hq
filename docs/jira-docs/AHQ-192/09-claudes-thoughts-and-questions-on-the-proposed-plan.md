@@ -78,7 +78,7 @@ Closing the loop by emailing John is a lovely ending, with three conscious decis
 
 **Recommended answer:** Plain Linux (a devcontainer/Docker on your Mac is fine — it's a real Linux VM) as the required platform, macOS-portability optional. Language unconstrained (letting each arm choose is itself an interesting design decision to observe) — though if you want maximum comparability, pin it in the requirement doc; if pinning, I'd pick a systems-capable language the judges can assess well (Go, Rust, or modern C++; TypeScript would work but caps the realism of a "performance" system).
 
-**Answer:** I have Ubuntu 24.04 LTS installed in VMWare on my Mac and would like to use that. I'm familiar with C++ and John writes in C so that sounds ideal.
+**Answer:** I have Ubuntu 26.04 LTS installed in VMWare on my Mac and would like to use that. I'm familiar with C++ and John writes in C so that sounds ideal.
 
 ### Q3. Acceptance criteria: adopt the in-harness formulation?
 

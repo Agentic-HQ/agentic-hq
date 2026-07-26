@@ -23,7 +23,7 @@
 
 ## 2. Environment
 
-- Ubuntu 24.04 VM (VMware on macOS), kernel ≥ 6.8, 2+ vCPUs, 4 GB RAM, run as root.
+- Ubuntu 26.04 VM (VMware on macOS), kernel ≥ 6.8, 2+ vCPUs, 4 GB RAM, run as root.
 - Packages: `clang llvm libbpf-dev bpftool linux-headers-$(uname -r) iproute2 iperf3 gcc make python3 python3-matplotlib tcpdump`
 - IPv4 only.
 
