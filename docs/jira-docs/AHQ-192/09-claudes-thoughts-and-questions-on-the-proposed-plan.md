@@ -1,6 +1,6 @@
 # Claude's Thoughts and Questions on the Proposed Plan
 
-> Written 2026-07-23, in response to [08-now-the-fun-bit----the-big-reveal.md](08-now-the-fun-bit----the-big-reveal.md). Context read: all AHQ-192 docs (01–08) plus the add-feature-detailed-example workflow CLI ([add-feature-detailed-example-cli.ts](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/ts-workflow/src/add-feature-detailed-example-cli.ts)) the birgitta-ousterhout-dev workflow would be based on.
+> Written 2026-07-23, in response to [08-now-the-fun-bit----the-big-reveal.md](08-now-the-fun-bit----the-big-reveal.md). Context read: all AHQ-192 docs (01–08) plus the add-feature-detailed-example workflow CLI ([add-feature-detailed-example-cli.ts](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/ts-workflow/src/add-feature-detailed-example-cli.ts)) the birgitta-ousterhout-full-build workflow would be based on.
 >
 > Format follows the doc-01 convention: thoughts first, then numbered questions with recommended answers and **Answer:** placeholders.
 
@@ -54,7 +54,7 @@ My strong recommendation is the last one: Amoh as a user-space system (server + 
 
 From reading the CLI it would be based on:
 
-- **The birgitta-ousterhout-dev workflow doesn't exist yet** — building it (presumably via create-workflow) is a real prerequisite task, and honestly the most valuable artifact of this whole exercise: the mapping of APoSD ideas onto named Guides (deep modules, information hiding, define-errors-out-of-existence, design-it-twice, comments-as-design) and Sensors (complexity symptoms: change amplification, cognitive load, unknown unknowns; comment-quality checks; module-depth review) is the design work that makes AHQ's case.
+- **The birgitta-ousterhout-full-build workflow doesn't exist yet** — building it (presumably via create-workflow) is a real prerequisite task, and honestly the most valuable artifact of this whole exercise: the mapping of APoSD ideas onto named Guides (deep modules, information hiding, define-errors-out-of-existence, design-it-twice, comments-as-design) and Sensors (complexity symptoms: change amplification, cognitive load, unknown unknowns; comment-quality checks; module-depth review) is the design work that makes AHQ's case.
 - **Scope mismatch to resolve**: the add-feature-detailed-example is explicitly "a single small feature to an existing codebase," run once per feature. Amoh is a greenfield *system*. One pass of a per-feature workflow over a whole system is off-label usage and could make arm 2 *underperform* for structural rather than philosophical reasons. The greenfield variant probably wants the Planner to produce a feature list and the Executor stage to loop over it (or the 7 stages re-interpreted at system granularity). Worth deciding deliberately rather than discovering mid-run.
 - **Fully-automated needs an answer policy.** The workflow skills ask AskUserQuestion-style questions (that's their job — the Interrogator especially). For the no-HITL run each skill needs an explicit "no human available: choose the recommended option and record the choice" rule, so the run doesn't stall and the choices are auditable afterwards.
 
@@ -63,7 +63,7 @@ From reading the CLI it would be based on:
 Closing the loop by emailing John is a lovely ending, with three conscious decisions first:
 
 1. **Tone check on the research docs.** Docs 02/04 contain frank passages — the single-maintainer analysis, the review-cadence story, the blunt funding verdicts. I believe they're respectful and he seems remarkably unprecious (he publicly thanked an AI bot for finding his bugs), but sending someone eight documents that repeatedly analyse the project's sustainability risks is a choice to make deliberately, perhaps with a framing line in the email acknowledging the bluntness.
-2. **The names.** "birgitta-ousterhout-dev" uses two real people's names, neither of whom has endorsed anything. For a private email experiment that's charming homage; if the repos go public (this folder is destined for a public repo), a courtesy heads-up to both — Birgitta's Guides/Sensors terminology should be attributed to her article regardless — would be both polite and a good excuse to start the conversation with John you're clearly angling for.
+2. **The names.** "birgitta-ousterhout-full-build" uses two real people's names, neither of whom has endorsed anything. For a private email experiment that's charming homage; if the repos go public (this folder is destined for a public repo), a courtesy heads-up to both — Birgitta's Guides/Sensors terminology should be attributed to her article regardless — would be both polite and a good excuse to start the conversation with John you're clearly angling for.
 3. **Set expectations in the email**: n=1, fully automated, no HITL, first experiment — so the result (either way) is read as a datapoint, not a verdict on his book or on Fable.
 
 ## Questions
@@ -116,7 +116,7 @@ Closing the loop by emailing John is a lovely ending, with three conscious decis
 
 **Answer:** Sounds good.
 
-### Q9. Workflow prerequisites: build birgitta-ousterhout-dev first, adapted for greenfield + no-HITL?
+### Q9. Workflow prerequisites: build birgitta-ousterhout-full-build first, adapted for greenfield + no-HITL?
 
 **Recommended answer:** Yes — separate task(s) before the experiment: scaffold via create-workflow; decide the greenfield adaptation (Planner emits feature list, execution loops over it); give every skill an explicit no-human-available policy (take the recommended option, record it). The Guides/Sensors-to-APoSD mapping deserves its own short design doc — it's the intellectual heart of AHQ's side of the experiment.
 
@@ -132,5 +132,5 @@ Closing the loop by emailing John is a lovely ending, with three conscious decis
 
 1. I write `10-amoh-requirement-doc.md` — self-contained, no references to Homa/this research/AHQ, phenomenon-not-mechanism, with the Q3 acceptance criteria. (Both arms receive *only* this file.)
 2. I draft the judging rubric doc, frozen before any run.
-3. The birgitta-ousterhout-dev workflow gets built (separate task, probably its own Jira).
+3. The birgitta-ousterhout-full-build workflow gets built (separate task, probably its own Jira).
 4. Arms run; blind judging; comparison report; email to John.
