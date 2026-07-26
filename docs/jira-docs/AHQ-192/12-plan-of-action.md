@@ -28,6 +28,17 @@
 
 **Scope:** a quick, practical test — n=1, fully automated, no HITL. Experimental purity is deliberately not chased (Golden Rule 1), and cost/tokens are not measured at all (Rule 8). All work stays on the feature branch until 7.4.
 
+## Starting a session (🧑 Steve pastes this)
+
+Every session begins the same way — a fresh `claude` in the repo root, then this message. Use it on the Mac, in the VM, and after every snapshot restore; the agent works out where it is and what's next.
+
+```
+Please read docs/jira-docs/AHQ-192/12-plan-of-action.md and take over as the
+driving agent. Work out from the status ledger and git state which phase we are
+in, then drive it: do every step marked AGENT yourself, and for every step marked
+STEVE give me exact instructions at the moment each one is needed.
+```
+
 ## Golden Rules
 
 1. **Proportionality — this is a quick test, not a scientific study.** Steve's decision, 2026-07-26. The point is a practical read on whether AHQ improves design quality. It is n=1, fully automated, and nobody's life depends on it. **Experimental purity is explicitly NOT a concern:** repo names that give the game away, git history, commit authorship, the arms sitting next to this repo, workflow-generated files, an arm that could in principle read the research — all **acceptable**. Do not raise them as blockers, do not design elaborate isolation, and do not ask Steve to pick between purity options. Take the cheap route, note it in one sentence in doc 15, move on. **Only two controls are worth keeping, because both are cheap and load-bearing:** (a) the rubric is frozen before either arm runs — it's the difference between measuring and marking your own homework; (b) arm 1 can actually work (permission parity, step 5.3) — without it there is no second arm to compare. Everything else: don't gold-plate it.
@@ -49,11 +60,14 @@
 
 ## Phase 1 — 💻 Orientation
 
-1.1 🤖 Read this plan; use the reading list to find anything else the task needs; read docs 13/14 if they exist. Check `git status`, `git branch --show-current`, `git log --oneline -5`.
-1.2 🤖 Verify the Atlassian MCP with a cheap read. Two gotchas: (a) `jira_transition_issue`'s comment parameter needs ADF and errors on Markdown — add comments separately via `jira_add_comment`; (b) MCP read-back of descriptions shows mangled formatting (escaped `**`, dropped chars) even when the UI renders fine — never "fix" formatting from a read-back alone.
-1.3 🤖 Report state to Steve: current phase per the ledger, anything unexpected, next step.
+1.1 🤖 **Work out which machine you are on before anything else** — the plan is split by machine and the phases differ. The working directory tells you: `/Users/…` = the Mac (Part A), `/home/…` = the Ubuntu VM (Part B). If you are in the VM, you are not in Phase 1 — go to Phase 4.
+1.2 🤖 Read this plan; use the reading list to find anything else the task needs; read docs 13/14 if they exist. Check `git status`, `git branch --show-current`, `git log --oneline -5`.
+1.3 🤖 Verify the Atlassian MCP with a cheap read. Two gotchas: (a) `jira_transition_issue`'s comment parameter needs ADF and errors on Markdown — add comments separately via `jira_add_comment`; (b) MCP read-back of descriptions shows mangled formatting (escaped `**`, dropped chars) even when the UI renders fine — never "fix" formatting from a read-back alone.
+1.4 🤖 Report state to Steve: current phase per the ledger, anything unexpected, next step.
 
 ## Phase 2 — 💻 Protocol + rubric (doc 13) — the pre-registration gate
+
+> **⚠️ Read doc 09 with the Golden Rules in hand.** Doc 09 is dated 2026-07-23 and argues at length for experimental rigour — token/cost accounting, tight isolation, careful de-confounding. **Golden Rules 1 and 8 supersede all of that**: this is a quick test, purity is not chased, cost is not measured. Take doc 09's *questions* and Steve's *answers*; do not reinstate its rigour recommendations. Where they conflict, the Golden Rules win.
 
 2.1 🤖 Write `13-experiment-protocol-and-judging-rubric.md`, closing doc-09 Q5–Q10 (arm environments, web-access parity, judging mechanics, runs per arm, John email shape). Contents:
    - **Objective gates first** — builds; `run_all.sh` completes unattended; S1 tail is real (P99 ≥ 10× P50); spec acceptance criteria 1–7; the four traps (ECN mask `0xFC`, TSO/GSO/GRO off, RED `bandwidth` param, S6 idle re-promotion).
@@ -86,7 +100,7 @@ Done by **Steve manually running create-workflow on the Mac** — "the workflow 
 3.3 🧑 Review/approve doc 14 — the mapping is the intellectual heart, worth real review — then `/git:02`. Doc 14 is now frozen.
 3.4 🧑 Run `agentic-hq create-workflow` (no `--using`) on the Mac, pointed at this plan for context and doc 14 as the kick-off guidance. **Draft the workflow's actual Plan with that agent** — the source of truth from here on. Workflow sessions are interactive; the driving agent stands by between stages to help interpret questions against the guidance's *intent*, not as an authority.
 3.5 🤖 Review the generated workflow against **the create-workflow plan**, with doc 14 only as an intent cross-check; smoke-test what's testable on the Mac; propose fix-ups.
-3.6 🧑 `/git:02` at sensible checkpoints. 🤖 Keeps AHQ-193 updated via MCP — transitions, and comments added separately from transitions (1.2).
+3.6 🧑 `/git:02` at sensible checkpoints. 🤖 Keeps AHQ-193 updated via MCP — transitions, and comments added separately from transitions (1.3).
 3.7 🤖→🧑 **Part A exit gate.** Verify the branch is pushed and say: "✅ Part A complete and pushed — Phase 4 can start in the VM."
 
 ---
@@ -99,17 +113,9 @@ Done by **Steve manually running create-workflow on the Mac** — "the workflow 
 
 4.1 🧑 Open VMware → start the VM → log in → terminal.
 4.2 🧑 Get the repo current (first time `git clone https://github.com/Agentic-HQ/agentic-hq.git`), check out the working branch, `git pull` — **this is how Part A's docs and the new workflow arrive**. `git branch -r` if the branch name has moved on.
-4.3 🧑 Start `claude` in the repo root and paste this kickoff (also used after every snapshot restore):
-
-```
-Please read docs/jira-docs/AHQ-192/12-plan-of-action.md, then take over as the
-driving agent. We are inside the Ubuntu VM, in Part B of the plan. Work out from
-the status ledger and git state which phase we're in, and guide me step-by-step
-through every step marked STEVE — exact instructions, at the moment each is needed.
-```
-
+4.3 🧑 Start a fresh `claude` in the repo root and paste the standard kickoff message (see *Starting a session*, top of this file). Same message every time, including after every snapshot restore.
 4.4 🤖 Orient: read this plan, docs 13 and 14; check git state. Confirm docs 13/14 and the new workflow are present — if not, Part A wasn't pushed; stop and tell Steve.
-4.5 🤖 Survey the VM: `gh auth status`; `claude --version`; Atlassian MCP check (gotchas per 1.2); `ls -al ~/.claude` and `cat ~/.claude/settings.json`. **Verified 2026-07-26: no `~/.claude/CLAUDE.md` on the VM** — Steve's global rules were never copied — but re-confirm rather than assume. **Also inspect `~/.claude.json`** (user-scope config; sits *beside* `~/.claude/`, so `ls ~/.claude` misses it) and list which **MCP servers** it configures — that's a contamination question, not just a config one (see 5.3).
+4.5 🤖 Survey the VM: `gh auth status`; `claude --version`; Atlassian MCP check (gotchas per 1.3); `ls -al ~/.claude` and `cat ~/.claude/settings.json`. **Verified 2026-07-26: no `~/.claude/CLAUDE.md` on the VM** — Steve's global rules were never copied — but re-confirm rather than assume. **Also inspect `~/.claude.json`** (user-scope config; sits *beside* `~/.claude/`, so `ls ~/.claude` misses it) and list which **MCP servers** it configures — that's a contamination question, not just a config one (see 5.3).
 4.6 🤖 **Survey the AHQ toolchain — the VM must now *run* a workflow, not just a benchmark.** `node -v` (22 or 24 LTS line), `corepack enable`, `pnpm install` at the repo root, `npm link`, then `agentic-hq list` and confirm **`birgitta-ousterhout-full-build` appears**. Also `pnpm install` in the new workflow's own `ts-workflow/`. Report gaps to Steve rather than fixing silently — finding this broken now is the entire point of doing it before Phase 6.
 4.7 🤖 Survey against spec §2: `uname -r` (≥ 6.8), which packages are present. **Install nothing yet** — that's Phase 5.
 4.8 🤖 Report state to Steve.
@@ -195,11 +201,10 @@ That adjacency is deliberate: AHQ finds workflows by scanning `.agentic-hq/plugi
 
 ## Status ledger (agent: update as phases complete, via Steve's WIP commits)
 
+*(Phases only — `git log` is the record of commits, so don't track them here.)*
+
 | Phase | Machine | What | Status |
 |---|---|---|---|
-| — | 💻 | Docs 01–12 + spec committed | ✅ `1f6ff1a` |
-| — | 💻 | VM-switch runbook revision | ✅ `42dd9b7` |
-| — | 💻 | Mac/VM split, rename, one-plan cleanup | ☐ pending (next `/git:02`) |
 | 1 | 💻 | Orientation | ☐ not started |
 | 2 | 💻 | Doc 13 frozen; stripped handoff spec created | ☐ not started — **first real task** |
 | 3 | 💻 | `birgitta-ousterhout-full-build` built via create-workflow (from scratch) under AHQ-193; pushed | ☐ not started |
