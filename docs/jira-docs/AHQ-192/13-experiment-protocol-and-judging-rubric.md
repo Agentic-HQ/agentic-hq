@@ -16,10 +16,10 @@
 |---|---|
 | **Drafted** | 2026-07-26 (Phase 2.1) |
 | **Approved by Steve** | ✅ 2026-07-26 (Phase 2.2) — all four open questions agreed as recommended; answers on the record in §9, decisions folded into §2 and §5 |
-| **Frozen at** | the WIP commit made at Phase 2.4 — see `git log` |
+| **Frozen at** | **commit `be0d017`** — *"WIP: AHQ-192 Phase 2 — freeze protocol & judging rubric"*, pushed 2026-07-26 (Phase 2.4). Everything in this document existed, in full, before the `birgitta-ousterhout-full-build` workflow was built and before either arm ran. That is checkable: `git show be0d017`. |
 | **Amendable after freeze?** | Only for things that cannot change a score: typos, clarifying wording, and filling in facts the protocol pre-committed to recording (the model name, the permission grant actually used, the a/b assignment). **Any change to a gate, a criterion, a weight or the interpretation table after arm 1 starts must be recorded as an amendment in §10, with a reason and a date, and repeated in doc 15.** |
 
-If §10 is empty when doc 15 is written, say so in doc 15 — "the rubric was frozen at commit X and never amended" is a claim worth being able to make.
+**§10 is not empty** — six amendments were made on 2026-07-27, all of them **before either arm ran**, following an adversarial review of this document. Doc 15 must reproduce the whole §10 list. The claim available is therefore the precise one: *the rubric was frozen at commit `be0d017`, amended six times before any arm ran, and never touched afterwards* — which is worth stating exactly, and worth not overstating.
 
 ---
 
@@ -73,13 +73,13 @@ Skill(agentic-hq-core-plugin:self-termination)
 Read(<ahq-install>/.agentic-hq)
 ```
 
-*(That is **nine** Atlassian MCP tools, not eight — doc 12 step 5.3 says eight; the list above is the counted, verified one.)*
+*(That is **nine** Atlassian MCP tools, not eight. An earlier doc 12 draft said eight; it was corrected in the same commit that froze this document, so doc 12 and this list now agree. The list above is the counted, verified one.)*
 
 Rules that follow from it:
 
 - **Arm 1 is launched with the same list via explicit `--allowedTools`**, minus the two arm-2-only entries (`Skill(agentic-hq-core-plugin:self-termination)` and `Read(<ahq-install>/.agentic-hq)`), which exist to make the *workflow machinery* work and grant no capability toward building TailCut. The exact command line used is recorded in §2.6 and reproduced in doc 15.
 - **Not `--dangerously-skip-permissions`.** Arm 2 is confined to the list; a blanket flag would hand arm 1 strictly more freedom and quietly invert the comparison.
-- **The Atlassian MCP tools are in the grant, so either arm could in principle search Jira and find AHQ-192.** Per Golden Rule 1 this is **accepted, not neutralised** — the point is that both arms have the identical grant. Doc 15's limitations sentence says so. *(Plan step 5.5's phrase "MCP neutralised" is superseded by this paragraph: matched, not neutralised.)*
+- **The Atlassian MCP tools are in the grant, so either arm could in principle search Jira and find AHQ-192.** Per Golden Rule 1 this is **accepted, not neutralised** — the point is that both arms have the identical grant. Doc 15's limitations sentence says so. *(An earlier doc 12 draft of step 5.5 said "MCP neutralised"; it was corrected to "matched, not neutralised" in the same commit that froze this document. Recorded here only so a reader of the older wording knows which one governs: this paragraph does.)*
   **Steve added MCP to the VM on 2026-07-26**, so this is now a live capability rather than an inert grant — the tools in the list above can actually reach a server. Still accepted; still matched. **But it raises one parity check for 4.5:** confirm the MCP servers are configured at **user scope** (`~/.claude.json`) and not in a project-scoped `.mcp.json` inside a repo. User scope means both arms see the identical set. A project-scoped config sitting in the AHQ repo would be visible to whichever arm runs from a directory that inherits it and not the other — a silent asymmetry in exactly the dimension this section is meant to pin down. Record which servers are configured, and their scope, in doc 15.
 - **Model parity:** AHQ passes **no `--model` flag** (verified — `claude-command-builder.ts` builds plugin-dir args, the allowed-tools flag and the command only), so arm 2 runs on the VM's configured default model. **Arm 1 is therefore also launched with no `--model` flag**, and parity holds by construction.
   **The VM, as of 2026-07-26 (Steve): Claude Code `2.1.220`, default model Opus 5, reasoning effort high.** Both arms and all three judges therefore run **Opus 5 at high reasoning effort**, inherited from the VM's own configuration rather than set per-arm — which is what makes them identical. **Reasoning effort is part of the parity contract, not just the model:** if it were set per-session anywhere, one arm could quietly get more thinking than the other. Re-verify model *and* effort at plan step 4.5, and state both in doc 15.
@@ -274,7 +274,8 @@ For each arm report: **Block A mean, Block N mean, and every individual criterio
 - **Three judges** (Q2, agreed 2026-07-26), each a **fresh `claude` session with zero AHQ-192 context**, started outside this repo so the research docs are not one `cd` away.
 - Each judge sees **both** repos, as `repo-a` and `repo-b`, in a dedicated judging directory: `~/judging/judge-N/repo-a`, `~/judging/judge-N/repo-b`.
 - The repos are **copied working trees** (`.git` removed) so the judge is not reading `tailcut-no-workflow` in a remote URL or a commit message. **That is the extent of the blinding.** Per Golden Rule 1: no scrubbing of workflow-generated files, no rewriting of history, no laundering of authorship. Doc 15 states the blinding was light.
-- **Assignment randomised**, then **counterbalanced**: judge 1 and judge 3 receive one ordering, judge 2 the reverse, so `repo-a` is not always the same arm and position effects cancel. The mapping is written to `judging/assignment.md` **in this repo** (which no judge can see) before judging starts, and is not opened until all judge outputs are saved.
+- **All three judges are launched identically** — the same command, from their own `~/judging/judge-N/` directory, differing only in `N`. The grant is **`Bash` and `Write` and nothing else**: `Bash` to run `verify.sh` and a scenario (§5.3), `Write` to produce `verdict.md`. **No `WebSearch`, no `WebFetch`, and no `.claude/settings.local.json` in any judging directory** — for the arms web access was a parity question, but for judges it is a *blinding* question: a judge with web access can unblind itself in one query, and "judge only what is in front of you" implies no web anyway. No `--model` flag, as everywhere else (§2.2). The exact command is written down during plan step 7.1 prep and reproduced in doc 15 beside the two arm command lines.
+- **Assignment randomised**, then **counterbalanced**: judge 1 and judge 3 receive one ordering, judge 2 the reverse, so `repo-a` is not always the same arm and position effects cancel. The mapping is written to `experiment-results/judging/assignment.md` **in this repo** (§6.1 — which no judge can see) before judging starts, and is not opened until all judge outputs are saved.
 - **Git history is excluded from blind judging** — it is the biggest provenance leak (`.agentic-hq` artifacts, commit cadence, authorship). Commit hygiene, if assessed at all, is assessed **later, non-blind, by Steve and the driving agent**, and labelled as such in doc 15 (plan step 7.2).
 
 ### 5.2 Judge prompt (frozen wording)
@@ -291,6 +292,13 @@ should not try to work it out. Judge only what is in front of you.
 
 Read the spec first, then each repo in the order they are listed above. Score
 BOTH repos against EVERY criterion in rubric.md, 1-5.
+
+Before scoring, run things. In each repo: run ./verify.sh, and run ONE scenario
+of your choice - the SAME scenario in both repos - using whatever commands that
+repo's own documentation tells you to use. sudo is available without a password.
+Use what happens as evidence for the reproducibility and verification-depth
+criteria. If something fails to run, that is evidence too: record what you tried
+and what happened, and score accordingly.
 
 For every single score you must cite concrete evidence: a file:line, or a named
 function or module. A score without evidence is not usable.
@@ -338,6 +346,19 @@ Captured after each arm completes, before the snapshot (plan steps 6.2 / 6.4):
 
 **Not captured: tokens, cost, price, or any efficiency proxy** (Golden Rule 8). Doc 15 states cost was not measured and makes **no** efficiency claim in either direction.
 
+### 6.1 Where captured artifacts go
+
+Everything above lands under **one** parent directory in this repo:
+
+```
+docs/jira-docs/AHQ-192/experiment-results/
+├── arm-1/          RESULTS.md, results/, driving agent's re-run logs, gate table, verify output
+├── arm-2/          the same
+└── judging/        assignment.md, judge-1..3 verdict.md, the judge launch command
+```
+
+**The Snapshot Law makes this load-bearing, not tidiness.** Every capture must be committed via `/git:02` and pushed **before any snapshot restore** — a gate log or a judge verdict sitting in an uncommitted working tree does not survive the restore that follows it, and cannot be regenerated once the VM is back at baseline.
+
 ---
 
 ## 7. Part 5 — How performance numbers are treated (pre-registered)
@@ -365,14 +386,36 @@ Written before the runs so the conclusion is a lookup, not an argument.
 | **Lopsided** | One arm's gate result is so much worse that the two systems aren't functionally comparable (e.g. one never got the rig running at all) | The design scores are reported **with that stated in the same breath**: comparing a working system to a partial one flatters the working one on nearly every criterion. |
 | **Comparable** | Both arms produced a system that builds and runs, with broadly similar gate results | Proceed to step 2 and let the design scores carry the result. |
 
-**Step 2 — the design-quality result** (given "comparable"):
+**Step 2 — the design-quality result** (given "comparable").
 
-| Outcome | Condition | How doc 15 states it |
-|---|---|---|
-| **Clear win for AHQ** | Arm 2 ahead by **≥ 0.75** on **both** Block A and Block N means, with **no individual judge reversing** the direction | "The workflow produced a materially better-designed system on this task." |
-| **Qualified win** | Ahead on **Block A but not Block N**, or ahead but **with a judge reversal** | Stated with the qualifier in the same sentence, never in a footnote. **Block A only** is explicitly reported as *possibly tautological* — an APoSD rubric flattering an APoSD workflow. |
-| **Wash** | Both means within **± 0.5** | "No detectable difference in design quality on this task at n=1." No spin. |
-| **Loss** | Arm 1 ahead by the same margins | Reported as plainly as a win would be — in doc 15 **and** in the email to John. |
+**Three definitions, fixed here so nothing is decided by interpretation later:**
+
+- **ΔA** = arm 2's Block A mean − arm 1's Block A mean, pooled across the three judges. **ΔN** likewise for Block N. Positive favours arm 2.
+- A block **favours** an arm when |Δ| **> 0.5** in that arm's direction. Otherwise that block is **level**.
+- A **reversal** is a judge whose *own* Block A mean **and** *own* Block N mean **both** favour the arm opposite to the overall direction of Δ. One block disagreeing is not a reversal; a whole judge pointing the other way is.
+
+**The rule is total — every (ΔA, ΔN, reversal) combination lands on exactly one row. First matching row wins.**
+
+| # | Outcome | Condition | How doc 15 states it |
+|---|---|---|---|
+| 1 | **Clear win for AHQ** | ΔA ≥ +0.75 **and** ΔN ≥ +0.75 **and** no reversal | "The workflow produced a materially better-designed system on this task." |
+| 2 | **Clear loss** | ΔA ≤ −0.75 **and** ΔN ≤ −0.75 **and** no reversal | Reported as plainly as a win would be — in doc 15 **and** in the email to John. |
+| 3 | **Wash** | \|ΔA\| ≤ 0.5 **and** \|ΔN\| ≤ 0.5 | "No detectable difference in design quality on this task at n=1." No spin. |
+| 4 | **Mixed** | everything else | Both Δs reported, with the mandatory wording for the sub-case below. Never a footnote. |
+
+**Row 4 sub-cases — also total, because "both blocks level" is unreachable here (row 3 catches it):**
+
+| Sub-case | Mandatory framing in doc 15 |
+|---|---|
+| **Both blocks favour arm 2** (so it missed row 1 on margin, or on a reversal) | "Directional, below the pre-registered bar." If a reversal exists, say so in the same sentence. |
+| **Both blocks favour arm 1** | The mirror, stated as plainly. |
+| **Block A favours arm 2, Block N level** | Reported as ***possibly tautological*** — an APoSD rubric flattering an APoSD workflow. This is the weakest form of a positive result and must not be written as anything stronger. |
+| **Block N favours arm 2, Block A level** | "Better code, but not distinctively APoSD-shaped — **the hypothesis is not supported even though the product is better**." |
+| **Block A favours arm 1, Block N level** | The mirror of the tautology case. |
+| **Block N favours arm 1, Block A level** | The mirror. |
+| **The two blocks favour opposite arms** | Report both, and state that this is the strongest available evidence that **the two blocks are measuring different things** — which is exactly what Block N exists to detect. Draw no overall winner. |
+
+*(Sanity-checked against adversarial pairs before freezing: ΔA = −0.2 / ΔN = +0.9 → row 4, "Block N favours arm 2, Block A level". ΔA = ΔN = +0.6 → row 4, "directional, below the bar". ΔA = +0.9 / ΔN = −0.9 → row 4, opposite arms. ΔA = ΔN = +0.5 → row 3, Wash.)*
 
 **Traps (§3.3)** are reported alongside as **supporting evidence for the design story**, not as a score: they are the concrete, checkable instances of "did this process catch the fiddly thing", and a trap result that contradicts the design scores is worth more discussion than either number alone.
 
@@ -427,4 +470,17 @@ The rig needs root throughout (spec §2, §11). An unattended arm that meets a `
 
 ## 10. Amendments after freeze
 
-*(None yet. Any entry here needs: date, what changed, why, and whether any arm had already run. Repeat the whole list in doc 15.)*
+*(Any entry here needs: date, what changed, why, and whether any arm had already run. Repeat the whole list in doc 15.)*
+
+**All six amendments below were made on 2026-07-27, before any arm had run** — the `birgitta-ousterhout-full-build` workflow did not yet exist and neither arm had been started. They arise from an adversarial review of this document by a separate Claude Fable 5 session, commissioned by Steve for exactly this purpose. None of them changes a gate, a criterion or a weight; AM2 makes an existing interpretation rule total rather than altering where its thresholds sit.
+
+> **Note on IDs.** Amendments are **AM1–AM6**. They are deliberately *not* numbered A1–A6, because **A1–A9 already mean the Block A rubric criteria** in §4.2 — and doc 15 has to reproduce both this table and the per-criterion scores. The bracketed reference in each row is the item number used by the Fable 5 review document, kept so the two can be matched up.
+
+| # | Date | Arm run? | What changed | Why |
+|---|---|---|---|---|
+| **AM1** *(review A1)* | 2026-07-27 | No | **§5.2 judge prompt** — added a paragraph instructing judges to run `verify.sh` and one scenario, **the same scenario in both repos**, before scoring; noted passwordless sudo; made a failure-to-run an evidenced outcome rather than a blocker. | §5.3 required judges to execute something — it is the entire basis for grounding N3 and N5 in observation rather than reading — but the frozen prompt never told them to. As frozen, all three judges would have scored from reading alone and the gap would have surfaced at plan step 7.1, too late to fix without unfreezing mid-judging. |
+| **AM2** *(review A2)* | 2026-07-27 | No | **§8 Step 2** — replaced the four-outcome table with a **total** decision rule: explicit definitions of ΔA/ΔN, "favours" (\|Δ\| > 0.5) and "reversal"; four first-match rows; seven exhaustive Mixed sub-cases with mandatory wording. | The original was not total. At least three real outcomes mapped to no row — ahead on both blocks but by 0.5–0.75; ahead on Block N but not Block A (the reverse-tautology case, arguably the most informative result available); and an ambiguity in "ahead on A but not N". A pre-registered lookup with holes forces post-hoc judgement at precisely the moment pre-registration exists to prevent it. **Thresholds are unchanged** — 0.75 for a clear result, 0.5 for a wash — so no outcome that had a row before has moved. |
+| **AM3** *(review A3)* | 2026-07-27 | No | **§5.1** — added judge session mechanics: all three launched identically from `~/judging/judge-N/`, granted **`Bash` and `Write` only**, explicitly **no web tools and no `settings.local.json`** in judging directories, no `--model`; exact command recorded in doc 15. | §2.2 pinned the arms' permissions to the word and said nothing about judges, leaving judging-day improvisation and the real risk of three unmatched judges. Web access is a **blinding** question for judges rather than a parity one: a judge with `WebSearch` can unblind itself in a single query, and the prompt's "judge only what is in front of you" already implies no web. |
+| **AM4** *(review A4)* | 2026-07-27 | No | **This entry** retires doc 09 Q8's rider: **no second round regardless of closeness.** | Doc 09 Q8's agreed answer included "pre-commit to a second round only if the result is close". This document carried n=1 forward but never explicitly rescinded the rider, and the Wash row is exactly where it would have been invoked. Retired under Golden Rule 1 (proportionality) — a second round is a second full run of an arm, which is not a proportionate response to a close result in a deliberately quick test. Doc 15 states n=1 with no contingent second round. |
+| **AM5** *(review A5)* | 2026-07-27 | No | **§2.2** — two parentheticals rewritten to mark them as historical (the "doc 12 says eight" note and the "MCP neutralised" note). | Both described doc 12 as it stood *before* commit `be0d017`, which itself corrected doc 12 to nine and to "matched, not neutralised". A cold-start agent told to treat doc 12 as the source of truth would have found both claims false and had no way to tell which document was stale. Clarifying wording only — the permitted class under §0. |
+| **AM6** *(review A6)* | 2026-07-27 | No | **New §6.1** — one parent directory for all captured artifacts (`docs/jira-docs/AHQ-192/experiment-results/` with `arm-1/`, `arm-2/`, `judging/`), and §5.1's `assignment.md` path updated to match. | §6 listed five things to capture per arm and gave no destination. Under the Snapshot Law an uncommitted capture does not survive the restore that immediately follows it, and cannot be regenerated once the VM is back at baseline — so "where does this file go" is a data-loss question, not a filing one. |
