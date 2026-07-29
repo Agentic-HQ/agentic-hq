@@ -32,6 +32,7 @@ agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 project-root                  = (your primary working directory — the repository the system is being built into)
 sample-docs-dir               = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/sample-docs
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 requirements-checklist        = {project-root}/docs/build-run/requirements-checklist.md
 decisions-register            = {project-root}/docs/build-run/decisions-register.md
 master-design-doc             = {project-root}/docs/master-design.md
@@ -45,6 +46,18 @@ slice-register                = {project-root}/docs/build-run/slice-register.md
 The stopping rule: a stage that cannot finish records the blockage, does the parts that are not blocked, and states plainly what was left undone. The failure to design against is a stage that neither finishes nor admits it did not.
 
 Research licence: you may use web research if this workspace grants it; you must be able to finish without it.
+
+## The Five Load-Bearing Guides (read before shaping)
+
+Read these five guide docs from `{guides-dir}` — each holds the Guide's rule, Ousterhout's words, an example and a counterexample:
+
+- `G09-increments-are-abstractions-not-features.md`
+- `G01-modules-should-be-deep.md`
+- `G02-information-hiding.md`
+- `G03-design-it-twice.md`
+- `G10-strategic-not-tactical.md`
+
+They are the five Guides the whole run leans on hardest, and your rough shape is the first thing they act on: name major modules that are candidates for depth (G1), separable by what each must know rather than by when things happen (G2), in a backlog whose slices will each be free to change the design rather than merely add to it (G9). Hold them at whiteboard level — they steer the shape; they are not licence to start designing the detail this stage must not produce.
 
 ## Step 1: Read the Context
 

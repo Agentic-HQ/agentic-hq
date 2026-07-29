@@ -34,6 +34,7 @@ spec-file                     = (parsed from input; a relative path is relative 
 pass-number                   = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
 sample-docs-dir               = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/sample-docs
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 decisions-register            = {project-root}/docs/build-run/decisions-register.md
 master-design-doc             = {project-root}/docs/master-design.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
@@ -50,10 +51,12 @@ Research licence: you may use web research if this workspace grants it; you must
 
 ## The Guides for This Stage
 
-- **G7 · Choosing Names & Consistency.** One concept, one name, everywhere, across every language in the repo. A name that is hard to choose is a signal the thing being named is not one thing. Existing conventions are not to be "improved" on mid-run: *"Having a 'better idea' is not a sufficient excuse to introduce inconsistencies."*
-- **G8 · Comments Describe What The Code Cannot.** Every non-obvious constant, every ordering requirement, every constraint the spec called out — documented where it will bite. Interface comments stay separate from implementation comments. *"The overall idea behind comments is to capture information that was in the mind of the designer but couldn't be represented in the code."*
-- **G10 · Strategic, Not Tactical.** Working code is not the finish line. Where a shortcut and a clean structure both pass the checks, take the clean structure; the run is not being timed. Record any shortcut you *do* take in the decisions register, so it is a known debt rather than a discovered one.
-- **G11 · Different Layers, Different Abstractions.** Adjacent layers must not present the same abstraction. A method that only forwards its arguments to a method with a similar signature has added a layer and no abstraction — remove it or give it a reason to exist.
+Read the guide doc in `{guides-dir}` for each Guide below — the rule, Ousterhout's words, an example and a counterexample — before building. Later sensor stages judge what you produce against those same documents. G10 is one of the workflow's five load-bearing Guides. Then apply each through its stage note here:
+
+- **G7 · Choosing Names & Consistency** (`G07-choosing-names-and-consistency.md`) — use the names the design doc chose, everywhere, in every language this slice touches; do not "improve" existing conventions mid-run.
+- **G8 · Comments Describe What The Code Cannot** (`G08-comments-describe-what-the-code-cannot.md`) — every non-obvious constant, ordering requirement and spec-called-out constraint documented where it will bite; interface comments stay separate from implementation comments.
+- **G10 · Strategic, Not Tactical** (`G10-strategic-not-tactical.md`) — where a shortcut and a clean structure both pass the checks, build the clean structure; record any shortcut you do take in the decisions register.
+- **G11 · Different Layers, Different Abstractions** (`G11-different-layers-different-abstractions.md`) — do not add forwarding layers while wiring the design together; a layer with no abstraction of its own comes out.
 
 ## Step 1: Read the Design and the Checks
 

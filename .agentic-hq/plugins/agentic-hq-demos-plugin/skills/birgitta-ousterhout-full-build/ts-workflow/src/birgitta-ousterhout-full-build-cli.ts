@@ -106,6 +106,19 @@ function parseCoverageDelta(l5Output: string): number {
 }
 
 /**
+ * Parses Command 03's (L1) bare verdict sentinel, EXACT-matched on the trimmed
+ * output — never substring-matched, because "no_more_slices" contains
+ * "more_slices". Anything else throws.
+ */
+function parseSliceVerdict(l1Output: string): SliceVerdict {
+  const verdict = l1Output.trim();
+  if (verdict === 'more_slices' || verdict === 'no_more_slices' || verdict === 'run_unsalvageable') {
+    return verdict;
+  }
+  throw new Error(`Unrecognised L1 verdict. Full Command 03 output:\n${l1Output}`);
+}
+
+/**
  * Asks on stdin whether to extend the pass cap. Default is No: Enter, any
  * answer other than y/Y, EOF, or a non-interactive stdin all decline — so an
  * unattended run is never blocked here; at worst the epilogue runs as normal
@@ -177,12 +190,13 @@ class FullBuildRun {
     if (!(await this.capAllowsAnotherPass())) {
       return 'max_passes_reached';
     }
-    const verdict = await this.getSliceVerdict();
+    const passNumber = this.passesCompleted + 1;
+    const verdict = await this.getSliceVerdict(passNumber);
     if (verdict !== 'more_slices') {
       return verdict;
     }
-    this.passesCompleted += 1;
-    const coverageDelta = await this.runSliceStages();
+    const coverageDelta = await this.runSliceStages(passNumber);
+    this.passesCompleted = passNumber;
     return this.recordProgress(coverageDelta);
   }
 
@@ -200,16 +214,13 @@ class FullBuildRun {
     return true;
   }
 
-  /** Runs Command 03 (L1) and exact-matches its bare verdict sentinel. */
-  private async getSliceVerdict(): Promise<SliceVerdict> {
-    const l1Output = await this.executeCommand(COMMAND_03_L1_SLICE_SCOPE_AND_LOOP_CONTROL, {
-      'pass-number': this.passesCompleted + 1,
-    });
-    const verdict = l1Output.trim();
-    if (verdict === 'more_slices' || verdict === 'no_more_slices' || verdict === 'run_unsalvageable') {
-      return verdict;
-    }
-    throw new Error(`Unrecognised L1 verdict. Full Command 03 output:\n${l1Output}`);
+  /** Runs Command 03 (L1) and parses its bare verdict sentinel. */
+  private async getSliceVerdict(passNumber: number): Promise<SliceVerdict> {
+    return parseSliceVerdict(
+      await this.executeCommand(COMMAND_03_L1_SLICE_SCOPE_AND_LOOP_CONTROL, {
+        'pass-number': passNumber,
+      })
+    );
   }
 
   /**
@@ -217,8 +228,8 @@ class FullBuildRun {
    * commit stage (L7) — even a pass that ends the loop leaves nothing
    * uncommitted behind. Returns the slice's coverage delta from L5.
    */
-  private async runSliceStages(): Promise<number> {
-    const passVariables = { 'pass-number': this.passesCompleted };
+  private async runSliceStages(passNumber: number): Promise<number> {
+    const passVariables = { 'pass-number': passNumber };
     await this.executeCommand(COMMAND_04_L2_SLICE_DESIGN, passVariables);
     await this.executeCommand(COMMAND_05_L3_FAILING_CHECK, passVariables);
     await this.executeCommand(COMMAND_06_L4_IMPLEMENTATION, passVariables);

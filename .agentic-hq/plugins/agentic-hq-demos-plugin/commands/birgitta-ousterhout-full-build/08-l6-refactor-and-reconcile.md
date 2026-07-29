@@ -33,6 +33,7 @@ agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 pass-number                   = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 decisions-register            = {project-root}/docs/build-run/decisions-register.md
 master-design-doc             = {project-root}/docs/master-design.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
@@ -49,10 +50,12 @@ Research licence: you may use web research if this workspace grants it; you must
 
 ## The Guides for This Stage
 
-- **G9 · Increments Are Abstractions, Not Features — the load-bearing Guide of the whole workflow.** Each slice may **change** the design, not merely add to it. If this slice made an existing abstraction wrong, **fix the abstraction — do not work around it and move on.** Deferring this, pass after pass, is exactly how a slice loop degenerates into tactical feature accretion, and it is the failure this entire workflow was built to prevent. *"Developing incrementally is generally a good idea, but the increments of development should be abstractions, not features."* And on every visit to existing code: *"Whenever you modify any code, try to find a way to improve the system design at least a little bit in the process. If you're not making the design better, you are probably making it worse."* This is the Guide an agent under time pressure will quietly skip. Do not be that agent.
-- **G2 · Information Hiding.** Every design decision known in exactly one place. If the findings show two modules sharing knowledge of one decision, move the boundary — do not patch both sites.
-- **G6 · General-Purpose Modules Are Deeper.** Do not generalise from one case — **do** generalise the moment a second case reveals the axis of variation. This slice may be that second case: if it near-duplicated something an earlier slice built, now is when the shared abstraction gets extracted. Keep special-purpose code cleanly separated from general-purpose code.
-- **G10 · Strategic, Not Tactical.** The run is not being timed. A clean structure beats a patch that also passes. Record any shortcut you consciously keep in the decisions register.
+Read the guide doc in `{guides-dir}` for each Guide below — the rule, Ousterhout's words, an example and a counterexample — before acting on the findings. Three of these (G9, G2, G10) are among the workflow's five load-bearing Guides. Then apply each through its stage note here:
+
+- **G9 · Increments Are Abstractions, Not Features** (`G09-increments-are-abstractions-not-features.md`) — **the load-bearing Guide of the whole workflow, and this is the stage where it lives or dies.** Each slice may **change** the design, not merely add to it: if this slice made an existing abstraction wrong, **fix the abstraction — do not work around it and move on.** Deferring this, pass after pass, is exactly how a slice loop degenerates into tactical feature accretion. This is the Guide an agent under time pressure will quietly skip. Do not be that agent.
+- **G2 · Information Hiding** (`G02-information-hiding.md`) — where the findings show two modules sharing knowledge of one decision, move the boundary; do not patch both sites.
+- **G6 · General-Purpose Modules Are Deeper** (`G06-general-purpose-modules-are-deeper.md`) — if this slice near-duplicated something an earlier slice built, the second case has revealed the axis of variation: now is when the shared abstraction gets extracted.
+- **G10 · Strategic, Not Tactical** (`G10-strategic-not-tactical.md`) — the run is not being timed; a clean structure beats a patch that also passes. Record any shortcut you consciously keep in the decisions register.
 
 ## Step 1: Read the Findings and the State
 

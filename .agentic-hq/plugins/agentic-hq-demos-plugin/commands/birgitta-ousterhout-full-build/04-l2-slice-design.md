@@ -33,6 +33,7 @@ agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 pass-number                   = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 requirements-checklist        = {project-root}/docs/build-run/requirements-checklist.md
 decisions-register            = {project-root}/docs/build-run/decisions-register.md
 master-design-doc             = {project-root}/docs/master-design.md
@@ -49,17 +50,17 @@ Research licence: you may use web research if this workspace grants it; you must
 
 ## The Guides for This Stage
 
-Read these before designing; they steer the work, and later sensor stages check whether they were followed.
+Read the guide doc in `{guides-dir}` for each Guide below — the rule, Ousterhout's words, an example and a counterexample — before designing. Later sensor stages judge what you produce against those same documents. Four of these (G1, G2, G3, G10) are among the workflow's five load-bearing Guides. Then apply each through its stage note here:
 
-- **G1 · Modules Should Be Deep.** Prefer few modules with small interfaces hiding substantial machinery over many thin ones. A module whose interface is nearly as big as its implementation is not carrying its weight. Do not mistake "small" for "good" — the named failure is *classitis*, the assumption that more classes are better, and it is a failure automated coders are prone to. *"Methods containing hundreds of lines of code are fine if they have a simple signature and are easy to read."*
-- **G2 · Information Hiding.** Every design decision — a constant, a format, a layout — is known in exactly one place. If two modules must both know it, the boundary is in the wrong place. Do not decompose by *when things happen*: *"focus on the knowledge that's needed to perform each task, not the order in which tasks occur."*
-- **G3 · Design It Twice.** For any non-trivial slice, produce a **materially different** second approach and compare the two against these Guides before committing. Record the rejected one and why in the master design doc. Two variations on the same idea is not designing it twice: *"Try to pick approaches that are radically different from each other; you'll learn more that way."* For a genuinely trivial slice, record "trivial slice — no alternative required" instead — an honest ruling beats a fabricated strawman.
-- **G4 · Define Errors Out Of Existence.** Prefer designs where the error cannot arise over designs that handle it in every caller: idempotent teardown, setup that cannot half-succeed, validation once at the edge. This is not licence to drop checks that are genuinely needed.
-- **G5 · Comments As Design.** Write each interface's comment **before** its implementation. If the comment is hard to write, the interface is wrong — fix the interface, not the comment. The same rule at system scale is how this whole stage works: writing the design-doc entry *is* the designing, and a shape that cannot be described cleanly is a shape that needs changing. *"Writing the comments first makes documentation part of the design process. Not only does this produce better documentation, but it also produces better designs."*
-- **G7 · Choosing Names & Consistency.** One concept, one name, everywhere, across every language in the repo. A name that is hard to choose is a signal the thing being named is not one thing. Existing conventions are not to be "improved" on mid-run.
-- **G10 · Strategic, Not Tactical.** Working code is not the finish line. Where a shortcut and a clean structure would both work, take the clean structure; the run is not being timed. Record any shortcut you *do* take in the decisions register, so it is a known debt rather than a discovered one.
-- **G11 · Different Layers, Different Abstractions.** Adjacent layers must not present the same abstraction. A method that only forwards its arguments to a method with a similar signature has added a layer and no abstraction — remove it or give it a reason to exist.
-- **G12 · Pull Complexity Downward.** Where complexity cannot be removed, absorb it inside the module rather than exporting it to callers as configuration, flags or edge cases they must each handle. *"Most modules have more users than developers, so it is better for the developers to suffer than the users."*
+- **G1 · Modules Should Be Deep** (`G01-modules-should-be-deep.md`) — carve this slice's design as few deep modules; every interface you add is cost imposed on all later slices.
+- **G2 · Information Hiding** (`G02-information-hiding.md`) — give each design decision this slice introduces exactly one home, and never decompose by when things happen.
+- **G3 · Design It Twice** (`G03-design-it-twice.md`) — record the materially different rejected approach and why in the master design doc; for a genuinely trivial slice, record "trivial slice — no alternative required" instead.
+- **G4 · Define Errors Out Of Existence** (`G04-define-errors-out-of-existence.md`) — before designing handling for an error, try to design the interface so the error cannot arise.
+- **G5 · Comments As Design** (`G05-comments-as-design.md`) — write each interface's comment before its implementation; this whole stage is that rule at system scale, because writing the design-doc entry *is* the designing.
+- **G7 · Choosing Names & Consistency** (`G07-choosing-names-and-consistency.md`) — name this slice's concepts once, consistently with every name the run has already chosen.
+- **G10 · Strategic, Not Tactical** (`G10-strategic-not-tactical.md`) — where a shortcut and a clean structure would both work, design the clean structure; record any shortcut you do take in the decisions register.
+- **G11 · Different Layers, Different Abstractions** (`G11-different-layers-different-abstractions.md`) — every layer this design adds must present a different abstraction from its neighbours.
+- **G12 · Pull Complexity Downward** (`G12-pull-complexity-downward.md`) — absorb unavoidable complexity inside the modules you design, never in their callers.
 
 ## Step 1: Read the State of the Run
 

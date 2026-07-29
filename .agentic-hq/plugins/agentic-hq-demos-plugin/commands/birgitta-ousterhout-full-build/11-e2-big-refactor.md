@@ -31,6 +31,7 @@ Parse out:
 agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 project-root                  = (your primary working directory — the repository the system is being built into)
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 decisions-register            = {project-root}/docs/build-run/decisions-register.md
 master-design-doc             = {project-root}/docs/master-design.md
 big-review-findings           = {project-root}/docs/build-run/big-review-findings.md
@@ -46,13 +47,15 @@ Research licence: you may use web research if this workspace grants it; you must
 
 ## The Guides for This Stage
 
-- **G1 · Modules Should Be Deep.** Prefer few modules with small interfaces hiding substantial machinery over many thin ones. Repairing a Shallow Module finding means deepening or merging — not adding another layer. Do not mistake "small" for "good" (*classitis*).
-- **G2 · Information Hiding.** Every design decision known in exactly one place. An Information Leakage finding is repaired by moving the boundary so one module owns the decision — never by synchronising the copies.
-- **G3 · Design It Twice.** For any substantial repair, sketch a materially different second approach and compare before committing to one. Record the rejected one and why in the design doc.
-- **G6 · General-Purpose Modules Are Deeper.** The whole system now exists — every axis of variation the slices revealed is visible. Where near-duplicates drifted, extract the somewhat-general abstraction: functionality sized to today's need, interface general enough for more than today's use. Keep special-purpose code cleanly separated from general-purpose code.
-- **G10 · Strategic, Not Tactical.** The run is not being timed; take the clean structure. Record any shortcut you consciously keep in the decisions register.
-- **G11 · Different Layers, Different Abstractions.** Adjacent layers must not present the same abstraction; remove pass-through methods or give them a reason to exist.
-- **G12 · Pull Complexity Downward.** Where complexity cannot be removed, absorb it inside the module rather than exporting it to every caller.
+Read the guide doc in `{guides-dir}` for each Guide below — the rule, Ousterhout's words, an example and a counterexample — before repairing anything. Four of these (G1, G2, G3, G10) are among the workflow's five load-bearing Guides. Then apply each through its stage note here:
+
+- **G1 · Modules Should Be Deep** (`G01-modules-should-be-deep.md`) — repairing a Shallow Module finding means deepening or merging, never adding another layer.
+- **G2 · Information Hiding** (`G02-information-hiding.md`) — an Information Leakage finding is repaired by moving the boundary so one module owns the decision, never by synchronising the copies.
+- **G3 · Design It Twice** (`G03-design-it-twice.md`) — for any substantial repair, sketch a materially different second approach and compare before committing; record the rejected one and why in the design doc.
+- **G6 · General-Purpose Modules Are Deeper** (`G06-general-purpose-modules-are-deeper.md`) — the whole system now exists, so every axis of variation the slices revealed is visible: where near-duplicates drifted, extract the somewhat-general abstraction.
+- **G10 · Strategic, Not Tactical** (`G10-strategic-not-tactical.md`) — the run is not being timed; take the clean structure, and record any shortcut you consciously keep in the decisions register.
+- **G11 · Different Layers, Different Abstractions** (`G11-different-layers-different-abstractions.md`) — remove pass-through methods or give them a reason to exist.
+- **G12 · Pull Complexity Downward** (`G12-pull-complexity-downward.md`) — prefer repairs that absorb complexity into a module over repairs that export it to callers.
 
 **And the moderation rule, from the source of all of the above:** *"When applying the ideas from this book, it's important to use moderation and discretion. Every rule has its exceptions, and every principle has its limits. If you take any design idea to its extreme, you will probably end up in a bad place."* Your remit is repair, not a spiral of over-engineered refactorings — the characteristic failure of an automated refactor stage with nobody to say "enough".
 

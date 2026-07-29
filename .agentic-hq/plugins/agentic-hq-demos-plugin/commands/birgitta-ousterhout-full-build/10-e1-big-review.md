@@ -31,6 +31,7 @@ Parse out:
 agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 project-root                  = (your primary working directory — the repository the system is being built into)
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 requirements-checklist        = {project-root}/docs/build-run/requirements-checklist.md
 master-design-doc             = {project-root}/docs/master-design.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
@@ -73,18 +74,20 @@ File every finding under the red flag it exemplifies, so findings can be counted
 
 Read `{master-design-doc}`, `{slice-register}`, `{sensor-manifest}`, `{requirements-checklist}`, the README and docs, and the code — this sweep judges the repository itself, with the code in front of you, never metrics alone.
 
+Then read all twelve guide docs in `{guides-dir}` (`G01-modules-should-be-deep.md` through `G12-pull-complexity-downward.md`). They are the design canon this system was built against — each holds one Guide's rule, an example and a counterexample — and the sensors below judge by those same documents, so the designers and you share one definition of every principle. Five are marked load-bearing (G9, G1, G2, G3, G10): a finding against one of those weighs heavier, other things equal, when you rank severity.
+
 ## Step 2: Run the Inferential Sensors
 
 Work through each sensor. Every finding carries a citation (`file:line` or a named module), the red flag it files under, what to do about it, and a severity.
 
-- **S8 · Module Depth & Layer Abstraction** — for each module: how big is the interface compared to what it hides? Which modules are wrappers? Which methods do nothing but forward their arguments to a method with a similar signature? Do adjacent layers actually present *different* abstractions? And where has complexity been exported to callers — flags, options, edge cases every caller must handle — that the module could have absorbed?
-- **S9 · Change Amplification & Near-Duplicates** — pick three plausible changes the spec implies. For each, count the places that must change together — anything above one is a finding, with the files listed. Also: where are there near-copies of the same thing that have started to drift?
+- **S8 · Module Depth & Layer Abstraction** (judges G1, G11, G12) — for each module: how big is the interface compared to what it hides? Which modules are wrappers? Which methods do nothing but forward their arguments to a method with a similar signature? Do adjacent layers actually present *different* abstractions? And where has complexity been exported to callers — flags, options, edge cases every caller must handle — that the module could have absorbed?
+- **S9 · Change Amplification & Near-Duplicates** (judges G2, G6) — pick three plausible changes the spec implies. For each, count the places that must change together — anything above one is a finding, with the files listed. Also: where are there near-copies of the same thing that have started to drift?
 - **S10 · Cognitive Load & Unknown Unknowns** — what must someone know to change this system safely that is written down **nowhere**? The worst form of complexity, and the hardest to see from inside — your fresh eyes are the instrument.
-- **S11 · Information Leakage** — which design decisions are known in more than one place? Name the constant/format/decision and every site.
-- **S12 · Comment Quality** — which comments repeat their code? Which non-obvious things have no comment at all? Are interface comments contaminated with implementation detail?
+- **S11 · Information Leakage** (judges G2) — which design decisions are known in more than one place? Name the constant/format/decision and every site.
+- **S12 · Comment Quality** (judges G5, G8) — which comments repeat their code? Which non-obvious things have no comment at all? Are interface comments contaminated with implementation detail?
 - **S13 · Documentation Honesty** — does the README describe the system that exists? Do stated numbers match measured ones? Are gaps stated, or quietly absent?
 - **S14 · Design Doc Fidelity** — does `{master-design-doc}` describe the system that actually exists — or the one it was expected to become? An incrementally-updated document drifts; you are what notices.
-- **S16 · Naming Consistency** — collect the system's vocabulary. Which concepts are named more than one way across files and languages? Which names are vague enough that the thing named is probably not one thing?
+- **S16 · Naming Consistency** (judges G7) — collect the system's vocabulary. Which concepts are named more than one way across files and languages? Which names are vague enough that the thing named is probably not one thing?
 - **S18 · Test Verification Depth** — **not optional.** Do the tests actually verify anything, or merely execute code? This run is the limiting case of the problem: the same unattended process wrote the code and the tests, and nobody reviewed either — and a passing suite is precisely the check that cannot notice it. Where the stack affords a mutation-testing tool, run it, and summarise its output through a query script — never paste it raw. Where no tool exists, work inferentially: sample the system's public behaviours and, for each, name **which check fails if this breaks**. A behaviour with no answer is a finding. Remember the cautionary shape: a file can report 100% statement coverage and have no real tests at all — the coverage all coming from one acceptance test passing through it. **Executed is not verified**; a coverage figure is evidence a line ran, not evidence anything would have failed had it been wrong.
 
 ## Step 3: Write the Findings File

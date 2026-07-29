@@ -33,6 +33,7 @@ agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 pass-number                   = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
+guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 requirements-checklist        = {project-root}/docs/build-run/requirements-checklist.md
 master-design-doc             = {project-root}/docs/master-design.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
@@ -56,6 +57,8 @@ Research licence: you may use web research if this workspace grants it; must fin
 
 Read `{sensor-manifest}` (which sensors exist and how each is run), the slice's `{slice-register}` entry, `{requirements-checklist}` and `{master-design-doc}`.
 
+Also read, from `{guides-dir}`: `G03-design-it-twice.md` and `G09-increments-are-abstractions-not-features.md`. S15 and S17 below judge by those two Guides' definitions and examples — the same documents the Slice Designer read.
+
 ## Step 2: Run the Computational Sensors
 
 Run each of the following, per the manifest. For any sensor the manifest records as absent, note the absence in the findings file rather than silently skipping.
@@ -66,8 +69,8 @@ Run each of the following, per the manifest. For any sensor the manifest records
 - **S4 · Regression** — **every earlier slice's checks still pass.** This is the net that makes incremental building safe; run the full suite, not a sample.
 - **S5 · Runs From Clean** — the documented build-and-run path works from a fresh clone of the repo into a temp directory, not just from the working tree. Catches "works in the agent's directory".
 - **S6 · Idempotence & Re-run** — setup/teardown-style operations survive being run twice; a second full run works.
-- **S15 · Design-It-Twice Evidence** — does this slice's master-design-doc entry record a **materially different** rejected alternative and why? The recorded ruling "trivial slice — no alternative required" is a **passing** outcome — state it as such. Presence of an entry is mechanical; whether the alternative was *materially* different is your judgement.
-- **S17 · Design Drift vs Accretion** — did this slice **modify any existing abstraction**, or only add new files? Look at the slice's diffs. Pure accretion may be legitimate for a genuinely orthogonal slice, so this sensor is **advisory, never a failure** — its output exists to make the Refactorer *consider* whether an abstraction should have moved.
+- **S15 · Design-It-Twice Evidence** — does this slice's master-design-doc entry record a **materially different** rejected alternative and why? The recorded ruling "trivial slice — no alternative required" is a **passing** outcome — state it as such. Presence of an entry is mechanical; whether the alternative was *materially* different is your judgement — judge it by `G03-design-it-twice.md`'s definition, example and counterexample.
+- **S17 · Design Drift vs Accretion** — did this slice **modify any existing abstraction**, or only add new files? Look at the slice's diffs. Pure accretion may be legitimate for a genuinely orthogonal slice, so this sensor is **advisory, never a failure** — its output exists to make the Refactorer *consider* whether an abstraction should have moved. The Guide whose failure this sensor watches for is `G09-increments-are-abstractions-not-features.md`.
 
 ## Step 3: Compute S7 — the Constraint Coverage Delta
 
