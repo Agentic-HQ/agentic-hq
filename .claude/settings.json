@@ -39,6 +39,7 @@
     "ask": [],
     "additionalDirectories": []
   },
+  "autoCompactWindow": 200000,
   "autoMode": {
     "allow": [
       "$defaults",

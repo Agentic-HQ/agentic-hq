@@ -1,0 +1,9 @@
+{
+  "pluginId": "agentic-hq-demos-plugin",
+  "skillId": "birgitta-ousterhout-full-build",
+  "shortId": "full-build",
+  "description": "Builds a whole system from a specification in thin vertical slices, steered by APoSD Guides and checked by Birgitta Böckeler-style Sensors.",
+  "exampleParameters": "-- --spec-file=./docs/spec.md",
+  "version": "1.0.0",
+  "author": { "name": "Agentic HQ" }
+}
