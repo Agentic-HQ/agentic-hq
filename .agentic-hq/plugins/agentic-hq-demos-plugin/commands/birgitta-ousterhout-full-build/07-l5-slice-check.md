@@ -35,6 +35,7 @@ pass-number                   = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
 guides-dir                    = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/guides
 requirements-checklist        = {project-root}/docs/build-run/requirements-checklist.md
+decisions-register            = {project-root}/docs/build-run/decisions-register.md
 master-design-doc             = {project-root}/docs/master-design.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
 sensor-manifest               = {project-root}/docs/build-run/sensor-manifest.md

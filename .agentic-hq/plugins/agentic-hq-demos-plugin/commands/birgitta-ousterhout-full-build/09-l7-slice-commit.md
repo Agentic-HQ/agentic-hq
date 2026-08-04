@@ -33,6 +33,7 @@ agentic-hq-workspace-root-dir = (parsed from input)
 spec-file                     = (parsed from input; a relative path is relative to project-root)
 pass-number                   = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
+decisions-register            = {project-root}/docs/build-run/decisions-register.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
 slice-findings-file           = {project-root}/docs/build-run/slice-findings/slice-{N}.md   (N = this slice's number from the register)
 ```

@@ -37,7 +37,10 @@ passes-completed              = (parsed from input)
 project-root                  = (your primary working directory — the repository the system is being built into)
 sample-docs-dir               = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/birgitta-ousterhout-full-build/docs/sample-docs
 requirements-checklist        = {project-root}/docs/build-run/requirements-checklist.md
+decisions-register            = {project-root}/docs/build-run/decisions-register.md
 slice-register                = {project-root}/docs/build-run/slice-register.md
+slice-findings-dir            = {project-root}/docs/build-run/slice-findings/
+big-review-findings           = {project-root}/docs/build-run/big-review-findings.md   (absent if the loop exit was run_unsalvageable — E1 was skipped)
 results-file                  = {project-root}/RESULTS.md
 ```
 
