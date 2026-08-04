@@ -169,8 +169,8 @@ Stop when the deliverables are complete and pushed.
 | Claude Code version | **`2.1.220`** — confirmed on the VM 2026-08-04 (4.5) | *(same VM, same binary)* |
 | Resolved model + reasoning effort | **`claude-fable-5[1m]` / effort `high`, auto-compact at 200k** — corrected 2026-08-04 at 6.1 (AM8; the 4.5 record of `claude-opus-5[1m]` was stale — Steve had pinned Fable 5 in `~/.claude/settings.json` pre-snapshot) | *(same — inherited from the same VM default, inside the baseline snapshot; `autoCompactWindow` re-applied post-restore per arm-2-launch.md step 0)* |
 | Web tools granted (Q1 outcome) | *(fill)* | *(fill)* |
-| Wall-clock start / end | *(fill)* | *(fill)* |
-| Ended by | *(completed / stalled / crashed)* | *(completed / stalled / crashed)* |
+| Wall-clock start / end | Started 2026-08-04 20:38 (6.1); **total ≈ 1 h 20 m** (Steve's report, 2026-08-04); final commit pushed 20:55 UTC (`7949ee5`). *(VM agent at 6.2: pin the exact end time from the session/git evidence — the 6.1 launch timestamp's timezone wasn't recorded, and the run included the AM8 exit/resume.)* | *(fill)* |
+| Ended by | **Completed** — clean closing self-report (captured at `experiment-results/arm-1/arm-1-final-session-message.md`), all deliverables committed and pushed. One mid-run exit/resume at ~72k tokens to apply AM8; not a stall. | *(completed / stalled / crashed)* |
 | Snapshot restored from | `tailcut-01-baseline` | `tailcut-01-baseline` |
 
 **No tokens. No cost. No quality-per-pound.** Golden Rule 8 — do not reintroduce it, not even "just for interest".
