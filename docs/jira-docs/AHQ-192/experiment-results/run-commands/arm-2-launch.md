@@ -2,6 +2,23 @@
 
 > Written at plan step 5.4/5.5, **before** the `tailcut-01-baseline` snapshot. Kept in this repo for the same Snapshot-Law reason as arm 1's.
 
+## Step 0 — re-apply the 200k auto-compact window (AM8; must be done after the restore, before launch)
+
+The baseline snapshot predates AM8, so the restore brings back arm 2's `.claude/settings.local.json` **without** `autoCompactWindow`. Arm 1 ran with it (added mid-run at ~72k tokens, 2026-08-04); arm 2 must match. Overwrite the file so it is byte-identical to what arm 1 finished with:
+
+```bash
+cat > ~/dev/claude/agentic-hq/tailcut/.claude/settings.local.json <<'EOF'
+{
+  "autoCompactWindow": 200000,
+  "permissions": {
+    "allow": ["WebSearch", "WebFetch"]
+  }
+}
+EOF
+```
+
+Why: the VM default model is `claude-fable-5[1m]` (1M context; pinned in `~/.claude/settings.json` inside the baseline), and Steve's decision (2026-08-04) is that sessions should auto-compact at 200k tokens rather than run deep into the 1M window. Doc 13 §10 AM8 records this; the md5 recorded at 5.3 (`8404ac70…`) refers to the pre-AM8 file and no longer applies.
+
 ## Step 1 — launch
 
 Run in the VM, from arm 2's workspace:
