@@ -1,0 +1,8 @@
+PASS  [1] DSCP on wire: EF pkts=20, CS1 pkts=20
+skip  [2] DCTCP (n/a for S3)
+PASS  [3] band2 max backlog 3795598B >> band0 max backlog 36340B
+skip  [4] ECN (n/a for S3)
+PASS  [5] tso/gso/gro off on all 6 veth ends
+skip  [6] keep-alive persistence (n/a for S3)
+skip  [7] idle re-promotion (n/a for S3)
+verify: ALL APPLICABLE CHECKS PASSED

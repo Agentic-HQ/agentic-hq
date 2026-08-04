@@ -1,0 +1,15 @@
+qdisc htb 1: root refcnt 129 r2q 10 default 0x10 direct_packets_stat 0 direct_qlen 1000
+ Sent 544543029 bytes 1495947 pkt (dropped 58, overlimits 399766 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc red 10: parent 1:10 limit 400000b min 30000b max 31000b ecn 
+ Sent 544543029 bytes 1495947 pkt (dropped 58, overlimits 181478 requeues 0) 
+ backlog 0b 0p requeues 0
+  marked 181420 early 58 pdrop 0 other 0 
+class htb 1:10 root leaf 10: prio 0 rate 100Mbit ceil 100Mbit burst 1600b cburst 1600b
+ Sent 544543029 bytes 1495947 pkt (dropped 58, overlimits 399766 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 1495947 borrowed: 0 giants: 0
+ tokens: 1917 ctokens: 1917
+
+class red 10:1 parent 10: 
+

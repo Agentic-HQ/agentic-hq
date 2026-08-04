@@ -1,0 +1,8 @@
+skip  [1] DSCP marking (n/a for S2)
+PASS  [2] DCTCP in use on client sockets (ss -ti)
+skip  [3] priority band backlog (n/a for S2)
+PASS  [4] ECT set on 400 sampled packets
+PASS  [5] tso/gso/gro off on all 6 veth ends
+skip  [6] keep-alive persistence (n/a for S2)
+skip  [7] idle re-promotion (n/a for S2)
+verify: ALL APPLICABLE CHECKS PASSED

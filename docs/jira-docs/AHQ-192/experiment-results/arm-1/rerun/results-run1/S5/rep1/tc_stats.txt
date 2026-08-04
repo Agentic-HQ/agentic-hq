@@ -1,0 +1,46 @@
+qdisc htb 1: root refcnt 129 r2q 10 default 0x10 direct_packets_stat 0 direct_qlen 1000
+ Sent 224388901 bytes 2068652 pkt (dropped 206, overlimits 80630 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc fq_codel 10: parent 1:10 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 224388901 bytes 2068652 pkt (dropped 206, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  maxpacket 1514 drop_overlimit 0 new_flow_count 711744 ecn_mark 0
+  new_flows_len 0 old_flows_len 8
+class htb 1:10 root leaf 10: prio 0 rate 100Mbit ceil 100Mbit burst 1600b cburst 1600b
+ Sent 224388901 bytes 2068652 pkt (dropped 0, overlimits 80630 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 2068652 borrowed: 0 giants: 0
+ tokens: 1917 ctokens: 1917
+
+class fq_codel 10:22 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 0us
+class fq_codel 10:1c4 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 1us
+class fq_codel 10:1f9 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 1us
+class fq_codel 10:210 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 0us
+class fq_codel 10:274 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 622 count 0 lastcount 0 ldelay 0us
+class fq_codel 10:337 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 1us
+class fq_codel 10:366 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 0us
+class fq_codel 10:3c0 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 1us

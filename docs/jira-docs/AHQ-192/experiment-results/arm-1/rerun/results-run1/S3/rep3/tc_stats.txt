@@ -1,0 +1,30 @@
+qdisc htb 1: root refcnt 129 r2q 10 default 0x10 direct_packets_stat 0 direct_qlen 1000
+ Sent 667332590 bytes 1850441 pkt (dropped 6321, overlimits 563674 requeues 0) 
+ backlog 3012630b 1991p requeues 0
+qdisc prio 10: parent 1:10 bands 3 priomap 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ Sent 667332590 bytes 1850441 pkt (dropped 6321, overlimits 0 requeues 0) 
+ backlog 3012630b 1991p requeues 0
+qdisc pfifo 12: parent 10:2 limit 1000p
+ Sent 236619868 bytes 156408 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc pfifo 11: parent 10:1 limit 1000p
+ Sent 139165878 bytes 1501419 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc bfifo 13: parent 10:3 limit 4Mb
+ Sent 291546844 bytes 192614 pkt (dropped 6321, overlimits 0 requeues 0) 
+ backlog 3012630b 1991p requeues 0
+class htb 1:10 root leaf 10: prio 0 rate 100Mbit ceil 100Mbit burst 1600b cburst 1600b
+ Sent 668401474 bytes 1851147 pkt (dropped 6321, overlimits 564321 requeues 0) 
+ backlog 1943746b 1285p requeues 0
+ lended: 1851147 borrowed: 0 giants: 0
+ tokens: -955 ctokens: -955
+
+class prio 10:1 parent 10: leaf 11: 
+ Sent 139165878 bytes 1501419 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+class prio 10:2 parent 10: leaf 12: 
+ Sent 236619868 bytes 156408 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+class prio 10:3 parent 10: leaf 13: 
+ Sent 292615728 bytes 193320 pkt (dropped 6321, overlimits 0 requeues 0) 
+ backlog 1943746b 1285p requeues 0

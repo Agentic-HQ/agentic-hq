@@ -1,0 +1,7 @@
+{
+  "scenario": "S1", "rep": 1, "duration_s": 60,
+  "cc": "cubic", "ecn": 0, "qdisc": "fifo",
+  "marker": "off", "client_mode": "fresh",
+  "bulk_mode": "bursty", "bulk_burst": "8M", "bulk_start": 1785878699.096713765, "bulk_end": 1785878762.246978370,
+  "workers": 8, "resp_size": 10240, "idle_gap_ms": 100
+}

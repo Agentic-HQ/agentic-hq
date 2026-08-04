@@ -1,0 +1,7 @@
+{
+  "scenario": "S5", "rep": 2, "duration_s": 60,
+  "cc": "cubic", "ecn": 0, "qdisc": "fq_codel",
+  "marker": "off", "client_mode": "fresh",
+  "bulk_mode": "bursty", "bulk_burst": "8M", "bulk_start": 1785876198.629084057, "bulk_end": 1785876271.023849176,
+  "workers": 8, "resp_size": 10240, "idle_gap_ms": 100
+}

@@ -1,0 +1,7 @@
+{
+  "scenario": "S3", "rep": 2, "duration_s": 60,
+  "cc": "cubic", "ecn": 0, "qdisc": "prio_fifo",
+  "marker": "on", "client_mode": "fresh",
+  "bulk_mode": "bursty", "bulk_burst": "8M", "bulk_start": 1785879145.705328925, "bulk_end": 1785879208.428357855,
+  "workers": 8, "resp_size": 10240, "idle_gap_ms": 100
+}

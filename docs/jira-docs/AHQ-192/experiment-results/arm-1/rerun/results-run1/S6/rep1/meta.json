@@ -1,0 +1,7 @@
+{
+  "scenario": "S6", "rep": 1, "duration_s": 60,
+  "cc": "dctcp", "ecn": 1, "qdisc": "prio_red",
+  "marker": "on", "client_mode": "keepalive",
+  "bulk_mode": "bursty", "bulk_burst": "8M", "bulk_start": 1785879677.524111723, "bulk_end": 1785879740.934377532,
+  "workers": 8, "resp_size": 10240, "idle_gap_ms": 100
+}

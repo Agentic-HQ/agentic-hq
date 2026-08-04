@@ -1,0 +1,22 @@
+qdisc htb 1: root refcnt 129 r2q 10 default 0x10 direct_packets_stat 0 direct_qlen 1000
+ Sent 252640170 bytes 1980125 pkt (dropped 250, overlimits 115075 requeues 0) 
+ backlog 0b 0p requeues 0
+qdisc fq_codel 10: parent 1:10 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 252640170 bytes 1980125 pkt (dropped 250, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  maxpacket 1514 drop_overlimit 0 new_flow_count 672907 ecn_mark 0
+  new_flows_len 0 old_flows_len 2
+class htb 1:10 root leaf 10: prio 0 rate 100Mbit ceil 100Mbit burst 1600b cburst 1600b
+ Sent 252640170 bytes 1980125 pkt (dropped 0, overlimits 115075 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 1980125 borrowed: 0 giants: 0
+ tokens: 1807 ctokens: 1807
+
+class fq_codel 10:67 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1382 count 0 lastcount 0 ldelay 1us
+class fq_codel 10:e2 parent 10: 
+ (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  deficit 1448 count 0 lastcount 0 ldelay 0us

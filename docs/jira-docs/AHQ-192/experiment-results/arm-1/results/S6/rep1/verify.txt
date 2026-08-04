@@ -1,0 +1,8 @@
+PASS  [1] DSCP on wire: EF pkts=20, CS1 pkts=20
+PASS  [2] DCTCP in use on client sockets (ss -ti)
+PASS  [3] band2 max backlog 171082B >> band0 max backlog 0B
+PASS  [4] ECT set on 400 sampled packets
+PASS  [5] tso/gso/gro off on all 6 veth ends
+PASS  [6] stable established conn count: 8 -> 8 (workers=8)
+PASS  [7] idle re-promotion: RPC flow counters stay <T1 (232 then 232 bytes across dumps, 8 flows) and packets still EF on wire (40 sampled) after >20s of traffic
+verify: ALL APPLICABLE CHECKS PASSED

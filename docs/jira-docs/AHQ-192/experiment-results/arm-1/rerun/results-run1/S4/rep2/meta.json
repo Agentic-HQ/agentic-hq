@@ -1,0 +1,7 @@
+{
+  "scenario": "S4", "rep": 2, "duration_s": 60,
+  "cc": "dctcp", "ecn": 1, "qdisc": "prio_red",
+  "marker": "on", "client_mode": "fresh",
+  "bulk_mode": "bursty", "bulk_burst": "8M", "bulk_start": 1785879336.952644382, "bulk_end": 1785879399.713308620,
+  "workers": 8, "resp_size": 10240, "idle_gap_ms": 100
+}

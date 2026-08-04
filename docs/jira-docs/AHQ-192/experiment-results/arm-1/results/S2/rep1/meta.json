@@ -1,0 +1,7 @@
+{
+  "scenario": "S2", "rep": 1, "duration_s": 60,
+  "cc": "dctcp", "ecn": 1, "qdisc": "red",
+  "marker": "off", "client_mode": "fresh",
+  "bulk_mode": "bursty", "bulk_burst": "8M", "bulk_start": 1785875548.183698470, "bulk_end": 1785875611.312684890,
+  "workers": 8, "resp_size": 10240, "idle_gap_ms": 100
+}
