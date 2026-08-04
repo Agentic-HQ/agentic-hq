@@ -51,6 +51,7 @@ STEVE give me exact instructions at the moment each one is needed.
 8. **Cost and token measurement is OUT OF SCOPE — do not reintroduce it.** Steve's decision, 2026-07-26: subscription plans hide tokens and prices and the workarounds aren't worth the time. No cost comparison and no quality-per-pound framing anywhere. **This supersedes doc 09's fairness confound 2** — do not follow doc 09 on this point. Doc 15 simply states cost was not measured.
 9. **Nothing carries across machines or sessions.** No agent memory was migrated to the VM. This folder + the repo CLAUDE.md are the entire context.
 10. **This folder is destined for a public repo.** Nothing personal, no non-public company information; keep the Criteo material sourced to their public engineering output.
+11. **Minimal bandwidth (Steve's constraint, 2026-08-04: on holiday, on a limited/metered connection).** No `apt update`/`apt upgrade`, no unnecessary downloads, no re-installs of things that already work. Automatic APT upgrades are already disabled (5.1) — leave them off. Everything the experiment needs was installed and verified in Phase 5; if something new genuinely must be downloaded, tell Steve the approximate size and get a yes first. Git push/pull of this repo and the arm repos is fine — it's small and load-bearing.
 
 ---
 
