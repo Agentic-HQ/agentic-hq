@@ -247,6 +247,17 @@ Decide whether the feature is a **good size to do in one run**.
      the suggested Sub-Tasks.
   2. **Continue with oversized feature implementation** — proceed anyway, at higher risk.
 
+  **CRITICAL — feedback is NOT approval. You must not proceed to Step 8/9 (write output +
+  terminate) until the human has given explicit approval of the FINAL plan.** If the human's
+  answer contains feedback, modifications, or anything other than a clear approval of one of the
+  two options: incorporate the changes into the `Split Suggestion`, then **re-ask** (AskUserQuestion
+  again) so the human approves the *updated* plan. Repeat as many rounds as needed.
+  - Anti-pattern (must never happen): human answers with feedback, e.g. "please add a 6th task" →
+    AI adds the 6th task as requested, marks the plan `(Accepted)`, and terminates. The human never
+    approved the final plan — they only gave feedback on a draft of it.
+  - Only mark `(Accepted)`/`(Rejected)` and move to Step 8 when the human's latest answer is an
+    unambiguous choice of Option 1 or Option 2 with no unincorporated changes.
+
   - **If the human chooses Option 1 (terminate & split):**
     - Rename the section heading to `## Split Suggestion (Accepted)` and record at the top of that
       section that the Researcher flagged the feature as oversized, recommended termination/splitting,
