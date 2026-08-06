@@ -292,6 +292,11 @@ No web/Perplexity research was required beyond two live npm-registry checks run 
 
 **Human Answer ('Yes' means follow AI Recommendation):** Yes
 
+**AI Note (appended 2026-08-06, during the AHQ-196 Researcher stage):** the tracer vehicle was
+subsequently fixed as **math-workflow** (not string-reversal) when the plan was revised to prove
+the infrastructure on a non-interactive multi-command workflow — see `## Split Suggestion
+(Accepted)` for the rationale.
+
 ### Question 5
 
 **Question:** For v1, is the publish process itself manual (you run a documented `npm publish` checklist locally, as `halso`), with CI/GitHub-Actions-based release automation explicitly out of scope?
@@ -371,25 +376,50 @@ Ordered by decreasing relevance (pointers for the Planner):
 ## Split Suggestion (Accepted)
 
 **Record of the decision:** the Researcher flagged this feature as too large/complex for one
-add-feature run and recommended terminating the workflow and splitting the feature. After several
-rounds of refinement (structural modification, Jira-ready titles, Jira IDs AHQ-196–AHQ-201 assigned
-and linked), the human gave **explicit approval of the final plan** ("Approve: terminate & split")
-— terminating this workflow and performing each Sub-Task below as its own single feature
-implementation. The human's structural modification (verbatim):
+add-feature run and recommended terminating the workflow and splitting the feature. The human gave
+explicit approval of the split plan, terminated the workflow, and performs each Sub-Task below as
+its own single feature implementation. On 2026-08-06, during the AHQ-196 Researcher stage, the
+human gave full approval to revise the plan into its current form: the infrastructure is proven on
+**math-workflow** first — taken as far as possible, including a real npm publish and
+registry-install verification — add-feature is converted only once everything is proven and
+working, and the remaining workflows are migrated in one final pass. (Earlier revisions of this
+plan are in git history.)
 
-> *"I like the way you split the subtasks into the Tracer bullet first, but one modification I like
-> is that I want whatever you put into these tasks to be done end-to-end across all the tasks (to
-> the point where the add feature workflow works in full). Leave all of the other workflows broken.
-> Only once we are completely happy with the add feature workflow working do we then lock that down
-> and fix all the other workflows. This is because if we try and do all the workflows as we go
-> along, if we then change our minds about something or improve it, we then have to do it on all
-> the workflows, which is a massive waste of time. We should only do this one workflow and get it
-> working end to end through all the tasks. We should insert a final task after the last
-> refactoring task to complete all the other workflows. Until then, they should be left broken."*
+**Guiding principle (applies to every Sub-Task, set by the human):** one workflow at a time, taken
+fully end-to-end. Sub-Tasks 1–3 prove the whole infrastructure chain on **math-workflow** only —
+from local build through tarball install to a real npm publish; Sub-Task 4 converts **add-feature**
+onto the pattern once the pipeline is proven; all other shipped workflows are **deliberately left
+broken** until the final Sub-Task migrates them onto the locked-down pattern in one pass. Rationale
+(the human's): migrating every workflow as we go would mean repeating each design change or
+improvement across all of them — a massive waste of time.
 
-**Guiding principle (applies to every Sub-Task):** Sub-Tasks 1–5 operate on the **add-feature
-workflow only**, taking it fully end-to-end. All other shipped workflows are **deliberately left
-broken** until Sub-Task 6 migrates them onto the proven, locked-down pattern in one pass.
+**Why math-workflow is the proving vehicle (chosen over add-feature, 2026-08-06):**
+
+- It runs **end-to-end with no human in the loop** — three chained Claude commands (×2, +3, ÷5)
+  producing an assertable output number — so every infrastructure iteration in Sub-Tasks 1–2 is a
+  fast, fully automatable run. add-feature's Researcher stops to wait for a human, which would have
+  forced an artificial "abort at first agent handshake" proof point and a human-attended Claude
+  session per iteration.
+- Failures point at the **infrastructure** (build, import resolution, runner script, plugin
+  discovery, io marshalling) rather than at workflow content — and the infrastructure is exactly
+  what Sub-Tasks 1–2 exist to prove.
+- It **ships** in the published package (it is a user-facing demo), so it can serve as the
+  installed-package smoke-test workflow permanently. A dedicated test plugin was considered and
+  rejected: it would near-duplicate math-workflow, and — like `steve-test-plugin` — it would
+  presumably be excluded from the published files whitelist, making it useless for post-publish
+  tarball testing. An existing e2e test
+  (`tests/e2e/demo/cross-workspace-demo-math-workflow-gives-expected-output-number.e2e.test.ts`)
+  is the template for the installed-package check.
+- Deferred risk, accepted: add-feature-specific surfaces (interactive stops, the four-agent chain,
+  help-doc paths located via the workspace-root relay) stay unproven until Sub-Task 4 — retiring
+  them is that Sub-Task's purpose.
+
+**Why the first publish (Sub-Task 3) precedes the add-feature conversion (Sub-Task 4):** publishing
+is itself infrastructure with its own failure modes (npx cache behaviour, global-install
+permissions, node-pty installing on a clean machine, the `files` whitelist producing a correct
+tarball) — exactly the class of problem the tracer approach exists to surface cheaply, so it is
+proven with math-workflow too. A quiet 0.x publish advertises nothing: the README/docs only start
+pointing users at the npm route in Sub-Task 5 (AHQ-199), after add-feature works.
 
 Why the split:
 
@@ -402,43 +432,77 @@ Why the split:
 
 Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
 
-1. **[AHQ-196](https://agentic-hq.atlassian.net/browse/AHQ-196) — Tracer Bullet: Prove Prebuilt add-feature Workflow Runs From an npm-Installed Tarball
-   (No Cloned Repo)** — minimal build (CLI + the add-feature ts-workflow) + minimal shared runner;
-   `npm pack`; install the tarball into a temp prefix; prove `agentic-hq list` works and the
-   add-feature workflow launches through its first agent handshake from a clean directory with the
-   cloned repo out of the picture. Must answer: how the `agentic-hq/tools/claude-code` import
-   resolves in compiled workflows, and that the build is deterministic (build twice, compare
-   hashes).
-2. **[AHQ-197](https://agentic-hq.atlassian.net/browse/AHQ-197) — Build Pipeline And Explicit Parameter Chain (build-mode, ahq-package-root) For The
-   add-feature Workflow** — implement `build-mode` and `ahq-package-root` through entry points →
-   TypeScript → the add-feature SKILL.md → shared runner; dev-mode parity (`build-first`);
+1. **[AHQ-196](https://agentic-hq.atlassian.net/browse/AHQ-196) — Tracer Bullet: Prove Prebuilt math-workflow Runs From an npm-Installed Tarball
+   (No Cloned Repo)** — minimal build (CLI + the math-workflow ts-workflow) + minimal shared
+   runner; `npm pack`; install the tarball into a temp prefix; prove `agentic-hq list` works and
+   math-workflow runs end-to-end non-interactively (correct output number) from a clean directory
+   with the cloned repo out of the picture. Must answer: how the `agentic-hq/tools/claude-code`
+   import resolves in compiled workflows, and that the build is deterministic (build twice,
+   compare hashes).
+2. **[AHQ-197](https://agentic-hq.atlassian.net/browse/AHQ-197) — Build Pipeline And Explicit Parameter Chain (build-mode, ahq-package-root) For
+   math-workflow** — implement `build-mode` and `ahq-package-root` through entry points →
+   TypeScript → the math-workflow SKILL.md → shared runner; dev-mode parity (`build-first`);
    entry-point dual-write of the legacy env var. Other workflows remain on the old pattern
    (broken).
 3. **[AHQ-198](https://agentic-hq.atlassian.net/browse/AHQ-198) — Package Hygiene And First npm Publish (files Whitelist, Un-private, Publish Guards And
    Checklist)** — `files` whitelist (drop tests, `steve-test-plugin`, dev configs, `.npmrc`),
    remove `private: true`, `prepublishOnly` guards, engines cleanup, documented manual publish
-   checklist, publish as `halso` with add-feature as the working workflow (how the not-yet-migrated
-   workflows are handled in the published package — excluded vs present-but-marked — is a Planner
-   decision for that Sub-Task).
-4. **[AHQ-199](https://agentic-hq.atlassian.net/browse/AHQ-199) — README And Docs: npm/npx Quickstart For Tool Users, Separate From Contributor Clone Path** —
+   checklist, then a quiet 0.x publish as `halso` with **math-workflow as the only working
+   workflow** — verified from the real registry: `npx agentic-hq` / `npm install -g agentic-hq`
+   from npmjs.org in a clean directory, running math-workflow end-to-end. Nothing advertises the
+   npm route until AHQ-199. (How the not-yet-migrated workflows are handled in the published
+   package — excluded vs present-but-marked — is a Planner decision for that Sub-Task.)
+4. **[AHQ-202](https://agentic-hq.atlassian.net/browse/AHQ-202) — Convert add-feature Onto The Proven Prebuilt Pattern (First
+   Interactive Multi-Agent Workflow)** — only once the whole pipeline (build → pack → publish →
+   registry install → run) is proven and we are happy with it: migrate add-feature (the flagship
+   workflow) onto the locked-down pattern, republish a patch version, and prove the full
+   interactive four-agent flow runs from a registry-installed package in a clean directory;
+   retires the add-feature-specific risks (interactive stops, the four-agent chain, help-doc paths
+   located via the workspace-root relay).
+5. **[AHQ-199](https://agentic-hq.atlassian.net/browse/AHQ-199) — README And Docs: npm/npx Quickstart For Tool Users, Separate From Contributor Clone Path** —
    README npm/npx Quickstart vs contributor split, tool-user prerequisites (Claude CLI; Linux build
    toolchain for node-pty), troubleshooting updates — written against the working add-feature flow.
-5. **[AHQ-200](https://agentic-hq.atlassian.net/browse/AHQ-200) — Isolated Zero-Change Refactor: Eliminate The AGENTIC_HQ_WORKSPACE_ROOT Env Var** — eliminate
+6. **[AHQ-200](https://agentic-hq.atlassian.net/browse/AHQ-200) — Isolated Zero-Change Refactor: Eliminate The AGENTIC_HQ_WORKSPACE_ROOT Env Var** — eliminate
    `AGENTIC_HQ_WORKSPACE_ROOT` (zero functionality change for the working system — see the "Final
    Refactor Stage" section; the still-broken workflows' legacy references are migrated in
-   Sub-Task 6).
-6. **[AHQ-201](https://agentic-hq.atlassian.net/browse/AHQ-201) — Migrate All Remaining Workflows And The Scaffolder Onto The Proven Prebuilt Pattern And
-   Restore Them To Working** *(added per the human's modification)* — with the add-feature pattern
-   locked down, migrate the remaining six skills (string-reversal, math-workflow,
-   quick-jira-workflow, full-jira-tdd-story-workflow, add-feature-detailed-example,
-   create-workflow) and the create-workflow scaffolder templates onto it; extend the build to all
-   shipped plugins; restore everything to working; full validation and (re)publish.
+   Sub-Task 7).
+7. **[AHQ-201](https://agentic-hq.atlassian.net/browse/AHQ-201) — Migrate All Remaining Workflows And The Scaffolder Onto The Proven Prebuilt Pattern And
+   Restore Them To Working** — with the pattern locked down, migrate the remaining five skills
+   (string-reversal, quick-jira-workflow, full-jira-tdd-story-workflow,
+   add-feature-detailed-example, create-workflow) and the create-workflow scaffolder templates onto
+   it; extend the build to all shipped plugins; restore everything to working; full validation and
+   (re)publish.
+
+## Update (2026-08-06, appended during the AHQ-196 Planner stage) — Sub-Task Addenda From The Perplexity Plan Review
+
+A Perplexity second-opinion review of the AHQ-196 tracer-bullet plan (full Q&A:
+`docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/perplexity-questions/01-perplexity-q-and-a-about-plan.md`)
+endorsed the prebuilt design but raised items belonging to later Sub-Tasks. They are recorded
+here — as AI/Perplexity-proposed addenda, for the human to confirm when each Sub-Task runs —
+because Sub-Task runs read this brief, not AHQ-196's documents.
+
+**Addendum to Sub-Task 3 (AHQ-198 — Package Hygiene And First npm Publish):**
+
+- Add a release guard preventing `npm pack` / `npm publish` from being run against the source
+  tree. AHQ-196 establishes that the tarball must be produced by **pnpm** (`pnpm pack` /
+  `pnpm publish`): only pnpm applies the `publishConfig` `bin`/`exports` overrides — an
+  npm-produced tarball would silently ship the dev (tsx/`.ts`) `bin` and `exports` and be
+  unusable, with no error at pack time.
+- Pin the pnpm version in the publish checklist: the override behaviour is package-manager
+  behaviour, not an npm-registry contract, so a pnpm major bump is a publish-pipeline change to
+  re-verify, not a routine upgrade.
+- Publish checks must inspect the packed tarball's **actual** `package/package.json` (prebuilt
+  `bin`, dist-JS `exports`, no `.ts` targets) rather than inferring from the source manifest —
+  AHQ-196 lands an e2e assertion of exactly this shape that the publish checklist can reuse.
+- Registry verification should include both `npx --yes agentic-hq` and a global
+  `npm install -g agentic-hq`, on Node 22 and Node 24.
+
+**Addendum to Sub-Task 5 (AHQ-199 — README And Docs):**
+
+- Sub-Tasks 1–3 verify on macOS only. Beyond documenting the existing Linux node-pty
+  prerequisite (compile-from-source: build toolchain + Python — already in this brief's
+  Blockers), consider an actual Linux install-and-run check (here or as part of AHQ-198's
+  registry verification, whichever the human prefers) before the npm route is advertised to
+  users.
 
 
-### Human Comment 4 - About Tasks
-
-I like the way you split the subtasks into the Tracer bullet first, but one modification I like is that I want whatever you put into these tasks to be 
-     done end-to-end across all the tasks (to the point where the add feature workflow works in full). Leave all of the other workflows broken. Only once we are completely happy with 
-     the add feature workflow working do we then lock that down and fix all the other workflows. This is because if we try and do all the workflows as we go along, if we then change our
-     minds about something or improve it, we then have to do it on all the workflows, which is a massive waste of time. We should only do this one workflow and get it working end to 
-     end through all the tasks. We should insert a final task after the last refactoring task to complete all the other workflows. Until then, they should be left broken. 
