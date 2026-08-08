@@ -10,9 +10,27 @@
   "exports": {
     "./tools/claude-code": "./src/tools/marshalled-io-tools/claude-code/index.ts"
   },
+  "// files": "Tarball whitelist (AHQ-196). dist/ is gitignored, so without this the packer would exclude the build output. run-workflow.cjs is whitelisted as a single file — scripts/mcp-scripts/ is a dev-machine installer that must not ship. Tarball hygiene proper is AHQ-198.",
+  "files": [
+    "bin",
+    "dist",
+    "scripts/run-workflow.cjs",
+    ".agentic-hq"
+  ],
+  "// publishConfig": "Applied by `pnpm pack` AT PACK TIME ONLY (npm's packer does not do this): the tarball's manifest gets the prebuilt bin + compiled-JS exports while the working tree keeps the dev values (tsx bin, .ts exports) untouched. See AHQ-196.",
+  "publishConfig": {
+    "bin": {
+      "agentic-hq": "bin/agentic-hq-prebuilt.cjs"
+    },
+    "exports": {
+      "./tools/claude-code": "./dist/src/tools/marshalled-io-tools/claude-code/index.js"
+    }
+  },
   "scripts": {
     "// POSTINSTALL": "FIX: node-pty posix_spawnp failed on macOS. pnpm extracts spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Known pnpm bug: https://github.com/pnpm/pnpm/issues/7366. Mac-only (darwin-*), fails silently on other platforms.",
     "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
+    "// BUILD": "Compiles the CLI graph + shipped math workflow to dist/ for the prebuilt npm package (AHQ-196). Clean build every time so outputs of since-deleted sources can never linger into an artifact.",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
     "validate": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test",
     "validate:all": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test:all",
@@ -47,7 +65,8 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:e2e:agentic-hq-cli-string-reversal": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/agentic-hq-cli-string-reversal.e2e.test.ts",
     "test:e2e:cross-workspace-string-reversal": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-string-reversal.e2e.test.ts",
-    "test:e2e:cross-workspace-demo-math-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-demo-math-workflow-gives-expected-output-number.e2e.test.ts",
+    "// test:e2e:cross-workspace-demo-math-workflow": "Needs `pnpm build` first: the math-workflow SKILL.md now runs the prebuilt workflow JS from dist/ (AHQ-196). Interim state — AHQ-197's build-first mode retires the prefix.",
+    "test:e2e:cross-workspace-demo-math-workflow": "pnpm build && vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-demo-math-workflow-gives-expected-output-number.e2e.test.ts",
     "test:e2e:cross-workspace-quick-jira-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-quick-jira-workflow-produces-expected-files.e2e.test.ts",
     "test:e2e:cross-workspace-list-workflows": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-list-workflows.e2e.test.ts",
     "test:e2e:user-workspace-workflows": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/string-reversal-workflow-in-new-workspace-lists-and-executes.e2e.test.ts",

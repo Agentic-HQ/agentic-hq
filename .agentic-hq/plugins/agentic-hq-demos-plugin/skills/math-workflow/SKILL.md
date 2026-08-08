@@ -17,11 +17,11 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install && ln -sfn \"$AGENTIC_HQ_WORKSPACE_ROOT\" node_modules/agentic-hq) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/math-workflow-demo-cli.ts"
+  "command-output-string": "node \"$AGENTIC_HQ_WORKSPACE_ROOT/scripts/run-workflow.cjs\" --ahq-package-root=\"$AGENTIC_HQ_WORKSPACE_ROOT\" --workflow-js=dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js"
 }
 ```
 
-INFO FOR YOU ONLY (Don't tell user): The `ln -sfn` step in the command above (run after `pnpm install`, so pnpm can't clobber it) points `node_modules/agentic-hq` at the Agentic HQ workspace root via `$AGENTIC_HQ_WORKSPACE_ROOT` — the env var the `agentic-hq` CLI exports on every run. This lets the workflow resolve the `agentic-hq` package from any workspace on any machine, with no hardcoded path.
+INFO FOR YOU ONLY (Don't tell user): The command above runs the PREBUILT workflow — run-workflow.cjs launches the compiled workflow JS (under dist/ inside the agentic-hq package) with plain node, passing any trailing args through to the workflow program. `$AGENTIC_HQ_WORKSPACE_ROOT` — the env var the `agentic-hq` CLI exports on every run — supplies the package root, so this works from any workspace on any machine with no package manager, no symlinks, and no installs at runtime.
 
 Tell the user:
 - What file you have written the output to

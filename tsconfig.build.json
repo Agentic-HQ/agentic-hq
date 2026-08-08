@@ -1,0 +1,24 @@
+{
+  // Emit config for the prebuilt npm package (AHQ-196). The root tsconfig.json is
+  // typecheck-only (noEmit); this one compiles both build surfaces — the CLI graph
+  // under src/ and the shipped math workflow — to dist/, mirroring the repo layout
+  // (rootDir "."), so the compiled workflow JS lands INSIDE the package where Node
+  // package self-reference resolves 'agentic-hq/tools/claude-code' against the
+  // root manifest.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "types": ["node"],
+    // typecheck-only mapping so the workflow's self-referencing import resolves
+    // without a node_modules symlink; does not affect emitted specifiers
+    "paths": {
+      "agentic-hq/tools/claude-code": ["./src/tools/marshalled-io-tools/claude-code/index.ts"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    ".agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/**/*"
+  ]
+}
