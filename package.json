@@ -60,6 +60,7 @@
     "test:integration:real-claude-self-termination-skill": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/real-claude-self-termination-skill.integration.test.ts",
     "test:integration:claude-file-io": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/claude-executes-command-using-file-io.integration.test.ts",
     "test:integration:create-test-jira-and-get-status": "vitest run --config vitest.integration.config.ts tests/integration/jira/custom-commands-create-and-get-status-of-test-jira.integration.test.ts",
+    "test:integration:build-determinism": "vitest run --config vitest.integration.config.ts tests/integration/build/build-determinism.integration.test.ts",
     "test:unit:fake-claude-file-io": "vitest run --config vitest.unit.config.ts tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts",
     "// E2E TEST COMMANDS": "test:e2e = ALL e2e tests",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
@@ -68,6 +69,8 @@
     "// test:e2e:cross-workspace-demo-math-workflow": "Needs `pnpm build` first: the math-workflow SKILL.md now runs the prebuilt workflow JS from dist/ (AHQ-196). Interim state — AHQ-197's build-first mode retires the prefix.",
     "test:e2e:cross-workspace-demo-math-workflow": "pnpm build && vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-demo-math-workflow-gives-expected-output-number.e2e.test.ts",
     "test:e2e:cross-workspace-quick-jira-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-quick-jira-workflow-produces-expected-files.e2e.test.ts",
+    "// test:e2e:prebuilt-tarball-math-workflow": "No `pnpm build` prefix needed — the test's beforeAll runs the build itself",
+    "test:e2e:prebuilt-tarball-math-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/npm-package/prebuilt-tarball-install-runs-math-workflow.e2e.test.ts",
     "test:e2e:cross-workspace-list-workflows": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-list-workflows.e2e.test.ts",
     "test:e2e:user-workspace-workflows": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/string-reversal-workflow-in-new-workspace-lists-and-executes.e2e.test.ts",
     "// WATCH MODE DISABLED": "Watch mode causes AI test execution to hang"

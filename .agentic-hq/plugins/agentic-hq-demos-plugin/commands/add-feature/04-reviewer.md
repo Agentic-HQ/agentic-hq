@@ -94,6 +94,16 @@ Read everything you need to review the change against what was actually asked fo
   `## Approved Deviations From The Plan`, and any `## Out Of Plan Follow-up Ideas/Concerns`.
 - **The actual changed files** named in the summary — read the real code, so your review is grounded in
   what shipped, not in the summary's description of it.
+- **The git history for this ticket AND any not-yet-committed changes** — build the real changed-file
+  list from both sources, since the work may be spread across commits, sitting uncommitted, or both:
+  - **Commits**: list the commits whose messages mention `{ticket-id}` and the files they changed
+    (e.g. `git log --oneline --grep={ticket-id}` and `git log --name-only --grep={ticket-id}`).
+  - **Uncommitted work**: list staged/unstaged/untracked changes (e.g. `git status --short` and
+    `git diff --name-only` / `git diff --cached --name-only`).
+
+  Cross-check the combined file list against the summary's `## Files Changed/Added/Deleted`: any file
+  that actually changed but the summary does not mention must still be read and reviewed — the summary
+  may under-report what actually changed.
 
 ## Step 2b: Check Pre-requisites
 

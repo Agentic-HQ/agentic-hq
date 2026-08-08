@@ -15,11 +15,13 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
+
+import { hashTree } from '../../helpers/file-tree-helper-functions.js';
 
 const TEST_TIMEOUT_MS = 300_000; // two full tsc compiles of the 65-file src graph
 
@@ -27,24 +29,6 @@ const TEST_TIMEOUT_MS = 300_000; // two full tsc compiles of the 65-file src gra
 const CLI_ENTRY_RELATIVE_PATH = 'src/cli/main.js';
 const WORKFLOW_JS_RELATIVE_PATH =
   '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js';
-
-/** Recursively hash every file under rootDir: relative path → SHA-256 hex digest. */
-function hashTree(rootDir: string): Record<string, string> {
-  const hashes: Record<string, string> = {};
-  const walk = (dir: string): void => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const entryPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(entryPath);
-      } else if (entry.isFile()) {
-        const digest = createHash('sha256').update(fs.readFileSync(entryPath)).digest('hex');
-        hashes[path.relative(rootDir, entryPath)] = digest;
-      }
-    }
-  };
-  walk(rootDir);
-  return hashes;
-}
 
 describe('Build determinism (AHQ-196)', () => {
   it(

@@ -26,6 +26,7 @@ import * as path from 'node:path';
 
 import { describe, it, expect, beforeAll } from 'vitest';
 
+import { hashTree } from '../../helpers/file-tree-helper-functions.js';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
 const SETUP_TIMEOUT_MS = 600_000; // build + pack + npm registry install
@@ -97,7 +98,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   const installedBinPath = path.join(installPrefix, 'bin', 'agentic-hq');
 
   let tarballManifest: PackageManifest;
-  let installedFileListing: string[];
+  let installedPackageHashes: Record<string, string>;
 
   beforeAll(() => {
     fs.mkdirSync(runDir, { recursive: true });
@@ -131,8 +132,9 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       repoRoot
     );
 
-    // Snapshot the installed package's file listing — the math run must not change it
-    installedFileListing = listFilesRecursively(installedPackageRoot);
+    // Snapshot the installed package's content (relative path → SHA-256) — the
+    // math run must not change it
+    installedPackageHashes = hashTree(installedPackageRoot);
   }, SETUP_TIMEOUT_MS);
 
   it(
@@ -284,9 +286,10 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       expect(fs.existsSync(path.join(firstIoDir, COMMAND_INPUT_FILENAME))).toBe(true);
       expect(fs.existsSync(path.join(firstIoDir, COMMAND_OUTPUT_FILENAME))).toBe(true);
 
-      // Assert — the installed package is READ-ONLY at runtime: its file listing
-      // is unchanged after the full workflow run
-      expect(listFilesRecursively(installedPackageRoot)).toEqual(installedFileListing);
+      // Assert — the installed package is READ-ONLY at runtime: no file was
+      // added, removed, or modified in place during the full workflow run
+      // (relative-path → SHA-256 map compares both the set of files and their bytes)
+      expect(hashTree(installedPackageRoot)).toEqual(installedPackageHashes);
 
       // Log — temp workspace won't be cleaned (auto-cleaned by OS from /tmp)
       process.stdout.write(
