@@ -52,7 +52,9 @@ const EXPECTED_EXPORTS = {
 const COMPILED_WORKFLOW_JS_RELATIVE_PATH =
   'dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js';
 
-interface TarballManifest {
+interface PackageManifest {
+  name?: string;
+  type?: string;
   bin?: Record<string, string>;
   exports?: Record<string, string>;
 }
@@ -94,7 +96,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   const installedPackageRoot = path.join(installPrefix, 'lib', 'node_modules', 'agentic-hq');
   const installedBinPath = path.join(installPrefix, 'bin', 'agentic-hq');
 
-  let tarballManifest: TarballManifest;
+  let tarballManifest: PackageManifest;
   let installedFileListing: string[];
 
   beforeAll(() => {
@@ -119,7 +121,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
     // the source package.json (proves the pack-time overrides really applied)
     tarballManifest = JSON.parse(
       execSync(`tar -xOzf "${tarballPath}" package/package.json`, { encoding: 'utf-8' })
-    ) as TarballManifest;
+    ) as PackageManifest;
 
     // Install the tarball the way npm would install from the registry
     runCliAndLogOutput(
@@ -134,7 +136,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   }, SETUP_TIMEOUT_MS);
 
   it(
-    'should ship the prebuilt artifact shape: overridden bin/exports and no nested package.json shadowing self-reference',
+    'should ship the prebuilt artifact shape: overridden bin/exports, dist manifest for self-reference, executable plugin scripts',
     () => {
       // The pack-time publishConfig overrides applied: bin points at the prebuilt
       // wrapper and exports at compiled dist JS, with no .ts targets anywhere
@@ -151,16 +153,46 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       );
       expect(fs.existsSync(compiledWorkflowJsPath)).toBe(true);
 
-      // No package.json on the directory path between the compiled workflow JS and
-      // the package root — a nested manifest there would shadow Node package
-      // self-reference and break the 'agentic-hq/tools/claude-code' import
+      // dist/package.json is the manifest the compiled workflow JS resolves
+      // 'agentic-hq/tools/claude-code' against (Node package self-reference uses
+      // the NEAREST ancestor manifest). It must exist, name the package, mark the
+      // compiled tree as ESM, and map the specifier to compiled JS — this is what
+      // makes resolution identical whether the JS runs from a dev tree or an
+      // installed package
+      const distRoot = path.join(installedPackageRoot, 'dist');
+      const distManifest = JSON.parse(
+        fs.readFileSync(path.join(distRoot, 'package.json'), 'utf-8')
+      ) as PackageManifest;
+      expect(distManifest.name).toBe('agentic-hq');
+      expect(distManifest.type).toBe('module');
+      expect(distManifest.exports).toEqual({
+        './tools/claude-code': './src/tools/marshalled-io-tools/claude-code/index.js',
+      });
+
+      // No OTHER package.json between the compiled workflow JS and dist/ — a
+      // manifest there would shadow dist/package.json and break the
+      // 'agentic-hq/tools/claude-code' import
       let dir = path.dirname(compiledWorkflowJsPath);
-      while (dir !== installedPackageRoot) {
+      while (dir !== distRoot) {
         expect(
           fs.existsSync(path.join(dir, 'package.json')),
-          `unexpected nested package.json at ${dir} would shadow package self-reference`
+          `unexpected nested package.json at ${dir} would shadow dist/package.json self-reference`
         ).toBe(false);
         dir = path.dirname(dir);
+      }
+
+      // Every shipped plugin shell script must be executable: skills invoke them
+      // directly at runtime (e.g. self-termination's kill script), and the packer
+      // records non-bin files without their execute bit — the package's install
+      // step must restore it
+      const pluginsRoot = path.join(installedPackageRoot, '.agentic-hq', 'plugins');
+      const shippedShellScripts = listFilesRecursively(pluginsRoot).filter((file) =>
+        file.endsWith('.sh')
+      );
+      expect(shippedShellScripts.length).toBeGreaterThan(0);
+      for (const script of shippedShellScripts) {
+        const mode = fs.statSync(path.join(pluginsRoot, script)).mode;
+        expect(mode & 0o100, `${script} must have the owner-execute bit`).toBeTruthy();
       }
     },
     FAST_TEST_TIMEOUT_MS

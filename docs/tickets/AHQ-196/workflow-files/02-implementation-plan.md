@@ -372,3 +372,35 @@ enforces it; determinism was already defined as extracted-tree hashes, not tarba
 warned tarball bytes embed timestamps — matching the brief's guidance); all runtime deps are
 already in `dependencies`; testing happens via the real extracted tarball install, not
 `node dist/…` from the repo.
+
+## Update From Human 02 — Approval Gate: Two Fixes Approved (2026-08-08)
+
+During the Implementer's approval gate the human ran the system by hand and surfaced two defects
+this plan had not anticipated. Both fixes below were explicitly approved at the gate.
+
+1. **Dev-path resolution broken → build now generates `dist/package.json`.** The plan assumed a
+   dev-mode math run works after `pnpm build`. In reality the compiled workflow JS, run under
+   plain node from the dev tree, self-references the **working-tree** root manifest, whose
+   `exports` still point at `.ts` source (kept that way for the tsx dev flow) →
+   `ERR_MODULE_NOT_FOUND` on the `.js`-suffixed relative imports inside the loaded `.ts` barrel.
+   The installed tarball was unaffected (its manifest is rewritten at pack time), which is why the
+   e2e passed while `agentic-hq math` failed. **Amendment:** `pnpm build` now copies
+   `scripts/dist-package.json` to `dist/package.json` (`name: agentic-hq`, `type: module`,
+   `exports` → compiled JS). As the nearest manifest above the compiled workflow JS it makes
+   self-reference resolve to compiled JS **identically in dev-tree and installed runs**. The
+   plan's "no nested manifest" e2e assertion is re-expressed accordingly: `dist/package.json`
+   must exist with those values, and no OTHER manifest may sit between the workflow JS and
+   `dist/`. The `publishConfig` exports override stays (still correct for the tarball's root
+   manifest and external consumers).
+2. **Shipped plugin scripts arrive non-executable → postinstall chmod.** `pnpm pack` records
+   non-`bin` files as 0644 in the tarball (verified: 755 on disk and in git, 644 in the tarball),
+   so scripts that skills execute directly at runtime (e.g. self-termination's
+   `kill-current-cli-process.sh`) fail with exit 126 from an npm install — observed live by the
+   human; the in-step agent's `bash <script>` fallback had masked it. **Amendment:** the shipped
+   `postinstall` also runs `find .agentic-hq/plugins -name '*.sh' -exec chmod +x {} +` (same
+   idiom as the existing node-pty spawn-helper chmod; no-op in the dev repo). New e2e assertion:
+   every shipped `.sh` under the installed plugins tree is executable.
+3. **Test-list expansion (human instruction):** a manual `agentic-hq math` run (dev binary from a
+   clean workspace) joins the things-to-test list alongside the two e2es and `pnpm validate` —
+   the tarball e2e alone cannot catch dev-path regressions (it stayed green while the CLI was
+   broken).

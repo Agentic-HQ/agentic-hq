@@ -505,4 +505,33 @@ because Sub-Task runs read this brief, not AHQ-196's documents.
   registry verification, whichever the human prefers) before the npm route is advertised to
   users.
 
+## Update (2026-08-08, appended during the AHQ-196 Implementer stage) — Architecture Recommendation From The Second Perplexity Review
+
+During AHQ-196's approval gate, two defects were found and fixed with interim mechanisms (a
+build-generated `dist/package.json` for self-reference; a postinstall chmod for shipped-script
+execute bits — full story in `docs/tickets/AHQ-196/workflow-files/03-implementation-summary.md`).
+A second Perplexity review of those fixes (full Q&A:
+`docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/perplexity-questions/02-perplexity-q-and-a-about-dist-package-json.md`)
+judged them defensible interims and recommended an architectural end-state. Recorded here as
+AI/Perplexity-proposed addenda for the human to confirm when the relevant work runs.
+
+**Cross-cutting architecture recommendation (schedule before or during Sub-Task 2 / AHQ-197, or
+as its own refactor ticket):**
+
+- The proper end-state for "runnable sub-programs shipped inside a package" is either **workflows
+  as true nested packages** (own manifests and builds, pnpm workspace, `workspace:*` dependency
+  on agentic-hq) or a **staged release tree** assembled at pack time with a single generated
+  manifest. The current generated `dist/package.json` is a blessed transitional step toward
+  either. The human's decision (2026-08-08): commit the working interim now and hold a separate
+  **"no behaviour change" refactor discussion** armed with these findings.
+
+**Addendum to Sub-Task 3 (AHQ-198 — Package Hygiene And First npm Publish):**
+
+- Consider switching shipped-script execute bits from the postinstall chmod to pnpm's standard
+  `publishConfig.executableFiles` once the shipped script list stabilises (it shrinks when
+  `steve-test-plugin` is excluded). Spike-verified in AHQ-196: `pnpm pack` (pnpm 11) honours it
+  for **exact paths only — globs are silently ignored**. It makes the tarball itself carry the
+  bits (correct under any installer); AHQ-196's e2e assertion (every shipped `.sh` executable)
+  guards against a script being added but not listed.
+
 

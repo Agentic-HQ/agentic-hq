@@ -17,7 +17,7 @@
     "scripts/run-workflow.cjs",
     ".agentic-hq"
   ],
-  "// publishConfig": "Applied by `pnpm pack` AT PACK TIME ONLY (npm's packer does not do this): the tarball's manifest gets the prebuilt bin + compiled-JS exports while the working tree keeps the dev values (tsx bin, .ts exports) untouched. See AHQ-196.",
+  "// publishConfig": "Applied by `pnpm pack` AT PACK TIME ONLY (npm's packer does not do this): the tarball's manifest gets the prebuilt bin + compiled-JS exports while the working tree keeps the dev values (tsx bin, .ts exports) untouched. These exports serve EXTERNAL consumers of the installed package; code under dist/ resolves via the build-generated dist/package.json instead (see scripts/dist-package.json) — the two exports maps must stay mirrored. See AHQ-196.",
   "publishConfig": {
     "bin": {
       "agentic-hq": "bin/agentic-hq-prebuilt.cjs"
@@ -27,10 +27,10 @@
     }
   },
   "scripts": {
-    "// POSTINSTALL": "FIX: node-pty posix_spawnp failed on macOS. pnpm extracts spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Known pnpm bug: https://github.com/pnpm/pnpm/issues/7366. Mac-only (darwin-*), fails silently on other platforms.",
-    "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
-    "// BUILD": "Compiles the CLI graph + shipped math workflow to dist/ for the prebuilt npm package (AHQ-196). Clean build every time so outputs of since-deleted sources can never linger into an artifact.",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "// POSTINSTALL": "Two exec-bit repairs. (1) node-pty posix_spawnp failed on macOS: pnpm extracts spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Known pnpm bug: https://github.com/pnpm/pnpm/issues/7366. Mac-only (darwin-*), fails silently on other platforms. (2) Shipped plugin shell scripts: `pnpm pack` records non-bin files as 0644 in the tarball, so scripts that skills execute directly at runtime (e.g. self-termination's kill script) arrive without their execute bit in an npm install of the package — restore it here. No-op in the dev repo, where the scripts are already executable.",
+    "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true; find .agentic-hq/plugins -name '*.sh' -exec chmod +x {} + 2>/dev/null || true",
+    "// BUILD": "Compiles the CLI graph + shipped math workflow to dist/ for the prebuilt npm package (AHQ-196). Clean build every time so outputs of since-deleted sources can never linger into an artifact. Also places scripts/dist-package.json at dist/package.json so compiled workflow JS self-reference-resolves 'agentic-hq/tools/claude-code' to compiled JS (the root manifest's exports point at .ts source for the tsx dev flow, which plain node cannot use) — see that file's own comments.",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp scripts/dist-package.json dist/package.json",
     "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
     "validate": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test",
     "validate:all": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test:all",
