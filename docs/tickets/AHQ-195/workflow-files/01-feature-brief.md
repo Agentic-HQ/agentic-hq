@@ -599,9 +599,11 @@ review (2026-08-08).
   migration.
 - The deferred ticket exists:
   **[AHQ-203](https://agentic-hq.atlassian.net/browse/AHQ-203)** (created by the human
-  2026-08-08, scheduled to run after AHQ-195 closes). Its brief lives at
-  `docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/AHQ-203-nested-packages-refactor-Jira.md`
-  — the source of truth; the Jira description points at that file, per repo convention.
+  2026-08-08, scheduled to run after AHQ-195 closes). Its **single source of truth is the Jira
+  issue itself**: https://agentic-hq.atlassian.net/browse/AHQ-203 — a repo brief file drafted
+  during the AHQ-196 review session was deliberately deleted by the human just before commit
+  (confirmed 2026-08-09 during the AHQ-197 Researcher stage); no repo ticket file exists for
+  AHQ-203 unless/until it is worked on.
 
 **Addendum to Sub-Task 7 (AHQ-201 — Migrate All Remaining Workflows And The Scaffolder),
 surfaced by the human during the AHQ-196 review:**
