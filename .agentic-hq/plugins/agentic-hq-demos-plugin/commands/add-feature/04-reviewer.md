@@ -229,8 +229,13 @@ and look at the `Fix?` column of the `## Potential Fixes` table:
     regression: keep working within the agreed fix scope until they pass again, or stop and tell the
     human.
   - Record what you changed under **`## Selected Fixes Applied`** (what was fixed, the files touched,
-    and the **result of re-running the Implementer's tests**), and record the decision under
-    `## Final Human Confirmation`.
+    and the **result of re-running the Implementer's tests**).
+  - **SECOND GATE — the human approves the applied fixes:** present the results (what changed, in
+    which files, and the test outcomes) and **wait** for the human's explicit approval. If they raise
+    problems or want further changes, agree and apply them under the same rules of this step
+    (including the regression re-run), update `## Selected Fixes Applied`, and re-present at this
+    gate. Only once the human explicitly approves may the command continue.
+  - Record the human's approval under `## Final Human Confirmation`, then continue to Step 6.
   - You still **never weaken, delete, or skip a failing test** to force a pass.
 
 > **Must Not Do:**
@@ -258,3 +263,9 @@ The CLI ignores this command's output. You are the final agent in the workflow.
 Run the self-termination skill immediately:
 
 /agentic-hq-core-plugin:self-termination
+
+## Important Notes
+
+- **Second gate:** if any fixes were applied at Step 5, the command must NOT end until the human has
+  explicitly approved the applied fixes (Step 5's SECOND GATE). No fixes applied → no second gate
+  needed.

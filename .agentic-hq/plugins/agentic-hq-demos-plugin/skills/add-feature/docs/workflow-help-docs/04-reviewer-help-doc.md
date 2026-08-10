@@ -62,7 +62,10 @@ table, write **`Yes`** in the **`Fix?`** column of any row you want fixed now, l
 - **If you mark one or more rows** — the Reviewer agrees a small fix plan with you, applies **only**
   those fixes, then **re-runs all the tests the Implementer recorded** to confirm they still pass (so a
   fix can't quietly break something), and records exactly what it changed — and the test result — under
-  *Selected Fixes Applied*.
+  *Selected Fixes Applied*. It then pauses at a **second gate**: it presents the applied changes and
+  test results and waits for your **explicit approval** — your chance to discuss any problems or agree
+  further changes (which it applies under the same rules, then re-presents). Only once you approve can
+  the workflow end.
 
 This keeps the review honest and conservative: nothing gets changed without your explicit mark, the
 Reviewer never applies fixes you didn't mark, it never weakens or deletes a failing test to force a
@@ -71,7 +74,8 @@ review of *this* change.
 
 ## What Happens Next — Customizing This Workflow
 
-The Reviewer is the **last** agent, so once you've made your decision at the gate, the workflow ends.
+The Reviewer is the **last** agent. If you marked nothing to fix, the workflow ends with that
+decision; if fixes were applied, it ends once you have approved them at the second gate.
 
 If this workflow was useful but felt **too minimal** for your process, that's by design — it's a small
 starting point. To make it your own, run `agentic-hq create-workflow -- --using=add-feature` to copy it and

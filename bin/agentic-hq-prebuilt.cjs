@@ -2,10 +2,11 @@
 /**
  * agentic-hq PREBUILT CLI entry point (AHQ-196)
  *
- * The shipped tarball's "bin" points here (via the pack-time publishConfig
- * override in package.json); the working tree's "bin" keeps pointing at the
- * dev wrapper (agentic-hq.cjs, which runs TS via tsx). This wrapper runs the
- * compiled JS under plain node — no tsx, no pnpm, no runtime installs.
+ * The shipped tarball's "bin" points here (written directly into the
+ * generated release manifest by scripts/build-release.cjs); the working
+ * tree's "bin" keeps pointing at the dev wrapper (agentic-hq.cjs, which runs
+ * TS via tsx). This wrapper runs the compiled JS under plain node — no tsx,
+ * no pnpm, no runtime installs.
  *
  * Commander reads process.argv itself, so no arg forwarding is needed.
  * Failures throw uncaught with a full stack trace, per this repo's

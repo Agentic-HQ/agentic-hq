@@ -97,8 +97,10 @@ without your say-so.
   fine) and **Potential Fixes** (anything that could be fixed or improved). To get something fixed, you
   write **`Yes`** in the **`Fix?`** column of that Potential Fixes row, save the file, and say **"done"**.
   It then applies **only** the rows you marked and re-runs the Implementer's tests to confirm nothing
-  broke. Mark nothing and the workflow simply ends — unmarked findings are left as-is, not tracked as
-  follow-ups.
+  broke — and pauses at a **second gate** where you review the applied fixes and their test results,
+  discuss any problems or further changes, and **explicitly approve** before the workflow can end. Mark
+  nothing and the workflow simply ends (no second gate needed) — unmarked findings are left as-is, not
+  tracked as follow-ups.
 
 ## "Tell Me More"
 

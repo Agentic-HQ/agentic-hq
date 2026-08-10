@@ -14,11 +14,7 @@
 
 import { describe, it, expect } from 'vitest';
 
-import { BuildMode } from '../../../src/interfaces/build-mode.js';
-import { CompositionRoot } from '../../../src/kernel/composition-root.js';
-import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
-import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
-import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
+import { RepoCheckoutClaudeCodeTool } from '../../helpers/repo-checkout-claude-code-tool.js';
 
 const TEST_TIMEOUT_MS = 60_000; // 60s for real Claude Code execution
 
@@ -30,14 +26,7 @@ describe('MarshalledCLITool.execute(command, commandInput) with real Claude', ()
     'should reverse a string via file I/O with real Claude Code',
     async () => {
       // Arrange
-      const tool = new DefaultClaudeCodeTool(
-        new CompositionRoot(
-          new DefaultAhqRuntimeParams(
-            BuildMode.BUILD_FIRST,
-            new DefaultAhqPackageRoot(process.cwd())
-          )
-        )
-      );
+      const tool = new RepoCheckoutClaudeCodeTool();
       const commandInputString = 'this is a test string';
       const expectedCommandOutputString = 'gnirts tset a si siht';
 

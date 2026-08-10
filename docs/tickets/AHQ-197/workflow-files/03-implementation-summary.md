@@ -70,7 +70,7 @@ still dual-write the legacy env var for untouched legacy readers (retired by AHQ
 
 **Docs:**
 
-- `docs/tickets/AHQ-197/workflow-files/02-implementation-plan.md` — **changed** (UPDATEs 1–3 recorded)
+- `docs/tickets/AHQ-197/workflow-files/02-implementation-plan.md` — **changed** (UPDATEs 1–4 recorded)
 
 ## Tests Added/Updated And Test Results
 
