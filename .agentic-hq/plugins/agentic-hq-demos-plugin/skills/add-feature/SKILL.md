@@ -8,6 +8,8 @@ disable-model-invocation: true
 Set:
 skill-base-dir = the skill base directory you were provided with when you ran this skill.
 command-input-output-files-directory = $0
+build-mode = $1
+ahq-package-root = $2
 
 List the variable names and values for the user, and explain where they came from.
 
@@ -17,11 +19,11 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install && ln -sfn \"$AGENTIC_HQ_WORKSPACE_ROOT\" node_modules/agentic-hq) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/add-feature-cli.ts"
+  "command-output-string": "node \"{ahq-package-root}/scripts/run-workflow.cjs\" --ahq-package-root=\"{ahq-package-root}\" --build-mode={build-mode} --workflow-js=dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/ts-workflow/src/add-feature-cli.js"
 }
 ```
 
-INFO FOR YOU ONLY (Don't tell user): The `ln -sfn` step in the command above (run after `pnpm install`, so pnpm can't clobber it) points `node_modules/agentic-hq` at the Agentic HQ workspace root via `$AGENTIC_HQ_WORKSPACE_ROOT` — the env var the `agentic-hq` CLI exports on every run. This lets the workflow resolve the `agentic-hq` package from any workspace on any machine, with no hardcoded path.
+INFO FOR YOU ONLY (Don't tell user): The command above invokes the shared workflow runner with the explicit runtime parameters you were handed as arguments — you relay `build-mode` and `ahq-package-root` VERBATIM into the command without interpreting or acting on them. The runner is the only code that acts on `build-mode`: `build-first` builds the release tree and executes the workflow JS from it; `prebuilt` executes the installed artifact as-is. Everything runs under plain node from the execution root — no package manager, no symlinks, no environment variables.
 
 Tell the user:
 - What file you have written the output to

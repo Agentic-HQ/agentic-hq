@@ -25,8 +25,10 @@ export class DefaultClaudeCodeTool extends MarshalledCLITool {
   // root is REQUIRED with no default (AHQ-197): the explicit parameter chain
   // bans silent defaults, and CompositionRoot itself now needs the runtime
   // params. Unmigrated legacy workflow CLIs that still call
-  // `new DefaultClaudeCodeTool()` fail here until AHQ-200/201 migrate them —
-  // a break the human explicitly accepted for AHQ-197.
+  // `new DefaultClaudeCodeTool()` fail here until AHQ-201 migrates them —
+  // a break the human explicitly accepted for AHQ-197. (math-workflow was
+  // migrated in AHQ-197; add-feature was pulled forward from AHQ-202 during
+  // AHQ-195 development.)
   constructor(root: CompositionRoot) {
     super(
       root.getIOMarshallerSessionFactory(),

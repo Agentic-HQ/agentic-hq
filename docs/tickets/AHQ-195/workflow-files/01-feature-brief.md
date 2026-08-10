@@ -461,7 +461,11 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    workflow) onto the locked-down pattern, republish a patch version, and prove the full
    interactive four-agent flow runs from a registry-installed package in a clean directory;
    retires the add-feature-specific risks (interactive stops, the four-agent chain, help-doc paths
-   located via the workspace-root relay).
+   located via the workspace-root relay). **Updated 2026-08-10:** the migration portion of this
+   Sub-Task was pulled forward and completed as
+   [AHQ-204](https://agentic-hq.atlassian.net/browse/AHQ-204) — see the addendum *"Update
+   (2026-08-10) — add-feature Migration Pulled Forward As AHQ-204"* at the bottom of this brief.
+   AHQ-202 retains the republish and the registry-install interactive proof.
 5. **[AHQ-199](https://agentic-hq.atlassian.net/browse/AHQ-199) — README And Docs: npm/npx Quickstart For Tool Users, Separate From Contributor Clone Path** —
    README npm/npx Quickstart vs contributor split, tool-user prerequisites (Claude CLI; Linux build
    toolchain for node-pty), troubleshooting updates — written against the working add-feature flow.
@@ -630,5 +634,30 @@ surfaced by the human during the AHQ-196 review:**
   AHQ-203, but it raises the two-copies/version-match question between the workflow's agentic-hq
   copy and the CLI's own). The full end-state is
   [AHQ-203](https://agentic-hq.atlassian.net/browse/AHQ-203).
+
+## Update (2026-08-10) — add-feature Migration Pulled Forward As AHQ-204
+
+Running add-feature (to start AHQ-198) crashed at startup: AHQ-197's explicit parameter chain
+deliberately broke every unmigrated workflow CLI (`new DefaultClaudeCodeTool()` now requires a
+`CompositionRoot`), and add-feature had not yet been migrated. Since AHQ-195 development itself
+uses add-feature, waiting for Sub-Task 4's (AHQ-202) planned slot — after the first publish is
+proven — was not viable.
+
+**Decided with the human (2026-08-10):** pull the migration portion of Sub-Task 4 (AHQ-202)
+forward as its own Sub-Task,
+**[AHQ-204](https://agentic-hq.atlassian.net/browse/AHQ-204) — Interim: Early-Migrate
+add-feature Onto The Prebuilt Pattern (Pulled Forward From AHQ-202 To Keep add-feature Usable
+During AHQ-195)** (created by the human 2026-08-10 — the MCP account lacked issue-create
+permission). Completed the same day; work details: `docs/tickets/AHQ-204/01-work-details.md`.
+
+- **What moved to AHQ-204 (done):** add-feature-cli.ts onto `DefaultWorkflowRuntime`; the
+  add-feature SKILL.md onto the shared `run-workflow.cjs` runner; `tsconfig.build.json` now
+  compiles add-feature into the staged release tree; a staged-artifact assertion for the
+  compiled add-feature JS added to the build-determinism integration test.
+- **What stays in AHQ-202:** republish a patch version and prove the full interactive
+  four-agent flow runs from a registry-installed package in a clean directory.
+- **Knock-on for Sub-Task 3 (AHQ-198):** the first publish now carries two migrated workflows
+  (math-workflow and add-feature) rather than math-workflow only — add-feature's
+  registry-install proof still belongs to AHQ-202.
 
 

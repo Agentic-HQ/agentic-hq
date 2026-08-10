@@ -18,12 +18,17 @@
  *   - anything else — a broken-contract failure: throw (uncaught) so the full stack trace
  *     is printed for a bug report.
  *
+ * The framework's required --build-mode / --ahq-package-root options
+ * (forwarded by the shared workflow runner) are consumed by
+ * DefaultWorkflowRuntime — this file contains only add-feature code.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-157
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-197
  */
 
 import { Command } from 'commander';
 
-import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultWorkflowRuntime } from 'agentic-hq/tools/claude-code';
 
 const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME = 'AGENTIC_HQ_WORKSPACE_ROOT';
 const CONTINUE_WORKFLOW_OUTCOME = 'CONTINUE_WORKFLOW';
@@ -33,6 +38,9 @@ const COMMAND_01_RESEARCHER = '/agentic-hq-demos-plugin:add-feature:01-researche
 const COMMAND_02_PLANNER = '/agentic-hq-demos-plugin:add-feature:02-planner';
 const COMMAND_03_IMPLEMENTER = '/agentic-hq-demos-plugin:add-feature:03-implementer';
 const COMMAND_04_REVIEWER = '/agentic-hq-demos-plugin:add-feature:04-reviewer';
+
+const runtime = new DefaultWorkflowRuntime(process.argv);
+const tool = runtime.getClaudeCodeTool();
 
 const program = new Command();
 
@@ -53,8 +61,6 @@ program
           `The workflow cannot continue.`
       );
     }
-
-    const tool = new DefaultClaudeCodeTool();
 
     // The TS program builds the full broadcast string itself and passes the SAME string to all four commands.
     const allVariables =
@@ -91,4 +97,4 @@ program
 // FULL STACK TRACE and exit non-zero. With no logging system, that stack trace is the bug report
 // the user sends us, so suppressing it into a tidy one-line message would actively hurt.
 // DO NOT add a boundary catch here. (Happy paths — TERMINATE / CONTINUE — simply resolve, exit 0.)
-program.parse();
+program.parse(runtime.getWorkflowArgs());

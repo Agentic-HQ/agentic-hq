@@ -1,11 +1,11 @@
 {
   // Emit config for the staged release tree (AHQ-196/AHQ-197). The root
-  // tsconfig.json is typecheck-only (noEmit); this one compiles both build
-  // surfaces — the CLI graph under src/ and the shipped math workflow — to
-  // release/dist, mirroring the repo layout (rootDir "."), so the compiled
-  // workflow JS lands INSIDE the staged package where Node package
-  // self-reference resolves 'agentic-hq/tools/claude-code' against the
-  // generated release manifest.
+  // tsconfig.json is typecheck-only (noEmit); this one compiles the build
+  // surfaces — the CLI graph under src/ and the shipped migrated workflows
+  // (math-workflow, add-feature) — to release/dist, mirroring the repo
+  // layout (rootDir "."), so the compiled workflow JS lands INSIDE the
+  // staged package where Node package self-reference resolves
+  // 'agentic-hq/tools/claude-code' against the generated release manifest.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
@@ -20,6 +20,7 @@
   },
   "include": [
     "src/**/*",
-    ".agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/**/*"
+    ".agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/**/*",
+    ".agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/ts-workflow/src/**/*"
   ]
 }

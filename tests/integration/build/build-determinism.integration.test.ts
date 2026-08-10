@@ -27,11 +27,14 @@ import { hashTree } from '../../helpers/file-tree-helper-functions.js';
 const TEST_TIMEOUT_MS = 300_000; // two full tsc compiles of the 65-file src graph
 
 // Key artifacts that must be present in the staged tree for the comparison
-// to be meaningful: the generated manifest and both build surfaces
+// to be meaningful: the generated manifest and every build surface (the CLI
+// graph plus each migrated workflow's compiled JS)
 const RELEASE_MANIFEST_RELATIVE_PATH = 'package.json';
 const CLI_ENTRY_RELATIVE_PATH = 'dist/src/cli/main.js';
-const WORKFLOW_JS_RELATIVE_PATH =
+const MATH_WORKFLOW_JS_RELATIVE_PATH =
   'dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js';
+const ADD_FEATURE_WORKFLOW_JS_RELATIVE_PATH =
+  'dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/ts-workflow/src/add-feature-cli.js';
 
 describe('Build determinism (AHQ-196/AHQ-197)', () => {
   it(
@@ -48,11 +51,12 @@ describe('Build determinism (AHQ-196/AHQ-197)', () => {
       execFileSync(process.execPath, [buildScriptPath], { cwd: repoRoot, stdio: 'inherit' });
       const hashesB = hashTree(releaseDir);
 
-      // Assert — the generated manifest and both build surfaces (CLI graph +
-      // math workflow) were staged
+      // Assert — the generated manifest and every build surface (CLI graph +
+      // the migrated workflows) were staged
       expect(Object.keys(hashesA)).toContain(RELEASE_MANIFEST_RELATIVE_PATH);
       expect(Object.keys(hashesA)).toContain(CLI_ENTRY_RELATIVE_PATH);
-      expect(Object.keys(hashesA)).toContain(WORKFLOW_JS_RELATIVE_PATH);
+      expect(Object.keys(hashesA)).toContain(MATH_WORKFLOW_JS_RELATIVE_PATH);
+      expect(Object.keys(hashesA)).toContain(ADD_FEATURE_WORKFLOW_JS_RELATIVE_PATH);
 
       // Assert — identical relative-path → hash maps: the build is deterministic
       expect(Object.keys(hashesA).length).toBeGreaterThan(0);
