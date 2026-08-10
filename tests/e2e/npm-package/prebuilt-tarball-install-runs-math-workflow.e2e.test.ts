@@ -1,12 +1,16 @@
 /**
- * E2E Test: Prebuilt npm tarball install runs the math workflow (AHQ-196)
+ * E2E Test: Prebuilt npm tarball install runs the math workflow (AHQ-196,
+ * re-pointed at the staged release tree by AHQ-197)
  *
  * The AHQ-195 tracer bullet: proves a prebuilt, READ-ONLY agentic-hq package
  * installed from an npm tarball runs a shipped workflow end-to-end with the
  * cloned repo out of the picture:
- * 1. Setup: `pnpm build` → `pnpm pack` → `npm install -g --prefix <temp/AHQ-196/…>`
- * 2. Assert the artifact shape is right (pack-time publishConfig overrides really
- *    applied; no nested package.json shadows Node package self-reference)
+ * 1. Setup: `pnpm build` (assembles the staged release/ tree) → `pnpm pack`
+ *    FROM release/ → `npm install -g --prefix <temp/AHQ-196/…>`
+ * 2. Assert the artifact shape is right: the tarball's manifest is the single
+ *    GENERATED one (no pack-time overrides), only intended files ship (no
+ *    io-files/test-plugin/dev-config leak class), no nested package.json
+ *    shadows Node package self-reference, shipped scripts are executable
  * 3. Run the INSTALLED bin's `agentic-hq list` from a clean temp workspace
  * 4. Run a full math workflow (3 real Claude steps: x2, +3, /5) from a clean
  *    temp workspace; assert the output number, the io-files in the USER
@@ -17,6 +21,7 @@
  * by absolute path instead of the globally-linked dev binary.
  *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-196
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-197
  */
 
 import { execSync } from 'node:child_process';
@@ -45,7 +50,7 @@ const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
 
-// The prebuilt artifact shape the pack-time publishConfig overrides must produce
+// The prebuilt artifact shape the GENERATED release manifest must carry
 const EXPECTED_BIN = { 'agentic-hq': 'bin/agentic-hq-prebuilt.cjs' };
 const EXPECTED_EXPORTS = {
   './tools/claude-code': './dist/src/tools/marshalled-io-tools/claude-code/index.js',
@@ -53,11 +58,40 @@ const EXPECTED_EXPORTS = {
 const COMPILED_WORKFLOW_JS_RELATIVE_PATH =
   'dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js';
 
+// Leak-class boundary: exactly what the staged release tree ships, nothing else
+const EXPECTED_TARBALL_TOP_LEVEL = [
+  '.agentic-hq',
+  'LICENSE',
+  'README.md',
+  'bin',
+  'dist',
+  'package.json',
+  'scripts',
+];
+const EXPECTED_SHIPPED_PLUGINS = [
+  'agentic-hq-core-plugin',
+  'agentic-hq-demos-plugin',
+  'agentic-hq-utilities-plugin',
+];
+
 interface PackageManifest {
   name?: string;
+  version?: string;
   type?: string;
+  private?: boolean;
   bin?: Record<string, string>;
   exports?: Record<string, string>;
+  files?: string[];
+  scripts?: Record<string, string>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  engines?: Record<string, string>;
+  packageManager?: string;
+  publishConfig?: {
+    bin?: Record<string, string>;
+    exports?: Record<string, string>;
+    executableFiles?: string[];
+  };
 }
 
 /** Recursively list every file under rootDir as sorted relative paths. */
@@ -97,32 +131,48 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   const installedPackageRoot = path.join(installPrefix, 'lib', 'node_modules', 'agentic-hq');
   const installedBinPath = path.join(installPrefix, 'bin', 'agentic-hq');
 
+  let rootManifest: PackageManifest;
   let tarballManifest: PackageManifest;
+  let tarballFileList: string[];
   let installedPackageHashes: Record<string, string>;
 
   beforeAll(() => {
     fs.mkdirSync(runDir, { recursive: true });
 
-    // Build the package (compiles the CLI graph + the math workflow to dist/)
+    // Build the package (compiles the CLI graph + the math workflow and stages
+    // the release/ tree with its generated manifest)
     runCliAndLogOutput('pnpm build', 'prebuilt-tarball-build', SETUP_TIMEOUT_MS, repoRoot);
 
-    // Pack the tarball — pnpm pack, NOT npm pack: only pnpm applies the
-    // publishConfig bin/exports overrides at pack time (approved plan decision)
+    // Pack the tarball FROM the staged release tree — its manifest is literal,
+    // so no pack-time override mechanism is involved any more
+    const releaseDir = path.join(repoRoot, 'release');
     runCliAndLogOutput(
       `pnpm pack --pack-destination "${runDir}"`,
       'prebuilt-tarball-pack',
       SETUP_TIMEOUT_MS,
-      repoRoot
+      releaseDir
     );
     const tarballs = fs.readdirSync(runDir).filter((entry) => entry.endsWith('.tgz'));
     expect(tarballs).toHaveLength(1);
     const tarballPath = path.join(runDir, tarballs[0]);
 
-    // The tarball's ACTUAL manifest — asserted on directly, never inferred from
-    // the source package.json (proves the pack-time overrides really applied)
+    // The source manifest the generated one is derived from — the shared
+    // fields must match it, never be hand-maintained copies that could drift
+    rootManifest = JSON.parse(
+      fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8')
+    ) as PackageManifest;
+
+    // The tarball's ACTUAL manifest and file list — asserted on directly,
+    // never inferred from the staging step
     tarballManifest = JSON.parse(
       execSync(`tar -xOzf "${tarballPath}" package/package.json`, { encoding: 'utf-8' })
     ) as PackageManifest;
+    tarballFileList = execSync(`tar -tzf "${tarballPath}"`, { encoding: 'utf-8' })
+      .split('\n')
+      .filter((entry) => entry.startsWith('package/'))
+      .map((entry) => entry.slice('package/'.length))
+      .filter((entry) => entry.length > 0)
+      .sort();
 
     // Install the tarball the way npm would install from the registry
     runCliAndLogOutput(
@@ -138,14 +188,65 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   }, SETUP_TIMEOUT_MS);
 
   it(
-    'should ship the prebuilt artifact shape: overridden bin/exports, dist manifest for self-reference, executable plugin scripts',
+    'should ship the prebuilt artifact shape: generated manifest, only intended files, no shadowing manifests, executable plugin scripts',
     () => {
-      // The pack-time publishConfig overrides applied: bin points at the prebuilt
-      // wrapper and exports at compiled dist JS, with no .ts targets anywhere
+      // The tarball carries the GENERATED release manifest: prebuilt bin and
+      // compiled-JS exports written in directly (no pack-time override
+      // mechanism), with no .ts targets anywhere
+      expect(tarballManifest.name).toBe('agentic-hq');
+      expect(tarballManifest.type).toBe('module');
       expect(tarballManifest.bin).toEqual(EXPECTED_BIN);
       expect(tarballManifest.exports).toEqual(EXPECTED_EXPORTS);
       for (const exportTarget of Object.values(tarballManifest.exports ?? {})) {
         expect(exportTarget).not.toMatch(/\.ts$/);
+      }
+
+      // Shared fields are derived from the root manifest (one source of truth)
+      expect(tarballManifest.version).toBe(rootManifest.version);
+      expect(tarballManifest.dependencies).toEqual(rootManifest.dependencies);
+      expect(tarballManifest.engines?.node).toBe(rootManifest.engines?.node);
+
+      // Dev-only and interim-mechanism fields must NOT ship: no files
+      // whitelist, no publishConfig bin/exports overrides, no devDependencies,
+      // no packageManager, no engines.pnpm
+      expect(tarballManifest.files).toBeUndefined();
+      expect(tarballManifest.publishConfig?.bin).toBeUndefined();
+      expect(tarballManifest.publishConfig?.exports).toBeUndefined();
+      expect(tarballManifest.devDependencies).toBeUndefined();
+      expect(tarballManifest.packageManager).toBeUndefined();
+      expect(tarballManifest.engines?.pnpm).toBeUndefined();
+
+      // The generated manifest carries the exec-bit mechanism: exact shipped
+      // shell-script paths enumerated from the staged tree (pnpm-specific
+      // publishConfig.executableFiles — globs are silently ignored, AHQ-196)
+      const executableFiles = tarballManifest.publishConfig?.executableFiles ?? [];
+      expect(executableFiles.length).toBeGreaterThan(0);
+      for (const executableFile of executableFiles) {
+        expect(executableFile).toMatch(/^\.agentic-hq\/plugins\/.+\.sh$/);
+        expect(tarballFileList).toContain(executableFile);
+      }
+
+      // Leak-class boundary: the tarball's top level is exactly the staged
+      // release tree — no io-files, no test plugin, no dev configs, no
+      // pnpm-only files, no node_modules
+      const tarballTopLevel = [
+        ...new Set(tarballFileList.map((file) => file.split('/')[0])),
+      ].sort();
+      expect(tarballTopLevel).toEqual(EXPECTED_TARBALL_TOP_LEVEL);
+      const dotAgenticHqEntries = tarballFileList.filter((file) => file.startsWith('.agentic-hq/'));
+      expect(dotAgenticHqEntries.length).toBeGreaterThan(0);
+      for (const entry of dotAgenticHqEntries) {
+        expect(entry).toMatch(/^\.agentic-hq\/plugins\//);
+      }
+      const shippedPlugins = [
+        ...new Set(dotAgenticHqEntries.map((entry) => entry.split('/')[2])),
+      ].sort();
+      expect(shippedPlugins).toEqual(EXPECTED_SHIPPED_PLUGINS);
+      expect(tarballFileList.filter((file) => file.startsWith('scripts/'))).toEqual([
+        'scripts/run-workflow.cjs',
+      ]);
+      for (const file of tarballFileList) {
+        expect(file).not.toMatch(/(^|\/)node_modules\//);
       }
 
       // The compiled workflow JS shipped in the install
@@ -155,30 +256,17 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       );
       expect(fs.existsSync(compiledWorkflowJsPath)).toBe(true);
 
-      // dist/package.json is the manifest the compiled workflow JS resolves
-      // 'agentic-hq/tools/claude-code' against (Node package self-reference uses
-      // the NEAREST ancestor manifest). It must exist, name the package, mark the
-      // compiled tree as ESM, and map the specifier to compiled JS — this is what
-      // makes resolution identical whether the JS runs from a dev tree or an
-      // installed package
-      const distRoot = path.join(installedPackageRoot, 'dist');
-      const distManifest = JSON.parse(
-        fs.readFileSync(path.join(distRoot, 'package.json'), 'utf-8')
-      ) as PackageManifest;
-      expect(distManifest.name).toBe('agentic-hq');
-      expect(distManifest.type).toBe('module');
-      expect(distManifest.exports).toEqual({
-        './tools/claude-code': './src/tools/marshalled-io-tools/claude-code/index.js',
-      });
-
-      // No OTHER package.json between the compiled workflow JS and dist/ — a
-      // manifest there would shadow dist/package.json and break the
-      // 'agentic-hq/tools/claude-code' import
+      // No package.json ANYWHERE between the compiled workflow JS and the
+      // package root: the compiled JS resolves 'agentic-hq/tools/claude-code'
+      // via Node package self-reference against the nearest ancestor manifest,
+      // which must be the package root's GENERATED manifest itself — any
+      // manifest below it would shadow that resolution (AHQ-197 retired the
+      // interim dist/package.json that used to sit in between)
       let dir = path.dirname(compiledWorkflowJsPath);
-      while (dir !== distRoot) {
+      while (dir !== installedPackageRoot) {
         expect(
           fs.existsSync(path.join(dir, 'package.json')),
-          `unexpected nested package.json at ${dir} would shadow dist/package.json self-reference`
+          `unexpected nested package.json at ${dir} would shadow the package-root manifest self-reference`
         ).toBe(false);
         dir = path.dirname(dir);
       }

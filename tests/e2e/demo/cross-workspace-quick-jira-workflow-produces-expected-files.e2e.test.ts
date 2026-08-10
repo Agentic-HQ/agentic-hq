@@ -27,6 +27,10 @@ import * as path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
+import { CompositionRoot } from '../../../src/kernel/composition-root.js';
+import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
@@ -98,7 +102,14 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
       fs.mkdirSync(tempWorkspace, { recursive: true });
 
       // Arrange — create a test Jira in the TEST project (multi-step: 2 test types)
-      const tool = new DefaultClaudeCodeTool();
+      const tool = new DefaultClaudeCodeTool(
+        new CompositionRoot(
+          new DefaultAhqRuntimeParams(
+            BuildMode.BUILD_FIRST,
+            new DefaultAhqPackageRoot(process.cwd())
+          )
+        )
+      );
       const testJiraId = await tool.execute(CREATE_TEST_JIRA_COMMAND, MULTI_STEP_TEST_JIRA_INPUT);
       expect(testJiraId).toMatch(JIRA_KEY_PATTERN);
 

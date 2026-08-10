@@ -8,6 +8,8 @@ disable-model-invocation: true
 Set:
 skill-base-dir = the skill base directory you were provided with when you ran this skill.
 command-input-output-files-directory = $0
+build-mode = $1
+ahq-package-root = $2
 
 List the variable names and values for the user, and explain where they came from.
 
@@ -17,11 +19,11 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "node \"$AGENTIC_HQ_WORKSPACE_ROOT/scripts/run-workflow.cjs\" --ahq-package-root=\"$AGENTIC_HQ_WORKSPACE_ROOT\" --workflow-js=dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js"
+  "command-output-string": "node \"{ahq-package-root}/scripts/run-workflow.cjs\" --ahq-package-root=\"{ahq-package-root}\" --build-mode={build-mode} --workflow-js=dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js"
 }
 ```
 
-INFO FOR YOU ONLY (Don't tell user): The command above runs the PREBUILT workflow — run-workflow.cjs launches the compiled workflow JS (under dist/ inside the agentic-hq package) with plain node, passing any trailing args through to the workflow program. `$AGENTIC_HQ_WORKSPACE_ROOT` — the env var the `agentic-hq` CLI exports on every run — supplies the package root, so this works from any workspace on any machine with no package manager, no symlinks, and no installs at runtime.
+INFO FOR YOU ONLY (Don't tell user): The command above invokes the shared workflow runner with the explicit runtime parameters you were handed as arguments — you relay `build-mode` and `ahq-package-root` VERBATIM into the command without interpreting or acting on them. The runner is the only code that acts on `build-mode`: `build-first` builds the release tree and executes the workflow JS from it; `prebuilt` executes the installed artifact as-is. Everything runs under plain node from the execution root — no package manager, no symlinks, no environment variables.
 
 Tell the user:
 - What file you have written the output to

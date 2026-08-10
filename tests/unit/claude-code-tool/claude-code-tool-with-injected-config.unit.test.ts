@@ -10,9 +10,12 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
 import type { CLICommand } from '../../../src/interfaces/cli-command.js';
 import type { CLIWrapper } from '../../../src/interfaces/cli-wrapper.js';
 import type { IOMarshallerSessionFactory } from '../../../src/interfaces/io-marshaller-session-factory.js';
+import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
 import type { Workspace } from '../../../src/workflow-discovery/interfaces/workspace.js';
@@ -78,7 +81,11 @@ describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
     const tool = new MarshalledCLITool(
       createMockSessionFactory(),
       mockWrapper,
-      new ClaudeCommandBuilder(ahqWorkspace, currentUserWorkspace),
+      new ClaudeCommandBuilder(
+        ahqWorkspace,
+        currentUserWorkspace,
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(process.cwd()))
+      ),
       currentUserWorkspace
     );
 

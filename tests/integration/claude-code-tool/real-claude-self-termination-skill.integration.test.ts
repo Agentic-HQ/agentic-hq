@@ -17,6 +17,10 @@
 
 import { describe, it } from 'vitest';
 
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
+import { CompositionRoot } from '../../../src/kernel/composition-root.js';
+import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 
 /**
@@ -38,7 +42,15 @@ describe('MarshalledCLITool self-termination via skill', () => {
     'should return control to test when Claude executes self-termination skill command',
     async () => {
       // Arrange
-      const tool = new DefaultClaudeCodeTool();
+      // REFACTOR: This exact creation of DefaultClaudeCodeTool is duplicated in lots of tests, so should be extracted somehow to remove duplciation (ideally as a new Type/Interface/Class that is shared - maybe a test object or maybe a one used in both test and production code?)
+      const tool = new DefaultClaudeCodeTool(
+        new CompositionRoot(
+          new DefaultAhqRuntimeParams(
+            BuildMode.BUILD_FIRST,
+            new DefaultAhqPackageRoot(process.cwd())
+          )
+        )
+      );
 
       // Act - Run the self-terminating skill command and wait for it to complete
       const commandInput = 'Unused command input string';

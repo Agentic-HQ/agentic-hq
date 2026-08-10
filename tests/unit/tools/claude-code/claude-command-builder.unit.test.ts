@@ -10,9 +10,18 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { DefaultCLICommand } from '../../../../src/io/terminal/default-cli-command.js';
+import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../../src/runtime-params/default-ahq-runtime-params.js';
 import { ClaudeCommandBuilder } from '../../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
+
+// The runtime params the AI relays verbatim across the Claude/skill hop (AHQ-197)
+const TEST_RUNTIME_PARAMS = new DefaultAhqRuntimeParams(
+  BuildMode.BUILD_FIRST,
+  new DefaultAhqPackageRoot('/test-ahq-package-root')
+);
 
 let tmpDir: string;
 let ahqConfigDir: string;
@@ -61,13 +70,21 @@ function mockUserWorkspace(root?: string): Workspace {
 describe('ClaudeCommandBuilder', () => {
   describe('build()', () => {
     it('should return a CLICommand with executable "claude" by default', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       expect(cmd.executable).toBe('claude');
     });
 
     it('should include --plugin-dir flags for all plugin subdirectories in AHQ installation', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
       expect(pluginDirArgs).toHaveLength(2);
@@ -82,7 +99,11 @@ describe('ClaudeCommandBuilder', () => {
         recursive: true,
       });
 
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace(userRoot));
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(userRoot),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
       // 2 from AHQ + 1 from user workspace
@@ -93,7 +114,11 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should not duplicate plugin dirs when workspace and installation are the same directory', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
       // Only AHQ plugins — no duplicates from workspace
@@ -103,7 +128,8 @@ describe('ClaudeCommandBuilder', () => {
     it('should handle non-existent user workspace plugin dir gracefully', () => {
       const builder = new ClaudeCommandBuilder(
         mockAhqWorkspace(),
-        mockUserWorkspace('/nonexistent/workspace')
+        mockUserWorkspace('/nonexistent/workspace'),
+        TEST_RUNTIME_PARAMS
       );
       const cmd = builder.build('test-command', '/tmp/dir');
       const pluginDirArgs = cmd.args.filter((a) => a.startsWith('--plugin-dir='));
@@ -112,7 +138,11 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should include --allowedTools flag with default tools', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const allowedToolsArg = cmd.args.find((a) => a.startsWith('--allowedTools='));
       expect(allowedToolsArg).toBeDefined();
@@ -121,51 +151,83 @@ describe('ClaudeCommandBuilder', () => {
     });
 
     it('should include Read scoped to configDir in allowedTools', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/marshalling-dir');
       const allowedToolsArg = cmd.args.find((a) => a.startsWith('--allowedTools='));
       expect(allowedToolsArg).toContain(`Read(${ahqConfigDir})`);
     });
 
-    it('should append command and marshallingId to args', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+    it('should append command, marshallingId, build-mode and ahq-package-root to args', () => {
+      // The AI relays build-mode and ahq-package-root verbatim across the
+      // Claude/skill hop without interpreting them (AHQ-197) — the relay is
+      // pure argument plumbing on the final positional argument
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('my-command', '/tmp/my-session');
       const lastArg = cmd.args[cmd.args.length - 1]!;
-      expect(lastArg).toBe('my-command /tmp/my-session');
+      expect(lastArg).toBe('my-command /tmp/my-session build-first /test-ahq-package-root');
     });
 
     it('should use custom executable when provided', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace(), 'tsx');
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS,
+        'tsx'
+      );
       const cmd = builder.build('test-command', '/tmp/dir');
       expect(cmd.executable).toBe('tsx');
     });
 
     it('should include extra args before plugin flags', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace(), 'tsx', [
-        '/path/to/fake.ts',
-      ]);
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS,
+        'tsx',
+        ['/path/to/fake.ts']
+      );
       const cmd = builder.build('test-command', '/tmp/dir');
       expect(cmd.args[0]).toBe('/path/to/fake.ts');
     });
 
     it('should return a DefaultCLICommand instance', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('test-command', '/tmp/dir');
       expect(cmd).toBeInstanceOf(DefaultCLICommand);
     });
 
     it('should produce a human-readable string via toString()', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('my-cmd', '/tmp/sess');
       const str = cmd.toString();
       expect(str).toContain('claude');
       expect(str).toContain('--plugin-dir=');
       expect(str).toContain('--allowedTools=');
-      expect(str).toContain('"my-cmd /tmp/sess"');
+      expect(str).toContain('"my-cmd /tmp/sess build-first /test-ahq-package-root"');
     });
 
     it('should log ANSI-formatted debug output via logDebug()', () => {
-      const builder = new ClaudeCommandBuilder(mockAhqWorkspace(), mockUserWorkspace());
+      const builder = new ClaudeCommandBuilder(
+        mockAhqWorkspace(),
+        mockUserWorkspace(),
+        TEST_RUNTIME_PARAMS
+      );
       const cmd = builder.build('my-cmd', '/tmp/sess');
 
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});

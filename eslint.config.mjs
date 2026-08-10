@@ -29,6 +29,7 @@ export default [
   {
     ignores: [
       'dist/**',
+      'release/**', // Staged release tree assembled by scripts/build-release.cjs (AHQ-197)
       'coverage/**',
       '**/*.d.ts',
       '**/node_modules/**',

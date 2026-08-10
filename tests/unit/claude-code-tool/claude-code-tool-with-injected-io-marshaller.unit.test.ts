@@ -8,7 +8,10 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
 import { JsonFileIOMarshallerSessionFactory } from '../../../src/io/marshalling/json-file-io-marshaller-session-factory.js';
+import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
 import { AhqWorkspaceImpl } from '../../../src/workflow-discovery/workspace/ahq-workspace-impl.js';
@@ -29,7 +32,16 @@ describe('MarshalledCLITool with real session factory and fake CLI', () => {
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(ahqWorkspace, currentUserWorkspace, TSX_EXECUTABLE, [FAKE_CLI_PATH]),
+      new ClaudeCommandBuilder(
+        ahqWorkspace,
+        currentUserWorkspace,
+        new DefaultAhqRuntimeParams(
+          BuildMode.BUILD_FIRST,
+          new DefaultAhqPackageRoot(process.cwd())
+        ),
+        TSX_EXECUTABLE,
+        [FAKE_CLI_PATH]
+      ),
       currentUserWorkspace
     );
 

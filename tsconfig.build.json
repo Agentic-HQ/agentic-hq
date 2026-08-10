@@ -1,15 +1,16 @@
 {
-  // Emit config for the prebuilt npm package (AHQ-196). The root tsconfig.json is
-  // typecheck-only (noEmit); this one compiles both build surfaces — the CLI graph
-  // under src/ and the shipped math workflow — to dist/, mirroring the repo layout
-  // (rootDir "."), so the compiled workflow JS lands INSIDE the package where Node
-  // package self-reference resolves 'agentic-hq/tools/claude-code' against the
-  // root manifest.
+  // Emit config for the staged release tree (AHQ-196/AHQ-197). The root
+  // tsconfig.json is typecheck-only (noEmit); this one compiles both build
+  // surfaces — the CLI graph under src/ and the shipped math workflow — to
+  // release/dist, mirroring the repo layout (rootDir "."), so the compiled
+  // workflow JS lands INSIDE the staged package where Node package
+  // self-reference resolves 'agentic-hq/tools/claude-code' against the
+  // generated release manifest.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
     "rootDir": ".",
-    "outDir": "dist",
+    "outDir": "release/dist",
     "types": ["node"],
     // typecheck-only mapping so the workflow's self-referencing import resolves
     // without a node_modules symlink; does not affect emitted specifiers

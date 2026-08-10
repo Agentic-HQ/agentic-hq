@@ -7,13 +7,16 @@
  * WorkflowCommandBuilder factory. Each call returns a fresh instance.
  *
  * SRP Knows About: Which concrete class implements each generic infrastructure
- * interface, and how to wire them together (dependency order).
+ * interface, how to wire them together (dependency order), and the
+ * AhqRuntimeParams supplied at construction (AHQ-197) that the wiring
+ * exposes to components needing them.
  *
  * SRP Knows Nothing About: Backend-specific tool assembly (that is the
  * responsibility of tool classes such as DefaultClaudeCodeTool), or how any
  * individual component works internally.
  */
 
+import type { AhqRuntimeParams } from '../interfaces/ahq-runtime-params.js';
 import type { CLIWrapper } from '../interfaces/cli-wrapper.js';
 import type { IOMarshallerSessionFactory } from '../interfaces/io-marshaller-session-factory.js';
 import type { WorkflowCommandBuilder } from '../interfaces/workflow-command-builder.js';
@@ -26,7 +29,16 @@ import { AhqWorkspaceImpl } from '../workflow-discovery/workspace/ahq-workspace-
 import { CurrentUserWorkspaceImpl } from '../workflow-discovery/workspace/current-user-workspace-impl.js';
 
 export class CompositionRoot {
+  constructor(private readonly ahqRuntimeParams: AhqRuntimeParams) {}
+
+  getAhqRuntimeParams(): AhqRuntimeParams {
+    return this.ahqRuntimeParams;
+  }
+
   getAhqWorkspace(): Workspace {
+    // Legacy reader: AhqWorkspaceImpl still sources its root from the
+    // AGENTIC_HQ_WORKSPACE_ROOT env var (dual-written by the bin wrappers).
+    // AHQ-200 migrates it to the explicit ahqPackageRoot carried above.
     return new AhqWorkspaceImpl();
   }
 

@@ -8,17 +8,25 @@
  * This is the plugin-bundled version of the workflow CLI.
  * Import uses the agentic-hq package (resolved via file: protocol for local dev).
  *
+ * The framework's required --build-mode / --ahq-package-root options
+ * (forwarded by the shared workflow runner) are consumed by
+ * DefaultWorkflowRuntime — this file contains only math-workflow code.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-81
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-197
  */
 
 import { Command } from 'commander';
 
-import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultWorkflowRuntime } from 'agentic-hq/tools/claude-code';
 
 const TIMES_TWO_COMMAND = '/agentic-hq-demos-plugin:math-workflow:times-two';
 const PLUS_THREE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:plus-three';
 const DIV_FIVE_COMMAND = '/agentic-hq-demos-plugin:math-workflow:div-five';
 const DEFAULT_INPUT_NUMBER = '11';
+
+const runtime = new DefaultWorkflowRuntime(process.argv);
+const tool = runtime.getClaudeCodeTool();
 
 const program = new Command();
 
@@ -27,8 +35,6 @@ program
   .description('Run a 3-step math workflow using Claude Code')
   .option('--input-number <number>', 'The input number to process', DEFAULT_INPUT_NUMBER)
   .action(async (options: { inputNumber: string }) => {
-    const tool = new DefaultClaudeCodeTool();
-
     // Step 1: Multiply by 2
     const step1Result = await tool.execute(TIMES_TWO_COMMAND, options.inputNumber);
 
@@ -41,4 +47,4 @@ program
     console.log(`Output number: ${step3Result}`);
   });
 
-program.parse();
+program.parse(runtime.getWorkflowArgs());

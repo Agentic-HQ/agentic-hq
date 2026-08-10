@@ -15,6 +15,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import type { AhqRuntimeParams } from '../../../interfaces/ahq-runtime-params.js';
 import type { CLICommand } from '../../../interfaces/cli-command.js';
 import type { MarshalledIOCLICommandBuilder } from '../../../interfaces/marshalled-io-cli-command-builder.js';
 import { DefaultCLICommand } from '../../../io/terminal/default-cli-command.js';
@@ -56,17 +57,20 @@ const DEFAULT_ALLOWED_TOOLS = [
 export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   private readonly ahqWorkspace: Workspace;
   private readonly currentUserWorkspace: Workspace;
+  private readonly ahqRuntimeParams: AhqRuntimeParams;
   private readonly executable: string;
   private readonly extraArgs: string[];
 
   constructor(
     ahqWorkspace: Workspace,
     currentUserWorkspace: Workspace,
+    ahqRuntimeParams: AhqRuntimeParams,
     executable: string = DEFAULT_CLAUDE_EXECUTABLE,
     extraArgs: string[] = []
   ) {
     this.ahqWorkspace = ahqWorkspace;
     this.currentUserWorkspace = currentUserWorkspace;
+    this.ahqRuntimeParams = ahqRuntimeParams;
     this.executable = executable;
     this.extraArgs = extraArgs;
   }
@@ -82,8 +86,11 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
       ...this.extraArgs,
       ...this.getClaudeCliPluginDirArgs(),
       `--allowedTools=${this.buildAllowedToolsListString()}`,
-      // Claude expects the AI tool command plus marshalling session ID as the final positional argument.
-      `${aiToolCommand} ${marshallingId}`,
+      // Claude expects the AI tool command plus its arguments as the final
+      // positional argument: the marshalling session ID, then the build-mode
+      // and ahq-package-root the AI relays VERBATIM across the skill hop
+      // without interpreting them (AHQ-197) — pure argument plumbing.
+      `${aiToolCommand} ${marshallingId} ${this.ahqRuntimeParams.getBuildMode().getValue()} ${this.ahqRuntimeParams.getAhqPackageRoot().getPath()}`,
     ];
   }
 

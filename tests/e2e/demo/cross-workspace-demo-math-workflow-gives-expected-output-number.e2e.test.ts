@@ -60,6 +60,11 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq binary', 
           'docs/user-docs/troubleshooting-quickstart.md.'
       ).toBe(true);
 
+      // Arrange — delete the staged release tree so a green run PROVES the
+      // build-first chain builds it from nothing on the fly (AHQ-197): no
+      // pre-existing build artifact, no manual `pnpm build` step
+      fs.rmSync(path.join(process.cwd(), 'release'), { recursive: true, force: true });
+
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
