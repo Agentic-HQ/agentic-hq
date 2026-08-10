@@ -86,6 +86,10 @@ details were then approved via AskUserQuestion: test-helper-class shape ("Test-h
 selected and stand as recorded (the accepted legacy break defers to AHQ-200/201; the relay-hop
 risk and the runner/TS parsing duplication are "do nothing" by recommendation).
 
+**Post-fix approval (second gate):** after the fixes were applied and the regression guard re-run,
+the human explicitly approved the applied refactors in chat — **"refactors are approved"**
+(2026-08-10).
+
 ## Customization Next Step
 
 If this workflow was useful but too minimal, customize it for your own process. Recommended next step: run `agentic-hq create-workflow -- --using=add-feature` to make a copy and add your own stages, rules, and approval gates. To see a worked example of a very detailed personal workflow, inspect or try out `agentic-hq add-feature-detailed-example`.
