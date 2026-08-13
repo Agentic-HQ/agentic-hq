@@ -398,3 +398,39 @@ including:
   leading `!` so the agent sees and records the output; registry verification on Node 24
   (default) and Node 22 (v22.20.0 PATH pin), npx + temp-prefix global install, with the
   unprefixed true global install skipped by default.
+
+## UPDATE (2026-08-12, agreed with Steve during implementation)
+
+**Step 1 (the publish command) runs in a regular macOS Terminal window, not via the in-session
+`!` prefix.** The first in-session attempt failed safely with `EOTP` (nothing uploaded,
+registry verified unchanged): the `!` commands run in a non-interactive shell with no TTY, so
+npm printed the browser-auth URL (masked) and exited instead of waiting for the passkey
+ceremony. Steve chose the regular-Terminal route over the documented Plan B token (smallest
+deviation: same command, different window; no new secrets). The agent records the outcome via
+the agent-run Step 2 registry check (`npm view agentic-hq versions dist-tags`), which is the
+authoritative evidence anyway. Steps 3–6 (verification matrix) are non-interactive and stay
+in-session via `!` as planned.
+
+## UPDATE 2 (2026-08-12, agreed with Steve during registry verification)
+
+**The 0.1.0 npx verification failed and Steve consented to "run these and fix any problems as
+you find them", so:**
+
+1. **Root cause (verified in the npx cache):** npm — like pnpm — extracts node-pty's
+   `spawn-helper` without its execute bit, and npx/project-local installs **hoist** node-pty to
+   a sibling of agentic-hq, where 0.1.0's nested-only `postinstall` chmod
+   (`node_modules/node-pty/…`) never reaches. Every npx `math` run crashed with
+   `posix_spawnp failed`. (`agentic-hq list` from npx was correct — only `math` and
+   `add-feature` shown.) The global-install e2e could not catch this because `npm install -g`
+   nests dependencies inside the package.
+2. **Fix (TDD'd):** new RED test in the tarball e2e installs the tarball as a hoisted project
+   dependency and asserts spawn-helper's exec bit; the `postinstall` in both the root manifest
+   and the generated release manifest now chmods **both** layouts
+   (`node_modules/node-pty/…` and `../node-pty/…`). GREEN 4/4.
+3. **Republish as 0.1.1** per the checklist's §6 failure protocol (fix → bump patch → restart):
+   all nets re-run green, 0.1.1 packed and inspected. 0.1.0 stays on the registry (immutable)
+   with the npx defect; `latest` moves to 0.1.1.
+4. **The verification matrix is run by the agent** (Steve's consent above), with workspaces
+   under `/tmp/agentic-hq-test-workspaces/` — a directory Claude Code already trusts — because
+   Claude's folder-trust prompt hangs non-interactive runs from fresh untrusted `mktemp` dirs
+   (this is also why the e2e suite, which uses that same parent, never prompts).

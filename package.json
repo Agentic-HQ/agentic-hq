@@ -1,6 +1,6 @@
 {
   "name": "agentic-hq",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agentic HQ - Orchestrating agentic software development teams",
   "type": "module",
   "private": true,
@@ -11,8 +11,10 @@
     "./tools/claude-code": "./src/tools/marshalled-io-tools/claude-code/index.ts"
   },
   "scripts": {
-    "// POSTINSTALL": "node-pty exec-bit repair: posix_spawnp failed on macOS because pnpm extracts the spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Known pnpm bug: https://github.com/pnpm/pnpm/issues/7366. Mac-only (darwin-*), fails silently on other platforms. Shipped plugin .sh exec bits are handled by the generated release manifest's publishConfig.executableFiles instead (AHQ-197) — see scripts/build-release.cjs.",
-    "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
+    "// POSTINSTALL": "node-pty exec-bit repair: posix_spawnp failed on macOS because both pnpm (https://github.com/pnpm/pnpm/issues/7366) and npm extract the spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Two paths because installers lay node-pty out differently (AHQ-198): nested inside this package (npm -g), or hoisted to a sibling (npx / project-local installs, where cwd is <root>/node_modules/agentic-hq). Mac-only (darwin-*), fails silently on other platforms/layouts. Shipped plugin .sh exec bits are handled by the generated release manifest's publishConfig.executableFiles instead (AHQ-197) — see scripts/build-release.cjs.",
+    "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper ../node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
+    "// PREPACK": "Wrong-tree publish guard (AHQ-198): the repo root must never be packed/published — the publishable artifact is the staged release tree. npm runs prepack even on a private package (private: true blocks publish but NOT pack), so this fails every root pack/publish loudly. prepack never runs at install time.",
+    "prepack": "node -e \"console.error('ERROR: never pack/publish the repo root — the publishable artifact is the staged release tree. Run: pnpm build && cd release && pnpm pack. See docs/dev/publish-checklist.md'); process.exit(1)\"",
     "// BUILD": "The shared release build (AHQ-197): compiles the CLI graph + shipped math workflow and assembles the staged release tree (release/) — exactly what ships, under a single generated manifest. Packing runs FROM release/ (cd release && pnpm pack). See scripts/build-release.cjs for the steps.",
     "build": "node scripts/build-release.cjs",
     "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
@@ -45,6 +47,7 @@
     "test:integration:claude-file-io": "vitest run --config vitest.integration.config.ts tests/integration/claude-code-tool/claude-executes-command-using-file-io.integration.test.ts",
     "test:integration:create-test-jira-and-get-status": "vitest run --config vitest.integration.config.ts tests/integration/jira/custom-commands-create-and-get-status-of-test-jira.integration.test.ts",
     "test:integration:build-determinism": "vitest run --config vitest.integration.config.ts tests/integration/build/build-determinism.integration.test.ts",
+    "test:integration:publish-guards": "vitest run --config vitest.integration.config.ts tests/integration/build/publish-guards.integration.test.ts",
     "test:unit:fake-claude-file-io": "vitest run --config vitest.unit.config.ts tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts",
     "// E2E TEST COMMANDS": "test:e2e = ALL e2e tests",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",

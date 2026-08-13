@@ -39,6 +39,19 @@ const SHIPPED_PLUGINS = [
   'agentic-hq-utilities-plugin',
 ];
 
+// AHQ-198: unmigrated workflows are excluded from the artifact until AHQ-201
+// migrates them — their legacy launch commands (pnpm install + tsx inside the
+// package) cannot work in the read-only npm install. AHQ-201 deletes entries
+// from this list as it migrates each workflow. Dev mode is untouched: dev
+// discovery reads the repo plugins tree, never the staged one.
+const EXCLUDED_UNMIGRATED_SKILLS = [
+  'agentic-hq-core-plugin/skills/create-workflow',
+  'agentic-hq-demos-plugin/skills/add-feature-detailed-example',
+  'agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow',
+  'agentic-hq-demos-plugin/skills/quick-jira-workflow',
+  'agentic-hq-demos-plugin/skills/string-reversal',
+];
+
 // ---------------------------------------------------------------------------
 // 1. Clean (also removes any stale repo-root dist/ left by pre-AHQ-197
 //    builds, which emitted there)
@@ -75,14 +88,22 @@ fs.copyFileSync(
   path.join(releaseDir, 'scripts', 'run-workflow.cjs')
 );
 
-// The shipped plugins, verbatim minus any ts-workflow node_modules
+// The shipped plugins, verbatim minus any ts-workflow node_modules and minus
+// the excluded unmigrated skills
+const pluginsRoot = path.join(repoRoot, '.agentic-hq', 'plugins');
 for (const plugin of SHIPPED_PLUGINS) {
   fs.cpSync(
-    path.join(repoRoot, '.agentic-hq', 'plugins', plugin),
+    path.join(pluginsRoot, plugin),
     path.join(releaseDir, '.agentic-hq', 'plugins', plugin),
     {
       recursive: true,
-      filter: (source) => path.basename(source) !== 'node_modules',
+      filter: (source) => {
+        if (path.basename(source) === 'node_modules') return false;
+        const rel = path.relative(pluginsRoot, source);
+        return !EXCLUDED_UNMIGRATED_SKILLS.some(
+          (skill) => rel === skill || rel.startsWith(skill + path.sep)
+        );
+      },
     }
   );
 }
@@ -122,19 +143,35 @@ const releaseManifest = {
   version: rootManifest.version,
   description: rootManifest.description,
   type: rootManifest.type,
-  // Kept private until AHQ-198 un-privates deliberately for the real publish
-  private: rootManifest.private,
+  // No `private` field (AHQ-198): the generated release manifest is the ONLY
+  // publishable manifest — the root keeps private: true permanently as the
+  // structural wrong-tree publish block
   bin: { 'agentic-hq': 'bin/agentic-hq-prebuilt.cjs' },
   exports: {
     './tools/claude-code': './dist/src/tools/marshalled-io-tools/claude-code/index.js',
   },
   scripts: {
-    // node-pty exec-bit repair only (pnpm extracts spawn-helper without its
-    // execute bit on macOS — https://github.com/pnpm/pnpm/issues/7366).
-    // Shipped plugin .sh files need no chmod here: their exec bits are
-    // recorded in the tarball via publishConfig.executableFiles below.
+    // Wrong-packer guard (AHQ-198): only pnpm applies
+    // publishConfig.executableFiles, so an npm-packed tarball would ship the
+    // plugin .sh files non-executable (exit 126 at runtime — AHQ-196).
+    // prepack runs on pack/publish only, never on install — and a tarball
+    // publish runs no lifecycle scripts at all, so uploading the pnpm-packed
+    // tarball with npm stays unaffected.
+    prepack:
+      "node -e \"const ua=process.env.npm_config_user_agent||''; " +
+      "if(!ua.startsWith('pnpm/')){console.error('ERROR: agentic-hq must be packed/published " +
+      'with pnpm — npm silently drops publishConfig.executableFiles, so shipped plugin scripts ' +
+      'would lose their execute bits. Use: pnpm pack / pnpm publish from release/.\');process.exit(1)}"',
+    // node-pty exec-bit repair only (both pnpm and npm extract spawn-helper
+    // without its execute bit on macOS — https://github.com/pnpm/pnpm/issues/7366
+    // and AHQ-198's npx crash). Two paths because installers lay node-pty out
+    // differently: nested inside this package (npm -g), or hoisted to a
+    // sibling (npx / project-local installs, where cwd is
+    // <root>/node_modules/agentic-hq). Shipped plugin .sh files need no chmod
+    // here: their exec bits are recorded in the tarball via
+    // publishConfig.executableFiles below.
     postinstall:
-      'chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true',
+      'chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper ../node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true',
   },
   dependencies: rootManifest.dependencies,
   // engines.node only — engines.pnpm is a contributor constraint; installs of

@@ -31,6 +31,7 @@ For people working on the AHQ codebase or building their own workflows.
   [design requirements](dev/project-design-requirements.md),
   [potential feature ideas](dev/potential-feature-ideas.md),
   [npm-commands reference](dev/npm-commands.md),
+  [publish checklist](dev/publish-checklist.md),
   [CI configuration](dev/ci-configuration.md).
   If you're interested, you can also read the founder's [Project Philosophy & Origin Story](dev/project-philosophy-and-origin-story.md).
 - [`glossary.md`](glossary.md) — Definitions of terms used across the docs
