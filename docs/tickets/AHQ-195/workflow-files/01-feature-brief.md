@@ -485,7 +485,11 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    (string-reversal, quick-jira-workflow, full-jira-tdd-story-workflow,
    add-feature-detailed-example, create-workflow) and the create-workflow scaffolder templates onto
    it; extend the build to all shipped plugins; restore everything to working; full validation and
-   (re)publish.
+   (re)publish. **AC added 2026-08-14 (during the AHQ-200 Researcher stage, at the human's
+   request):** on completion, `AGENTIC_HQ_WORKSPACE_ROOT` and its equivalent names (e.g.
+   `agentic-hq-workspace-root-dir`, `agenticHqWorkspaceRoot`) are fully eliminated — verified by a
+   grep of the whole workspace that finds them only in legacy and old conversation/spec files
+   (e.g. `docs/jira-docs/`, ticket history under `docs/tickets/`, `LEGACY/` copies).
 8. **[AHQ-199](https://agentic-hq.atlassian.net/browse/AHQ-199) — README And Docs: npm/npx Quickstart For Tool Users, Separate From Contributor Clone Path** —
    README npm/npx Quickstart vs contributor split, tool-user prerequisites (Claude CLI; Linux build
    toolchain for node-pty), troubleshooting updates — written against the working add-feature flow.
