@@ -479,6 +479,16 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    add-feature-detailed-example, create-workflow) and the create-workflow scaffolder templates onto
    it; extend the build to all shipped plugins; restore everything to working; full validation and
    (re)publish.
+8. **[AHQ-205](https://agentic-hq.atlassian.net/browse/AHQ-205) — Bug: agentic-hq CLI Installed From Npm Crashes When add-feature Workflow Runs From
+   AHQ Workspace Root** — added 2026-08-14, found during AHQ-202's registry-install proof: the
+   installed CLI crashes at startup (`cannot add command 'add-feature' as already have command
+   'add-feature'`) when run from a directory whose local workspace defines a workflow named the
+   same as a shipped one (e.g. the agentic-hq repo clone itself) — workflow registration has no
+   name-collision handling, so every invocation from such a directory fails, including `list` and
+   `--help`. Full description:
+   `docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`. See the addendum
+   *"Update (2026-08-14, appended during the AHQ-202 Implementer stage)"* at the bottom of this
+   brief.
 
 ## Update (2026-08-06, appended during the AHQ-196 Planner stage) — Sub-Task Addenda From The Perplexity Plan Review
 
@@ -659,5 +669,24 @@ permission). Completed the same day; work details: `docs/tickets/AHQ-204/01-work
 - **Knock-on for Sub-Task 3 (AHQ-198):** the first publish now carries two migrated workflows
   (math-workflow and add-feature) rather than math-workflow only — add-feature's
   registry-install proof still belongs to AHQ-202.
+
+## Update (2026-08-14, appended during the AHQ-202 Implementer stage) — New Final Sub-Task AHQ-205: Registry-Install Workflow Name-Collision Crash
+
+During AHQ-202's proof (Phase 1, the clean prefix-global install of `agentic-hq@0.1.1`), the
+installed CLI was found to crash at startup with an uncaught
+`Error: cannot add command 'add-feature' as already have command 'add-feature'` when run from a
+directory whose local workspace defines a workflow named the same as a shipped one — e.g. the
+agentic-hq repo clone itself. Workflow registration aggregates the installed package's workspace
+and the local workspace with no name-collision handling, and the crash happens during CLI program
+construction, so **every** invocation from such a directory fails (`list`, `add-feature`, even
+`--help`). Reproduced twice against the registry-installed 0.1.1.
+
+**Decided with the human (2026-08-14):** split out as its own bug Sub-Task,
+**[AHQ-205](https://agentic-hq.atlassian.net/browse/AHQ-205)** (created by the human 2026-08-14),
+now the last Sub-Task of AHQ-195 — rather than triggering AHQ-202's contingent
+fix-and-republish path, because AHQ-202's planned proof contexts (a neutral directory and a
+scratch project with no local plugins) cannot collide and are unaffected. Full bug description,
+reproduction steps, and fix-locating notes:
+`docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`.
 
 
