@@ -73,13 +73,14 @@ export class WorkspaceImpl implements Workspace {
   }
 
   /**
-   * Return true iff rootDir equals the injected AhqPackageRoot — plain string equality, no
-   * path normalisation. Decided (AHQ-205, 2026-08-16) and verified: a symlinked invocation is
-   * clean (`process.cwd()` and the bin wrapper's `__dirname` both resolve physically); only a
-   * trailing separator on `--ahq-package-root` defeats the comparison, and neither shipped bin
-   * wrapper can produce one (both build the value with `path.join`). Since AHQ-205 a missed
-   * match no longer crashes anyway — the CLI still starts and the listing merely shows the
-   * package block fully DISABLED under the local one. Not worth normalising here.
+   * Return true iff rootDir equals the injected AhqPackageRoot.
+   *
+   * This is a plain string comparison with no path normalisation, and that is a considered
+   * choice rather than an oversight (see AHQ-205): a symlinked invocation still compares equal,
+   * because both `process.cwd()` and the bin wrappers' `__dirname` resolve to the physical path;
+   * and the only input that would make two spellings of the same directory compare unequal — a
+   * trailing separator on `--ahq-package-root` — cannot come from either shipped bin wrapper,
+   * since both build that value with `path.join`, which never yields one.
    */
   isAhqPackage(): boolean {
     return this.rootDir === this.ahqPackageRoot.getPath();
