@@ -8,6 +8,8 @@
  * register its workflows — tell don't ask.
  * Variables typed as WorkflowSearchResults interface; Impl used only for construction.
  */
+import * as path from 'node:path';
+
 import { afterEach, describe, expect } from 'vitest';
 
 import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
@@ -15,7 +17,30 @@ import type { WorkflowSearchResults } from '../../../../src/workflow-discovery/i
 import { WorkflowSearchResultsImpl } from '../../../../src/workflow-discovery/workflow-listing/workflow-search-results-impl.js';
 import { StubWorkflowRegistry } from '../test-fixtures/stub-workflow-registry.js';
 import { tmpdirTest } from '../test-fixtures/tmpdir-fixture.js';
-import { createTestWorkspaceFixture } from '../test-fixtures/workspace-fixture.js';
+import {
+  createSingleWorkflowFixture,
+  createTestWorkspaceFixture,
+} from '../test-fixtures/workspace-fixture.js';
+
+/**
+ * Two-root fixture (AHQ-205): the AHQ package at `<tmpdir>/package` (the standard fixture,
+ * which includes `math`) and a separate local workspace at `<tmpdir>/local` holding ONE
+ * workflow whose shortId collides (`math`) under a different plugin id. Returns both roots.
+ */
+function createPackageAndCollidingLocalRoots(tmpdir: string): {
+  packageRoot: string;
+  localRoot: string;
+} {
+  const packageRoot = path.join(tmpdir, 'package');
+  const localRoot = path.join(tmpdir, 'local');
+  createTestWorkspaceFixture(packageRoot);
+  createSingleWorkflowFixture(localRoot, 'local-plugin', 'my-math', {
+    shortId: 'math',
+    description: 'A LOCAL math that collides with the package one',
+    exampleParameters: '-- --input-number=1',
+  });
+  return { packageRoot, localRoot };
+}
 
 describe('WorkflowSearchResultsImpl', () => {
   const originalCwd = process.cwd;
@@ -111,6 +136,54 @@ describe('WorkflowSearchResultsImpl', () => {
 
       // Only AHQ package workflows (3), no duplicates from CurrentUserWorkspace
       expect(registry.registered).toHaveLength(3);
+    }
+  );
+
+  // AHQ-205: the local workspace registers BEFORE the AHQ package. WorkflowRegistryImpl keeps
+  // the first registration of a short name, so this order is what makes "local wins" true.
+  // (The stub registry does not dedupe — this test pins ORDER; the registry test pins first-wins.)
+  tmpdirTest(
+    'should register the local workspace workflows before the AHQ package workflows',
+    ({ tmpdir }) => {
+      const { packageRoot, localRoot } = createPackageAndCollidingLocalRoots(tmpdir);
+      process.cwd = () => localRoot;
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+        new DefaultAhqPackageRoot(packageRoot)
+      );
+      const registry = new StubWorkflowRegistry();
+
+      searchResults.registerWorkflowsWith(registry);
+
+      const fullCommands = registry.registered.map((w) => w.getFullClaudeSkillCommand().toString());
+      // 1 local + 3 package — both `math`s present, local one first
+      expect(fullCommands).toHaveLength(4);
+      expect(fullCommands[0]).toBe('/local-plugin:my-math');
+      expect(fullCommands.slice(1)).toContain('/test-plugin-alpha:math-skill');
+    }
+  );
+
+  // AHQ-205: over real two-root discovery, the listing flags exactly the copy that registration
+  // skipped — the AHQ package's `math` — so the listing and the subcommand table agree.
+  tmpdirTest(
+    'should flag exactly the AHQ package copy as DISABLED in the listing when the local workspace claims the shortId first',
+    ({ tmpdir }) => {
+      const { packageRoot, localRoot } = createPackageAndCollidingLocalRoots(tmpdir);
+      process.cwd = () => localRoot;
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+        new DefaultAhqPackageRoot(packageRoot)
+      );
+
+      const output = searchResults.getWorkflowsListingString();
+      const lines = output.split('\n');
+
+      const disabledIndexes = lines
+        .map((line, index) => (line.includes('DISABLED') ? index : -1))
+        .filter((index) => index >= 0);
+      const localHeaderIndex = lines.findIndex((line) => line.includes('Local Workspace:'));
+      expect(disabledIndexes).toHaveLength(1);
+      expect(lines[disabledIndexes[0]!]).toContain("shortId 'math'");
+      expect(disabledIndexes[0]!).toBeLessThan(localHeaderIndex);
+      expect(lines[disabledIndexes[0]! + 2]).toContain('Solves math problems');
     }
   );
 });

@@ -10,11 +10,12 @@
 > `LEGACY/01-research-and-plan-of-action.md.SUPERSEDED_BAD_DESIGN` (§1–§5 reused, §6–§7 rejected);
 > the post-mortem `supporting-docs/bad-coding-conversation-with-Opus.md`; and the code itself.
 
-**Status (2026-08-16, handover note):** research and plan **complete; nothing implemented yet**.
-No production or test code has been touched. Waiting on the human's answers to §10 (all have
-defaults; only Cycle 4 depends on them — Cycles 0–3 can start now). The reproduction fixtures under
-`temp/AHQ-205/` are still on disk. This file is untracked and **not yet committed** (a WIP commit
-was started via `/git:02-…` and interrupted before the message was presented — nothing was staged).
+**Status (2026-08-16, updated after implementation):** this plan was **executed in full** the same
+day, with all §10 defaults confirmed by the human — see
+[`02-details-of-final-implementation.md`](02-details-of-final-implementation.md) for what landed,
+the TDD log, the testing details and the one open question. The plan below is left as written (it
+was committed as `1698a3a` before implementation started); the reproduction fixtures under
+`temp/AHQ-205/` are still on disk.
 
 **This document supersedes the LEGACY plan.** The reproduction (LEGACY §3), root-cause chain (§4)
 and research findings (§5) there were verified empirically and are *not* repeated in full here —

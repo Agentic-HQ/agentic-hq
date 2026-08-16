@@ -40,9 +40,13 @@ export class WorkflowSearchResultsImpl implements WorkflowSearchResults {
   getWorkflowsListingString(): string {
     return this.formatter.formatWorkflowsListing(this.ahqPackage, this.currentUserWorkspace);
   }
-  /** Register all workflows from both workspaces with the registry. */
+  /**
+   * Register all workflows from both workspaces with the registry. The local workspace goes
+   * FIRST: WorkflowRegistryImpl keeps the first registration of a short name, so this order is
+   * what makes the local workspace win a shortId collision with the AHQ package (AHQ-205).
+   */
   registerWorkflowsWith(registry: WorkflowRegistry): void {
-    this.ahqPackage.registerWorkflowsWith(registry);
     this.currentUserWorkspace.registerWorkflowsWith(registry);
+    this.ahqPackage.registerWorkflowsWith(registry);
   }
 }

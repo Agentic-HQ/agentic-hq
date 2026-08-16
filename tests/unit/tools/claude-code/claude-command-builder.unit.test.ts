@@ -113,6 +113,36 @@ describe('ClaudeCommandBuilder', () => {
       expect(pluginDirArgs.join(' ')).toContain('user-plugin');
     });
 
+    // AHQ-205: Claude Code keeps only the FIRST of two --plugin-dir flags naming the same plugin,
+    // so the user's workspace dirs must precede the AHQ package's for "local wins" to hold at
+    // the Claude layer as well as in the CLI's own subcommand table.
+    it('should place every user-workspace --plugin-dir flag before every AHQ-package one', () => {
+      const userRoot = path.join(tmpDir, 'user-workspace');
+      const userPluginsDir = path.join(userRoot, '.agentic-hq', 'plugins');
+      fs.mkdirSync(path.join(userPluginsDir, 'user-plugin'), { recursive: true });
+
+      const builder = new ClaudeCommandBuilder(
+        mockAhqPackage(),
+        mockUserWorkspace(userRoot),
+        TEST_RUNTIME_PARAMS
+      );
+      const cmd = builder.build('test-command', '/tmp/dir');
+
+      const pluginDirIndexes = cmd.args
+        .map((arg, index) => ({ arg, index }))
+        .filter(({ arg }) => arg.startsWith('--plugin-dir='));
+      const userIndexes = pluginDirIndexes
+        .filter(({ arg }) => arg.startsWith(`--plugin-dir=${userPluginsDir}`))
+        .map(({ index }) => index);
+      const packageIndexes = pluginDirIndexes
+        .filter(({ arg }) => arg.startsWith(`--plugin-dir=${path.join(ahqConfigDir, 'plugins')}`))
+        .map(({ index }) => index);
+
+      expect(userIndexes).toHaveLength(1);
+      expect(packageIndexes).toHaveLength(2);
+      expect(Math.max(...userIndexes)).toBeLessThan(Math.min(...packageIndexes));
+    });
+
     it('should not duplicate plugin dirs when workspace and installation are the same directory', () => {
       const builder = new ClaudeCommandBuilder(
         mockAhqPackage(),

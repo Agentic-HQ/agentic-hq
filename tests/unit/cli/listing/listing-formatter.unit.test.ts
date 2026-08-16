@@ -243,6 +243,164 @@ describe('ListingFormatter', () => {
       expect(output).not.toContain('Same as Agentic HQ Package');
     });
 
+    // AHQ-205: the listing marks each entry that lost a shortId collision with a
+    // `DISABLED — shortId '<x>' is already used by existing workflow` line directly above it.
+    // Losers are worked out by the same first-claim walk registration uses: the built-in
+    // `list` is pre-claimed, then the LOCAL workspace claims names, then the AHQ package;
+    // within a workspace, plugin order then workflow order.
+    describe('DISABLED flag on shortId collisions (AHQ-205)', () => {
+      const DISABLED_MARKER = 'DISABLED';
+
+      function disabledLineIndexes(output: string): number[] {
+        return output
+          .split('\n')
+          .map((line, index) => (line.includes(DISABLED_MARKER) ? index : -1))
+          .filter((index) => index >= 0);
+      }
+
+      it('should flag the package copy (not the local one) when package and local share a shortId', () => {
+        const ahq = stubWorkspace({
+          displayName: 'Agentic HQ Package',
+          root: '/ahq',
+          plugins: [stubPlugin('demos', [REVERSAL_WORKFLOW, MATH_WORKFLOW])],
+          isAhq: true,
+        });
+        const localMath = stubWorkflow({
+          shortName: 'math',
+          description: 'A LOCAL math workflow',
+          exampleCommandPart: 'agentic-hq math',
+          exampleArgsPart: ' -- --input-number=1',
+        });
+        const local = stubWorkspace({
+          displayName: 'Local Workspace',
+          root: '/some/other/path',
+          plugins: [stubPlugin('local-plugin', [localMath])],
+          isAhq: false,
+        });
+
+        const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
+        const lines = output.split('\n');
+
+        const flagged = disabledLineIndexes(output);
+        expect(flagged).toHaveLength(1);
+        const flagIndex = flagged[0]!;
+        expect(lines[flagIndex]).toContain("shortId 'math'");
+        // Directly above the PACKAGE's math command line, i.e. in the package block
+        expect(lines[flagIndex + 1]).toContain('agentic-hq math');
+        expect(lines[flagIndex + 2]).toContain('Solves math problems');
+        // ...and before the local block begins; the local entry itself is clean
+        const localHeaderIndex = lines.findIndex((l) => l.includes('Local Workspace:'));
+        expect(flagIndex).toBeLessThan(localHeaderIndex);
+        const localMathIndex = lines.findIndex((l) => l.includes('A LOCAL math workflow'));
+        expect(lines[localMathIndex - 2]).not.toContain(DISABLED_MARKER);
+      });
+
+      it('should flag only the second of two plugins in one workspace that share a shortId', () => {
+        const dupInPluginOne = stubWorkflow({
+          shortName: 'dup',
+          description: 'dup in plugin-one',
+          exampleCommandPart: 'agentic-hq dup',
+          exampleArgsPart: '',
+        });
+        const dupInPluginTwo = stubWorkflow({
+          shortName: 'dup',
+          description: 'dup in plugin-two',
+          exampleCommandPart: 'agentic-hq dup',
+          exampleArgsPart: '',
+        });
+        const ahq = stubWorkspace({
+          displayName: 'Agentic HQ Package',
+          root: '/ahq',
+          plugins: [
+            stubPlugin('plugin-one', [dupInPluginOne]),
+            stubPlugin('plugin-two', [dupInPluginTwo]),
+          ],
+          isAhq: true,
+        });
+        const local = stubWorkspace({
+          displayName: 'Local Workspace',
+          root: '/ahq',
+          plugins: [],
+          isAhq: true,
+        });
+
+        const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
+        const lines = output.split('\n');
+
+        const flagged = disabledLineIndexes(output);
+        expect(flagged).toHaveLength(1);
+        expect(lines[flagged[0]! + 2]).toContain('dup in plugin-two');
+      });
+
+      it('should flag a workflow whose shortId is "list" (the built-in subcommand is pre-claimed)', () => {
+        const listWorkflow = stubWorkflow({
+          shortName: 'list',
+          description: 'A workflow that happens to be called list',
+          exampleCommandPart: 'agentic-hq list',
+          exampleArgsPart: '',
+        });
+        const ahq = stubWorkspace({
+          displayName: 'Agentic HQ Package',
+          root: '/ahq',
+          plugins: [stubPlugin('demos', [listWorkflow])],
+          isAhq: true,
+        });
+        const local = stubWorkspace({
+          displayName: 'Local Workspace',
+          root: '/ahq',
+          plugins: [],
+          isAhq: true,
+        });
+
+        const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
+        const lines = output.split('\n');
+
+        const flagged = disabledLineIndexes(output);
+        expect(flagged).toHaveLength(1);
+        expect(lines[flagged[0]!]).toContain("shortId 'list'");
+        expect(lines[flagged[0]! + 1]).toContain('agentic-hq list');
+      });
+
+      it('should show no DISABLED flag anywhere when no shortIds collide', () => {
+        const ahq = stubWorkspace({
+          displayName: 'Agentic HQ Package',
+          root: '/ahq',
+          plugins: [stubPlugin('demos', [REVERSAL_WORKFLOW, MATH_WORKFLOW])],
+          isAhq: true,
+        });
+        const local = stubWorkspace({
+          displayName: 'Local Workspace',
+          root: '/some/other/path',
+          plugins: [stubPlugin('local-plugin', [NOOP_WORKFLOW])],
+          isAhq: false,
+        });
+
+        const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
+
+        expect(output).not.toContain(DISABLED_MARKER);
+      });
+
+      it('should show no DISABLED flag when local IS the AHQ package even though it has the same plugins', () => {
+        const ahq = stubWorkspace({
+          displayName: 'Agentic HQ Package',
+          root: '/ahq',
+          plugins: [stubPlugin('demos', [REVERSAL_WORKFLOW, MATH_WORKFLOW])],
+          isAhq: true,
+        });
+        const local = stubWorkspace({
+          displayName: 'Local Workspace',
+          root: '/ahq',
+          plugins: [stubPlugin('demos', [REVERSAL_WORKFLOW, MATH_WORKFLOW])],
+          isAhq: true,
+        });
+
+        const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
+
+        expect(output).not.toContain(DISABLED_MARKER);
+        expect(output).toContain('Same as Agentic HQ Package');
+      });
+    });
+
     it('should start and end with a blank line so output prints with breathing space', () => {
       const ahq = stubWorkspace({
         displayName: 'Agentic HQ Package',

@@ -19,7 +19,8 @@ import { WorkflowRegistryImpl } from './workflow-registry-impl.js';
 
 const PROGRAM_NAME = 'agentic-hq';
 const PROGRAM_DESCRIPTION = 'Orchestrate agentic software development with Claude Code';
-const LIST_SUBCOMMAND_NAME = 'list';
+/** Exported so ListingFormatter can pre-claim it when working out DISABLED entries (AHQ-205). */
+export const LIST_SUBCOMMAND_NAME = 'list';
 const LIST_SUBCOMMAND_DESCRIPTION = 'List available workflow skills';
 
 /**
@@ -37,6 +38,9 @@ export function createProgram(
   program.name(PROGRAM_NAME).description(PROGRAM_DESCRIPTION).enablePositionalOptions();
 
   // --- list subcommand ---
+  // Registered BEFORE the discovered workflows on purpose: WorkflowRegistryImpl keeps the first
+  // registration of a short name, so this order is what reserves `list` against a workflow
+  // that happens to use it as its shortId (AHQ-205).
   program
     .command(LIST_SUBCOMMAND_NAME)
     .description(LIST_SUBCOMMAND_DESCRIPTION)

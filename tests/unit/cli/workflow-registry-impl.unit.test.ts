@@ -62,4 +62,48 @@ describe('WorkflowRegistryImpl', () => {
       '--string-to-reverse=hello',
     ]);
   });
+
+  // AHQ-205: the first registration of a short name wins; later ones are not registered
+  // (Commander would otherwise throw `cannot add command 'x' as already have command 'x'`).
+  it('should keep the first workflow and not throw when a second workflow has the same short name', async () => {
+    const program = new Command();
+    program.enablePositionalOptions();
+    const mockBuilder: WorkflowCommandBuilder = {
+      build: vi.fn().mockResolvedValue({ execute: vi.fn() }),
+    };
+    const registry: WorkflowRegistry = new WorkflowRegistryImpl(program, mockBuilder);
+
+    const first = createStubWorkflow('add-feature', 'Local copy', '/my-local-plugin:add-feature');
+    const second = createStubWorkflow(
+      'add-feature',
+      'Shipped copy',
+      '/agentic-hq-demos-plugin:add-feature'
+    );
+    registry.register(first);
+    expect(() => registry.register(second)).not.toThrow();
+
+    const matching = program.commands.filter((cmd: Command) => cmd.name() === 'add-feature');
+    expect(matching).toHaveLength(1);
+
+    await program.parseAsync(['node', 'agentic-hq', 'add-feature']);
+    expect(mockBuilder.build).toHaveBeenCalledWith('/my-local-plugin:add-feature', []);
+  });
+
+  it('should never replace a subcommand the program already has (a workflow named "list" does not shadow the built-in)', async () => {
+    const program = new Command();
+    program.enablePositionalOptions();
+    const builtInListAction = vi.fn();
+    program.command('list').action(builtInListAction);
+    const mockBuilder: WorkflowCommandBuilder = {
+      build: vi.fn().mockResolvedValue({ execute: vi.fn() }),
+    };
+    const registry: WorkflowRegistry = new WorkflowRegistryImpl(program, mockBuilder);
+
+    const workflowNamedList = createStubWorkflow('list', 'A workflow called list', '/p:list');
+    expect(() => registry.register(workflowNamedList)).not.toThrow();
+
+    await program.parseAsync(['node', 'agentic-hq', 'list']);
+    expect(builtInListAction).toHaveBeenCalledTimes(1);
+    expect(mockBuilder.build).not.toHaveBeenCalled();
+  });
 });

@@ -202,7 +202,11 @@ How does `agentic-hq math -- --input-number=11` reach the right plugin?
    subcommand for every discovered workflow.
 5. **[`src/cli/workflow-registry-impl.ts`](../../src/cli/workflow-registry-impl.ts)** —
    for each workflow, registers the `shortId` as a Commander subcommand
-   whose action delegates to the workflow command builder.
+   whose action delegates to the workflow command builder. The first
+   registration of a `shortId` wins (the local workspace registers before the
+   AHQ package, so a local workflow shadows a shipped one with the same
+   `shortId`); later ones are not registered and `agentic-hq list` shows them
+   flagged `DISABLED`.
 
 ### Workflow discovery
 

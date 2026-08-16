@@ -123,10 +123,13 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
     );
 
     const flags: string[] = [];
-    this.addPluginDirsFrom(ahqPluginsDir, flags);
+    // The user's plugin dirs go FIRST: Claude Code keeps only the first of two --plugin-dir
+    // flags that name the same plugin (probed 2026-08-16, AHQ-205), so this order is what makes
+    // "local workspace wins" true at the Claude layer, not just in the CLI's subcommand table.
     if (!this.currentUserWorkspace.isAhqPackage()) {
       this.addPluginDirsFrom(userPluginsDir, flags);
     }
+    this.addPluginDirsFrom(ahqPluginsDir, flags);
     return flags;
   }
 

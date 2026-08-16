@@ -128,4 +128,43 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
       consoleSpy.mockRestore();
     }
   });
+
+  // AHQ-205: the built-in `list` is registered before any workflow, and the first registration
+  // of a short name wins — so a discovered workflow named `list` must neither crash program
+  // creation nor take over the `list` subcommand.
+  it('should survive a discovered workflow named "list" and still print the injected listing for the list command', async () => {
+    const { builder } = createMockBuilder();
+    const listingSpy = vi.fn().mockReturnValue('injected-listing-marker');
+    const searchResults: WorkflowSearchResults = {
+      getWorkflowsListingString: listingSpy,
+      registerWorkflowsWith: (registry: WorkflowRegistry) => {
+        registry.register({
+          getShortName: () => ({ toString: () => 'list' }),
+          getDescription: () => ({ toString: () => 'A workflow that happens to be called list' }),
+          getFullClaudeSkillCommand: () => ({ toString: () => '/some-plugin:list' }),
+          getExampleCommand: () => ({
+            getCommandPart: () => 'agentic-hq list',
+            getArgsPart: () => '',
+            toString: () => 'agentic-hq list',
+          }),
+        });
+      },
+    };
+
+    let program: ReturnType<typeof createProgram> | undefined;
+    expect(() => {
+      program = createProgram(builder, searchResults);
+    }).not.toThrow();
+
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      await program!.parseAsync(['node', 'agentic-hq', 'list']);
+
+      expect(listingSpy).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalledWith('injected-listing-marker');
+      expect(builder.build).not.toHaveBeenCalled();
+    } finally {
+      consoleSpy.mockRestore();
+    }
+  });
 });
