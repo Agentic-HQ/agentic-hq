@@ -11,6 +11,7 @@ import { describe, expect, vi } from 'vitest';
 
 import { WorkflowRegistryImpl } from '../../../src/cli/workflow-registry-impl.js';
 import type { WorkflowCommandBuilder } from '../../../src/interfaces/workflow-command-builder.js';
+import { ShortIdAlreadyRegisteredError } from '../../../src/workflow-discovery/errors/short-id-already-registered-error.js';
 import type { WorkflowRegistry } from '../../../src/workflow-discovery/interfaces/workflow-registry.js';
 
 function createStubWorkflow(shortName: string, description: string, fullCommand: string) {
@@ -63,9 +64,10 @@ describe('WorkflowRegistryImpl', () => {
     ]);
   });
 
-  // AHQ-205: the first registration of a short name wins; later ones are not registered
-  // (Commander would otherwise throw `cannot add command 'x' as already have command 'x'`).
-  it('should keep the first workflow and not throw when a second workflow has the same short name', async () => {
+  // AHQ-205: a short name that is already a subcommand is rejected with a named error — the
+  // first registration wins and is never replaced (Commander itself would otherwise throw a
+  // generic `cannot add command 'x' as already have command 'x'`).
+  it('should throw ShortIdAlreadyRegisteredError for a second workflow with the same short name, keeping the first', async () => {
     const program = new Command();
     program.enablePositionalOptions();
     const mockBuilder: WorkflowCommandBuilder = {
@@ -80,7 +82,8 @@ describe('WorkflowRegistryImpl', () => {
       '/agentic-hq-demos-plugin:add-feature'
     );
     registry.register(first);
-    expect(() => registry.register(second)).not.toThrow();
+    expect(() => registry.register(second)).toThrow(ShortIdAlreadyRegisteredError);
+    expect(() => registry.register(second)).toThrow("'add-feature'");
 
     const matching = program.commands.filter((cmd: Command) => cmd.name() === 'add-feature');
     expect(matching).toHaveLength(1);
@@ -89,7 +92,7 @@ describe('WorkflowRegistryImpl', () => {
     expect(mockBuilder.build).toHaveBeenCalledWith('/my-local-plugin:add-feature', []);
   });
 
-  it('should never replace a subcommand the program already has (a workflow named "list" does not shadow the built-in)', async () => {
+  it('should throw ShortIdAlreadyRegisteredError for a name the program already has (a workflow named "list" does not shadow the built-in)', async () => {
     const program = new Command();
     program.enablePositionalOptions();
     const builtInListAction = vi.fn();
@@ -100,7 +103,7 @@ describe('WorkflowRegistryImpl', () => {
     const registry: WorkflowRegistry = new WorkflowRegistryImpl(program, mockBuilder);
 
     const workflowNamedList = createStubWorkflow('list', 'A workflow called list', '/p:list');
-    expect(() => registry.register(workflowNamedList)).not.toThrow();
+    expect(() => registry.register(workflowNamedList)).toThrow(ShortIdAlreadyRegisteredError);
 
     await program.parseAsync(['node', 'agentic-hq', 'list']);
     expect(builtInListAction).toHaveBeenCalledTimes(1);

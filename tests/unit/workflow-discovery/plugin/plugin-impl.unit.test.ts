@@ -10,6 +10,9 @@
  */
 import { describe, expect } from 'vitest';
 
+import { ShortIdAlreadyRegisteredError } from '../../../../src/workflow-discovery/errors/short-id-already-registered-error.js';
+import type { AhqWorkflow } from '../../../../src/workflow-discovery/interfaces/ahq-workflow.js';
+import type { WorkflowRegistry } from '../../../../src/workflow-discovery/interfaces/workflow-registry.js';
 import { PluginImpl } from '../../../../src/workflow-discovery/plugin/plugin-impl.js';
 import type { Plugin } from '../../../../src/workflow-discovery/plugin/plugin.js';
 import { StubWorkflowRegistry } from '../test-fixtures/stub-workflow-registry.js';
@@ -64,4 +67,44 @@ describe('PluginImpl', () => {
     // test-plugin-alpha has 2 workflows (reversal + math)
     expect(registry.registered).toHaveLength(2);
   });
+
+  // AHQ-205: the registry rejects an already-registered short name with ShortIdAlreadyRegisteredError;
+  // the plugin's answer is "skip it, the first registration wins" and carry on with the rest.
+  tmpdirTest(
+    'should skip a workflow the registry rejects as already registered and still register the rest',
+    ({ tmpdir }) => {
+      createTestWorkspaceFixture(tmpdir);
+      const plugin: Plugin = new PluginImpl('test-plugin-alpha', tmpdir);
+      const registry = new RejectingWorkflowRegistry('reversal');
+
+      expect(() => plugin.registerWorkflowsWith(registry)).not.toThrow();
+
+      const registeredShortNames = registry.registered.map((w) => w.getShortName().toString());
+      expect(registeredShortNames).toEqual(['math']);
+    }
+  );
+
+  tmpdirTest('should let any other registry error propagate unchanged', ({ tmpdir }) => {
+    createTestWorkspaceFixture(tmpdir);
+    const plugin: Plugin = new PluginImpl('test-plugin-alpha', tmpdir);
+    const registry: WorkflowRegistry = {
+      register: () => {
+        throw new Error('registry is on fire');
+      },
+    };
+
+    expect(() => plugin.registerWorkflowsWith(registry)).toThrow('registry is on fire');
+  });
 });
+
+/** Records registrations like StubWorkflowRegistry, but rejects one short name as already taken. */
+class RejectingWorkflowRegistry implements WorkflowRegistry {
+  readonly registered: AhqWorkflow[] = [];
+  constructor(private readonly rejectedShortName: string) {}
+  register(workflow: AhqWorkflow): void {
+    if (workflow.getShortName().toString() === this.rejectedShortName) {
+      throw new ShortIdAlreadyRegisteredError(workflow.getShortName());
+    }
+    this.registered.push(workflow);
+  }
+}

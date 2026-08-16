@@ -14,6 +14,11 @@ committed yet** — the working tree holds 15 modified files + 2 new files (this
 see §5); run `/git:02-…` when ready. One question raised by the human mid-implementation is recorded in §6 for
 their decision; the code follows the approved plan (silent first-wins) unless they say otherwise.
 
+> **Later the same day:** this was committed as `f932cc0`, and the §6 question was then decided in
+> favour of the named error — see §8 and
+> [`03-refactor-to-use-error-class-details-and-testing-details.md`](03-refactor-to-use-error-class-details-and-testing-details.md).
+> The body below is left as the record of what `f932cc0` contains.
+
 ---
 
 ## 1. What Was Done — In One Screen
@@ -442,6 +447,10 @@ The answer given (recorded here so it is not lost), with the recommendation **no
 **Decision needed:** keep as implemented (recommended) / add the boolean return / add the exception.
 The code as it stands is the plan's silent first-wins.
 
+**Decided (2026-08-16, after `f932cc0`): add the exception.** The human's view: a duplicate
+`shortId` *is* an exception to normal operation, and a silent return is too muted. Built and
+verified with no behaviour change — see §8 and the 03 doc.
+
 ---
 
 ## 7. Out Of Scope (unchanged from the plan)
@@ -450,3 +459,24 @@ Publishing (AHQ-201 — this fix reaches npm with the next re-publish); migratin
 unmigrated workflows (AHQ-201); splitting `Workspace` (AHQ-206); the `release/` contention between
 `publish-guards` and `build-determinism` (I1 avoids `release/` entirely; the manual prebuilt check
 was done with nothing else building). Path normalisation: record-only, as decided — no code change.
+
+---
+
+## 8. Superseded In Part — The Silent Return Became A Named Error
+
+After this document was written and `f932cc0` committed, the §6 question was decided: the guard in
+`WorkflowRegistryImpl.register()` no longer returns silently — it throws
+**`ShortIdAlreadyRegisteredError`** (`src/workflow-discovery/errors/short-id-already-registered-error.ts`),
+the `WorkflowRegistry` interface documents that `@throws`, and `PluginImpl.registerWorkflowsWith()`
+catches exactly that error, skips the workflow (first registration wins) and carries on; any other
+error propagates. **No user-visible behaviour changed** — every real run and both integration tests
+are identical; the unit count went 176 → 178.
+
+What that supersedes here: §1 edit 1 and §2's `register()` listing ("do nothing / return") and the
+"silently not registered" wording in the SRP-header descriptions; tests R1/R2/P1 as described in
+§3.1 (re-expressed as R1′/R2′/P1′, plus two new `PluginImpl` tests). Everything else in this
+document — the precedence swap, the `--plugin-dir` flip, the DISABLED flag and its formatter walk,
+the acceptance test, the filed-scenario verification — stands as written.
+
+Full details, code as landed, the reasoning for and against, and the testing record are in
+[`03-refactor-to-use-error-class-details-and-testing-details.md`](03-refactor-to-use-error-class-details-and-testing-details.md).
