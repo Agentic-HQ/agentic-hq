@@ -443,10 +443,11 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    math-workflow** — implement `build-mode` and `ahq-package-root` through entry points →
    TypeScript → the math-workflow SKILL.md → shared runner; dev-mode parity (`build-first`);
    entry-point dual-write of the legacy env var. Other workflows remain on the old pattern
-   (broken). **Updated 2026-08-08:** this Sub-Task now opens with the architecture refactor
-   discussion and also owns the **staged-release-tree restructure** — see the addendum
-   *"Update (2026-08-08, appended during the AHQ-196 Reviewer stage) — Architecture Decision"*
-   at the bottom of this brief.
+   (broken). It also owned the **staged-release-tree restructure**: the build assembles exactly what
+   ships into `release/` under a single generated manifest, packing runs from that staged tree, and
+   the generated manifest's `publishConfig.executableFiles` carries the shipped scripts' exec bits —
+   retiring AHQ-196's `publishConfig` override dance, the `files` whitelist, and the plugin-script
+   chmod. **Done.**
 3. **[AHQ-198](https://agentic-hq.atlassian.net/browse/AHQ-198) — Package Hygiene And First npm Publish (files Whitelist, Un-private, Publish Guards And
    Checklist)** — `files` whitelist (drop tests, `steve-test-plugin`, dev configs, `.npmrc`),
    remove `private: true`, `prepublishOnly` guards, engines cleanup, documented manual publish
@@ -461,11 +462,11 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    workflow) onto the locked-down pattern, republish a patch version, and prove the full
    interactive four-agent flow runs from a registry-installed package in a clean directory;
    retires the add-feature-specific risks (interactive stops, the four-agent chain, help-doc paths
-   located via the workspace-root relay). **Updated 2026-08-10:** the migration portion of this
-   Sub-Task was pulled forward and completed as
-   [AHQ-204](https://agentic-hq.atlassian.net/browse/AHQ-204) — see the addendum *"Update
-   (2026-08-10) — add-feature Migration Pulled Forward As AHQ-204"* at the bottom of this brief.
-   AHQ-202 retains the republish and the registry-install interactive proof.
+   located via the workspace-root relay). The migration portion was pulled forward and completed as
+   [AHQ-204](https://agentic-hq.atlassian.net/browse/AHQ-204) (2026-08-10, because AHQ-195
+   development itself uses add-feature and AHQ-197 had deliberately broken every unmigrated workflow
+   CLI); work details in `docs/tickets/AHQ-204/01-work-details.md`. AHQ-202 retained the republish
+   and the registry-install interactive proof. **Both done.**
 5. **[AHQ-200](https://agentic-hq.atlassian.net/browse/AHQ-200) — Isolated Zero-Change Refactor: Eliminate The AGENTIC_HQ_WORKSPACE_ROOT Env Var** — eliminate
    `AGENTIC_HQ_WORKSPACE_ROOT` (zero functionality change for the working system — see the "Final
    Refactor Stage" section; the still-broken workflows' legacy references are migrated in
@@ -477,9 +478,8 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    same as a shipped one (e.g. the agentic-hq repo clone itself) — workflow registration has no
    name-collision handling, so every invocation from such a directory fails, including `list` and
    `--help`. Full description:
-   `docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`. See the addendum
-   *"Update (2026-08-14, appended during the AHQ-202 Implementer stage)"* at the bottom of this
-   brief.
+   `docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`. Further instructions
+   for this Sub-Task are in *Open Sub-Task Instructions* below.
 7. **[AHQ-201](https://agentic-hq.atlassian.net/browse/AHQ-201) — Migrate All Remaining Workflows And The Scaffolder Onto The Proven Prebuilt Pattern And
    Restore Them To Working** — with the pattern locked down, migrate the remaining five skills
    (string-reversal, quick-jira-workflow, full-jira-tdd-story-workflow,
@@ -493,258 +493,130 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
 8. **[AHQ-199](https://agentic-hq.atlassian.net/browse/AHQ-199) — README And Docs: npm/npx Quickstart For Tool Users, Separate From Contributor Clone Path** —
    README npm/npx Quickstart vs contributor split, tool-user prerequisites (Claude CLI; Linux build
    toolchain for node-pty), troubleshooting updates — written against the working add-feature flow.
-   **Updated 2026-08-14:** moved from fifth to **last**, so the docs are written once against the
-   fully restored system (all workflows migrated, AHQ-205 fixed, the legacy env var already
-   removed by AHQ-200) — see the addendum *"Update (2026-08-14, appended during the AHQ-199
-   Researcher stage)"* at the bottom of this brief.
+   **Moved from fifth to last (2026-08-14)**, so the docs are written once against the fully
+   restored system (all workflows migrated, AHQ-205 fixed, the legacy env var already removed by
+   AHQ-200). Further instructions for this Sub-Task are in *Open Sub-Task Instructions* below.
 
-## Update (2026-08-06, appended during the AHQ-196 Planner stage) — Sub-Task Addenda From The Perplexity Plan Review
+## Open Sub-Task Instructions (consolidated 2026-08-16)
 
-A Perplexity second-opinion review of the AHQ-196 tracer-bullet plan (full Q&A:
-`docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/perplexity-questions/01-perplexity-q-and-a-about-plan.md`)
-endorsed the prebuilt design but raised items belonging to later Sub-Tasks. They are recorded
-here — as AI/Perplexity-proposed addenda, for the human to confirm when each Sub-Task runs —
-because Sub-Task runs read this brief, not AHQ-196's documents.
+Sub-Tasks 1–5 are **complete**: AHQ-196, AHQ-197, AHQ-198, AHQ-202 (with its migration half done as
+AHQ-204), and AHQ-200. This section holds only what a **remaining** Sub-Task agent needs in order to
+do the right thing — read the Sub-Task list above for scope, then your own Sub-Task's items here.
 
-**Addendum to Sub-Task 3 (AHQ-198 — Package Hygiene And First npm Publish):**
+> Eight dated "Update …" sections appended between 2026-08-06 and 2026-08-16 were consolidated into
+> this one on 2026-08-16, at the human's request: decision narratives, superseded scheduling,
+> Perplexity review write-ups, and instructions for Sub-Tasks that have since completed. Nothing
+> still-actionable was dropped. If the reasoning behind an instruction below is ever needed, it is in
+> git history: `git log -p -- docs/tickets/AHQ-195/workflow-files/01-feature-brief.md`.
 
-- Add a release guard preventing `npm pack` / `npm publish` from being run against the source
-  tree. AHQ-196 establishes that the tarball must be produced by **pnpm** (`pnpm pack` /
-  `pnpm publish`): only pnpm applies the `publishConfig` `bin`/`exports` overrides — an
-  npm-produced tarball would silently ship the dev (tsx/`.ts`) `bin` and `exports` and be
-  unusable, with no error at pack time.
-- Pin the pnpm version in the publish checklist: the override behaviour is package-manager
-  behaviour, not an npm-registry contract, so a pnpm major bump is a publish-pipeline change to
-  re-verify, not a routine upgrade.
-- Publish checks must inspect the packed tarball's **actual** `package/package.json` (prebuilt
-  `bin`, dist-JS `exports`, no `.ts` targets) rather than inferring from the source manifest —
-  AHQ-196 lands an e2e assertion of exactly this shape that the publish checklist can reuse.
-- Registry verification should include both `npx --yes agentic-hq` and a global
-  `npm install -g agentic-hq`, on Node 22 and Node 24.
+### Sub-Task 6 — AHQ-205 (bug: workflow name-collision crash)
 
-**Addendum to Sub-Task 8 (AHQ-199 — README And Docs):**
+- **Full bug description:** `docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`.
+  Found during AHQ-202's registry-install proof and reproduced twice against the registry-installed
+  `agentic-hq@0.1.1`.
+- **Decide path normalisation explicitly.** `WorkspaceImpl.isAhqPackage()` compares raw strings
+  (`this.rootDir === this.ahqPackageRoot.getPath()`), so a trailing slash or a symlinked invocation
+  makes the dedup guard silently miss. AHQ-200 preserved this bit-for-bit while migrating the guard's
+  source of truth from the env var to the injected root, leaving the decision to this Sub-Task.
+- **Verify AHQ-200's AC 5 on this ticket's own add-feature run.** AHQ-200 renamed the add-feature
+  relay variable to `ahq-package-root` (CLI broadcast plus all four `commands/add-feature/0?-*.md`
+  parsers, verified in lockstep), but the rename was never exercised end-to-end: the AHQ-200 workflow
+  process had started before the rename landed, so it relayed the old `agentic-hq-workspace-root-dir=`
+  name for its whole run. Confirm Command 01's `command-input.json` reads `ahq-package-root=…` and
+  record it. If this Sub-Task is not run via add-feature, carry the check to whichever one is.
 
-- Sub-Tasks 1–3 verify on macOS only. Beyond documenting the existing Linux node-pty
-  prerequisite (compile-from-source: build toolchain + Python — already in this brief's
-  Blockers), consider an actual Linux install-and-run check (here or as part of AHQ-198's
-  registry verification, whichever the human prefers) before the npm route is advertised to
-  users.
+### Sub-Task 7 — AHQ-201 (migrate the remaining workflows and the scaffolder)
 
-## Update (2026-08-08, appended during the AHQ-196 Implementer stage) — Architecture Recommendation From The Second Perplexity Review
+- **Open design question this Sub-Task must answer deliberately: how do user-created workflows work
+  against a pure npm install, with no agentic-hq clone anywhere?** Today's mechanism (scaffolded
+  `pnpm install` + `ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq` + tsx on `.ts`
+  source) presumes pnpm and the tsx toolchain on every machine that runs the workflow, plus an
+  agentic-hq installation for the symlink to point at. The prebuilt pattern (compiling workflows into
+  the package's `dist/`) cannot cover user-workspace workflows — the installed package is read-only.
+  - **The human's acceptance scenario for "restore everything to working"** (test it, don't assume
+    it): a developer npm-installs agentic-hq → runs `agentic-hq create-workflow` in an empty
+    workspace → commits/pushes the scaffolded workflow to GitHub → a collaborator clones that project
+    and runs the workflow using their own npm-installed agentic-hq — with no agentic-hq clone
+    anywhere in the scenario.
+  - **Consequence to design for:** with an npm install, scaffolding *into the AHQ package* is
+    impossible (read-only), so the user workspace becomes the only scaffold destination for
+    npm-installed users; clone users keep both options.
+  - **Candidate mechanisms (not decided):** (a) keep symlink+tsx for user-authored workflows,
+    accepting pnpm as a workflow-*author* prerequisite (distinct from the tool-user path, which needs
+    none); (b) scaffold workflows with a real declared dependency on the published agentic-hq package
+    (plain `npm install` in the workflow dir — a step toward AHQ-203, but it raises the
+    two-copies/version-match question between the workflow's agentic-hq copy and the CLI's own).
+- **The unmigrated workflows now have no env-var supply at all.** AHQ-200 deleted the bin wrappers'
+  `AGENTIC_HQ_WORKSPACE_ROOT` dual-write, so the five unmigrated SKILL.md launch commands built
+  around `ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT"` (e.g. `skills/create-workflow/SKILL.md:18`, whose
+  comment still calls it "the env var the `agentic-hq` CLI exports on every run") now resolve it to
+  empty. **Not a regression** — those workflows were already broken by AHQ-197
+  (`create-workflow-cli.ts:60` calls `new DefaultClaudeCodeTool()` no-arg, but that constructor has
+  required a `CompositionRoot` since AHQ-197). Treat the SKILL.md `ln -sfn` pattern and the CLIs' own
+  env-var reads as one migration, and don't spend time diagnosing the empty-symlink failure from
+  scratch.
+- **`create-workflow` is what the add-feature Reviewer tells users to run next.** Command 04's
+  mandated *Customization Next Step* recommends `agentic-hq create-workflow -- --using=add-feature`,
+  so re-verify precisely that invocation as part of the restore-to-working proof.
+- **Delete the temporary half of the AHQ-200 bin-wrapper test once the grep-clean AC above holds.**
+  `tests/integration/bin/bin-wrapper-supplies-the-package-root-explicitly.integration.test.ts` has two
+  tests. The first — the wrapper renders a listing from the `--ahq-package-root` it passes — is
+  **permanent**. The second, *"should take the package root only from that parameter, never from a
+  retired environment variable"*, exists only for the migration window: it poisons
+  `AGENTIC_HQ_WORKSPACE_ROOT` and proves nothing reads it. Once the grep-clean AC holds, that name
+  exists nowhere in the repo and the test is archaeology that costs a future reader time. Delete the
+  second `it(...)` block, the `LEGACY_ENV_VAR_NAME` and `BOGUS_LEGACY_ROOT` constants, the optional
+  parameter of `runListThroughDevBinWrapper()`, and the `TEMPORARY` paragraph in the file header
+  (which repeats these instructions in place).
 
-During AHQ-196's approval gate, two defects were found and fixed with interim mechanisms (a
-build-generated `dist/package.json` for self-reference; a postinstall chmod for shipped-script
-execute bits — full story in `docs/tickets/AHQ-196/workflow-files/03-implementation-summary.md`).
-A second Perplexity review of those fixes (full Q&A:
-`docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/perplexity-questions/02-perplexity-q-and-a-about-dist-package-json.md`)
-judged them defensible interims and recommended an architectural end-state. Recorded here as
-AI/Perplexity-proposed addenda for the human to confirm when the relevant work runs.
+### Sub-Task 8 — AHQ-199 (README and docs)
 
-**Cross-cutting architecture recommendation (schedule before or during Sub-Task 2 / AHQ-197, or
-as its own refactor ticket):**
+- **Starting reference points:** AHQ-198's registry verification matrix (`npx --yes agentic-hq` and
+  prefix-global `npm install -g`, each on Node 22 and Node 24, math end-to-end),
+  `docs/dev/publish-checklist.md`, and `docs/user-docs/troubleshooting-quickstart.md`.
+- **Registry state to document correctly:** `agentic-hq@0.1.0` is deprecated (npx crash) — 0.1.1+ is
+  the working line.
+- **Mention Claude Code's folder-trust prompt** on first run in a fresh directory (an AHQ-198
+  follow-up) in the Quickstart.
+- **Consider an actual Linux install-and-run check** before the npm route is advertised: Sub-Tasks
+  1–3 verified on macOS only, and Linux node-pty compiles from source (build toolchain + Python —
+  see this brief's Blockers). Here or folded into AHQ-198's registry verification, the human's choice.
+- **Retarget the glossary's root-model link.** `docs/glossary.md` (rewritten during AHQ-200) sends
+  readers to `tickets/AHQ-200/workflow-files/01-feature-brief.md#the-three-root-concepts--in-depth-analysis`
+  for the two-roots model. The link resolves today, but a user-facing glossary should not depend on a
+  per-ticket AI workflow artifact. Either add a durable roots section to
+  `docs/dev/how-agentic-hq-works.md` (which has no equivalent section today — verified 2026-08-16)
+  and point there, or inline the explanation into the glossary.
 
-- The proper end-state for "runnable sub-programs shipped inside a package" is either **workflows
-  as true nested packages** (own manifests and builds, pnpm workspace, `workspace:*` dependency
-  on agentic-hq) or a **staged release tree** assembled at pack time with a single generated
-  manifest. The current generated `dist/package.json` is a blessed transitional step toward
-  either. The human's decision (2026-08-08): commit the working interim now and hold a separate
-  **"no behaviour change" refactor discussion** armed with these findings.
+### After AHQ-195 closes
 
-**Addendum to Sub-Task 3 (AHQ-198 — Package Hygiene And First npm Publish):**
+- **[AHQ-203](https://agentic-hq.atlassian.net/browse/AHQ-203) — workflows as true nested packages**
+  (own manifests and builds, pnpm workspace, `workspace:*` dependency on agentic-hq). Deliberately
+  deferred until the npm route works for developers: its payoff is post-launch (per-workflow
+  independence and third-party workflow authoring), it is a genuine re-architecture rather than a
+  no-behaviour-change step, and the published package's public contract (`bin` plus the
+  `agentic-hq/tools/claude-code` export) insulates npm users from a later internal re-layout — so
+  deferring costs internal rework only, never a breaking change. **Its single source of truth is the
+  Jira issue itself**; there is deliberately no repo ticket file for it unless/until it is worked on.
+- **[AHQ-206](https://agentic-hq.atlassian.net/browse/AHQ-206) — split the `Workspace` interface**
+  (extract `PluginSource` for the shared plugin-discovery half, with `Workspace` extending it for the
+  user side) so the type system stops claiming the AHQ package is a workspace. Description:
+  `docs/tickets/AHQ-200/workflow-files/supporting-docs/AHQ-206_later_refactor_jira_description.md`;
+  a `REFACTOR LATER` comment on `AhqPackageImpl` points at it. Concrete symptom to cite: `WorkspaceImpl`
+  takes `AhqPackageRoot` as a third constructor parameter used by exactly one method
+  (`isAhqPackage()`), and `AhqPackageImpl.createDelegate()` passes it down even though
+  `AhqPackageImpl` overrides `isAhqPackage()` to `return true`.
 
-- Consider switching shipped-script execute bits from the postinstall chmod to pnpm's standard
-  `publishConfig.executableFiles` once the shipped script list stabilises (it shrinks when
-  `steve-test-plugin` is excluded). Spike-verified in AHQ-196: `pnpm pack` (pnpm 11) honours it
-  for **exact paths only — globs are silently ignored**. It makes the tarball itself carry the
-  bits (correct under any installer); AHQ-196's e2e assertion (every shipped `.sh` executable)
-  guards against a script being added but not listed.
+### Needs a Jira — flagged for the human (found during the AHQ-200 review, 2026-08-16)
 
-## Update (2026-08-08, appended during the AHQ-196 Reviewer stage) — Architecture Decision: Staged Release Tree In AHQ-197; Nested Packages Deferred Post-AHQ-195
-
-This resolves the scheduling question the previous addendum left open ("before or during
-Sub-Task 2 / AHQ-197, or as its own refactor ticket"). Decided with the human during the AHQ-196
-review (2026-08-08).
-
-**Addendum to Sub-Task 2 (AHQ-197 — Build Pipeline And Explicit Parameter Chain):**
-
-- **AHQ-197 opens with the "no behaviour change" refactor discussion** the human called for at
-  the AHQ-196 approval gate: its Researcher/Planner stage takes the second Perplexity review
-  (`docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/perplexity-questions/02-perplexity-q-and-a-about-dist-package-json.md`)
-  and AHQ-196's Findings For Later Sub-Tasks as inputs, and confirms (or amends) the
-  staged-release-tree design below with the human before any build-pipeline code is written.
-- **AHQ-197 now also owns the staged-release-tree restructure.** Expected shape (details are the
-  AHQ-197 Planner's to finalise):
-  - The build assembles **exactly what ships** into a staging directory (e.g. `release/`):
-    compiled CLI JS, compiled workflow JS, the shipped plugins tree, the bin wrapper and the
-    runner — with a **single generated manifest at its root**. That manifest is the evolution of
-    today's generated `dist/package.json`, promoted to the package's real manifest: generated
-    from the root `package.json` (name/version/dependencies/engines/postinstall — one source of
-    truth, transformed, never hand-maintained) with the prebuilt `bin` and compiled-JS `exports`
-    written in directly.
-  - **Packing runs from the staged tree**, so two AHQ-196 mechanisms retire together: the
-    `publishConfig` `bin`/`exports` override dance (the generated manifest simply contains the
-    prebuilt values) and the `files` whitelist (what ships is what was staged). This structurally
-    eliminates the whitelist-vs-gitignore leak class AHQ-196 found (the `.agentic-hq/temp/`
-    io-files, `steve-test-plugin`, pnpm-only files can no longer ship by accident).
-  - Exec bits: the staging step can enumerate every shipped `.sh` and write
-    `publishConfig.executableFiles` **exact paths** into the generated manifest (spike-proven in
-    AHQ-196: exact paths honoured, globs silently ignored), retiring the postinstall chmod.
-    Whether that replaces or merely backs up the chmod is a Planner decision; the e2e's
-    every-shipped-script-is-executable assertion stays as the guard either way.
-  - AHQ-196's tests are the safety net that makes this a provable no-behaviour-change refactor:
-    the build-determinism integration test and the tarball-install e2e assert
-    architecture-agnostic outcomes and transfer with path re-pointing only. No second tracer
-    spike is needed.
-- **Why inside AHQ-195 rather than after it:** every later Sub-Task gets cheaper once the layout
-  is settled — AHQ-198's hygiene work shrinks to "stage the right things" plus publish guards,
-  and the AHQ-202/AHQ-201 migrations happen once, onto the final layout. Deferring past AHQ-201
-  would mean re-migrating seven workflows — exactly the repeated-work waste the
-  one-workflow-at-a-time principle exists to prevent.
-- Knock-on: Sub-Task 3's (AHQ-198) `files`-whitelist wording in the Sub-Task list above predates
-  this decision — its hygiene *goal* stands unchanged; the *mechanism* becomes the staged tree.
-
-**Nested-packages end-state — deferred until after AHQ-195 (decision + why):**
-
-- The second Perplexity review's other, maximal option — **workflows as true nested packages**
-  (own manifests and builds, pnpm workspace, `workspace:*` dependency on agentic-hq; described in
-  `docs/tickets/AHQ-196/workflow-files/02-implementation-plan-supporting-docs/perplexity-questions/02-perplexity-q-and-a-about-dist-package-json.md`)
-  — is **deferred until after AHQ-195 completes**, i.e. after the npm route works for
-  developers.
-- Why deferred: its main payoff is per-workflow independence — isolated builds and tests,
-  independent versioning, and above all **third-party workflow authoring** against agentic-hq as
-  a declared dependency — which is a post-launch concern; it is a genuine re-architecture that
-  reshapes the dev flow, not a no-behaviour-change step; and nothing in AHQ-195's goal depends
-  on it — the published package's public contract (`bin` + the `agentic-hq/tools/claude-code`
-  export) insulates npm users from a later internal re-layout, so deferring costs internal
-  rework only, never a breaking change. The requirements will also be better understood after
-  add-feature (interactive, four agents, help docs) and the scaffolder have been through the
-  migration.
-- The deferred ticket exists:
-  **[AHQ-203](https://agentic-hq.atlassian.net/browse/AHQ-203)** (created by the human
-  2026-08-08, scheduled to run after AHQ-195 closes). Its **single source of truth is the Jira
-  issue itself**: https://agentic-hq.atlassian.net/browse/AHQ-203 — a repo brief file drafted
-  during the AHQ-196 review session was deliberately deleted by the human just before commit
-  (confirmed 2026-08-09 during the AHQ-197 Researcher stage); no repo ticket file exists for
-  AHQ-203 unless/until it is worked on.
-
-**Addendum to Sub-Task 7 (AHQ-201 — Migrate All Remaining Workflows And The Scaffolder),
-surfaced by the human during the AHQ-196 review:**
-
-- **Open design question AHQ-201 must answer deliberately: how do user-created workflows work
-  against a pure npm install (no agentic-hq clone anywhere)?** Today's user-workspace mechanism
-  (scaffolded `pnpm install` + `ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq` +
-  tsx on `.ts` source) is retained through AHQ-195, but it presumes pnpm and the tsx toolchain
-  on every machine that runs the workflow, and an agentic-hq installation for the symlink to
-  point at. The prebuilt pattern (compile workflows into the package's `dist/`) cannot cover
-  user-workspace workflows — the installed package is read-only.
-- **The human's acceptance scenario for "restore everything to working" (record it so it is
-  tested, not assumed):** a developer npm-installs agentic-hq → runs
-  `agentic-hq create-workflow` in an empty workspace → commits/pushes the scaffolded workflow to
-  GitHub → a collaborator clones that project and runs the workflow using their own
-  npm-installed agentic-hq — with no agentic-hq clone anywhere in the scenario.
-- Related consequence to design for: with an npm install, scaffolding **into the AHQ workspace**
-  is no longer possible (the installed package is read-only) — the user workspace becomes the
-  only scaffold destination for npm-installed users; clone users keep both options.
-- Candidate mechanisms for that Sub-Task's Planner (not decided): (a) keep symlink+tsx for
-  user-authored workflows, accepting pnpm as a workflow-*author* prerequisite (distinct from the
-  tool-user path, which needs none); (b) scaffold workflows with a real declared dependency on
-  the published agentic-hq package (plain `npm install` in the workflow dir — a step toward
-  AHQ-203, but it raises the two-copies/version-match question between the workflow's agentic-hq
-  copy and the CLI's own). The full end-state is
-  [AHQ-203](https://agentic-hq.atlassian.net/browse/AHQ-203).
-
-## Update (2026-08-10) — add-feature Migration Pulled Forward As AHQ-204
-
-Running add-feature (to start AHQ-198) crashed at startup: AHQ-197's explicit parameter chain
-deliberately broke every unmigrated workflow CLI (`new DefaultClaudeCodeTool()` now requires a
-`CompositionRoot`), and add-feature had not yet been migrated. Since AHQ-195 development itself
-uses add-feature, waiting for Sub-Task 4's (AHQ-202) planned slot — after the first publish is
-proven — was not viable.
-
-**Decided with the human (2026-08-10):** pull the migration portion of Sub-Task 4 (AHQ-202)
-forward as its own Sub-Task,
-**[AHQ-204](https://agentic-hq.atlassian.net/browse/AHQ-204) — Interim: Early-Migrate
-add-feature Onto The Prebuilt Pattern (Pulled Forward From AHQ-202 To Keep add-feature Usable
-During AHQ-195)** (created by the human 2026-08-10 — the MCP account lacked issue-create
-permission). Completed the same day; work details: `docs/tickets/AHQ-204/01-work-details.md`.
-
-- **What moved to AHQ-204 (done):** add-feature-cli.ts onto `DefaultWorkflowRuntime`; the
-  add-feature SKILL.md onto the shared `run-workflow.cjs` runner; `tsconfig.build.json` now
-  compiles add-feature into the staged release tree; a staged-artifact assertion for the
-  compiled add-feature JS added to the build-determinism integration test.
-- **What stays in AHQ-202:** republish a patch version and prove the full interactive
-  four-agent flow runs from a registry-installed package in a clean directory.
-- **Knock-on for Sub-Task 3 (AHQ-198):** the first publish now carries two migrated workflows
-  (math-workflow and add-feature) rather than math-workflow only — add-feature's
-  registry-install proof still belongs to AHQ-202.
-
-## Update (2026-08-14, appended during the AHQ-202 Implementer stage) — New Final Sub-Task AHQ-205: Registry-Install Workflow Name-Collision Crash
-
-During AHQ-202's proof (Phase 1, the clean prefix-global install of `agentic-hq@0.1.1`), the
-installed CLI was found to crash at startup with an uncaught
-`Error: cannot add command 'add-feature' as already have command 'add-feature'` when run from a
-directory whose local workspace defines a workflow named the same as a shipped one — e.g. the
-agentic-hq repo clone itself. Workflow registration aggregates the installed package's workspace
-and the local workspace with no name-collision handling, and the crash happens during CLI program
-construction, so **every** invocation from such a directory fails (`list`, `add-feature`, even
-`--help`). Reproduced twice against the registry-installed 0.1.1.
-
-**Decided with the human (2026-08-14):** split out as its own bug Sub-Task,
-**[AHQ-205](https://agentic-hq.atlassian.net/browse/AHQ-205)** (created by the human 2026-08-14),
-now the last Sub-Task of AHQ-195 *(superseded later the same day: AHQ-205 is now Sub-Task 6 and
-AHQ-199 moved last — see the next addendum)* — rather than triggering AHQ-202's contingent
-fix-and-republish path, because AHQ-202's planned proof contexts (a neutral directory and a
-scratch project with no local plugins) cannot collide and are unaffected. Full bug description,
-reproduction steps, and fix-locating notes:
-`docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`.
-
-## Update (2026-08-14, appended during the AHQ-199 Researcher stage) — AHQ-199 (Docs) Moved To Last Sub-Task
-
-During the AHQ-199 Researcher's initial research, the human asked (chat, verbatim): *"One
-question: should we do all the documentation (README etc) - once we've completed all the
-workflows - AHQ-201  and fixed the major bug in AHQ-205 ?  So move this to last  sub-task of
-AHQ-195?"* — later adding: *"also may reduce churn as we won't have to document the
-AGENTIC_HQ_WORKSPACE_ROOT as it will have been removed by AHQ-200."* The Researcher recommended
-yes; the human accepted, and the AHQ-199 workflow run was terminated cleanly
-(`TERMINATE_WORKFLOW`). The human deleted that run's `docs/tickets/AHQ-199/` files (AHQ-199
-starts fresh in its new final slot), so the deferral reasoning is recorded in full here. The
-Sub-Task list above has been renumbered to the new order — items 1–4 (all complete) unchanged,
-then AHQ-200 (5), AHQ-205 (6), AHQ-201 (7), and **AHQ-199 last (8)**. Placing AHQ-205 just
-before AHQ-201 was the human's follow-up decision (chat, verbatim): *"I've also moved AHQ-205 to
-just before AHQ-201 in case fixing it involves per-workflow changes.  This is so all workflows
-get the right shape, (nearly last), then documented (really last)"*.
-
-Why docs-last is right (Researcher findings, agreed by the human):
-
-1. **Docs written now would describe a temporary state and need a full second pass after
-   AHQ-201.** The published `agentic-hq@0.1.1` ships only math-workflow and add-feature
-   (`EXCLUDED_UNMIGRATED_SKILLS` in `scripts/build-release.cjs`), and the five unmigrated
-   workflows are deliberately broken even in the clone — including `reversal`, the README's own
-   step-7 smoke test (verified during this run: `string-reversal-demo-cli.ts` still calls
-   `new DefaultClaudeCodeTool()` with no arguments, the pre-AHQ-197 pattern).
-2. **AHQ-205 hits exactly the audience the Quickstart targets.** The npm-installed CLI crashes on
-   every invocation (`list`, `--help`, any workflow) from a directory whose local workspace
-   defines a workflow named the same as a shipped one — and the current README TIP even suggests
-   running add-feature from within the AHQ workspace, which for an npm-install user is precisely
-   the crashing case. Advertising the npm route before the fix would mean documenting a known
-   startup crash as a caveat and unpicking it later.
-3. **The env-var churn disappears (the human's point):** with AHQ-200 complete first, the docs
-   never need to document `AGENTIC_HQ_WORKSPACE_ROOT` at all — it will already have been
-   eliminated.
-4. **The Addendum to Sub-Task 8 above already leans this way:** it asks for a real Linux
-   install-and-run check to be considered *before the npm route is advertised to users*, and
-   AHQ-202's approved deviation anticipates a future Ubuntu VM full-run Jira. Docs-last lets that
-   verification land first, so the docs only advertise what is proven.
-5. **Deferring costs nothing user-facing:** the 0.1.x publishes are deliberately quiet (nothing
-   advertises the npm route until AHQ-199 runs — by design), and the public `main` README is
-   unaffected until this feature branch merges.
-
-Carried-forward notes for the AHQ-199 re-run (recorded here so this Researcher's research is not
-lost with the deleted run files): the Quickstart should mention Claude Code's folder-trust prompt
-on first run in a fresh directory (an AHQ-198 follow-up); AHQ-198's registry verification matrix
-(`npx --yes agentic-hq` and prefix-global `npm install -g`, each on Node 22 and Node 24, math
-end-to-end), `docs/dev/publish-checklist.md`, and
-`docs/user-docs/troubleshooting-quickstart.md` are the starting reference points; and
-`agentic-hq@0.1.0` is deprecated on the registry (npx crash) — 0.1.1+ is the working line.
-
-
+1. **Integration-suite contention on the `release/` tree.**
+   `tests/integration/build/publish-guards.integration.test.ts` fails in `beforeAll` when the whole
+   suite runs, but passes 3/3 on its own — it and `build-determinism.integration.test.ts` both invoke
+   `scripts/build-release.cjs` against the same `release/` directory. Pre-existing and unrelated to
+   AHQ-200 (verified by stashing all AHQ-200 changes and reproducing the failure on the clean tree).
+   Likely fix: stage into per-test directories, or serialise those two files.
+2. **CI runs unit tests only.** `.github/workflows/ci.yml` runs `pnpm validate` (typecheck + lint +
+   format + **unit** tests) plus a bare `agentic-hq list` smoke step that checks the **exit code
+   only**. `pnpm test:integration` and `pnpm test:e2e` never run in CI, so every integration/e2e test
+   is a local-only guard. Worth a deliberate decision (a nightly job, or a Claude-free subset in CI)
+   rather than leaving it implicit.

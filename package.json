@@ -48,6 +48,7 @@
     "test:integration:create-test-jira-and-get-status": "vitest run --config vitest.integration.config.ts tests/integration/jira/custom-commands-create-and-get-status-of-test-jira.integration.test.ts",
     "test:integration:build-determinism": "vitest run --config vitest.integration.config.ts tests/integration/build/build-determinism.integration.test.ts",
     "test:integration:publish-guards": "vitest run --config vitest.integration.config.ts tests/integration/build/publish-guards.integration.test.ts",
+    "test:integration:bin-wrapper": "vitest run --config vitest.integration.config.ts tests/integration/bin/bin-wrapper-supplies-the-package-root-explicitly.integration.test.ts",
     "test:unit:fake-claude-file-io": "vitest run --config vitest.unit.config.ts tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts",
     "// E2E TEST COMMANDS": "test:e2e = ALL e2e tests",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
