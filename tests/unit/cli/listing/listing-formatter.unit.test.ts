@@ -55,7 +55,7 @@ function stubWorkspace(opts: {
     getRoot: () => opts.root,
     getTempDir: () => `${opts.root}/.agentic-hq/temp`,
     getDotAgenticHqDir: () => `${opts.root}/.agentic-hq`,
-    isAhqWorkspace: () => opts.isAhq,
+    isAhqPackage: () => opts.isAhq,
   };
 }
 
@@ -84,7 +84,7 @@ describe('ListingFormatter', () => {
   describe('formatWorkflowsListing', () => {
     it('should include the "Available workflows" title in the output', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('demos', [MATH_WORKFLOW])],
         isAhq: true,
@@ -103,7 +103,7 @@ describe('ListingFormatter', () => {
 
     it('should render single-line workspace headers in the form "{name}: {path}"', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/path/to/ahq',
         plugins: [],
         isAhq: true,
@@ -117,12 +117,12 @@ describe('ListingFormatter', () => {
 
       const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
 
-      expect(output).toContain('Agentic HQ Workspace: /path/to/ahq');
+      expect(output).toContain('Agentic HQ Package: /path/to/ahq');
     });
 
     it('should render plugin headings with the "Plugin: " prefix', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('my-plugin', [MATH_WORKFLOW])],
         isAhq: true,
@@ -141,7 +141,7 @@ describe('ListingFormatter', () => {
 
     it('should place each workflow command line directly above its description line', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('demos', [REVERSAL_WORKFLOW])],
         isAhq: true,
@@ -162,7 +162,7 @@ describe('ListingFormatter', () => {
 
     it('should filter out plugins that have no workflows (no empty "Plugin: foo" headings)', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('empty-plugin', []), stubPlugin('demos', [MATH_WORKFLOW])],
         isAhq: true,
@@ -180,9 +180,9 @@ describe('ListingFormatter', () => {
       expect(output).toContain('Plugin: demos');
     });
 
-    it('should render the "Same as Agentic HQ Workspace" message when local IS the AHQ workspace', () => {
+    it('should render the "Same as Agentic HQ Package" message when local IS the AHQ package', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('demos', [MATH_WORKFLOW])],
         isAhq: true,
@@ -197,12 +197,14 @@ describe('ListingFormatter', () => {
       const output = new ListingFormatter().formatWorkflowsListing(ahq, local);
 
       expect(output).toContain('Local Workspace:');
-      expect(output).toContain('Same as Agentic HQ Workspace');
+      expect(output).toContain(
+        'Same as Agentic HQ Package (running from within the AHQ package directory)'
+      );
     });
 
-    it('should NOT repeat the local plugins inline when local IS the AHQ workspace', () => {
+    it('should NOT repeat the local plugins inline when local IS the AHQ package', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('demos', [MATH_WORKFLOW])],
         isAhq: true,
@@ -221,7 +223,7 @@ describe('ListingFormatter', () => {
 
     it('should render the full local workspace block (header + plugins) when local differs from AHQ', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [stubPlugin('demos', [MATH_WORKFLOW])],
         isAhq: true,
@@ -238,12 +240,12 @@ describe('ListingFormatter', () => {
       expect(output).toContain('Local Workspace: /some/other/path');
       expect(output).toContain('Plugin: local-plugin');
       expect(output).toContain('agentic-hq noop');
-      expect(output).not.toContain('Same as Agentic HQ Workspace');
+      expect(output).not.toContain('Same as Agentic HQ Package');
     });
 
     it('should start and end with a blank line so output prints with breathing space', () => {
       const ahq = stubWorkspace({
-        displayName: 'Agentic HQ Workspace',
+        displayName: 'Agentic HQ Package',
         root: '/ahq',
         plugins: [],
         isAhq: true,

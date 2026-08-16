@@ -15,6 +15,7 @@
  * workflow parses its own remaining arguments.
  */
 import type { AhqCommandLine } from '../interfaces/ahq-command-line.js';
+import type { AhqPackageRoot } from '../interfaces/ahq-package-root.js';
 import type { Tool } from '../interfaces/tool.js';
 import type { WorkflowRuntime } from '../interfaces/workflow-runtime.js';
 import { CompositionRoot } from '../kernel/composition-root.js';
@@ -36,5 +37,11 @@ export class DefaultWorkflowRuntime implements WorkflowRuntime {
 
   getWorkflowArgs(): string[] {
     return this.ahqCommandLine.getRemainingArgs();
+  }
+
+  getAhqPackageRoot(): AhqPackageRoot {
+    // REFACTOR: This is called a "train wreck" and is a code smell. We should consider refactoring to something like "this.ahqCommandLine.getPackageRoot();" and
+    // do it in all places that use "ahqCommandLine.getAhqRuntimeParams"
+    return this.ahqCommandLine.getAhqRuntimeParams().getAhqPackageRoot();
   }
 }

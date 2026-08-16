@@ -1,6 +1,7 @@
 /**
  * Tests WorkflowSearchResultsImpl — aggregates workspace search results and displays them.
- * Contains two Workspaces (AhqWorkspaceImpl + CurrentUserWorkspaceImpl) and a
+ * Constructed with the injected AhqPackageRoot, which it passes into both of
+ * its Workspaces (AhqPackageImpl + CurrentUserWorkspaceImpl); also holds a
  * ListingFormatter. getWorkflowsListingString() hands both workspaces to the
  * formatter, which reads their getDisplayName/getPlugins data and assembles
  * the string. registerWorkflowsWith(registry) tells each Workspace directly to
@@ -9,6 +10,7 @@
  */
 import { afterEach, describe, expect } from 'vitest';
 
+import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
 import type { WorkflowSearchResults } from '../../../../src/workflow-discovery/interfaces/workflow-search-results.js';
 import { WorkflowSearchResultsImpl } from '../../../../src/workflow-discovery/workflow-listing/workflow-search-results-impl.js';
 import { StubWorkflowRegistry } from '../test-fixtures/stub-workflow-registry.js';
@@ -19,7 +21,6 @@ describe('WorkflowSearchResultsImpl', () => {
   const originalCwd = process.cwd;
 
   afterEach(() => {
-    delete process.env.AGENTIC_HQ_WORKSPACE_ROOT;
     process.cwd = originalCwd;
   });
 
@@ -27,9 +28,10 @@ describe('WorkflowSearchResultsImpl', () => {
     'should format discovered workflows with header, names, paths, descriptions',
     ({ tmpdir }) => {
       createTestWorkspaceFixture(tmpdir);
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
       process.cwd = () => tmpdir;
-      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+        new DefaultAhqPackageRoot(tmpdir)
+      );
       const output = searchResults.getWorkflowsListingString();
 
       expect(output).toContain('Available workflows');
@@ -40,9 +42,10 @@ describe('WorkflowSearchResultsImpl', () => {
 
   tmpdirTest('should include each workflow description from the fixture', ({ tmpdir }) => {
     createTestWorkspaceFixture(tmpdir);
-    process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
     process.cwd = () => tmpdir;
-    const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
+    const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+      new DefaultAhqPackageRoot(tmpdir)
+    );
     const output = searchResults.getWorkflowsListingString();
     expect(output).toContain('Reverses a string');
     expect(output).toContain('Solves math problems');
@@ -53,9 +56,10 @@ describe('WorkflowSearchResultsImpl', () => {
     'should return only headers (no plugin sections) when no workflows are discovered',
     ({ tmpdir }) => {
       // Empty tmpdir — no plugins exist in either workspace
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
       process.cwd = () => tmpdir;
-      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+        new DefaultAhqPackageRoot(tmpdir)
+      );
       const output = searchResults.getWorkflowsListingString();
 
       expect(output).toContain('Available workflows');
@@ -68,57 +72,45 @@ describe('WorkflowSearchResultsImpl', () => {
     'should include both AHQ and user workspace sections with headers in getWorkflowsListingString',
     ({ tmpdir }) => {
       createTestWorkspaceFixture(tmpdir);
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
       // Stub process.cwd to a different directory with its own plugins
-      const originalCwd = process.cwd;
       process.cwd = () => '/some/other/workspace';
-      try {
-        const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
-        const output = searchResults.getWorkflowsListingString();
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+        new DefaultAhqPackageRoot(tmpdir)
+      );
+      const output = searchResults.getWorkflowsListingString();
 
-        expect(output).toContain('Agentic HQ Workspace');
-        expect(output).toContain('Local Workspace');
-      } finally {
-        process.cwd = originalCwd;
-      }
+      expect(output).toContain('Agentic HQ Package');
+      expect(output).toContain('Local Workspace');
     }
   );
 
-  tmpdirTest('should show "same as AHQ workspace" message when directories match', ({ tmpdir }) => {
+  tmpdirTest('should show "same as AHQ package" message when directories match', ({ tmpdir }) => {
     createTestWorkspaceFixture(tmpdir);
-    process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
-    const originalCwd = process.cwd;
     process.cwd = () => tmpdir;
-    try {
-      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
-      const output = searchResults.getWorkflowsListingString();
+    const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+      new DefaultAhqPackageRoot(tmpdir)
+    );
+    const output = searchResults.getWorkflowsListingString();
 
-      expect(output).toContain('Agentic HQ Workspace');
-      expect(output).toContain('Same as Agentic HQ Workspace');
-    } finally {
-      process.cwd = originalCwd;
-    }
+    expect(output).toContain('Agentic HQ Package');
+    expect(output).toContain('Same as Agentic HQ Package');
   });
 
   tmpdirTest(
     'should register all discovered workflows from both workspaces via registerWorkflowsWith',
     ({ tmpdir }) => {
       createTestWorkspaceFixture(tmpdir);
-      process.env.AGENTIC_HQ_WORKSPACE_ROOT = tmpdir;
       // Same dir so CurrentUserWorkspace registers nothing (no duplicates)
-      const originalCwd = process.cwd;
       process.cwd = () => tmpdir;
-      try {
-        const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl();
-        const registry = new StubWorkflowRegistry();
+      const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
+        new DefaultAhqPackageRoot(tmpdir)
+      );
+      const registry = new StubWorkflowRegistry();
 
-        searchResults.registerWorkflowsWith(registry);
+      searchResults.registerWorkflowsWith(registry);
 
-        // Only AHQ workspace workflows (3), no duplicates from CurrentUserWorkspace
-        expect(registry.registered).toHaveLength(3);
-      } finally {
-        process.cwd = originalCwd;
-      }
+      // Only AHQ package workflows (3), no duplicates from CurrentUserWorkspace
+      expect(registry.registered).toHaveLength(3);
     }
   );
 });

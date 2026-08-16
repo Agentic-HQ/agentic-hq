@@ -221,6 +221,20 @@ lines changed (AC 2 + 4).
 2. `pnpm test:integration` and `pnpm test:e2e` — same pass/fail profile as before the ticket;
    `test:e2e:agentic-hq-cli-string-reversal` **stays red** (the recorded AHQ-197 marker —
    unchanged by this ticket, per the brief).
+
+   > **UPDATE 1 (2026-08-14):** the **full** `pnpm test:e2e` suite is **not** run — the human
+   > stopped it as too slow. `pnpm test:integration` still runs in full. Three targeted e2e-level
+   > tests replace it, all green: `test:e2e:cross-workspace-demo-math-workflow` (whole chain with
+   > real Claude, U ≠ P); `agentic-hq math` from the repo root (U = P, so the dedup guard fires);
+   > and the tarball e2e's Claude-free `-t "should list workflows via the installed bin from a
+   > clean workspace"` (the prebuilt wrapper, whose env-var write this ticket deletes).
+   >
+   > **UPDATE 2 (2026-08-16):** `docs/glossary.md` moved from Review-stage to Implementer-stage at
+   > the human's direction, the Implementer having the full context. Scope: name the AHQ package /
+   > package-root concepts with a link to the brief's *Three Root Concepts*, keep "Agentic HQ
+   > workspace" as a human-facing term, no Deprecated section, currently-relevant information only.
+   > Done; the human's `//REFACTOR:` note in that file is deleted as it instructed.
+
 3. **Manual validation (AC 5):** the human runs a live add-feature workflow
    (`agentic-hq add-feature --ticket-id …`) and confirms the four agents receive and parse
    `ahq-package-root` end-to-end. (Running the *next* ticket's workflow naturally satisfies this.)

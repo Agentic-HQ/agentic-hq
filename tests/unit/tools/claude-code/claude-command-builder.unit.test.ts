@@ -41,15 +41,15 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-function mockAhqWorkspace(): Workspace {
+function mockAhqPackage(): Workspace {
   return {
-    getDisplayName: () => 'Agentic HQ Workspace',
+    getDisplayName: () => 'Agentic HQ Package',
     getPlugins: () => [],
     registerWorkflowsWith: () => {},
     getRoot: () => path.dirname(ahqConfigDir),
     getTempDir: () => path.join(ahqConfigDir, 'temp'),
     getDotAgenticHqDir: () => ahqConfigDir,
-    isAhqWorkspace: () => true,
+    isAhqPackage: () => true,
   };
 }
 
@@ -63,7 +63,7 @@ function mockUserWorkspace(root?: string): Workspace {
     getRoot: () => r,
     getTempDir: () => path.join(dotDir, 'temp'),
     getDotAgenticHqDir: () => dotDir,
-    isAhqWorkspace: () => r === path.dirname(ahqConfigDir),
+    isAhqPackage: () => r === path.dirname(ahqConfigDir),
   };
 }
 
@@ -71,7 +71,7 @@ describe('ClaudeCommandBuilder', () => {
   describe('build()', () => {
     it('should return a CLICommand with executable "claude" by default', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -81,7 +81,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should include --plugin-dir flags for all plugin subdirectories in AHQ installation', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -100,7 +100,7 @@ describe('ClaudeCommandBuilder', () => {
       });
 
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(userRoot),
         TEST_RUNTIME_PARAMS
       );
@@ -115,7 +115,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should not duplicate plugin dirs when workspace and installation are the same directory', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -127,7 +127,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should handle non-existent user workspace plugin dir gracefully', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace('/nonexistent/workspace'),
         TEST_RUNTIME_PARAMS
       );
@@ -139,7 +139,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should include --allowedTools flag with default tools', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -152,7 +152,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should include Read scoped to configDir in allowedTools', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -166,7 +166,7 @@ describe('ClaudeCommandBuilder', () => {
       // Claude/skill hop without interpreting them (AHQ-197) — the relay is
       // pure argument plumbing on the final positional argument
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -177,7 +177,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should use custom executable when provided', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS,
         'tsx'
@@ -188,7 +188,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should include extra args before plugin flags', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS,
         'tsx',
@@ -200,7 +200,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should return a DefaultCLICommand instance', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -210,7 +210,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should produce a human-readable string via toString()', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );
@@ -224,7 +224,7 @@ describe('ClaudeCommandBuilder', () => {
 
     it('should log ANSI-formatted debug output via logDebug()', () => {
       const builder = new ClaudeCommandBuilder(
-        mockAhqWorkspace(),
+        mockAhqPackage(),
         mockUserWorkspace(),
         TEST_RUNTIME_PARAMS
       );

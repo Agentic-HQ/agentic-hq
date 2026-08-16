@@ -1,5 +1,5 @@
 /**
- * AhqFile — A file on disk within the AHQ workspace whose content
+ * AhqFile — A file on disk within the AHQ package whose content
  * can be read as a string.
  *
  * SRP Does: Read the file's content as a string.

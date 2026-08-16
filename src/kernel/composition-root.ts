@@ -25,7 +25,7 @@ import { PtyCLIWrapper } from '../io/terminal/pty-cli-wrapper.js';
 import { DefaultClaudeCodeTool } from '../tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 import { ClaudeWorkflowCommandBuilder } from '../workflow/claude/claude-workflow-command-builder.js';
 import type { Workspace } from '../workflow-discovery/interfaces/workspace.js';
-import { AhqWorkspaceImpl } from '../workflow-discovery/workspace/ahq-workspace-impl.js';
+import { AhqPackageImpl } from '../workflow-discovery/workspace/ahq-package-impl.js';
 import { CurrentUserWorkspaceImpl } from '../workflow-discovery/workspace/current-user-workspace-impl.js';
 
 export class CompositionRoot {
@@ -35,15 +35,12 @@ export class CompositionRoot {
     return this.ahqRuntimeParams;
   }
 
-  getAhqWorkspace(): Workspace {
-    // Legacy reader: AhqWorkspaceImpl still sources its root from the
-    // AGENTIC_HQ_WORKSPACE_ROOT env var (dual-written by the bin wrappers).
-    // AHQ-200 migrates it to the explicit ahqPackageRoot carried above.
-    return new AhqWorkspaceImpl();
+  getAhqPackage(): Workspace {
+    return new AhqPackageImpl(this.ahqRuntimeParams.getAhqPackageRoot());
   }
 
   getCurrentUserWorkspace(): Workspace {
-    return new CurrentUserWorkspaceImpl();
+    return new CurrentUserWorkspaceImpl(this.ahqRuntimeParams.getAhqPackageRoot());
   }
 
   getCLIWrapper(): CLIWrapper {

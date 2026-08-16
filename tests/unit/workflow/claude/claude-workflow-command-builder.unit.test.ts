@@ -23,7 +23,7 @@ const mockWorkspace: Workspace = {
   getRoot: () => '/mock/project-root',
   getTempDir: () => '/mock/project-root/.agentic-hq/temp',
   getDotAgenticHqDir: () => '/mock/project-root/.agentic-hq',
-  isAhqWorkspace: () => false,
+  isAhqPackage: () => false,
 };
 
 function createMockTool(resolvedCommand: string): Tool {

@@ -33,27 +33,27 @@ and output files)
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`The variables used in this workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and ticket-id=PROJ-123`
+`The variables used in this workflow are: ahq-package-root=/path/to/agentic-hq and ticket-id=PROJ-123`
 
 Parse out the two variables:
-- `agentic-hq-workspace-root-dir`
+- `ahq-package-root`
 - `ticket-id`
 
 ## Step 0b: Establish Variables
 
 Establish the variables this workflow uses. Every path is derived from the inputs and
-roots — the chain is self-contained (built from `agentic-hq-workspace-root-dir`, `project-root`, and
+roots — the chain is self-contained (built from `ahq-package-root`, `project-root`, and
 `ticket-id`):
 
 ```
 # Inputs & roots
 command-input-output-files-directory = $0
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 ticket-id                     = (parsed from input)
 project-root                  = (your primary working directory)
 
-# Skill & bundled-docs dirs (derived from the workspace root)
-demos-plugin-dir       = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
+# Skill & bundled-docs dirs (derived from the ahq package root)
+demos-plugin-dir       = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin
 current-workflow-id    = add-feature
 skills-dir             = {demos-plugin-dir}/skills/{current-workflow-id}
 workflow-help-docs-dir = {skills-dir}/docs/workflow-help-docs
@@ -75,7 +75,7 @@ review-summary-file         = {workflow-files-dir}/04-review-summary.md
 
 ## Step 1: Validate Input
 
-- `agentic-hq-workspace-root-dir` — required
+- `ahq-package-root` — required
 - `ticket-id` — required
 
 If any required variable is empty, STOP and flag it as an error for the user to investigate or

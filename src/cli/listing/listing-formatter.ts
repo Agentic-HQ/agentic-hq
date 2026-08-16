@@ -2,7 +2,7 @@
  * ListingFormatter — Renders the `agentic-hq list` output by reading
  * structured data from Workspace / Plugin / AhqWorkflow entities.
  *
- * SRP Does: Take an AHQ workspace and a current-user workspace and
+ * SRP Does: Take an AHQ package and a current-user workspace and
  * produce the full coloured, indented listing string ready to print.
  *
  * SRP Knows About: The visual contract (title text, headers, "Same
@@ -39,7 +39,7 @@ const TITLE_TEXT = 'Available workflows';
 const PLUGIN_LABEL = 'Plugin: ';
 const WORKSPACE_NAME_SUFFIX = ':';
 const SAME_AS_AHQ_MESSAGE_TEXT =
-  'Same as Agentic HQ Workspace (running from within the AHQ directory)';
+  'Same as Agentic HQ Package (running from within the AHQ package directory)';
 
 // Structural punctuation — keeps line-assembly readable as prose.
 const LINE_BREAK = '\n';
@@ -52,12 +52,12 @@ export class ListingFormatter {
    * with a leading and trailing blank line (matches prior output so
    * the visible result is byte-identical).
    */
-  formatWorkflowsListing(ahqWorkspace: Workspace, localWorkspace: Workspace): string {
+  formatWorkflowsListing(ahqPackage: Workspace, localWorkspace: Workspace): string {
     // Leading + trailing LINE_BREAK give the output a blank line top and bottom, matching
     // the pre-refactor `['', ...sections, ''].join('\n')` shape so output stays byte-identical.
     const body = [
       this.titleLine(),
-      this.workspaceBlock(ahqWorkspace),
+      this.workspaceBlock(ahqPackage),
       this.localWorkspaceBlock(localWorkspace),
     ].join(BLANK_LINE_BETWEEN_BLOCKS);
     return LINE_BREAK + body + LINE_BREAK;
@@ -88,7 +88,7 @@ export class ListingFormatter {
    * AHQ" message is shown under the local-workspace header.
    */
   private localWorkspaceBlock(localWorkspace: Workspace): string {
-    if (localWorkspace.isAhqWorkspace()) {
+    if (localWorkspace.isAhqPackage()) {
       return this.sameAsAhqMessageLine(localWorkspace);
     }
     return this.workspaceBlock(localWorkspace);
@@ -162,9 +162,9 @@ export class ListingFormatter {
   }
 
   /**
-   * The single-line "Same as Agentic HQ Workspace" message that replaces
-   * the local-workspace block when local IS the AHQ workspace. Renders as:
-   *   `  Local Workspace: Same as Agentic HQ Workspace (...)` — dim suffix.
+   * The single-line "Same as Agentic HQ Package" message that replaces
+   * the local-workspace block when local IS the AHQ package. Renders as:
+   *   `  Local Workspace: Same as Agentic HQ Package (...)` — dim suffix.
    */
   private sameAsAhqMessageLine(localWorkspace: Workspace): string {
     const labelledName = formatWorkspaceName(

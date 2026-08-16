@@ -16,7 +16,7 @@ import type { WorkflowRegistry } from './workflow-registry.js';
  * are formatted, or how registration works.
  */
 export interface Workspace {
-  /** Return this workspace's display name (e.g. `Agentic HQ Workspace`, `Local Workspace`). */
+  /** Return this workspace's display name (e.g. `Agentic HQ Package`, `Local Workspace`). */
   getDisplayName(): string;
   /** Return this workspace's plugins in discovery order. */
   getPlugins(): Plugin[];
@@ -28,6 +28,6 @@ export interface Workspace {
   getTempDir(): string;
   /** Return `{root}/.agentic-hq` — this workspace's AHQ config directory. */
   getDotAgenticHqDir(): string;
-  /** Return true iff this workspace's root equals the AHQ workspace root. */
-  isAhqWorkspace(): boolean;
+  /** Return true iff this workspace's root equals the AHQ package root. */
+  isAhqPackage(): boolean;
 }

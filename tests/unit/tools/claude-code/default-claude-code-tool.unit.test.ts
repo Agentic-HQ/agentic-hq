@@ -42,7 +42,7 @@ function fakeWorkspace(root: string, isAhq: boolean): Workspace {
     getRoot: () => root,
     getTempDir: () => `${root}/.agentic-hq/temp`,
     getDotAgenticHqDir: () => `${root}/.agentic-hq`,
-    isAhqWorkspace: () => isAhq,
+    isAhqPackage: () => isAhq,
   };
 }
 
@@ -63,7 +63,7 @@ describe('DefaultClaudeCodeTool', () => {
     const myCliWrapper: CLIWrapper = {
       run: vi.fn().mockResolvedValue(undefined),
     };
-    const myAhqWorkspace = fakeWorkspace('/my-ahq-root', true);
+    const myAhqPackage = fakeWorkspace('/my-ahq-root', true);
     const myCurrentUserWorkspace = fakeWorkspace('/my-cwd-root', false);
     const myRuntimeParams = new DefaultAhqRuntimeParams(
       BuildMode.PREBUILT,
@@ -73,7 +73,7 @@ describe('DefaultClaudeCodeTool', () => {
     const myRoot = {
       getIOMarshallerSessionFactory: vi.fn(() => mySessionFactory),
       getCLIWrapper: vi.fn(() => myCliWrapper),
-      getAhqWorkspace: vi.fn(() => myAhqWorkspace),
+      getAhqPackage: vi.fn(() => myAhqPackage),
       getCurrentUserWorkspace: vi.fn(() => myCurrentUserWorkspace),
       getAhqRuntimeParams: vi.fn(() => myRuntimeParams),
     } as unknown as CompositionRoot;
@@ -90,7 +90,7 @@ describe('DefaultClaudeCodeTool', () => {
     // CompositionRoot (AHQ-197) so every Claude launch carries the relay
     expect(ClaudeCommandBuilder).toHaveBeenCalledTimes(1);
     expect(ClaudeCommandBuilder).toHaveBeenCalledWith(
-      myAhqWorkspace,
+      myAhqPackage,
       myCurrentUserWorkspace,
       myRuntimeParams
     );

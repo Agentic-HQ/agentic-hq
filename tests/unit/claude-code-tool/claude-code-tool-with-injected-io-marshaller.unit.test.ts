@@ -14,7 +14,7 @@ import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-p
 import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
-import { AhqWorkspaceImpl } from '../../../src/workflow-discovery/workspace/ahq-workspace-impl.js';
+import { AhqPackageImpl } from '../../../src/workflow-discovery/workspace/ahq-package-impl.js';
 import { CurrentUserWorkspaceImpl } from '../../../src/workflow-discovery/workspace/current-user-workspace-impl.js';
 
 const TSX_EXECUTABLE = 'tsx';
@@ -27,18 +27,16 @@ describe('MarshalledCLITool with real session factory and fake CLI', () => {
   it('should work end-to-end with real session factory and fake CLI', async () => {
     const { PtyCLIWrapper } = await import('../../../src/io/terminal/pty-cli-wrapper.js');
 
-    const ahqWorkspace = new AhqWorkspaceImpl();
-    const currentUserWorkspace = new CurrentUserWorkspaceImpl();
+    const ahqPackageRoot = new DefaultAhqPackageRoot(process.cwd());
+    const ahqPackage = new AhqPackageImpl(ahqPackageRoot);
+    const currentUserWorkspace = new CurrentUserWorkspaceImpl(ahqPackageRoot);
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
       new ClaudeCommandBuilder(
-        ahqWorkspace,
+        ahqPackage,
         currentUserWorkspace,
-        new DefaultAhqRuntimeParams(
-          BuildMode.BUILD_FIRST,
-          new DefaultAhqPackageRoot(process.cwd())
-        ),
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, ahqPackageRoot),
         TSX_EXECUTABLE,
         [FAKE_CLI_PATH]
       ),

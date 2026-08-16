@@ -55,20 +55,20 @@ const DEFAULT_ALLOWED_TOOLS = [
 ];
 
 export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
-  private readonly ahqWorkspace: Workspace;
+  private readonly ahqPackage: Workspace;
   private readonly currentUserWorkspace: Workspace;
   private readonly ahqRuntimeParams: AhqRuntimeParams;
   private readonly executable: string;
   private readonly extraArgs: string[];
 
   constructor(
-    ahqWorkspace: Workspace,
+    ahqPackage: Workspace,
     currentUserWorkspace: Workspace,
     ahqRuntimeParams: AhqRuntimeParams,
     executable: string = DEFAULT_CLAUDE_EXECUTABLE,
     extraArgs: string[] = []
   ) {
-    this.ahqWorkspace = ahqWorkspace;
+    this.ahqPackage = ahqPackage;
     this.currentUserWorkspace = currentUserWorkspace;
     this.ahqRuntimeParams = ahqRuntimeParams;
     this.executable = executable;
@@ -102,7 +102,7 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
     // approve agenticHqInstallationRootDir Read access here.
     // NOTE: This is temporary since AHQ-102 will bundle required resources with each workflow skill,
     // and so at that point we can remove this entire function and just use DEFAULT_ALLOWED_TOOLS again.
-    const agenticHqInstallationRootDir = this.ahqWorkspace.getDotAgenticHqDir();
+    const agenticHqInstallationRootDir = this.ahqPackage.getDotAgenticHqDir();
     return [...DEFAULT_ALLOWED_TOOLS, `Read(${agenticHqInstallationRootDir})`].join(' ');
   }
 
@@ -116,7 +116,7 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   // of plugin directories in multiple (unlimited) workspaces - so may be better to leave doing this
   // "properly" until then and leave this slightly hacky, quick search of 2 workspaces for the moment.
   private getClaudeCliPluginDirArgs(): string[] {
-    const ahqPluginsDir = path.join(this.ahqWorkspace.getDotAgenticHqDir(), PLUGINS_SUBDIR);
+    const ahqPluginsDir = path.join(this.ahqPackage.getDotAgenticHqDir(), PLUGINS_SUBDIR);
     const userPluginsDir = path.join(
       this.currentUserWorkspace.getDotAgenticHqDir(),
       PLUGINS_SUBDIR
@@ -124,7 +124,7 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
 
     const flags: string[] = [];
     this.addPluginDirsFrom(ahqPluginsDir, flags);
-    if (!this.currentUserWorkspace.isAhqWorkspace()) {
+    if (!this.currentUserWorkspace.isAhqPackage()) {
       this.addPluginDirsFrom(userPluginsDir, flags);
     }
     return flags;

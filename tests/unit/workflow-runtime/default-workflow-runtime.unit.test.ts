@@ -55,6 +55,16 @@ describe('DefaultWorkflowRuntime', () => {
     await expect(tool.execute('/my-command', 'my-input')).resolves.toBe('mock-tool-output');
   });
 
+  it('exposes the AhqPackageRoot parsed from the constructor argv via getAhqPackageRoot()', () => {
+    const runtime = new DefaultWorkflowRuntime([
+      ...NODE_ARGV_PREFIX,
+      '--build-mode=build-first',
+      '--ahq-package-root=/repo/checkout',
+    ]);
+
+    expect(runtime.getAhqPackageRoot().getPath()).toBe('/repo/checkout');
+  });
+
   it('throws loudly at construction when --build-mode is missing', () => {
     expect(
       () => new DefaultWorkflowRuntime([...NODE_ARGV_PREFIX, '--ahq-package-root=/repo'])

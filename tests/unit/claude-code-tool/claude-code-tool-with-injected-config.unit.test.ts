@@ -59,14 +59,14 @@ function createMockCliWrapper(): CLIWrapper & { getLastCallArgs: () => string[] 
 describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
   it('should discover plugin dirs dynamically and include allowed tools', async () => {
     const mockWrapper = createMockCliWrapper();
-    const ahqWorkspace: Workspace = {
-      getDisplayName: () => 'Agentic HQ Workspace',
+    const ahqPackage: Workspace = {
+      getDisplayName: () => 'Agentic HQ Package',
       getPlugins: () => [],
       registerWorkflowsWith: () => {},
       getRoot: () => tmpDir,
       getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
       getDotAgenticHqDir: () => ahqConfigDir,
-      isAhqWorkspace: () => true,
+      isAhqPackage: () => true,
     };
     const currentUserWorkspace: Workspace = {
       getDisplayName: () => 'Local Workspace',
@@ -75,14 +75,14 @@ describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
       getRoot: () => tmpDir,
       getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
       getDotAgenticHqDir: () => path.join(tmpDir, '.agentic-hq'),
-      isAhqWorkspace: () => true,
+      isAhqPackage: () => true,
     };
 
     const tool = new MarshalledCLITool(
       createMockSessionFactory(),
       mockWrapper,
       new ClaudeCommandBuilder(
-        ahqWorkspace,
+        ahqPackage,
         currentUserWorkspace,
         new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(process.cwd()))
       ),

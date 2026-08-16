@@ -78,27 +78,64 @@ Two related uses you'll see:
 
 ## Filesystem & layout
 
-### Agentic HQ workspace
+### AHQ package
 
-The clone of the `agentic-hq` repo on your machine. Contains the AHQ codebase
-*and* the shipped plugins under `.agentic-hq/plugins/`.
+The directory the currently executing copy of agentic-hq lives in: its CLI code,
+the shared workflow runner, and the shipped plugins under `.agentic-hq/plugins/`.
+Which copy that is follows from which binary you invoked — the repo checkout for
+the dev binary, the npm-installed directory for the installed one. Never
+detected or guessed: each bin wrapper passes its own parent directory as
+[`ahq-package-root`](#ahq-package-root-ahq-package-root). One of the system's
+two roots, the other being your [local workspace](#local-workspace). Modelled in
+code by `AhqPackageImpl`.
+
+(For how these roots relate — including when the package and your local
+workspace are the same directory — see *The Three Root Concepts* in
+[AHQ-200's feature brief](tickets/AHQ-200/workflow-files/01-feature-brief.md#the-three-root-concepts--in-depth-analysis).)
+
+### AHQ package root (`ahq-package-root`)
+
+The path of the [AHQ package](#ahq-package) — one of the system's two roots.
+Flows visibly as the `--ahq-package-root=` option from the bin wrapper, through
+the CLI and `AhqRuntimeParams`, and verbatim across the Claude/skill hop to the
+shared runner. It is **required, with no default**, so a missing value fails
+loudly instead of silently resolving to the wrong directory. Modelled by the
+`AhqPackageRoot` value object.
 
 ### Local workspace
 
-Any other directory on your machine where you run `agentic-hq <workflow>`. The
-CLI looks for plugins in **both** the AHQ workspace and the local workspace,
+Your current directory — wherever you ran `agentic-hq <workflow>` from. This is
+where *your* plugins are discovered (`.agentic-hq/plugins/`), where per-run temp
+files are written, and the working directory Claude itself is launched in.
+Nothing at runtime ever writes into the AHQ package, so an installed copy stays
+a read-only artifact.
+
+The CLI looks for plugins in **both** the AHQ package and the local workspace,
 so you can ship workflows in either place. (This dual-search is a transitional
 design — see *Two-workspace plugin search* in
 [how-agentic-hq-works.md](dev/how-agentic-hq-works.md#transitional-design-notes).)
 
+The two overlap when you run `agentic-hq` from the root of your clone of the AHQ
+repo: that one directory is then both your local workspace *and* the
+[AHQ package](#ahq-package). The CLI spots this and searches it once rather than
+twice, so the shipped plugins aren't registered or listed twice — `agentic-hq
+list` shows `Same as Agentic HQ Package` in place of a repeated block.
+
+### Agentic HQ workspace
+
+An informal, human name for a contributor's clone of the `agentic-hq` repo —
+handy in conversation, but not something the CLI or the code models. When it
+matters to a run, that checkout is playing one of the two real roles: the
+[AHQ package](#ahq-package) (you invoked its binary) or your
+[local workspace](#local-workspace) (you're standing in it).
+
 ### `agentic-hq` install dir
 
-The directory containing the `agentic-hq` CLI on your machine. After running
-`npm link`, this is the path of the local
-`agentic-hq` repo (because dev mode symlinks the live source). Used in the
-auto-appended `Read(<agentic-hq install dir>/.agentic-hq)` permission so
-Claude can read shipped command files from outside the user's local
-workspace.
+The directory containing the `agentic-hq` CLI on your machine — the same
+directory as the [AHQ package root](#ahq-package-root-ahq-package-root), named
+this way in the permissions context. Used in the auto-appended
+`Read(<agentic-hq install dir>/.agentic-hq)` grant so Claude can read shipped
+command files from outside the user's local workspace.
 
 ### `ahq-workflow.json`
 
@@ -158,7 +195,7 @@ AHQ has nothing to read. See `PtyCLIWrapper` in `src/io/terminal/`.
 
 | Term | Path |
 |---|---|
-| AHQ workspace root | the clone of this repo |
+| AHQ package root | the copy of AHQ you invoked — this checkout, or the npm-installed dir |
 | Plugins dir | `.agentic-hq/plugins/` |
 | Per-run temp dir | `.agentic-hq/temp/command-input-output-files/io-files-<ts>_<uuid>/` |
 | `agentic-hq` CLI source | `src/cli/` |

@@ -22,7 +22,7 @@ const mockWorkspace: Workspace = {
   getRoot: () => '/mock/project',
   getTempDir: () => TEST_TEMP_DIR,
   getDotAgenticHqDir: () => '/mock/project/.agentic-hq',
-  isAhqWorkspace: () => false,
+  isAhqPackage: () => false,
 };
 
 describe('JsonFileIOMarshallerSession', () => {

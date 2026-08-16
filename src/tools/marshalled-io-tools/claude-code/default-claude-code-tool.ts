@@ -7,8 +7,8 @@
  * CompositionRoot.
  *
  * SRP Knows About: That Claude's CLI command is built by
- * ClaudeCommandBuilder (wired with the AHQ + current-user workspaces and
- * the AhqRuntimeParams the AI relays across the skill hop), and that the
+ * ClaudeCommandBuilder (wired with the AHQ package + current-user workspace
+ * and the AhqRuntimeParams the AI relays across the skill hop), and that the
  * rest of the pipeline (session, CLI wrapper, working directory) is shared
  * generic infrastructure drawn from CompositionRoot.
  *
@@ -34,7 +34,7 @@ export class DefaultClaudeCodeTool extends MarshalledCLITool {
       root.getIOMarshallerSessionFactory(),
       root.getCLIWrapper(),
       new ClaudeCommandBuilder(
-        root.getAhqWorkspace(),
+        root.getAhqPackage(),
         root.getCurrentUserWorkspace(),
         root.getAhqRuntimeParams()
       ),

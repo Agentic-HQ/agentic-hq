@@ -22,8 +22,9 @@ export const app = {
     const ahqCommandLine = new DefaultAhqCommandLine(argv);
     const root = new CompositionRoot(ahqCommandLine.getAhqRuntimeParams());
     const builder = root.getWorkflowCommandBuilder();
-    createProgram(builder, new WorkflowSearchResultsImpl()).parse(
-      ahqCommandLine.getRemainingArgs()
-    );
+    createProgram(
+      builder,
+      new WorkflowSearchResultsImpl(ahqCommandLine.getAhqRuntimeParams().getAhqPackageRoot())
+    ).parse(ahqCommandLine.getRemainingArgs());
   },
 };

@@ -1,3 +1,4 @@
+import type { AhqPackageRoot } from './ahq-package-root.js';
 import type { Tool } from './tool.js';
 
 /**
@@ -18,4 +19,7 @@ export interface WorkflowRuntime {
 
   /** The argv with the framework's options stripped, order preserved — feed this to the workflow's own Commander parse */
   getWorkflowArgs(): string[];
+
+  /** The AhqPackageRoot the framework passed — where the running agentic-hq package lives */
+  getAhqPackageRoot(): AhqPackageRoot;
 }

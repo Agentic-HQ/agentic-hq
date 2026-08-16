@@ -25,7 +25,7 @@ const mockWorkspace: Workspace = {
   getRoot: () => '/mock/project',
   getTempDir: () => '/mock/project/.agentic-hq/temp',
   getDotAgenticHqDir: () => '/mock/project/.agentic-hq',
-  isAhqWorkspace: () => false,
+  isAhqPackage: () => false,
 };
 
 function createMockSession(): IOMarshallerSession {

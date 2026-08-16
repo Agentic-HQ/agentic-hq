@@ -9,8 +9,8 @@
  *   03 — Implementer   (implements the approved plan with tests)
  *   04 — Reviewer      (concise evidence-backed review + a path to customize the workflow)
  *
- * Broadcast + stage-outcome gate. The CLI builds the variables string itself (workspace
- * root + the mandatory ticket-id) and passes the SAME string to all four commands; the
+ * Broadcast + stage-outcome gate. The CLI builds the variables string itself (the AHQ
+ * package root + the mandatory ticket-id) and passes the SAME string to all four commands; the
  * outputs of commands 02-04 are ignored. Command 01's (the Researcher's) trimmed output
  * is the stage outcome:
  *   - CONTINUE_WORKFLOW — run agents 02, 03, 04 in order.
@@ -30,7 +30,6 @@ import { Command } from 'commander';
 
 import { DefaultWorkflowRuntime } from 'agentic-hq/tools/claude-code';
 
-const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME = 'AGENTIC_HQ_WORKSPACE_ROOT';
 const CONTINUE_WORKFLOW_OUTCOME = 'CONTINUE_WORKFLOW';
 const TERMINATE_WORKFLOW_OUTCOME = 'TERMINATE_WORKFLOW';
 
@@ -51,20 +50,9 @@ program
   )
   .requiredOption('--ticket-id <id>', 'Mandatory ticket id (make one up if you have no issue tracker)')
   .action(async (options: { ticketId: string }) => {
-    const agenticHqWorkspaceRoot = process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME];
-    if (!agenticHqWorkspaceRoot) {
-      // Catastrophic precondition failure — throw (uncaught, see program.parse() below) so the
-      // full stack trace is printed. The message states the cause so it heads the trace.
-      throw new Error(
-        `Cannot run the add-feature workflow: the ${AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME} ` +
-          `environment variable is not set (it must point to the Agentic HQ workspace root). ` +
-          `The workflow cannot continue.`
-      );
-    }
-
     // The TS program builds the full broadcast string itself and passes the SAME string to all four commands.
     const allVariables =
-      `The variables used in this workflow are: agentic-hq-workspace-root-dir=${agenticHqWorkspaceRoot}` +
+      `The variables used in this workflow are: ahq-package-root=${runtime.getAhqPackageRoot().getPath()}` +
       ` and ticket-id=${options.ticketId}`;
 
     // The Researcher's trimmed output is the stage-outcome gate (exactly one of three outcomes).

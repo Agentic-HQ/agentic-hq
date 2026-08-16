@@ -28,7 +28,7 @@ flowchart TB
     User([User runs<br/>agentic-hq math -- --input-number=11])
 
     subgraph CLI["AHQ CLI dispatch (src/cli/)"]
-        Bin[bin/agentic-hq.cjs<br/>sets AGENTIC_HQ_WORKSPACE_ROOT]
+        Bin[bin/agentic-hq.cjs<br/>passes --ahq-package-root]
         Main[main.ts → app.ts]
         Discovery[Workflow discovery<br/>scan .agentic-hq/plugins/<br/>register each shortId]
     end
@@ -188,8 +188,8 @@ the other end of the PTY.
 
 How does `agentic-hq math -- --input-number=11` reach the right plugin?
 
-1. **`bin/agentic-hq.cjs`** — CJS shim. Sets
-   `AGENTIC_HQ_WORKSPACE_ROOT` (so workflow discovery can find the plugins
+1. **`bin/agentic-hq.cjs`** — CJS shim. Passes the explicit
+   `--ahq-package-root` parameter (so workflow discovery can find the plugins
    dir) and execs `tsx src/cli/main.ts`.
 2. **[`src/cli/main.ts`](../../src/cli/main.ts)** — two lines:
    `import { app }; app.run();`. Deliberately tiny; see *Transitional design
@@ -322,7 +322,7 @@ right now and will change in tracked follow-up tickets. Worth knowing about
 so you don't mistake them for permanent design:
 
 - **Two-workspace plugin search.** When the CLI runs, it currently looks
-  for plugins in both the AHQ workspace (where the CLI itself lives) and
+  for plugins in both the AHQ package (where the CLI itself lives) and
   the user's current workspace. See the comments in
   `src/tools/marshalled-io-tools/claude-code/claude-command-builder.ts` —
   this is a temporary "search both" approach pending a proper
@@ -331,8 +331,3 @@ so you don't mistake them for permanent design:
   (Bash, Edit, Write, Jira/Confluence MCP, etc.) are listed in
   `claude-command-builder.ts`. Per-workflow bundling is tracked in
   [AHQ-102](https://agentic-hq.atlassian.net/browse/AHQ-102).
-- **Env-var workspace root.** `bin/agentic-hq.cjs` sets
-  `AGENTIC_HQ_WORKSPACE_ROOT` so downstream code can find the plugins
-  directory. There's a REFACTOR note in that file flagging the env-var
-  approach as global hidden state worth replacing with an explicit
-  parameter passed inward from the boundary.
