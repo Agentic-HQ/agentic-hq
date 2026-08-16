@@ -496,6 +496,14 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    **Moved from fifth to last (2026-08-14)**, so the docs are written once against the fully
    restored system (all workflows migrated, AHQ-205 fixed, the legacy env var already removed by
    AHQ-200). Further instructions for this Sub-Task are in *Open Sub-Task Instructions* below.
+9. **[AHQ-207](https://agentic-hq.atlassian.net/browse/AHQ-207) — Full add-feature Run Of The npm-Installed agentic-hq On The Ubuntu VM** —
+   added 2026-08-16: the closing proof for AHQ-195. Everything so far was verified on macOS, and the
+   one add-feature run from a registry install (AHQ-202) was deliberately stopped at the first
+   interactive stop; this Sub-Task installs the published package on a fresh Ubuntu VM and drives
+   `add-feature` through all four agents to completion. Runs last — after AHQ-201 and the
+   re-publish that follows it (and after AHQ-199, since it follows the README Quickstart as
+   written). **AHQ-195 is not done until this is.** Unlike the other Sub-Tasks, **the details are in
+   the Jira ticket, not in this document** — the Jira is the source of truth for AHQ-207.
 
 ## Open Sub-Task Instructions (consolidated 2026-08-16)
 
@@ -578,15 +586,25 @@ do the right thing — read the Sub-Task list above for scope, then your own Sub
   the working line.
 - **Mention Claude Code's folder-trust prompt** on first run in a fresh directory (an AHQ-198
   follow-up) in the Quickstart.
-- **Consider an actual Linux install-and-run check** before the npm route is advertised: Sub-Tasks
-  1–3 verified on macOS only, and Linux node-pty compiles from source (build toolchain + Python —
-  see this brief's Blockers). Here or folded into AHQ-198's registry verification, the human's choice.
+- **The Linux install-and-run check is now its own Sub-Task —
+  [AHQ-207](https://agentic-hq.atlassian.net/browse/AHQ-207)** (added 2026-08-16; details in that
+  Jira, not here). It follows the README Quickstart *as written* on a fresh Ubuntu VM, so any gap it
+  finds in the docs comes back to AHQ-199 as a defect. Sub-Tasks 1–3 verified on macOS only, and
+  Linux node-pty compiles from source (build toolchain + Python — see this brief's Blockers), so the
+  prerequisites section written here is what AHQ-207 will test.
 - **Retarget the glossary's root-model link.** `docs/glossary.md` (rewritten during AHQ-200) sends
   readers to `tickets/AHQ-200/workflow-files/01-feature-brief.md#the-three-root-concepts--in-depth-analysis`
   for the two-roots model. The link resolves today, but a user-facing glossary should not depend on a
   per-ticket AI workflow artifact. Either add a durable roots section to
   `docs/dev/how-agentic-hq-works.md` (which has no equivalent section today — verified 2026-08-16)
   and point there, or inline the explanation into the glossary.
+
+### Sub-Task 9 — AHQ-207 (full add-feature run on the Ubuntu VM)
+
+- **No instructions here by design.** For this Sub-Task the
+  [Jira ticket](https://agentic-hq.atlassian.net/browse/AHQ-207) is the source of truth — scope,
+  acceptance criteria, sequencing (blocked by AHQ-201 and the re-publish after it) and runner
+  notes all live there. Read the Jira, not this document.
 
 ### After AHQ-195 closes
 
