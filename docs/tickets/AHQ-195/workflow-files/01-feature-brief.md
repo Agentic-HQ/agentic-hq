@@ -576,6 +576,24 @@ do the right thing — read the Sub-Task list above for scope, then your own Sub
   second `it(...)` block, the `LEGACY_ENV_VAR_NAME` and `BOGUS_LEGACY_ROOT` constants, the optional
   parameter of `runListThroughDevBinWrapper()`, and the `TEMPORARY` paragraph in the file header
   (which repeats these instructions in place).
+- **Also in scope (added 2026-08-18, during the AHQ-201 Researcher stage, at the human's request):
+  rename the dev binary to `agentic-hq-dev`.** The clone's dev wrapper (`bin/agentic-hq.cjs`, on PATH via
+  `npm link`, rebuilds from source on every run) is installed as `agentic-hq-dev`; `agentic-hq` is
+  reserved for the npm-installed prebuilt release. Root `package.json` `bin` changes; the generated
+  release manifest's `bin` (`agentic-hq` → prebuilt wrapper) is untouched; nothing in the runtime chain
+  invokes the binary by name. Rationale and details:
+  `docs/tickets/AHQ-201/workflow-files/supporting-docs/01-new-two-separate-builds-architecture-design.md` §10.
+  Done inside AHQ-201 (not a separate Jira) so AHQ-199 writes the docs once with the final names.
+- **AHQ-201 was split (2026-08-18) into two clean sub-task Jiras, with AHQ-201 as the umbrella:**
+  [AHQ-208](https://agentic-hq.atlassian.net/browse/AHQ-208) — *Split Framework Build From Workflow
+  Build: Uniform Build+Run For All Workflows (Proven On math, string-reversal, add-feature)* — the
+  re-work of the build/runner system (two separate builds; one SKILL.md template; per-workflow
+  `build-mode`; `agentic-hq-dev`), then [AHQ-209](https://agentic-hq.atlassian.net/browse/AHQ-209) —
+  *Migrate Remaining Workflows And create-workflow Scaffolder Onto Two-Builds Pattern, Restore All To
+  Working, Publish 0.2.0* — which delivers everything listed for Sub-Task 7 above. Sequence:
+  AHQ-208 → AHQ-209 → AHQ-207 → AHQ-199. The parent brief for both is
+  `docs/tickets/AHQ-201/workflow-files/01-feature-brief.md` (+ its `supporting-docs/01|02|03`); read
+  its `Split Suggestion (Accepted)` first.
 
 ### Sub-Task 8 — AHQ-199 (README and docs)
 
