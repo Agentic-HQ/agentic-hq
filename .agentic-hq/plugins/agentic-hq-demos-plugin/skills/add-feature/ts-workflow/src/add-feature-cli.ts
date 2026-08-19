@@ -4,7 +4,7 @@
  *
  * A short, generic, customizable four-stage loop for adding one small feature to an
  * existing codebase:
- *   01 — Researcher    (turns the request into a feature brief; decides if it's a good size)
+ *   01 — Researcher    (turns the request into an approved feature brief; decides if it's a good size)
  *   02 — Planner       (turns the brief into an approved implementation plan)
  *   03 — Implementer   (implements the approved plan with tests)
  *   04 — Reviewer      (concise evidence-backed review + a path to customize the workflow)

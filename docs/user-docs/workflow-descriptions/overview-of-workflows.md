@@ -97,7 +97,7 @@ The **flagship** workflow and the recommended starting point. It adds a **single
 
 How it runs — each agent reads the previous agent's document, writes its own, and pauses for you at its gate:
 
-1. **Researcher** → `01-feature-brief.md` — turns your feature request into a scoped brief with acceptance criteria, then decides whether the feature is a good size to do in one run (this size check **gates** the workflow). Waits for you to write your feature request, and to answer any clarifying questions it raises.
+1. **Researcher** → `01-feature-brief.md` — turns your feature request into a scoped brief with acceptance criteria, then decides whether the feature is a good size to do in one run (this size check **gates** the workflow). Waits for you to write your feature request, to answer any clarifying questions it raises, and to **approve the finished brief** (combined with the split decision in one question, if a split is suggested).
 2. **Planner** → `02-implementation-plan.md` — turns the brief into a compact, test-first implementation plan: the minimum-useful tests and the minimal code those tests drive. It writes **no production code** and pauses for your explicit approval before any code is written.
 3. **Implementer** → `03-implementation-summary.md` plus the actual code and tests — implements the approved plan (and nothing more), runs the tests, and records exactly what changed. Pauses for you to approve or discuss further.
 4. **Reviewer** → `04-review-summary.md` — gives a concise, evidence-backed review, then applies **only** the fixes you mark and re-runs the tests to confirm nothing broke. After it, the workflow ends.

@@ -33,7 +33,8 @@ context stays sharp and every important decision is recorded on disk:
 1. **[Researcher](01-researcher-help-doc.md)** → `01-feature-brief.md` — turns your request into a
    clear, well-scoped feature brief (your prompt, its understanding, bounded research, any questions,
    and a short acceptance-criteria checklist), then decides whether the feature is a good size to do in
-   one run. Its size decision **gates** the workflow.
+   one run and asks you to **approve the brief**. Its size decision and your approval **gate** the
+   workflow.
 2. **[Planner](02-planner-help-doc.md)** → `02-implementation-plan.md` — turns the brief into a compact,
    **approved** implementation plan: the minimum-useful tests and the minimal code those tests drive. It
    writes **no production code**, and pauses for your approval before any code is written.
@@ -82,10 +83,14 @@ without your say-so.
   request into it and confirm — everything downstream is built from this. If it then needs anything
   clarified, it adds a short **Questions And Answers** section and again waits for you to type your
   answers directly into the brief.
-- **Researcher — size check** *(only if the feature looks too big)*: it pauses, explains why, adds a
-  **Split Suggestion** to the brief, and asks you (via a multiple-choice prompt) whether to **terminate
-  and split** *(recommended)* or **continue anyway** at higher risk. For a normal, good-size feature
-  there's no prompt — it just continues to the Planner.
+- **Researcher — brief approval (always) + size check**: once the brief is finalized, you are always
+  asked to **approve it** via a single multiple-choice prompt. For a normal, good-size feature the
+  choice is simply **approve brief** *(recommended)* or **request changes**. If the feature looks too
+  big, the Researcher first pauses, explains why, and adds a **Split Suggestion** to the brief — and
+  the prompt becomes **one combined question**: **approve brief & terminate to split** *(recommended)*,
+  **approve brief, continue oversized** (higher risk), or **request changes**. Either way, feedback is
+  never treated as approval — changes are incorporated and you're asked again until you explicitly
+  approve.
 - **Planner — plan approval**: you must **explicitly approve** the implementation plan before any code is
   written. The Planner gives you the path to `02-implementation-plan.md`, waits, and records your
   approval (and any conditions) in the plan.
