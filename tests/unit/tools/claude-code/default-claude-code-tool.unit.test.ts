@@ -43,6 +43,7 @@ function fakeWorkspace(root: string, isAhq: boolean): Workspace {
     getTempDir: () => `${root}/.agentic-hq/temp`,
     getDotAgenticHqDir: () => `${root}/.agentic-hq`,
     isAhqPackage: () => isAhq,
+    getBuildMode: () => BuildMode.BUILD_FIRST,
   };
 }
 

@@ -1,4 +1,5 @@
 import type { AhqPackageRoot } from '../../interfaces/ahq-package-root.js';
+import { BuildMode } from '../../interfaces/build-mode.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import type { Plugin } from '../plugin/plugin.js';
@@ -68,7 +69,19 @@ export class CurrentUserWorkspaceImpl implements Workspace {
     return this.createDelegate().isAhqPackage();
   }
 
+  /** Always BUILD_FIRST (AHQ-208): a user workspace holds workflow SOURCE, so its
+   *  workflows must be built before running — whatever mode the wrapper was
+   *  invoked with (this class never even receives the wrapper's mode). */
+  getBuildMode(): BuildMode {
+    return BuildMode.BUILD_FIRST;
+  }
+
   private createDelegate(): WorkspaceImpl {
-    return new WorkspaceImpl(LOCAL_WORKSPACE_DISPLAY_NAME, process.cwd(), this.ahqPackageRoot);
+    return new WorkspaceImpl(
+      LOCAL_WORKSPACE_DISPLAY_NAME,
+      process.cwd(),
+      this.ahqPackageRoot,
+      this.getBuildMode()
+    );
   }
 }

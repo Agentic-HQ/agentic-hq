@@ -1,6 +1,7 @@
 /**
  * Tests WorkspaceImpl — the generic workspace that does all the real work.
- * Takes a display name, a root directory path, and the injected AhqPackageRoot.
+ * Takes a display name, a root directory path, the injected AhqPackageRoot,
+ * and the BuildMode every workflow discovered under it carries (AHQ-208).
  * Exposes the display name and a list of discovered Plugin entities (via
  * `getDisplayName()` / `getPlugins()`) that downstream consumers (the CLI
  * listing formatter, the registry registration loop) read as plain data. When
@@ -16,6 +17,7 @@ import * as path from 'node:path';
 
 import { describe, expect } from 'vitest';
 
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 import { WorkspaceImpl } from '../../../../src/workflow-discovery/workspace/workspace-impl.js';
@@ -26,15 +28,28 @@ import { createTestWorkspaceFixture } from '../test-fixtures/workspace-fixture.j
 // The injected AHQ package root for tests where its value is irrelevant
 // (everything except the isAhqPackage comparisons).
 const TEST_AHQ_PACKAGE_ROOT = new DefaultAhqPackageRoot('/test-ahq-package-root');
+// The injected build mode for tests where its value is irrelevant
+// (everything except the getBuildMode tests, AHQ-208).
+const TEST_BUILD_MODE = BuildMode.BUILD_FIRST;
 
 describe('WorkspaceImpl', () => {
   tmpdirTest('should return the constructor display name via getDisplayName()', ({ tmpdir }) => {
-    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir, TEST_AHQ_PACKAGE_ROOT);
+    const workspace: Workspace = new WorkspaceImpl(
+      'Test Workspace',
+      tmpdir,
+      TEST_AHQ_PACKAGE_ROOT,
+      TEST_BUILD_MODE
+    );
     expect(workspace.getDisplayName()).toBe('Test Workspace');
   });
 
   tmpdirTest('should return the constructor root directory via getRoot()', ({ tmpdir }) => {
-    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir, TEST_AHQ_PACKAGE_ROOT);
+    const workspace: Workspace = new WorkspaceImpl(
+      'Test Workspace',
+      tmpdir,
+      TEST_AHQ_PACKAGE_ROOT,
+      TEST_BUILD_MODE
+    );
     expect(workspace.getRoot()).toBe(tmpdir);
   });
 
@@ -45,7 +60,8 @@ describe('WorkspaceImpl', () => {
       const workspace: Workspace = new WorkspaceImpl(
         'Test Workspace',
         tmpdir,
-        TEST_AHQ_PACKAGE_ROOT
+        TEST_AHQ_PACKAGE_ROOT,
+        TEST_BUILD_MODE
       );
       const pluginNames = workspace.getPlugins().map((p) => p.getName());
 
@@ -61,7 +77,8 @@ describe('WorkspaceImpl', () => {
       const workspace: Workspace = new WorkspaceImpl(
         'Test Workspace',
         tmpdir,
-        TEST_AHQ_PACKAGE_ROOT
+        TEST_AHQ_PACKAGE_ROOT,
+        TEST_BUILD_MODE
       );
       const allShortNames = workspace
         .getPlugins()
@@ -80,7 +97,8 @@ describe('WorkspaceImpl', () => {
       const workspace: Workspace = new WorkspaceImpl(
         'Empty Workspace',
         tmpdir,
-        TEST_AHQ_PACKAGE_ROOT
+        TEST_AHQ_PACKAGE_ROOT,
+        TEST_BUILD_MODE
       );
       expect(workspace.getPlugins()).toEqual([]);
     }
@@ -93,7 +111,8 @@ describe('WorkspaceImpl', () => {
       const workspace: Workspace = new WorkspaceImpl(
         'Test Workspace',
         tmpdir,
-        TEST_AHQ_PACKAGE_ROOT
+        TEST_AHQ_PACKAGE_ROOT,
+        TEST_BUILD_MODE
       );
       const registry = new StubWorkflowRegistry();
 
@@ -104,15 +123,57 @@ describe('WorkspaceImpl', () => {
     }
   );
 
+  // The per-workflow build-mode rule (AHQ-208): a workspace is constructed WITH
+  // the mode of everything discovered under it, and threads it down so every
+  // plugin's workflows carry it.
+  tmpdirTest('should return the constructor build mode via getBuildMode()', ({ tmpdir }) => {
+    const workspace: Workspace = new WorkspaceImpl(
+      'Test Workspace',
+      tmpdir,
+      TEST_AHQ_PACKAGE_ROOT,
+      BuildMode.PREBUILT
+    );
+    expect(workspace.getBuildMode()).toBe(BuildMode.PREBUILT);
+  });
+
+  tmpdirTest(
+    "should expose every plugin's workflows carrying the workspace's build mode",
+    ({ tmpdir }) => {
+      createTestWorkspaceFixture(tmpdir);
+      const workspace: Workspace = new WorkspaceImpl(
+        'Test Workspace',
+        tmpdir,
+        TEST_AHQ_PACKAGE_ROOT,
+        BuildMode.PREBUILT
+      );
+      const workflows = workspace.getPlugins().flatMap((plugin) => plugin.getWorkflows());
+
+      expect(workflows.length).toBeGreaterThan(0);
+      for (const workflow of workflows) {
+        expect(workflow.getBuildMode()).toBe(BuildMode.PREBUILT);
+      }
+    }
+  );
+
   // Direct coverage of the mechanical logic WorkspaceImpl owns for the four new Workspace
   // methods (getRoot/getTempDir/getDotAgenticHqDir/isAhqPackage). Outer impls delegate here.
   tmpdirTest('should return {root}/.agentic-hq/temp via getTempDir()', ({ tmpdir }) => {
-    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir, TEST_AHQ_PACKAGE_ROOT);
+    const workspace: Workspace = new WorkspaceImpl(
+      'Test Workspace',
+      tmpdir,
+      TEST_AHQ_PACKAGE_ROOT,
+      TEST_BUILD_MODE
+    );
     expect(workspace.getTempDir()).toBe(path.join(tmpdir, '.agentic-hq', 'temp'));
   });
 
   tmpdirTest('should return {root}/.agentic-hq via getDotAgenticHqDir()', ({ tmpdir }) => {
-    const workspace: Workspace = new WorkspaceImpl('Test Workspace', tmpdir, TEST_AHQ_PACKAGE_ROOT);
+    const workspace: Workspace = new WorkspaceImpl(
+      'Test Workspace',
+      tmpdir,
+      TEST_AHQ_PACKAGE_ROOT,
+      TEST_BUILD_MODE
+    );
     expect(workspace.getDotAgenticHqDir()).toBe(path.join(tmpdir, '.agentic-hq'));
   });
 
@@ -122,7 +183,8 @@ describe('WorkspaceImpl', () => {
       const workspace: Workspace = new WorkspaceImpl(
         'Test Workspace',
         tmpdir,
-        new DefaultAhqPackageRoot(tmpdir)
+        new DefaultAhqPackageRoot(tmpdir),
+        TEST_BUILD_MODE
       );
       expect(workspace.isAhqPackage()).toBe(true);
     }
@@ -134,7 +196,8 @@ describe('WorkspaceImpl', () => {
       const workspace: Workspace = new WorkspaceImpl(
         'Test Workspace',
         tmpdir,
-        new DefaultAhqPackageRoot('/some/other/path')
+        new DefaultAhqPackageRoot('/some/other/path'),
+        TEST_BUILD_MODE
       );
       expect(workspace.isAhqPackage()).toBe(false);
     }

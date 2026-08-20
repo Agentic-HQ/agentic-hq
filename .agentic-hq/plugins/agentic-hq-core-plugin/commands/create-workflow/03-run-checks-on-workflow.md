@@ -58,7 +58,7 @@ Read the following to gain full context:
 4. **Example workflow files for convention comparison**:
    - All `.md` files in `{example-workflow-commands-dir}`
    - `{example-workflow-skill-dir}/SKILL.md`
-   - `{example-workflow-skill-dir}/ts-workflow/src/math-workflow-demo-cli.ts`
+   - `{example-workflow-skill-dir}/ts-workflow/src/math-workflow-cli.ts`
 
 ---
 

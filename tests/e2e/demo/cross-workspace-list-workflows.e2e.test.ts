@@ -1,11 +1,11 @@
 /**
- * E2E Test: Cross-Workspace `agentic-hq list` via globally-linked agentic-hq binary
+ * E2E Test: Cross-Workspace `agentic-hq list` via globally-linked agentic-hq-dev binary
  *
  * Verifies that `agentic-hq list` discovers and displays workflows when run
  * from a SEPARATE workspace via the globally-linked binary:
- * 1. Precondition: `agentic-hq` is already on PATH (installed via README `npm link`)
+ * 1. Precondition: `agentic-hq-dev` is already on PATH (installed via README `npm link`)
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. Run: agentic-hq list
+ * 3. Run: agentic-hq-dev list
  * 4. Assert: Output contains `Available workflows` title
  * 5. Assert: Output contains `create-workflow` (stable core workflow — confirms discovery)
  * 6. Assert: Output contains create-workflow's description (confirms it's rendered, not just listed)
@@ -31,7 +31,7 @@ const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
 // Paths
 const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
 
-describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary', () => {
+describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq-dev binary', () => {
   it(
     'should list workflows in the new 2-line format from a separate workspace via the globally-linked binary',
     () => {
@@ -40,10 +40,12 @@ describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary'
       // installer's job, not the test's, so we assert it rather than running `npm link`
       // here. A failure means the documented install step wasn't completed on this machine.
       const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
-      const agenticHqOnPath = pathDirs.some((dir) => fs.existsSync(path.join(dir, 'agentic-hq')));
+      const agenticHqDevOnPath = pathDirs.some((dir) =>
+        fs.existsSync(path.join(dir, 'agentic-hq-dev'))
+      );
       expect(
-        agenticHqOnPath,
-        '`agentic-hq` is not on your PATH. It should have been linked during ' +
+        agenticHqDevOnPath,
+        '`agentic-hq-dev` is not on your PATH. It should have been linked during ' +
           'installation — see README Quick Start step 5 (`npm link` from the repo ' +
           'root). Run that, then re-run the e2e tests; if it still fails, see ' +
           'docs/user-docs/troubleshooting-quickstart.md.'
@@ -53,8 +55,8 @@ describe('Cross-Workspace agentic-hq list via globally-linked agentic-hq binary'
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
 
-      // Act — run `agentic-hq list` from the temp workspace (exactly as a developer would)
-      const command = 'agentic-hq list';
+      // Act — run `agentic-hq-dev list` from the temp workspace (exactly as a developer would)
+      const command = 'agentic-hq-dev list';
 
       let output: string;
       try {

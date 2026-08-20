@@ -1,3 +1,4 @@
+import type { BuildMode } from '../../interfaces/build-mode.js';
 import { ShortIdAlreadyRegisteredError } from '../errors/short-id-already-registered-error.js';
 import type { AhqWorkflow } from '../interfaces/ahq-workflow.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
@@ -28,7 +29,8 @@ import type { Plugin } from './plugin.js';
 export class PluginImpl implements Plugin {
   constructor(
     private readonly pluginName: string,
-    private readonly workspaceRoot: string
+    private readonly workspaceRoot: string,
+    private readonly buildMode: BuildMode
   ) {}
 
   /** Return this plugin's name (the directory name under `.agentic-hq/plugins/`). */
@@ -36,11 +38,12 @@ export class PluginImpl implements Plugin {
     return this.pluginName;
   }
 
-  /** Discover and return this plugin's workflows in glob order. */
+  /** Discover and return this plugin's workflows in glob order, each carrying
+   *  this plugin's workspace build mode (AHQ-208). */
   getWorkflows(): AhqWorkflow[] {
     const pluginDir = new PluginDirectoryImpl(this.pluginName, this.workspaceRoot);
     const files = pluginDir.findWorkflowFiles();
-    return files.map((f) => new AhqWorkflowImpl(f));
+    return files.map((f) => new AhqWorkflowImpl(f, this.buildMode));
   }
 
   /**

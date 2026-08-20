@@ -12,6 +12,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ListingFormatter } from '../../../../src/cli/listing/listing-formatter.js';
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import type { AhqWorkflow } from '../../../../src/workflow-discovery/interfaces/ahq-workflow.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 import type { Plugin } from '../../../../src/workflow-discovery/plugin/plugin.js';
@@ -26,6 +27,7 @@ function stubWorkflow(opts: {
     getShortName: () => ({ toString: () => opts.shortName }),
     getDescription: () => ({ toString: () => opts.description }),
     getFullClaudeSkillCommand: () => ({ toString: () => `/plugin:${opts.shortName}` }),
+    getBuildMode: () => BuildMode.BUILD_FIRST,
     getExampleCommand: () => ({
       getCommandPart: () => opts.exampleCommandPart,
       getArgsPart: () => opts.exampleArgsPart,
@@ -56,6 +58,7 @@ function stubWorkspace(opts: {
     getTempDir: () => `${opts.root}/.agentic-hq/temp`,
     getDotAgenticHqDir: () => `${opts.root}/.agentic-hq`,
     isAhqPackage: () => opts.isAhq,
+    getBuildMode: () => BuildMode.BUILD_FIRST,
   };
 }
 

@@ -1,27 +1,29 @@
 /**
  * E2E Test: Prebuilt npm tarball install runs the math workflow (AHQ-196,
- * re-pointed at the staged release tree by AHQ-197)
+ * re-pointed at the staged release tree by AHQ-197, moved onto the two-builds
+ * design by AHQ-208 — the shipped set now also includes string-reversal and a
+ * one-Claude-step reversal run; file name kept, it is referenced by
+ * package.json and the publish checklist)
  *
  * The AHQ-195 tracer bullet: proves a prebuilt, READ-ONLY agentic-hq package
- * installed from an npm tarball runs a shipped workflow end-to-end with the
+ * installed from an npm tarball runs shipped workflows end-to-end with the
  * cloned repo out of the picture:
- * 1. Setup: `pnpm build` (assembles the staged release/ tree) → `pnpm pack`
- *    FROM release/ → `npm install -g --prefix <temp/AHQ-196/…>`
+ * 1. Setup: buildPackAndInstallTarball — `pnpm build` (Framework Build (1) +
+ *    Workflow Build (2) per shipped migrated workflow, staged into release/)
+ *    → `pnpm pack` FROM release/ → `npm install -g --prefix <temp/AHQ-208/…>`
  * 2. Assert the artifact shape is right: the tarball's manifest is the single
  *    GENERATED one (no pack-time overrides), only intended files ship (no
- *    io-files/test-plugin/dev-config leak class), no nested package.json
- *    shadows Node package self-reference, shipped scripts are executable
+ *    io-files/test-plugin/dev-config leak class, no per-workflow install
+ *    files inside any ts-workflow/), no nested package.json shadows Node
+ *    package self-reference, shipped scripts are executable
  * 3. Run the INSTALLED bin's `agentic-hq list` from a clean temp workspace
- * 4. Run a full math workflow (3 real Claude steps: x2, +3, /5) from a clean
- *    temp workspace; assert the output number, the io-files in the USER
- *    workspace, and that nothing was written inside the installed package
- *
- * Modeled on cross-workspace-demo-math-workflow-gives-expected-output-number
- * (same timeout/diagnostic pattern), but invoking the installed package's bin
- * by absolute path instead of the globally-linked dev binary.
+ * 4. Run a full math workflow (3 real Claude steps: x2, +3, /5) and a
+ *    string-reversal (1 real Claude step) from clean temp workspaces; assert
+ *    the outputs, the io-files in the USER workspace, and that nothing was
+ *    written inside the installed package
  *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-196
- * See: https://agentic-hq.atlassian.net/browse/AHQ-197
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-208
  */
 
 import { execSync } from 'node:child_process';
@@ -33,17 +35,22 @@ import { describe, it, expect, beforeAll } from 'vitest';
 
 import { hashTree } from '../../helpers/file-tree-helper-functions.js';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
+import { buildPackAndInstallTarball } from '../helpers/tarball-install-helper-functions.js';
 
 const SETUP_TIMEOUT_MS = 600_000; // build + pack + npm registry install
 const FAST_TEST_TIMEOUT_MS = 60_000; // no Claude invocation
 const HOISTED_INSTALL_TIMEOUT_MS = 120_000; // one extra npm install of the tarball
 const MATH_RUN_TIMEOUT_MS = 1000_000; // 3 real Claude steps: claude can be really slow
+const REVERSAL_RUN_TIMEOUT_MS = 600_000; // 1 real Claude step
 const MATH_LOG_FILE_LABEL = 'prebuilt-tarball-math-workflow';
 const MATH_LOG_FILE_PATH = `/tmp/e2e-${MATH_LOG_FILE_LABEL}.log`;
+const REVERSAL_LOG_FILE_LABEL = 'prebuilt-tarball-string-reversal';
 
 // Test data constants (11 x2=22, +3=25, /5=5)
 const TEST_INPUT_NUMBER = 11;
 const EXPECTED_OUTPUT_NUMBER = 5;
+const TEST_INPUT_STRING = 'tarball install test';
+const EXPECTED_REVERSED_STRING = 'tset llatsni llabrat';
 
 // Paths
 const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
@@ -51,13 +58,31 @@ const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
 
-// The prebuilt artifact shape the GENERATED release manifest must carry
+// The prebuilt artifact shape the GENERATED release manifest must carry —
+// types resolve from the shipped .d.ts, runtime from the compiled JS (AHQ-208)
 const EXPECTED_BIN = { 'agentic-hq': 'bin/agentic-hq-prebuilt.cjs' };
 const EXPECTED_EXPORTS = {
-  './tools/claude-code': './dist/src/tools/marshalled-io-tools/claude-code/index.js',
+  './tools/claude-code': {
+    types: './dist/src/tools/marshalled-io-tools/claude-code/index.d.ts',
+    default: './dist/src/tools/marshalled-io-tools/claude-code/index.js',
+  },
 };
-const COMPILED_WORKFLOW_JS_RELATIVE_PATH =
-  'dist/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.js';
+// Each shipped migrated workflow's compiled JS, which since AHQ-208 lives
+// inside the workflow's own ts-workflow/dist/
+const COMPILED_WORKFLOW_JS_RELATIVE_PATHS = [
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/ts-workflow/dist/add-feature-cli.js',
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/dist/math-workflow-cli.js',
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/dist/string-reversal-cli.js',
+];
+// Per-workflow install files must NOT ship inside any ts-workflow/ (AHQ-208
+// stripped layout): a stray ts-workflow/package.json would also shadow the
+// package-root manifest for Node package self-reference
+const STRIPPED_TS_WORKFLOW_FILE_NAMES = [
+  'package.json',
+  'pnpm-lock.yaml',
+  '.npmrc',
+  'pnpm-workspace.yaml',
+];
 
 // Leak-class boundary: exactly what the staged release tree ships, nothing else
 const EXPECTED_TARBALL_TOP_LEVEL = [
@@ -76,22 +101,20 @@ const EXPECTED_SHIPPED_PLUGINS = [
 ];
 
 // Shipped-skills boundary (AHQ-198): only the migrated workflows ship — the
-// five unmigrated skills are excluded from the artifact until AHQ-201 migrates
-// them (their legacy launch commands mutate the package tree and need
-// pnpm/tsx, which cannot work in a read-only npm install). The utilities
-// plugin has no skills/ directory, so it must not appear in this map.
+// remaining unmigrated skills are excluded from the artifact until AHQ-209
+// migrates them (their legacy launch commands mutate the package tree and
+// need pnpm/tsx, which cannot work in a read-only npm install). AHQ-208
+// restored string-reversal to the shipped set. The utilities plugin has no
+// skills/ directory, so it must not appear in this map.
 const EXPECTED_SHIPPED_SKILLS_BY_PLUGIN: Record<string, string[]> = {
   'agentic-hq-core-plugin': ['self-termination'],
-  'agentic-hq-demos-plugin': ['add-feature', 'math-workflow'],
+  'agentic-hq-demos-plugin': ['add-feature', 'math-workflow', 'string-reversal'],
 };
 
 // The excluded skills must not surface in the installed `agentic-hq list`
 // output either — discovery is filesystem-driven against the installed tree.
-// Substrings match how each workflow actually renders in the listing: the
-// string-reversal skill lists under the short command `agentic-hq reversal`,
-// so 'reversal' (not 'string-reversal') is the substring that detects it.
+// Substrings match how each workflow actually renders in the listing.
 const EXCLUDED_WORKFLOW_LIST_SUBSTRINGS = [
-  'reversal',
   'quick-jira',
   'full-jira',
   'add-feature-detailed-example',
@@ -104,7 +127,7 @@ interface PackageManifest {
   type?: string;
   private?: boolean;
   bin?: Record<string, string>;
-  exports?: Record<string, string>;
+  exports?: Record<string, string | Record<string, string>>;
   files?: string[];
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
@@ -144,16 +167,21 @@ function createCleanWorkspace(): string {
 
 describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   const repoRoot = process.cwd();
-  // temp/AHQ-196 is the human-approved scratch tree for this ticket's tarball installs
+  // temp/AHQ-208 is this ticket's gitignored scratch tree for tarball installs
   const runDir = path.join(
     repoRoot,
     'temp',
-    'AHQ-196',
+    'AHQ-208',
     `e2e-tarball-${Date.now()}_${randomUUID()}`
   );
-  const installPrefix = path.join(runDir, 'install-prefix');
-  const installedPackageRoot = path.join(installPrefix, 'lib', 'node_modules', 'agentic-hq');
-  const installedBinPath = path.join(installPrefix, 'bin', 'agentic-hq');
+  const installedPackageRoot = path.join(
+    runDir,
+    'install-prefix',
+    'lib',
+    'node_modules',
+    'agentic-hq'
+  );
+  const installedBinPath = path.join(runDir, 'install-prefix', 'bin', 'agentic-hq');
 
   let rootManifest: PackageManifest;
   let tarballManifest: PackageManifest;
@@ -162,24 +190,9 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   let tarballPath: string;
 
   beforeAll(() => {
-    fs.mkdirSync(runDir, { recursive: true });
-
-    // Build the package (compiles the CLI graph + the math workflow and stages
-    // the release/ tree with its generated manifest)
-    runCliAndLogOutput('pnpm build', 'prebuilt-tarball-build', SETUP_TIMEOUT_MS, repoRoot);
-
-    // Pack the tarball FROM the staged release tree — its manifest is literal,
-    // so no pack-time override mechanism is involved any more
-    const releaseDir = path.join(repoRoot, 'release');
-    runCliAndLogOutput(
-      `pnpm pack --pack-destination "${runDir}"`,
-      'prebuilt-tarball-pack',
-      SETUP_TIMEOUT_MS,
-      releaseDir
-    );
-    const tarballs = fs.readdirSync(runDir).filter((entry) => entry.endsWith('.tgz'));
-    expect(tarballs).toHaveLength(1);
-    tarballPath = path.join(runDir, tarballs[0]);
+    // Build → pack FROM release/ → npm install into an isolated prefix
+    // (shared with the user-workspace fixture e2e)
+    ({ tarballPath } = buildPackAndInstallTarball(runDir));
 
     // The source manifest the generated one is derived from — the shared
     // fields must match it, never be hand-maintained copies that could drift
@@ -199,16 +212,8 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       .filter((entry) => entry.length > 0)
       .sort();
 
-    // Install the tarball the way npm would install from the registry
-    runCliAndLogOutput(
-      `npm install -g --prefix "${installPrefix}" "${tarballPath}"`,
-      'prebuilt-tarball-npm-install',
-      SETUP_TIMEOUT_MS,
-      repoRoot
-    );
-
     // Snapshot the installed package's content (relative path → SHA-256) — the
-    // math run must not change it
+    // workflow runs must not change it
     installedPackageHashes = hashTree(installedPackageRoot);
   }, SETUP_TIMEOUT_MS);
 
@@ -222,8 +227,15 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       expect(tarballManifest.type).toBe('module');
       expect(tarballManifest.bin).toEqual(EXPECTED_BIN);
       expect(tarballManifest.exports).toEqual(EXPECTED_EXPORTS);
-      for (const exportTarget of Object.values(tarballManifest.exports ?? {})) {
-        expect(exportTarget).not.toMatch(/\.ts$/);
+      // No .ts source targets anywhere — a `types` condition pointing at a
+      // shipped .d.ts is the one allowed .ts-suffixed shape (AHQ-208)
+      const exportLeafTargets = Object.values(tarballManifest.exports ?? {}).flatMap((target) =>
+        typeof target === 'string' ? [target] : Object.values(target)
+      );
+      for (const exportTarget of exportLeafTargets) {
+        if (exportTarget.endsWith('.ts')) {
+          expect(exportTarget).toMatch(/\.d\.ts$/);
+        }
       }
 
       // Shared fields are derived from the root manifest (one source of truth)
@@ -291,33 +303,58 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
         skills.sort();
       }
       expect(shippedSkillsByPlugin).toEqual(EXPECTED_SHIPPED_SKILLS_BY_PLUGIN);
+      // Exactly the runner and the Workflow Build it delegates to ship from
+      // scripts/ (AHQ-208) — the rest of scripts/ is dev-machine tooling
       expect(tarballFileList.filter((file) => file.startsWith('scripts/'))).toEqual([
+        'scripts/build-workflow.cjs',
         'scripts/run-workflow.cjs',
       ]);
       for (const file of tarballFileList) {
         expect(file).not.toMatch(/(^|\/)node_modules\//);
       }
 
-      // The compiled workflow JS shipped in the install
-      const compiledWorkflowJsPath = path.join(
-        installedPackageRoot,
-        COMPILED_WORKFLOW_JS_RELATIVE_PATH
-      );
-      expect(fs.existsSync(compiledWorkflowJsPath)).toBe(true);
+      // dist/ ships compiled JS + source maps + declarations and nothing else;
+      // tsc's incremental cache never ships (AHQ-208)
+      const distFiles = tarballFileList.filter((file) => file.startsWith('dist/'));
+      expect(distFiles.length).toBeGreaterThan(0);
+      for (const file of distFiles) {
+        expect(file).toMatch(/\.(js|js\.map|d\.ts)$/);
+      }
+      expect(tarballFileList.filter((file) => file.endsWith('.tsbuildinfo'))).toEqual([]);
 
-      // No package.json ANYWHERE between the compiled workflow JS and the
-      // package root: the compiled JS resolves 'agentic-hq/tools/claude-code'
-      // via Node package self-reference against the nearest ancestor manifest,
-      // which must be the package root's GENERATED manifest itself — any
-      // manifest below it would shadow that resolution (AHQ-197 retired the
-      // interim dist/package.json that used to sit in between)
-      let dir = path.dirname(compiledWorkflowJsPath);
-      while (dir !== installedPackageRoot) {
-        expect(
-          fs.existsSync(path.join(dir, 'package.json')),
-          `unexpected nested package.json at ${dir} would shadow the package-root manifest self-reference`
-        ).toBe(false);
-        dir = path.dirname(dir);
+      // Stripped layout (AHQ-208, doc 01 §11(a) watch-item): per-workflow
+      // install files must not ship inside any ts-workflow/
+      for (const file of tarballFileList) {
+        const segments = file.split('/');
+        if (segments.slice(0, -1).includes('ts-workflow')) {
+          expect(
+            STRIPPED_TS_WORKFLOW_FILE_NAMES,
+            `per-workflow install file ${file} must not ship`
+          ).not.toContain(segments[segments.length - 1]);
+        }
+      }
+
+      // Each shipped migrated workflow's compiled JS shipped in the install,
+      // with no package.json ANYWHERE between it and the package root: the
+      // compiled JS resolves 'agentic-hq/tools/claude-code' via Node package
+      // self-reference against the nearest ancestor manifest, which must be
+      // the package root's GENERATED manifest itself — any manifest below it
+      // would shadow that resolution
+      for (const compiledWorkflowJsRelativePath of COMPILED_WORKFLOW_JS_RELATIVE_PATHS) {
+        const compiledWorkflowJsPath = path.join(
+          installedPackageRoot,
+          compiledWorkflowJsRelativePath
+        );
+        expect(fs.existsSync(compiledWorkflowJsPath), compiledWorkflowJsRelativePath).toBe(true);
+
+        let dir = path.dirname(compiledWorkflowJsPath);
+        while (dir !== installedPackageRoot) {
+          expect(
+            fs.existsSync(path.join(dir, 'package.json')),
+            `unexpected nested package.json at ${dir} would shadow the package-root manifest self-reference`
+          ).toBe(false);
+          dir = path.dirname(dir);
+        }
       }
 
       // Every shipped plugin shell script must be executable: skills invoke them
@@ -404,14 +441,38 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       // 'add-feature-detailed-example' absence assertion below
       expect(output).toContain('agentic-hq add-feature');
 
-      // The five excluded unmigrated workflows must not be listed from the
-      // installed package (AHQ-198 recorded Planner decision; AHQ-201 restores
-      // them as it migrates each one)
+      // string-reversal ships again since AHQ-208 (it lists under the short
+      // command `agentic-hq reversal`)
+      expect(output).toContain('agentic-hq reversal');
+
+      // The excluded unmigrated workflows must not be listed from the
+      // installed package (AHQ-198 recorded Planner decision; AHQ-209
+      // restores them as it migrates each one)
       for (const excludedSubstring of EXCLUDED_WORKFLOW_LIST_SUBSTRINGS) {
         expect(output).not.toContain(excludedSubstring);
       }
     },
     FAST_TEST_TIMEOUT_MS
+  );
+
+  it(
+    'should run the string-reversal workflow from a clean workspace via the installed bin',
+    () => {
+      const workspace = createCleanWorkspace();
+
+      const output = runCliAndLogOutput(
+        `"${installedBinPath}" reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`,
+        REVERSAL_LOG_FILE_LABEL,
+        REVERSAL_RUN_TIMEOUT_MS,
+        workspace
+      );
+
+      expect(output).toContain(EXPECTED_REVERSED_STRING);
+
+      // The installed package stays READ-ONLY at runtime for this workflow too
+      expect(hashTree(installedPackageRoot)).toEqual(installedPackageHashes);
+    },
+    REVERSAL_RUN_TIMEOUT_MS
   );
 
   it(
@@ -486,7 +547,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       process.stdout.write(
         `\nTemp workspace created at: ${workspace}\n` +
           `Tarball install kept at: ${runDir}\n` +
-          "Not cleaning up — temp/AHQ-196 is this ticket's gitignored scratch tree.\n"
+          "Not cleaning up — temp/AHQ-208 is this ticket's gitignored scratch tree.\n"
       );
     },
     MATH_RUN_TIMEOUT_MS

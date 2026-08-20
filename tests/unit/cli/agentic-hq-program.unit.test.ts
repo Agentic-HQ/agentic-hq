@@ -9,9 +9,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createProgram } from '../../../src/cli/agentic-hq-program.js';
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
 import type { WorkflowCommandBuilder } from '../../../src/interfaces/workflow-command-builder.js';
 import type { WorkflowCommand } from '../../../src/interfaces/workflow-command.js';
 import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import type { WorkflowRegistry } from '../../../src/workflow-discovery/interfaces/workflow-registry.js';
 import type { WorkflowSearchResults } from '../../../src/workflow-discovery/interfaces/workflow-search-results.js';
 import { WorkflowSearchResultsImpl } from '../../../src/workflow-discovery/workflow-listing/workflow-search-results-impl.js';
@@ -62,6 +64,7 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
         getShortName: () => ({ toString: () => 'test-wf' }),
         getDescription: () => ({ toString: () => 'A test workflow' }),
         getFullClaudeSkillCommand: () => ({ toString: () => '/test-plugin:test-skill' }),
+        getBuildMode: () => BuildMode.BUILD_FIRST,
         getExampleCommand: () => ({
           getCommandPart: () => 'agentic-hq test-wf',
           getArgsPart: () => '',
@@ -73,7 +76,11 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
     const program = createProgram(builder, searchResults);
     await program.parseAsync(['node', 'agentic-hq', 'test-wf']);
 
-    expect(builder.build).toHaveBeenCalledWith('/test-plugin:test-skill', []);
+    expect(builder.build).toHaveBeenCalledWith(
+      '/test-plugin:test-skill',
+      BuildMode.BUILD_FIRST,
+      []
+    );
     expect(mockCommand.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -84,6 +91,7 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
         getShortName: () => ({ toString: () => 'test-wf' }),
         getDescription: () => ({ toString: () => 'A test workflow' }),
         getFullClaudeSkillCommand: () => ({ toString: () => '/test-plugin:test-skill' }),
+        getBuildMode: () => BuildMode.BUILD_FIRST,
         getExampleCommand: () => ({
           getCommandPart: () => 'agentic-hq test-wf',
           getArgsPart: () => '',
@@ -95,7 +103,9 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
     const program = createProgram(builder, searchResults);
     await program.parseAsync(['node', 'agentic-hq', 'test-wf', '--', '--extra-arg=value']);
 
-    expect(builder.build).toHaveBeenCalledWith('/test-plugin:test-skill', ['--extra-arg=value']);
+    expect(builder.build).toHaveBeenCalledWith('/test-plugin:test-skill', BuildMode.BUILD_FIRST, [
+      '--extra-arg=value',
+    ]);
     expect(mockCommand.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -159,7 +169,7 @@ describe('createProgram with WorkflowCommandBuilder and WorkflowSearchResults in
         process.cwd = () => tmpdir; // U = P: only the package registers
         const { builder } = createMockBuilder();
         const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-          new DefaultAhqPackageRoot(tmpdir)
+          new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
         );
 
         let program: ReturnType<typeof createProgram> | undefined;

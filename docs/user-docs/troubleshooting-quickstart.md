@@ -83,9 +83,9 @@ end of the README's [Installation](../../README.md#installation) steps.
   — if you try it, please report back on the
   [Discord server](https://discord.gg/fnR7SJt2d7).
 
-### Installing the `agentic-hq` CLI (`npm link`) fails
+### Installing the `agentic-hq-dev` CLI (`npm link`) fails
 
-#### `agentic-hq: command not found` after `npm link`
+#### `agentic-hq-dev: command not found` after `npm link`
 
 - **Cause:** npm's global bin directory isn't on your `PATH`, or your current
   shell hasn't picked up the new symlink. Under nvm this dir is the active
@@ -115,7 +115,7 @@ end of the README's [Installation](../../README.md#installation) steps.
 
 - **Cause:** This repo pins pnpm via the `packageManager` field, so npm may
   print a benign warning when you run `npm link`. This is expected.
-- **Fix:** Ignore it. `npm link` only registers the global `agentic-hq`
+- **Fix:** Ignore it. `npm link` only registers the global `agentic-hq-dev`
   command via the package's `bin` field; pnpm still owns `node_modules`. To
   undo the link later, run `npm unlink -g agentic-hq`.
 
@@ -137,7 +137,7 @@ does.
 
 #### `command not found: agentic-hq`
 
-- **Cause:** Same as the *`agentic-hq: command not found` after `npm link`*
+- **Cause:** Same as the *`agentic-hq-dev: command not found` after `npm link`*
   case above.
 - **Fix:** Open a new terminal; check that `<npm prefix -g>/bin` is on
   `PATH`.

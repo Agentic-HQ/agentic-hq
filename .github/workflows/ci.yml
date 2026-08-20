@@ -71,10 +71,11 @@ jobs:
         run: npm link
 
       # README step 5 verification, and our non-Claude smoke test: exercises
-      # real CLI startup (Commander parsing, plugin/workflow discovery),
+      # real CLI startup (Commander parsing, plugin/workflow discovery) AND
+      # the Framework Build (1) the agentic-hq-dev wrapper runs first (AHQ-208),
       # which unit tests never touch.
       - name: Smoke test CLI (no Claude required)
-        run: agentic-hq list
+        run: agentic-hq-dev list
 
       # README step 6: the hard gate — typecheck + lint + format + unit tests.
       - name: Validate (typecheck + lint + format + unit tests)

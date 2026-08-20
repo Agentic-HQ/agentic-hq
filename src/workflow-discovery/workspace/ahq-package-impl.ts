@@ -1,4 +1,5 @@
-import type { AhqPackageRoot } from '../../interfaces/ahq-package-root.js';
+import type { AhqRuntimeParams } from '../../interfaces/ahq-runtime-params.js';
+import type { BuildMode } from '../../interfaces/build-mode.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import type { Plugin } from '../plugin/plugin.js';
@@ -9,14 +10,16 @@ const AHQ_PACKAGE_DISPLAY_NAME = 'Agentic HQ Package';
 
 /**
  * AhqPackageImpl — Concrete Workspace for the AHQ package itself, rooted at
- * the constructor-injected AhqPackageRoot.
+ * the AhqPackageRoot inside the constructor-injected AhqRuntimeParams.
  *
- * SRP Does: Answer getRoot() straight from the injected AhqPackageRoot, and
+ * SRP Does: Answer getRoot() and getBuildMode() straight from the injected
+ * AhqRuntimeParams — the package's workflows INHERIT the wrapper's mode
+ * (AHQ-208): dev wrapper → build-first, shipped wrapper → prebuilt — and
  * isAhqPackage() as always true (this class IS the AHQ package by
  * definition — an override, not delegation). Every other Workspace method is
- * delegated to a WorkspaceImpl built with that same root.
+ * delegated to a WorkspaceImpl built with that same root and mode.
  *
- * SRP Knows About: The injected AhqPackageRoot, the AHQ display name,
+ * SRP Knows About: The injected AhqRuntimeParams, the AHQ display name,
  * and the WorkspaceImpl constructor.
  *
  * SRP Knows Nothing About: How plugins are discovered or how
@@ -35,7 +38,7 @@ const AHQ_PACKAGE_DISPLAY_NAME = 'Agentic HQ Package';
  * and workflow registration unchanged.
  */
 export class AhqPackageImpl implements Workspace {
-  constructor(private readonly ahqPackageRoot: AhqPackageRoot) {}
+  constructor(private readonly ahqRuntimeParams: AhqRuntimeParams) {}
 
   /** Return the AHQ package display name (delegates to WorkspaceImpl). */
   getDisplayName(): string {
@@ -52,9 +55,15 @@ export class AhqPackageImpl implements Workspace {
     this.createDelegate().registerWorkflowsWith(registry);
   }
 
-  /** Return the injected AhqPackageRoot's path. */
+  /** Return the injected runtime params' AhqPackageRoot path. */
   getRoot(): string {
-    return this.ahqPackageRoot.getPath();
+    return this.ahqRuntimeParams.getAhqPackageRoot().getPath();
+  }
+
+  /** Return the wrapper's mode from the injected runtime params (AHQ-208) —
+   *  the AHQ package's workflows run however the invoked binary says. */
+  getBuildMode(): BuildMode {
+    return this.ahqRuntimeParams.getBuildMode();
   }
 
   /** Return `{root}/.agentic-hq/temp` (delegates to WorkspaceImpl). */
@@ -73,6 +82,11 @@ export class AhqPackageImpl implements Workspace {
   }
 
   private createDelegate(): WorkspaceImpl {
-    return new WorkspaceImpl(AHQ_PACKAGE_DISPLAY_NAME, this.getRoot(), this.ahqPackageRoot);
+    return new WorkspaceImpl(
+      AHQ_PACKAGE_DISPLAY_NAME,
+      this.getRoot(),
+      this.ahqRuntimeParams.getAhqPackageRoot(),
+      this.getBuildMode()
+    );
   }
 }

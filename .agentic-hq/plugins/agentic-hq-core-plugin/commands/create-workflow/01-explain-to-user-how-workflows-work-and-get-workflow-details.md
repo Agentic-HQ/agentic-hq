@@ -33,7 +33,7 @@ how-agentic-hq-works-file = {agentic-hq-workspace-root-dir}/docs/dev/how-agentic
 demos-plugin-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
 example-workflow-commands-dir = {demos-plugin-dir}/commands/math-workflow
 example-workflow-skill-dir = {demos-plugin-dir}/skills/math-workflow
-example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-demo-cli.ts
+example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-cli.ts
 example-workflow-skill-file = {example-workflow-skill-dir}/SKILL.md
 example-workflow-package-json = {example-workflow-skill-dir}/ts-workflow/package.json
 ```
@@ -416,7 +416,7 @@ Captures the structure of the orchestrator CLI that Command 02 of `create-workfl
 ### Pattern to follow
 
 {Pick one and justify briefly:
-- **`math-workflow-demo-cli.ts`** — simplest. Each command's output is fed as the next command's input. Use when downstream commands genuinely need values produced earlier (a chosen ID, a derived path).
+- **`math-workflow-cli.ts`** — simplest. Each command's output is fed as the next command's input. Use when downstream commands genuinely need values produced earlier (a chosen ID, a derived path).
 - **`create-workflow-cli.ts`** — env-var-driven. CLI reads an env var, constructs one input string, passes the **same** string to every command, ignores per-command outputs. Phase gating done via filesystem state. Use when commands are stateless w.r.t. each other and gating is on disk.
 - **Custom** — describe.}
 

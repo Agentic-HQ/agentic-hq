@@ -16,6 +16,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect } from 'vitest';
 
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 import { CurrentUserWorkspaceImpl } from '../../../../src/workflow-discovery/workspace/current-user-workspace-impl.js';
@@ -80,6 +81,30 @@ describe('CurrentUserWorkspaceImpl', () => {
       expect(registry.registered).toHaveLength(3);
     }
   );
+
+  // The per-workflow build-mode rule (AHQ-208): a user workspace holds SOURCE,
+  // so its workflows are always build-first — the wrapper's mode is irrelevant
+  // (this class never even receives it).
+  tmpdirTest('should always return BUILD_FIRST via getBuildMode()', ({ tmpdir }) => {
+    process.cwd = () => tmpdir;
+    const workspace: Workspace = new CurrentUserWorkspaceImpl(OTHER_AHQ_PACKAGE_ROOT);
+    expect(workspace.getBuildMode()).toBe(BuildMode.BUILD_FIRST);
+  });
+
+  tmpdirTest('should register workflows that all carry BUILD_FIRST', ({ tmpdir }) => {
+    createTestWorkspaceFixture(tmpdir);
+    process.cwd = () => tmpdir;
+
+    const workspace: Workspace = new CurrentUserWorkspaceImpl(OTHER_AHQ_PACKAGE_ROOT);
+    const registry = new StubWorkflowRegistry();
+
+    workspace.registerWorkflowsWith(registry);
+
+    expect(registry.registered).toHaveLength(3);
+    for (const workflow of registry.registered) {
+      expect(workflow.getBuildMode()).toBe(BuildMode.BUILD_FIRST);
+    }
+  });
 
   // Coverage of the four root/path methods: pure delegation through to WorkspaceImpl
   // (cwd becomes rootDir). isAhqPackage compares cwd to the injected AhqPackageRoot

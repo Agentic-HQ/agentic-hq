@@ -1,11 +1,11 @@
 /**
- * E2E Test: Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq binary
+ * E2E Test: Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq-dev binary
  *
  * Verifies that the quick Jira TDD workflow works from a SEPARATE workspace:
- * 1. Precondition: `agentic-hq` is already on PATH (installed via README `npm link`)
+ * 1. Precondition: `agentic-hq-dev` is already on PATH (installed via README `npm link`)
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Create a test Jira via MarshalledCLITool
- * 4. Run: agentic-hq quick-jira -- --jira-id={testJiraId}
+ * 4. Run: agentic-hq-dev quick-jira -- --jira-id={testJiraId}
  * 5. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
  * 6. Assert: Implementation files exist (src/temp-test-hello-world.ts, src/temp-test-hello-world.cli.ts)
  * 7. Assert: Jira status is Done
@@ -75,7 +75,7 @@ function assertWorkflowOutputFilesExist(projectRoot: string, testJiraId: string)
   }
 }
 
-describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq binary', () => {
+describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq-dev binary', () => {
   it(
     'should implement a test Jira and produce expected files from a separate workspace via the globally-linked binary',
     async () => {
@@ -84,10 +84,12 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
       // installer's job, not the test's, so we assert it rather than running `npm link`
       // here. A failure means the documented install step wasn't completed on this machine.
       const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
-      const agenticHqOnPath = pathDirs.some((dir) => fs.existsSync(path.join(dir, 'agentic-hq')));
+      const agenticHqDevOnPath = pathDirs.some((dir) =>
+        fs.existsSync(path.join(dir, 'agentic-hq-dev'))
+      );
       expect(
-        agenticHqOnPath,
-        '`agentic-hq` is not on your PATH. It should have been linked during ' +
+        agenticHqDevOnPath,
+        '`agentic-hq-dev` is not on your PATH. It should have been linked during ' +
           'installation — see README Quick Start step 5 (`npm link` from the repo ' +
           'root). Run that, then re-run the e2e tests; if it still fails, see ' +
           'docs/user-docs/troubleshooting-quickstart.md.'
@@ -103,7 +105,7 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq bin
       expect(testJiraId).toMatch(JIRA_KEY_PATTERN);
 
       // Act — run agentic-hq from the temp workspace (no --project-root, workspace IS the project root)
-      const command = `agentic-hq quick-jira -- --jira-id=${testJiraId}`;
+      const command = `agentic-hq-dev quick-jira -- --jira-id=${testJiraId}`;
 
       let output: string;
       try {

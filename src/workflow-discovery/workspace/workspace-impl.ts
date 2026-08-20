@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { AhqPackageRoot } from '../../interfaces/ahq-package-root.js';
+import type { BuildMode } from '../../interfaces/build-mode.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import { PluginImpl } from '../plugin/plugin-impl.js';
@@ -32,7 +33,8 @@ export class WorkspaceImpl implements Workspace {
   constructor(
     private readonly displayName: string,
     private readonly rootDir: string,
-    private readonly ahqPackageRoot: AhqPackageRoot
+    private readonly ahqPackageRoot: AhqPackageRoot,
+    private readonly buildMode: BuildMode
   ) {}
 
   /** Return the workspace's display name (e.g. `Agentic HQ Package`, `Local Workspace`). */
@@ -47,7 +49,14 @@ export class WorkspaceImpl implements Workspace {
       return [];
     }
     const entries = fs.readdirSync(pluginsPath, { withFileTypes: true });
-    return entries.filter((e) => e.isDirectory()).map((e) => new PluginImpl(e.name, this.rootDir));
+    return entries
+      .filter((e) => e.isDirectory())
+      .map((e) => new PluginImpl(e.name, this.rootDir, this.buildMode));
+  }
+
+  /** Return the constructor-injected mode every workflow under this workspace carries (AHQ-208). */
+  getBuildMode(): BuildMode {
+    return this.buildMode;
   }
 
   /** Tell each discovered plugin to register its workflows with the registry. */

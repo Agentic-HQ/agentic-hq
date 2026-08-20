@@ -160,7 +160,7 @@ Source files:
 
 - [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow)
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/SKILL.md)
-- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.ts)
+- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-cli.ts)
 
 ### `quick-jira-workflow` — Reads a Jira ticket and completes it via TDD
 
@@ -197,7 +197,7 @@ Source files:
 
 - [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/quick-jira-workflow)
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/SKILL.md)
-- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/src/quick-jira-workflow-demo-cli.ts)
+- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/src/quick-jira-workflow-cli.ts)
 
 ### `full-jira-tdd-story-workflow` — Full TDD story workflow driven by a Jira ticket
 
@@ -229,7 +229,7 @@ Source files:
 
 - [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/full-jira-tdd-story-workflow)
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/SKILL.md)
-- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/src/full-jira-tdd-story-workflow-demo-cli.ts)
+- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/src/full-jira-tdd-story-workflow-cli.ts)
 
 ---
 

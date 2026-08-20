@@ -39,7 +39,7 @@ approved-workflow-spec-filename = {workflow-creation-artifacts-dir}/02a-APPROVED
 plan-verbatim-copy-file = {workflow-creation-artifacts-dir}/02b-approved-workflow-plan-verbatim-copy.md
 example-workflow-commands-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow
 example-workflow-skill-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow
-example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-demo-cli.ts
+example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-cli.ts
 ```
 
 ---
@@ -301,7 +301,7 @@ Create the orchestrator CLI at `{skills-dir}/ts-workflow/src/{workflow-id}-cli.t
 >
 > Look at the actual filenames you created in step 4a and use them **exactly** in your TypeScript constants.
 
-Follow the math-workflow-demo-cli.ts pattern:
+Follow the math-workflow-cli.ts pattern:
 - Import `Command` from commander and `DefaultClaudeCodeTool` from agentic-hq
 - Define constants for each command path
 - Simple linear flow: execute commands sequentially

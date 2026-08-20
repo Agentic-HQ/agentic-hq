@@ -24,7 +24,7 @@ export const app = {
     const builder = root.getWorkflowCommandBuilder();
     createProgram(
       builder,
-      new WorkflowSearchResultsImpl(ahqCommandLine.getAhqRuntimeParams().getAhqPackageRoot())
+      new WorkflowSearchResultsImpl(ahqCommandLine.getAhqRuntimeParams())
     ).parse(ahqCommandLine.getRemainingArgs());
   },
 };

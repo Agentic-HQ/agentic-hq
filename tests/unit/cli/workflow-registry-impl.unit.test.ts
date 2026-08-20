@@ -2,23 +2,30 @@
  * Tests WorkflowRegistryImpl — wraps a Commander program and WorkflowCommandBuilder.
  * When register(workflow) is called, it registers a Commander subcommand using
  * workflow.getShortName() as the command name and workflow.getDescription() as help text.
- * When the subcommand executes, it calls builder.build() with workflow.getFullClaudeSkillCommand()
- * and passthrough args.
+ * When the subcommand executes, it calls builder.build() with workflow.getFullClaudeSkillCommand(),
+ * the workflow's own BuildMode (per-workflow, AHQ-208), and passthrough args.
  * Variables typed as WorkflowRegistry interface; WorkflowRegistryImpl used only for construction.
  */
 import { Command } from 'commander';
 import { describe, expect, vi } from 'vitest';
 
 import { WorkflowRegistryImpl } from '../../../src/cli/workflow-registry-impl.js';
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
 import type { WorkflowCommandBuilder } from '../../../src/interfaces/workflow-command-builder.js';
 import { ShortIdAlreadyRegisteredError } from '../../../src/workflow-discovery/errors/short-id-already-registered-error.js';
 import type { WorkflowRegistry } from '../../../src/workflow-discovery/interfaces/workflow-registry.js';
 
-function createStubWorkflow(shortName: string, description: string, fullCommand: string) {
+function createStubWorkflow(
+  shortName: string,
+  description: string,
+  fullCommand: string,
+  buildMode = BuildMode.BUILD_FIRST
+) {
   return {
     getShortName: () => ({ toString: () => shortName }),
     getDescription: () => ({ toString: () => description }),
     getFullClaudeSkillCommand: () => ({ toString: () => fullCommand }),
+    getBuildMode: () => buildMode,
     getExampleCommand: () => ({
       getCommandPart: () => `agentic-hq ${shortName}`,
       getArgsPart: () => '',
@@ -44,7 +51,7 @@ describe('WorkflowRegistryImpl', () => {
     expect(subcommand).toBeDefined();
   });
 
-  it('should call builder.build with workflow.getFullClaudeSkillCommand and passthrough args when subcommand executes', async () => {
+  it("should call builder.build with workflow.getFullClaudeSkillCommand, the workflow's own build mode, and passthrough args when subcommand executes", async () => {
     const program = new Command();
     program.enablePositionalOptions();
     const mockExecute = vi.fn();
@@ -53,13 +60,18 @@ describe('WorkflowRegistryImpl', () => {
     };
     const registry: WorkflowRegistry = new WorkflowRegistryImpl(program, mockBuilder);
 
-    const workflow = createStubWorkflow('reversal', 'Reverses a string', '/demos:reversal');
+    const workflow = createStubWorkflow(
+      'reversal',
+      'Reverses a string',
+      '/demos:reversal',
+      BuildMode.PREBUILT
+    );
     registry.register(workflow);
 
     // Simulate running the subcommand
     await program.parseAsync(['node', 'agentic-hq', 'reversal', '--', '--string-to-reverse=hello']);
 
-    expect(mockBuilder.build).toHaveBeenCalledWith('/demos:reversal', [
+    expect(mockBuilder.build).toHaveBeenCalledWith('/demos:reversal', BuildMode.PREBUILT, [
       '--string-to-reverse=hello',
     ]);
   });
@@ -89,7 +101,11 @@ describe('WorkflowRegistryImpl', () => {
     expect(matching).toHaveLength(1);
 
     await program.parseAsync(['node', 'agentic-hq', 'add-feature']);
-    expect(mockBuilder.build).toHaveBeenCalledWith('/my-local-plugin:add-feature', []);
+    expect(mockBuilder.build).toHaveBeenCalledWith(
+      '/my-local-plugin:add-feature',
+      BuildMode.BUILD_FIRST,
+      []
+    );
   });
 
   it('should throw ShortIdAlreadyRegisteredError for a name the program already has (a workflow named "list" does not shadow the built-in)', async () => {

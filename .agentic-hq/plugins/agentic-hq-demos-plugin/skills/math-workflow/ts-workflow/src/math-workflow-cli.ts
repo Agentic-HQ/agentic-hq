@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Demo CLI: Math Workflow using Claude Code
+ * math-workflow-cli — Math Workflow demo using Claude Code (named by the
+ * AHQ-208 program-name convention <skill-id>-cli)
  *
  * Demonstrates Agentic HQ's ability to chain multiple Claude Code sessions.
  * Takes an input number and runs it through 3 steps: x2, +3, /5
@@ -31,7 +32,7 @@ const tool = runtime.getClaudeCodeTool();
 const program = new Command();
 
 program
-  .name('math-workflow-demo-cli')
+  .name('math-workflow-cli')
   .description('Run a 3-step math workflow using Claude Code')
   .option('--input-number <number>', 'The input number to process', DEFAULT_INPUT_NUMBER)
   .action(async (options: { inputNumber: string }) => {

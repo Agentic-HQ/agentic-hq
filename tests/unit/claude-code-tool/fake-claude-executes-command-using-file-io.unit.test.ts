@@ -34,18 +34,15 @@ describe('MarshalledCLITool.execute(command, commandInput)', () => {
   it('should reverse a string via file I/O with fake CLI', async () => {
     // Arrange - inject fake CLI instead of real Claude
     const ahqPackageRoot = new DefaultAhqPackageRoot(process.cwd());
-    const ahqPackage = new AhqPackageImpl(ahqPackageRoot);
+    const ahqRuntimeParams = new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, ahqPackageRoot);
+    const ahqPackage = new AhqPackageImpl(ahqRuntimeParams);
     const currentUserWorkspace = new CurrentUserWorkspaceImpl(ahqPackageRoot);
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(
-        ahqPackage,
-        currentUserWorkspace,
-        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, ahqPackageRoot),
-        TSX_EXECUTABLE,
-        [FAKE_CLI_PATH]
-      ),
+      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace, ahqRuntimeParams, TSX_EXECUTABLE, [
+        FAKE_CLI_PATH,
+      ]),
       currentUserWorkspace
     );
     const commandInputString = 'this is a test string';

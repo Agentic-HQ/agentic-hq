@@ -50,6 +50,7 @@ function mockAhqPackage(): Workspace {
     getTempDir: () => path.join(ahqConfigDir, 'temp'),
     getDotAgenticHqDir: () => ahqConfigDir,
     isAhqPackage: () => true,
+    getBuildMode: () => BuildMode.BUILD_FIRST,
   };
 }
 
@@ -64,6 +65,7 @@ function mockUserWorkspace(root?: string): Workspace {
     getTempDir: () => path.join(dotDir, 'temp'),
     getDotAgenticHqDir: () => dotDir,
     isAhqPackage: () => r === path.dirname(ahqConfigDir),
+    getBuildMode: () => BuildMode.BUILD_FIRST,
   };
 }
 

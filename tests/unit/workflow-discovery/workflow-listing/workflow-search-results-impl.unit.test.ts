@@ -12,7 +12,9 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect } from 'vitest';
 
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../../src/runtime-params/default-ahq-runtime-params.js';
 import type { WorkflowSearchResults } from '../../../../src/workflow-discovery/interfaces/workflow-search-results.js';
 import { WorkflowSearchResultsImpl } from '../../../../src/workflow-discovery/workflow-listing/workflow-search-results-impl.js';
 import { StubWorkflowRegistry } from '../test-fixtures/stub-workflow-registry.js';
@@ -55,7 +57,7 @@ describe('WorkflowSearchResultsImpl', () => {
       createTestWorkspaceFixture(tmpdir);
       process.cwd = () => tmpdir;
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-        new DefaultAhqPackageRoot(tmpdir)
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
       );
       const output = searchResults.getWorkflowsListingString();
 
@@ -69,7 +71,7 @@ describe('WorkflowSearchResultsImpl', () => {
     createTestWorkspaceFixture(tmpdir);
     process.cwd = () => tmpdir;
     const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-      new DefaultAhqPackageRoot(tmpdir)
+      new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
     );
     const output = searchResults.getWorkflowsListingString();
     expect(output).toContain('Reverses a string');
@@ -83,7 +85,7 @@ describe('WorkflowSearchResultsImpl', () => {
       // Empty tmpdir — no plugins exist in either workspace
       process.cwd = () => tmpdir;
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-        new DefaultAhqPackageRoot(tmpdir)
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
       );
       const output = searchResults.getWorkflowsListingString();
 
@@ -100,7 +102,7 @@ describe('WorkflowSearchResultsImpl', () => {
       // Stub process.cwd to a different directory with its own plugins
       process.cwd = () => '/some/other/workspace';
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-        new DefaultAhqPackageRoot(tmpdir)
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
       );
       const output = searchResults.getWorkflowsListingString();
 
@@ -113,7 +115,7 @@ describe('WorkflowSearchResultsImpl', () => {
     createTestWorkspaceFixture(tmpdir);
     process.cwd = () => tmpdir;
     const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-      new DefaultAhqPackageRoot(tmpdir)
+      new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
     );
     const output = searchResults.getWorkflowsListingString();
 
@@ -128,7 +130,7 @@ describe('WorkflowSearchResultsImpl', () => {
       // Same dir so CurrentUserWorkspace registers nothing (no duplicates)
       process.cwd = () => tmpdir;
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-        new DefaultAhqPackageRoot(tmpdir)
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(tmpdir))
       );
       const registry = new StubWorkflowRegistry();
 
@@ -148,7 +150,7 @@ describe('WorkflowSearchResultsImpl', () => {
       const { packageRoot, localRoot } = createPackageAndCollidingLocalRoots(tmpdir);
       process.cwd = () => localRoot;
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-        new DefaultAhqPackageRoot(packageRoot)
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(packageRoot))
       );
       const registry = new StubWorkflowRegistry();
 
@@ -170,7 +172,7 @@ describe('WorkflowSearchResultsImpl', () => {
       const { packageRoot, localRoot } = createPackageAndCollidingLocalRoots(tmpdir);
       process.cwd = () => localRoot;
       const searchResults: WorkflowSearchResults = new WorkflowSearchResultsImpl(
-        new DefaultAhqPackageRoot(packageRoot)
+        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(packageRoot))
       );
 
       const output = searchResults.getWorkflowsListingString();

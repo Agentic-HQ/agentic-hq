@@ -17,7 +17,7 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install && ln -sfn \"$AGENTIC_HQ_WORKSPACE_ROOT\" node_modules/agentic-hq) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/quick-jira-workflow-demo-cli.ts"
+  "command-output-string": "(cd {skill-base-dir}/ts-workflow && pnpm install && ln -sfn \"$AGENTIC_HQ_WORKSPACE_ROOT\" node_modules/agentic-hq) && {skill-base-dir}/ts-workflow/node_modules/.bin/tsx --tsconfig {skill-base-dir}/ts-workflow/tsconfig.json {skill-base-dir}/ts-workflow/src/quick-jira-workflow-cli.ts"
 }
 ```
 

@@ -63,11 +63,13 @@ Linux only:
    pnpm install
    ```
 
-5. **Install the `agentic-hq` CLI onto your `PATH`** so you can run workflows from any directory:
+5. **Install the `agentic-hq-dev` CLI onto your `PATH`** so you can run workflows from any directory:
 
    ```bash
    npm link
    ```
+
+   The linked clone's binary is **`agentic-hq-dev`** (it rebuilds the framework from source on every run); an npm install of the published package gives you **`agentic-hq`** instead.
 
    > [!NOTE]
    > **Linux users:** `npm link` prints two warnings — an *"Unknown project config `frozen-lockfile`"* and an *allow-scripts* note about a `darwin-*` `postinstall`. Both are expected and safe to ignore (the config is a pnpm key npm doesn't read; the postinstall is a macOS-only step that no-ops on Linux).
@@ -76,7 +78,7 @@ Linux only:
    Verify it's on your `PATH`:
 
    ```bash
-   agentic-hq list
+   agentic-hq-dev list
    ```
 
 6. **Run unit tests and other validation** (should take less than 10 seconds):
@@ -88,7 +90,7 @@ Linux only:
 7. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
    ```bash
-   agentic-hq reversal -- --string-to-reverse="wow this is amazing"
+   agentic-hq-dev reversal -- --string-to-reverse="wow this is amazing"
    ```
 
    NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
@@ -107,7 +109,7 @@ If any step above fails, see [Quick Start Troubleshooting](docs/user-docs/troubl
 `cd` into the root of an existing project you'd like to add a small feature to, then run:
 
 ```bash
-agentic-hq add-feature -- --ticket-id=PROJ-1
+agentic-hq-dev add-feature -- --ticket-id=PROJ-1
 ```
 
 - **`--ticket-id`** - set this to the ticket id from your issue tracking system, or make one up.  It is used as a directory name in (`docs/tickets/<ticket-id>/workflow-files/`).
@@ -129,7 +131,7 @@ This is the core customisation path of Agentic HQ: run a workflow you like, then
 Change directory into the root of the project you want your new workflow to live in and then run:
 
 ```bash
-agentic-hq create-workflow -- --using=add-feature
+agentic-hq-dev create-workflow -- --using=add-feature
 ```
 
 `--using` takes the **short-id** of the workflow to base yours on. It finds the `add-feature` workflow (looking in both the Agentic HQ install directory and your own project directory).  You then work with Claude to modify it.  You may want to add a new Agent, enforce your own rules, add approval or review gates. It copies and rewires the workflow into a new one that's genuinely yours and runnable straight away; the original is never touched.
@@ -140,12 +142,12 @@ To build a workflow from scratch, run `create-workflow` with no `--using` (see [
 
 ## Running Workflows From Your Own Workspaces
 
-After completing the Quick Start above, the `agentic-hq` command is available globally. You can `cd` into any workspace on your machine and run workflows from there.
+After completing the Quick Start above, the `agentic-hq-dev` command is available globally. You can `cd` into any workspace on your machine and run workflows from there.
 
 ### Listing Available Workflows
 
 ```bash
-agentic-hq list
+agentic-hq-dev list
 ```
 
 This shows all available workflows grouped by plugin, with example usage for each. It lists workflows from both the Agentic HQ workspace and (if different) your current local workspace.
@@ -156,7 +158,7 @@ For full details of all the workflows and links to their source files — see [d
 
 ```bash
 
-agentic-hq <short-name> -- [passthrough args]
+agentic-hq-dev <short-name> -- [passthrough args]
 
 ```
 
@@ -168,7 +170,7 @@ agentic-hq <short-name> -- [passthrough args]
 # Create a temporary workspace and run the string reversal demo from it
 mkdir /tmp/my-temp-workspace
 cd /tmp/my-temp-workspace
-agentic-hq reversal -- --string-to-reverse="this is working well"
+agentic-hq-dev reversal -- --string-to-reverse="this is working well"
 ```
 
 ## Why Use Agentic HQ?
@@ -191,23 +193,23 @@ Here's the rest of what Agentic HQ ships with:
 - **A detailed, opinionated workflow — `add-feature-detailed-example`.** A worked example of how far a workflow can be shaped around one developer's own way of building software: a seven-stage loop (ticket → interrogate → plan → execute → refactor-plan → refactor-execute → validate). It's deliberately overkill for most people — treat it as a showcase of what's possible, not the recommended starting point.
 
   ```bash
-  agentic-hq add-feature-detailed-example -- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-1
+  agentic-hq-dev add-feature-detailed-example -- --verbosity=low --suggest-large-refactor=false --ticket-id=PROJ-1
   ```
 
   See its [developer help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/docs/developer-help-docs/developer-help-doc.md) for how it's built and how to adapt it.
 
 - **Jira-driven workflows — `quick-jira` and `full-jira`.** TDD-by-Jira workflows (one fully unattended, one human-in-the-loop) that read a ticket, drive a RED → GREEN → REFACTOR cycle per test type, and update the ticket. These were Agentic HQ's original flagship. They need a one-time MCP-server setup — see their entries in [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md), which link to the [Jira MCP setup guide](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md).
 
-- **Build a workflow from scratch.** Run `agentic-hq create-workflow` with no `--using` to design a brand-new workflow collaboratively from a blank slate (rather than copying an existing one).
+- **Build a workflow from scratch.** Run `agentic-hq-dev create-workflow` with no `--using` to design a brand-new workflow collaboratively from a blank slate (rather than copying an existing one).
 
 - **Quick demos — `reversal` and `math`.** Tiny throwaway workflows, handy for confirming things work or seeing how variables flow from one step to the next:
 
   ```bash
   # reversal — single-step (~20s) workflow that asks Claude to reverse the input string
-  agentic-hq reversal -- --string-to-reverse="wow this is amazing"
+  agentic-hq-dev reversal -- --string-to-reverse="wow this is amazing"
 
   # math — three-step (~80s) workflow that runs a number through ×2 → +3 → ÷5
-  agentic-hq math -- --input-number=11
+  agentic-hq-dev math -- --input-number=11
   ```
 
 For the full catalogue — every shipped workflow, what it does, and links to its source — see [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md).

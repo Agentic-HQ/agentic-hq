@@ -103,7 +103,9 @@ Check every one of these:
 
 - **no `private` field** at all;
 - `bin` is exactly `{"agentic-hq": "bin/agentic-hq-prebuilt.cjs"}`;
-- every `exports` target is compiled `./dist/….js` — **no `.ts` anywhere**;
+- every `exports` runtime target is compiled `./dist/….js`; a `types` condition
+  may point at a shipped `./dist/….d.ts` — **no `.ts` source target anywhere**
+  (the only allowed `.ts` suffix is `.d.ts`);
 - `publishConfig.executableFiles` is **non-empty** and lists only
   `.agentic-hq/plugins/**/*.sh` paths;
 - **no** `devDependencies`, **no** `packageManager`, **no** `engines.pnpm` —
@@ -117,14 +119,40 @@ tar -tzf agentic-hq-<version>.tgz | grep '^package/\.agentic-hq/plugins/' | grep
 
 - **Expected:** exactly the migrated workflows' skills (currently
   `agentic-hq-core-plugin/self-termination`, `agentic-hq-demos-plugin/add-feature`,
-  `agentic-hq-demos-plugin/math-workflow`) — none of the unmigrated skills listed in
-  `EXCLUDED_UNMIGRATED_SKILLS` in `scripts/build-release.cjs`.
+  `agentic-hq-demos-plugin/math-workflow`,
+  `agentic-hq-demos-plugin/string-reversal`) — none of the unmigrated skills
+  listed in `EXCLUDED_UNMIGRATED_SKILLS` in `scripts/build-release.cjs`.
 
 ```
 tar -tzf agentic-hq-<version>.tgz | grep node_modules
 ```
 
 - **Expected:** no output at all.
+
+```
+tar -tzf agentic-hq-<version>.tgz | grep '^package/scripts/'
+```
+
+- **Expected:** exactly `package/scripts/build-workflow.cjs` and
+  `package/scripts/run-workflow.cjs` (the shared runner and the Workflow Build
+  it delegates to — nothing else from `scripts/` ships).
+
+```
+tar -tzf agentic-hq-<version>.tgz | grep -E '\.tsbuildinfo|ts-workflow/(package\.json|pnpm-lock\.yaml|\.npmrc|pnpm-workspace\.yaml)'
+```
+
+- **Expected:** no output at all — tsc's incremental cache never ships, and no
+  per-workflow install file ships inside any `ts-workflow/` (a stray
+  `ts-workflow/package.json` would shadow the package-root manifest for Node
+  package self-reference).
+
+```
+tar -tzf agentic-hq-<version>.tgz | grep -E '^package/dist/src/cli/main\.js(\.map)?$|^package/dist/src/tools/marshalled-io-tools/claude-code/index\.d\.ts$'
+```
+
+- **Expected:** all three lines present — the compiled CLI, its source map
+  (maps ship, with inlined sources, so installed-package stack traces show
+  original TS lines), and the shipped type declarations.
 
 **If any check fails:** STOP — do not publish. Fix the build, then restart from §2.
 

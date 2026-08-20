@@ -5,15 +5,11 @@
   "engines": {
     "node": "^22.0.0 || ^24.0.0"
   },
-  "// DYNAMIC-LINK-PATH": "The agentic-hq dependency uses link: protocol. The placeholder REPO_ROOT_PLACEHOLDER is replaced at test runtime with the real absolute path to the agentic-hq repo root.",
-  "scripts": {
-    "// POSTINSTALL": "FIX: node-pty posix_spawnp failed. pnpm extracts spawn-helper without +x. Same fix as main project. See: https://github.com/pnpm/pnpm/issues/7366",
-    "postinstall": "chmod +x node_modules/.pnpm/node-pty@*/node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true"
-  },
-  "// EXACT-PINS-AHQ-152": "tsx and commander are pinned to EXACT versions (no ^ range) as a deliberate supply-chain WORKAROUND for not being able to freeze this fixture. Everywhere else in the repo we use the frozen-lockfile control (AHQ-152), but it CANNOT be used here: the e2e harness copies this fixture to a temp dir and rewrites the agentic-hq link: path at runtime, and pnpm records link: deps in pnpm-lock.yaml as a DEPTH-RELATIVE path — so a committed lockfile produces a DANGLING agentic-hq symlink at the new depth (verified empirically). Exact pins give the same 'no silent version drift' protection for the only two third-party registry deps, with no lockfile required. agentic-hq itself is first-party (local link) and carries no supply-chain risk, so it needs no pin. When intentionally bumping these, update both versions here. See AHQ-152.",
   "dependencies": {
-    "agentic-hq": "link:REPO_ROOT_PLACEHOLDER",
-    "tsx": "4.21.0",
-    "commander": "14.0.3"
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^22"
   }
 }

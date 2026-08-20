@@ -36,7 +36,9 @@ is deliberately short and factual — a record of what happened, not an essay �
 - **Approved Deviations From The Plan** — any plan changes agreed with you (or "None");
 - **Out Of Plan Follow-up Ideas/Concerns** — useful work deliberately left out of scope (or "None");
 - **Approval Gate Changes** — added only if the approval-gate discussion led to code changes: what was
-  discussed, what changed, and why.
+  discussed, what changed, and why;
+- **Human Approval Confirmation** — filled in when you approve at the approval gate: what was approved
+  and that you approved it (with any conditions you attached).
 
 ## Follows The Approved Plan
 
@@ -73,7 +75,8 @@ get one brief checkpoint with the implementing agent still in context.
 It gives you a short recap plus the path to the summary and the changed files, then asks via a quick
 multiple-choice prompt:
 
-- **Implementation Approved** — the default (just press Enter): the stage finishes and hands on to the
+- **Implementation Approved** — the default (just press Enter): your approval is recorded in the
+  summary's *Human Approval Confirmation* section, then the stage finishes and hands on to the
   Reviewer.
 - **Implementation Not Approved - Discuss Further** — the agent asks what you'd like to discuss or
   change, answers your questions, and makes any changes you agree (within plan scope directly; a plan

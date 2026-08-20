@@ -5,18 +5,22 @@
   "type": "module",
   "private": true,
   "bin": {
-    "agentic-hq": "bin/agentic-hq.cjs"
+    "agentic-hq-dev": "bin/agentic-hq.cjs"
   },
   "exports": {
-    "./tools/claude-code": "./src/tools/marshalled-io-tools/claude-code/index.ts"
+    "./tools/claude-code": {
+      "types": "./src/tools/marshalled-io-tools/claude-code/index.ts",
+      "default": "./dist/src/tools/marshalled-io-tools/claude-code/index.js"
+    }
   },
   "scripts": {
     "// POSTINSTALL": "node-pty exec-bit repair: posix_spawnp failed on macOS because both pnpm (https://github.com/pnpm/pnpm/issues/7366) and npm extract the spawn-helper binary with -rw-r--r-- instead of -rwxr-xr-x. Two paths because installers lay node-pty out differently (AHQ-198): nested inside this package (npm -g), or hoisted to a sibling (npx / project-local installs, where cwd is <root>/node_modules/agentic-hq). Mac-only (darwin-*), fails silently on other platforms/layouts. Shipped plugin .sh exec bits are handled by the generated release manifest's publishConfig.executableFiles instead (AHQ-197) — see scripts/build-release.cjs.",
     "postinstall": "chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper ../node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
     "// PREPACK": "Wrong-tree publish guard (AHQ-198): the repo root must never be packed/published — the publishable artifact is the staged release tree. npm runs prepack even on a private package (private: true blocks publish but NOT pack), so this fails every root pack/publish loudly. prepack never runs at install time.",
     "prepack": "node -e \"console.error('ERROR: never pack/publish the repo root — the publishable artifact is the staged release tree. Run: pnpm build && cd release && pnpm pack. See docs/dev/publish-checklist.md'); process.exit(1)\"",
-    "// BUILD": "The shared release build (AHQ-197): compiles the CLI graph + shipped math workflow and assembles the staged release tree (release/) — exactly what ships, under a single generated manifest. Packing runs FROM release/ (cd release && pnpm pack). See scripts/build-release.cjs for the steps.",
+    "// BUILD": "Two separate builds (AHQ-208): build:framework = Framework Build (1), incremental tsc of src/ into <repo>/dist (JS + .d.ts + maps) — the dev wrapper agentic-hq-dev runs it automatically before every run. build = the release build for publishing: Framework Build (1) + a Workflow Build (2) per shipped migrated workflow + staging the release/ tree — exactly what ships, under a single generated manifest. Packing runs FROM release/ (cd release && pnpm pack). See scripts/build-release.cjs for the steps.",
     "build": "node scripts/build-release.cjs",
+    "build:framework": "tsc -p tsconfig.build.json",
     "// VALIDATION": "validate = typecheck + lint + format + unit tests (REQUIRED before commits)",
     "validate": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test",
     "validate:all": "pnpm typecheck && pnpm lint:check && pnpm format:check && pnpm test:all",
@@ -27,14 +31,14 @@
     "// FORMATTING": "format:check = read-only, format:fix = auto-fix (use carefully)",
     "format:check": "prettier . --check",
     "format:fix": "prettier . --write",
-    "// demo:agentic-hq-cli": "Uses 'node bin/agentic-hq.cjs' directly — self-contained, no global PATH dependency (same as the e2e test)",
+    "// demo:agentic-hq-cli": "Uses 'node bin/agentic-hq.cjs' (the agentic-hq-dev wrapper file) directly — self-contained, no global PATH dependency (same as the e2e test)",
     "// DEMO: STRING REVERSAL": "Two ways to run the string reversal demo (override the built-in default with -- --string-to-reverse='your string')",
     "demo:agentic-hq-cli:string-reversal": "node bin/agentic-hq.cjs --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal",
-    "// demo:plugin-direct": "Runs the EXACT command the skill returns (cd + pnpm install + pnpm demo:<workflow>), bypassing the agentic-hq CLI",
-    "demo:plugin-direct:string-reversal": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow && pnpm install) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/src/string-reversal-demo-cli.ts\"",
-    "demo:plugin-direct:math-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow && pnpm install) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-demo-cli.ts\"",
-    "demo:plugin-direct:quick-jira-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow && pnpm install) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/src/quick-jira-workflow-demo-cli.ts \\\"\\$@\\\"\" --",
-    "demo:plugin-direct:full-jira-tdd-story-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow && pnpm install) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/src/full-jira-tdd-story-workflow-demo-cli.ts \\\"\\$@\\\"\" --",
+    "// demo:plugin-direct": "Runs the workflow program directly via the shared runner (migrated workflows: Framework Build (1) + build-first Workflow Build (2)), bypassing the agentic-hq CLI. quick-jira/full-jira still embed the legacy tsx chain until AHQ-209 migrates them.",
+    "demo:plugin-direct:string-reversal": "pnpm build:framework && node scripts/run-workflow.cjs --build-mode=build-first --ahq-package-root=\"$PWD\" --workflow-dir=\"$PWD/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow\" --workflow-js=dist/string-reversal-cli.js",
+    "demo:plugin-direct:math-workflow": "pnpm build:framework && node scripts/run-workflow.cjs --build-mode=build-first --ahq-package-root=\"$PWD\" --workflow-dir=\"$PWD/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow\" --workflow-js=dist/math-workflow-cli.js",
+    "demo:plugin-direct:quick-jira-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow && pnpm install) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/src/quick-jira-workflow-cli.ts \\\"\\$@\\\"\" --",
+    "demo:plugin-direct:full-jira-tdd-story-workflow": "bash -c \"(cd .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow && pnpm install) && .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/node_modules/.bin/tsx --tsconfig .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/tsconfig.json .agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/src/full-jira-tdd-story-workflow-cli.ts \\\"\\$@\\\"\" --",
     "// TEST COMMANDS": "test = unit tests, test:unit = same as test, test:all = unit + integration + e2e",
     "test": "vitest run --config vitest.unit.config.ts",
     "test:unit": "vitest run --config vitest.unit.config.ts",

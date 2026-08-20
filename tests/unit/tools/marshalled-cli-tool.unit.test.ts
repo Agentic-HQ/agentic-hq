@@ -9,6 +9,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { BuildMode } from '../../../src/interfaces/build-mode.js';
 import type { CLICommand } from '../../../src/interfaces/cli-command.js';
 import type { CLIWrapper } from '../../../src/interfaces/cli-wrapper.js';
 import type { IOMarshallerSessionFactory } from '../../../src/interfaces/io-marshaller-session-factory.js';
@@ -26,6 +27,7 @@ const mockWorkspace: Workspace = {
   getTempDir: () => '/mock/project/.agentic-hq/temp',
   getDotAgenticHqDir: () => '/mock/project/.agentic-hq',
   isAhqPackage: () => false,
+  getBuildMode: () => BuildMode.BUILD_FIRST,
 };
 
 function createMockSession(): IOMarshallerSession {

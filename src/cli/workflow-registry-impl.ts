@@ -13,7 +13,9 @@ import type { WorkflowRegistry } from '../workflow-discovery/interfaces/workflow
  * SRP Does: Register a Commander subcommand for each workflow,
  * using its short name as the command name and wiring its action
  * to call builder.build() with the workflow's full Claude skill
- * command. A workflow whose short name the program already has as a
+ * command and the workflow's OWN build mode (per-workflow, AHQ-208 —
+ * decided by the workspace the workflow was discovered under). A
+ * workflow whose short name the program already has as a
  * subcommand is rejected with ShortIdAlreadyRegisteredError — the
  * first registration wins and is never replaced (AHQ-205); what to do
  * about the rejected one is the caller's decision.
@@ -55,7 +57,7 @@ export class WorkflowRegistryImpl implements WorkflowRegistry {
       .passThroughOptions()
       .allowExcessArguments(true)
       .action(async (_options: unknown, cmd: Command) => {
-        const command = await this.builder.build(fullCommand, cmd.args);
+        const command = await this.builder.build(fullCommand, workflow.getBuildMode(), cmd.args);
         await command.execute();
       });
   }

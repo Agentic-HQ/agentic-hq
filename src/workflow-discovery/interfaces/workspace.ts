@@ -1,3 +1,4 @@
+import type { BuildMode } from '../../interfaces/build-mode.js';
 import type { Plugin } from '../plugin/plugin.js';
 
 import type { WorkflowRegistry } from './workflow-registry.js';
@@ -30,4 +31,7 @@ export interface Workspace {
   getDotAgenticHqDir(): string;
   /** Return true iff this workspace's root equals the AHQ package root. */
   isAhqPackage(): boolean;
+  /** The mode of every workflow discovered under this workspace (AHQ-208): a user workspace holds
+   *  source → BUILD_FIRST; the AHQ package's workflows inherit the wrapper's mode. */
+  getBuildMode(): BuildMode;
 }

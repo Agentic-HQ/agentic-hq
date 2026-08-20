@@ -38,7 +38,7 @@ function buildVariablesString(jiraId: string, testType?: string): string {
 const program = new Command();
 
 program
-  .name('quick-jira-workflow-demo-cli')
+  .name('quick-jira-workflow-cli')
   .description('Run a multi-step Jira workflow using Claude Code')
   .requiredOption('--jira-id <string>', 'The Jira ID to implement (e.g. TEST-123)')
   .action(async (options: { jiraId: string }) => {

@@ -144,13 +144,16 @@ Write `{implementation-summary-file}`. Keep it **compact** and factual. Use thes
 - **`## Approval Gate Changes`** — **only add this section if the Step 5 Approval Gate discussion leads
   to code changes**: what was discussed, what you changed, and why. Omit it entirely if the human
   approves with no changes.
+- **`## Human Approval Confirmation`** — leave this to be filled in once the human approves at the
+  Approval Gate (Step 5); add a short placeholder line such as `_Awaiting human approval._`.
 
 > **Must Not Do:**
 > - **Broaden scope beyond the approved plan without explicit Human approval.** Implement only what the plan covers.
 > - **Deviate from the plan without stopping and getting human consent** to modify it (recorded as an
 >   UPDATE in `02-implementation-plan.md` and under `## Approved Deviations From The Plan`).
 > - **Weaken, delete, or skip failing tests to force a pass.**
-> - **End the command without explicit Human Approval at the Approval Gate** (Step 5).
+> - **End the command without explicit Human Approval at the Approval Gate** (Step 5), recorded in
+>   `## Human Approval Confirmation`.
 
 ## Step 5: Human Check-In — The Approval Gate
 
@@ -173,7 +176,9 @@ Then ask, using the `AskUserQuestion` tool:
   changes.
 
 Handle the answer:
-- **"Implementation Approved"** → continue to Step 6.
+- **"Implementation Approved"** → record it in the summary's **`## Human Approval Confirmation`**
+  section — a short note of **what** was approved and **that** the human approved it (quote any
+  conditions they attach) — then continue to Step 6.
 - **"Implementation Not Approved - Discuss Further"** → ask them very **briefly** what they want to discuss, then:
   - **Answer any questions** about what you did and why.
   - If they request changes **within the approved plan's scope**, make them and re-run the relevant

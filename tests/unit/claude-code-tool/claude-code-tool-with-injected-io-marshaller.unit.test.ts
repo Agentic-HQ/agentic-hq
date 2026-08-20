@@ -28,18 +28,15 @@ describe('MarshalledCLITool with real session factory and fake CLI', () => {
     const { PtyCLIWrapper } = await import('../../../src/io/terminal/pty-cli-wrapper.js');
 
     const ahqPackageRoot = new DefaultAhqPackageRoot(process.cwd());
-    const ahqPackage = new AhqPackageImpl(ahqPackageRoot);
+    const ahqRuntimeParams = new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, ahqPackageRoot);
+    const ahqPackage = new AhqPackageImpl(ahqRuntimeParams);
     const currentUserWorkspace = new CurrentUserWorkspaceImpl(ahqPackageRoot);
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(
-        ahqPackage,
-        currentUserWorkspace,
-        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, ahqPackageRoot),
-        TSX_EXECUTABLE,
-        [FAKE_CLI_PATH]
-      ),
+      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace, ahqRuntimeParams, TSX_EXECUTABLE, [
+        FAKE_CLI_PATH,
+      ]),
       currentUserWorkspace
     );
 

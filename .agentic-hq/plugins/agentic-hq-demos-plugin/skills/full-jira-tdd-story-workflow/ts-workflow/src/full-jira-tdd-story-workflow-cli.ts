@@ -45,7 +45,7 @@ function buildVariablesString(jiraId: string, testType?: string): string {
 const program = new Command();
 
 program
-  .name('full-jira-tdd-story-workflow-demo-cli')
+  .name('full-jira-tdd-story-workflow-cli')
   .description('Run the full interactive Jira TDD Story Workflow using Claude Code')
   .requiredOption('--jira-id <string>', 'The Jira ID to implement (e.g. AHQ-41)')
   .action(async (options: { jiraId: string }) => {

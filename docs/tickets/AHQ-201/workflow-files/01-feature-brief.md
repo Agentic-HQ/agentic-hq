@@ -555,4 +555,28 @@ Sequence: **AHQ-208 → AHQ-209 → AHQ-207 → AHQ-199.**
      all seven list; string-reversal end-to-end; the user-workspace scenario against the registry
      install). Unblocks AHQ-207 and AHQ-199.
 
+   **Update (2026-08-19, decided during AHQ-208 planning — read before starting B):**
+   - **Every `SKILL.md` is now byte-identical** — there is no per-workflow line at all. The template
+     derives `skill-id` from the final path segment of the `skill-base-dir` Claude Code hands every
+     skill (= the skill directory name = `skillId` in `ahq-workflow.json`; `shortId` does NOT work),
+     sets `workflow-program-name = {skill-id}-cli`, and returns the four-option runner command with
+     `--workflow-js=dist/{workflow-program-name}.js`; the frontmatter `description` is generic. The
+     exact file is in `docs/tickets/AHQ-208/workflow-files/02-implementation-plan.md` §6 (and lands in
+     the repo via AHQ-208 on math-workflow, string-reversal, add-feature and the e2e fixture). For B:
+     quick-jira-workflow, full-jira-tdd-story-workflow, add-feature-detailed-example and create-workflow
+     get **that identical file** (copy it — do not hand-edit a name into it), and the scaffolder's
+     "4-COPY" step **copies `SKILL.md` verbatim with no substitutions** — it no longer "sets the CLI
+     filename" in `SKILL.md`.
+   - **Standard program-name convention `<skill-id>-cli.ts`** (`src/<skill-id>-cli.ts` → compiled
+     `dist/<skill-id>-cli.js`). AHQ-208 renames **all five** `-demo-cli` files — `math-workflow-cli.ts`,
+     `string-reversal-cli.ts`, `quick-jira-workflow-cli.ts`, `full-jira-tdd-story-workflow-cli.ts`
+     (rename-only for those two; their migration is still B's) and the fixture's
+     `string-reversal-copy-for-test-cli.ts` — so B finds every CLI already on the convention
+     (add-feature, add-feature-detailed-example and create-workflow complied already) and must keep it:
+     the scaffolder names a new workflow's CLI `<skill-id>-cli.ts`, nothing else.
+   - The builds are named **Framework Build (1)** and **Workflow Build (2)** everywhere ("Build 1"/"Build
+     2" in these AHQ-201 docs are the historical names) — see `docs/glossary.md` *Builds & running* and
+     `docs/dev/how-agentic-hq-works.md` *Builds: Framework Build (1) and Workflow Build (2)*; use those
+     names in anything B writes (Command 03 "runs the Workflow Build (2)", help docs, comments).
+
 **Recommendation:** terminate this workflow and split the feature as above.

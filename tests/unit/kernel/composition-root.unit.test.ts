@@ -36,6 +36,20 @@ describe('CompositionRoot', () => {
     expect(ahqPackage.isAhqPackage()).toBe(true);
   });
 
+  // The per-workflow build-mode rule (AHQ-208): the AHQ package inherits the
+  // wrapper's mode from the runtime params; the user's workspace holds source
+  // and is always build-first.
+  it("getAhqPackage() carries the runtime params' build mode; getCurrentUserWorkspace() is always BUILD_FIRST", () => {
+    const prebuiltParams = new DefaultAhqRuntimeParams(
+      BuildMode.PREBUILT,
+      new DefaultAhqPackageRoot('/installed/pkg')
+    );
+    const root = new CompositionRoot(prebuiltParams);
+
+    expect(root.getAhqPackage().getBuildMode()).toBe(BuildMode.PREBUILT);
+    expect(root.getCurrentUserWorkspace().getBuildMode()).toBe(BuildMode.BUILD_FIRST);
+  });
+
   it('getCurrentUserWorkspace() returns a Workspace rooted at process.cwd()', () => {
     const currentUserWorkspace = new CompositionRoot(TEST_RUNTIME_PARAMS).getCurrentUserWorkspace();
 

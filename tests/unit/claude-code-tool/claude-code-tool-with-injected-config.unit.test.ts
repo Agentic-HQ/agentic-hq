@@ -67,6 +67,7 @@ describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
       getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
       getDotAgenticHqDir: () => ahqConfigDir,
       isAhqPackage: () => true,
+      getBuildMode: () => BuildMode.BUILD_FIRST,
     };
     const currentUserWorkspace: Workspace = {
       getDisplayName: () => 'Local Workspace',
@@ -76,6 +77,7 @@ describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
       getTempDir: () => path.join(tmpDir, '.agentic-hq', 'temp'),
       getDotAgenticHqDir: () => path.join(tmpDir, '.agentic-hq'),
       isAhqPackage: () => true,
+      getBuildMode: () => BuildMode.BUILD_FIRST,
     };
 
     const tool = new MarshalledCLITool(

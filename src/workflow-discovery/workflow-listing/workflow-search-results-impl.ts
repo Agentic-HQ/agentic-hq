@@ -1,5 +1,5 @@
 import { ListingFormatter } from '../../cli/listing/listing-formatter.js';
-import type { AhqPackageRoot } from '../../interfaces/ahq-package-root.js';
+import type { AhqRuntimeParams } from '../../interfaces/ahq-runtime-params.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { WorkflowSearchResults } from '../interfaces/workflow-search-results.js';
 import type { Workspace } from '../interfaces/workspace.js';
@@ -12,13 +12,15 @@ import { CurrentUserWorkspaceImpl } from '../workspace/current-user-workspace-im
  * them to a ListingFormatter for the listing string or registers
  * their workflows directly with a WorkflowRegistry.
  *
- * SRP Does: Compose AhqPackageImpl + CurrentUserWorkspaceImpl
- * (injecting the AhqPackageRoot received at construction into both),
- * and delegate listing-string rendering to ListingFormatter and
- * registration to each workspace.
+ * SRP Does: Compose AhqPackageImpl + CurrentUserWorkspaceImpl from the
+ * AhqRuntimeParams received at construction (the package gets the full
+ * params — its workflows inherit the wrapper's build mode, AHQ-208; the
+ * user workspace gets only the AhqPackageRoot — its workflows are always
+ * build-first), and delegate listing-string rendering to ListingFormatter
+ * and registration to each workspace.
  *
  * SRP Knows About: The default AhqPackageImpl + CurrentUserWorkspaceImpl
- * composition, the AhqPackageRoot they need, and the ListingFormatter
+ * composition, the AhqRuntimeParams they need, and the ListingFormatter
  * dependency.
  *
  * SRP Knows Nothing About: How plugins are discovered, what the
@@ -31,9 +33,9 @@ export class WorkflowSearchResultsImpl implements WorkflowSearchResults {
   private readonly ahqPackage: Workspace;
   private readonly currentUserWorkspace: Workspace;
   private readonly formatter: ListingFormatter;
-  constructor(ahqPackageRoot: AhqPackageRoot) {
-    this.ahqPackage = new AhqPackageImpl(ahqPackageRoot);
-    this.currentUserWorkspace = new CurrentUserWorkspaceImpl(ahqPackageRoot);
+  constructor(ahqRuntimeParams: AhqRuntimeParams) {
+    this.ahqPackage = new AhqPackageImpl(ahqRuntimeParams);
+    this.currentUserWorkspace = new CurrentUserWorkspaceImpl(ahqRuntimeParams.getAhqPackageRoot());
     this.formatter = new ListingFormatter();
   }
   /** Return the full listing string (formatter assembles title + both workspace sections). */

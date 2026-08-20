@@ -22,7 +22,7 @@ import type { IOMarshallerSessionFactory } from '../interfaces/io-marshaller-ses
 import type { WorkflowCommandBuilder } from '../interfaces/workflow-command-builder.js';
 import { JsonFileIOMarshallerSessionFactory } from '../io/marshalling/json-file-io-marshaller-session-factory.js';
 import { PtyCLIWrapper } from '../io/terminal/pty-cli-wrapper.js';
-import { DefaultClaudeCodeTool } from '../tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
+import { DefaultClaudeCodeToolFactory } from '../tools/marshalled-io-tools/claude-code/default-claude-code-tool-factory.js';
 import { ClaudeWorkflowCommandBuilder } from '../workflow/claude/claude-workflow-command-builder.js';
 import type { Workspace } from '../workflow-discovery/interfaces/workspace.js';
 import { AhqPackageImpl } from '../workflow-discovery/workspace/ahq-package-impl.js';
@@ -36,7 +36,7 @@ export class CompositionRoot {
   }
 
   getAhqPackage(): Workspace {
-    return new AhqPackageImpl(this.ahqRuntimeParams.getAhqPackageRoot());
+    return new AhqPackageImpl(this.ahqRuntimeParams);
   }
 
   getCurrentUserWorkspace(): Workspace {
@@ -51,10 +51,12 @@ export class CompositionRoot {
     return new JsonFileIOMarshallerSessionFactory(this.getCurrentUserWorkspace());
   }
 
-  /** Create a WorkflowCommandBuilder wired to this system's tool, CLI wrapper, and workspace. */
+  /** Create a WorkflowCommandBuilder wired to this system's tool factory, CLI wrapper, and
+   *  workspace. The factory (not a single tool) is what lets each launched workflow carry its
+   *  OWN build mode across the skill hop (AHQ-208). */
   getWorkflowCommandBuilder(): WorkflowCommandBuilder {
     return new ClaudeWorkflowCommandBuilder(
-      new DefaultClaudeCodeTool(this),
+      new DefaultClaudeCodeToolFactory(this.ahqRuntimeParams.getAhqPackageRoot()),
       this.getCLIWrapper(),
       this.getCurrentUserWorkspace()
     );
