@@ -99,6 +99,12 @@ files makes the suite deterministic; each file passed standalone before and afte
 `docs/user-docs/workflow-descriptions/overview-of-workflows.md`, the three create-workflow command
 files (file-name-only).
 
+**Changed — add-feature workflow meta-work (outside the AHQ-208 plan, same commit; noted by the
+Reviewer):** `.agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature/03-implementer.md`
+and `.../skills/add-feature/docs/workflow-help-docs/03-implementer-help-doc.md` — the Implementer
+command now records human approval in the summary's `## Human Approval Confirmation` section (per
+the commit message).
+
 **Deleted:** the old `link:`-era lockfiles/`node_modules` in the three migrated bundled workflows
 (lockfiles regenerated fresh); the fixture's `REPO_ROOT_PLACEHOLDER` mechanism.
 

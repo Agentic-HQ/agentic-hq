@@ -29,8 +29,15 @@ try {
     { cwd: packageRoot, stdio: 'inherit' }
   );
 } catch (error) {
-  // tsc already printed the errors; just propagate the exit code
-  process.exit(error.status || 1);
+  // No exit status means tsc never ran (e.g. ENOENT because
+  // node_modules/.bin/tsc is missing — run `pnpm install` first), so nothing
+  // was printed yet: rethrow loudly instead of exiting silently.
+  if (error.status == null) {
+    throw error;
+  }
+  // A real compile failure: tsc already printed the errors; just propagate
+  // the exit code
+  process.exit(error.status);
 }
 
 process.setSourceMapsEnabled(true);
