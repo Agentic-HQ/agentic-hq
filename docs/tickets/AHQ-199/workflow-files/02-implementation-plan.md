@@ -184,6 +184,24 @@ already explain how the roots relate, including the overlap case.
 - `docs/user-docs/workflow-descriptions/overview-of-workflows.md:21`: prerequisites line drops
   `pnpm` ("complete the README Quick Start — Node.js, the `agentic-hq` CLI from npm, and Claude Code").
 
+### UPDATE (2026-08-22, human-approved at the Implementer's Approval Gate)
+
+Two small fixes outside the original file list, surfaced by the Implementer as out-of-plan
+findings and explicitly approved by the human ("pls do"), were added to scope:
+
+1. `docs/user-docs/workflow-descriptions/overview-of-workflows.md:147` — pre-existing broken
+   source link fixed: `string-reversal-demo-cli.ts` → `string-reversal-cli.ts` (stale filename
+   from the AHQ-208/209 migrations).
+2. `.github/workflows/ci.yml` — the stale comment mapping to old README step numbers re-keyed to
+   the new setup doc's step numbers (comment-only change; both the header block and the matching
+   per-step inline comments).
+3. Terminology: the human ruled the prose shorthand "dev setup" ambiguous (all users are devs) —
+   replaced with **"contributor setup"** everywhere it appeared (ci-configuration.md's table
+   column and prose, ci.yml comments, troubleshooting.md's step references, docs/README.md's link
+   text). The filename `docs/dev/setting-up-agentic-hq-for-development.md` and its H1 stay as
+   specified in the Human Prompt, as does CONTRIBUTING.md's pre-existing "Local development
+   setup" heading (anchor stability; its body already says "contributor setup").
+
 ## Risks/Unknowns/Concerns
 
 - **AHQ-207 is the real test** — any npm-flow step this plan words wrongly on a fresh Ubuntu VM

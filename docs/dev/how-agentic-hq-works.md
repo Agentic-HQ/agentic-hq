@@ -306,6 +306,29 @@ in [The Four Combinations Of Example Run Types, All Explained And Worked Through
 clone, a collaborator's machine — and §8 records why all four runner options
 were kept).
 
+### The two roots
+
+Every combination above resolves against exactly two directories:
+
+- **The AHQ package root** (`ahq-package-root`) — the directory the executing
+  copy of Agentic HQ lives in. It is always one of exactly two places: the
+  root of the `agentic-hq` package in the npm installation directory, or the
+  root of a checked-out Agentic HQ repo workspace. It holds the framework
+  code, the shared runner, and the bundled plugins — arriving prebuilt in the
+  npm package, but compiled at run time in a checkout (the Framework Build on
+  every `agentic-hq-dev` invocation, the Workflow Build per `build-first`
+  workflow). Never detected or guessed: each bin wrapper passes its own
+  parent directory, so which copy runs is set structurally by which binary
+  you invoked.
+- **The local workspace** — your current directory when you run a workflow.
+  Your own plugins are discovered here, per-run temp files are written here,
+  and Claude itself is launched in the root of this workspace.
+
+The two overlap when you run from the root of a clone of the AHQ repo: that
+one directory is then both roots at once, and the CLI searches it once rather
+than twice (`agentic-hq list` shows `Same as Agentic HQ Package` in place of a
+repeated block).
+
 ### The two binaries and the staged release tree
 
 - **`agentic-hq-dev`** — the clone's binary (`bin/agentic-hq.cjs`, on PATH via

@@ -18,7 +18,7 @@
 
 This page lists every workflow shipped with Agentic HQ, organised by **Plugin → Workflow**, with how to run it and what it does.
 
-> **Prerequisites:** before running these workflows be sure to complete the install steps in the [README](../../../README.md#installation) (Node.js, `pnpm`, the `agentic-hq` CLI, and Claude Code itself).
+> **Prerequisites:** before running these workflows be sure to complete the [README Quick Start](../../../README.md#quick-start) — Node.js, the `agentic-hq` CLI from npm, and Claude Code itself.
 
 > **Source of truth:** the authoritative live list is produced by:
 >
@@ -144,7 +144,7 @@ Source files:
 
 - [Workflow Commands](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/commands/string-reversal)
 - [Workflow Skill File](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/SKILL.md)
-- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/src/string-reversal-demo-cli.ts)
+- [Workflow TypeScript Program](../../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/src/string-reversal-cli.ts)
 
 ### `math-workflow` — Passes a number through three chained math steps
 

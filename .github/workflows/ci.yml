@@ -3,21 +3,22 @@
 # Full documentation: docs/dev/ci-configuration.md
 # =============================================================================
 #
-# Principle: follow, as closely as possible, what a real dev does on a fresh
-# Ubuntu machine following the README Quick Start — WITHOUT real Claude Code.
-# The job's steps map onto the README's numbered steps:
+# Principle: follow, as closely as possible, what a contributor does on a
+# fresh Ubuntu machine following the contributor setup doc,
+# docs/dev/setting-up-agentic-hq-for-development.md — WITHOUT real Claude
+# Code. The job's steps map onto that doc's numbered steps:
 #
-#   README step 1 (install Node 24 LTS)   -> actions/setup-node + .nvmrc
-#   README step 2 (git clone + cd)        -> actions/checkout
-#   README step 3 (corepack enable)       -> identical command
-#   README step 4 (pnpm install)          -> identical command
-#   README step 5 (npm link + verify)     -> identical commands (smoke test)
-#   README step 6 (pnpm validate)         -> identical command
-#   README step 7 (reversal workflow)     -> OUT OF SCOPE: needs real Claude.
+#   Contributor setup step 2 (install Node 24 LTS)  -> actions/setup-node + .nvmrc
+#   Contributor setup step 3 (git clone + cd)       -> actions/checkout
+#   Contributor setup step 4 (corepack enable)      -> identical command
+#   Contributor setup step 5 (pnpm install)         -> identical command
+#   Contributor setup step 6 (npm link + verify)    -> identical commands (smoke test)
+#   Contributor setup step 7 (pnpm validate)        -> identical command
+#   Contributor setup step 8 (reversal workflow)    -> OUT OF SCOPE: needs real Claude.
 #      A separate optional/manual workflow for Claude/Jira e2e tests is
 #      AHQ-177: https://agentic-hq.atlassian.net/browse/AHQ-177
 #
-# The README's Linux-only prerequisite (build-essential + python3, for the
+# The contributor setup doc's Linux-only prerequisite (build-essential + python3, for the
 # node-pty source compile) is already preinstalled on GitHub's ubuntu-24.04
 # runner image (verified against the actions/runner-images manifest), so there
 # is deliberately no apt-get step — on a provisioned image it would either
@@ -43,40 +44,40 @@ jobs:
     # Guard against hangs (e.g. a test accidentally entering watch mode).
     timeout-minutes: 15
     steps:
-      # README step 2: get the code.
+      # Contributor setup step 3: get the code.
       - uses: actions/checkout@v7
 
-      # README step 1: Node version read from .nvmrc — the same single source
-      # of truth a real dev's nvm uses.
+      # Contributor setup step 2: Node version read from .nvmrc — the same single
+      # source of truth a real dev's nvm uses.
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
 
-      # README step 3: Corepack reads packageManager from package.json and
+      # Contributor setup step 4: Corepack reads packageManager from package.json and
       # installs that exact pnpm version, verified against its sha512 hash.
       - name: Enable Corepack (installs pinned pnpm)
         run: corepack enable
 
-      # README step 4: .npmrc sets frozen-lockfile=true, so this installs
+      # Contributor setup step 5: .npmrc sets frozen-lockfile=true, so this installs
       # exactly pnpm-lock.yaml. node-pty compiles from source here — no
       # linux-x64 prebuild (AHQ-170); its build script is the only one
       # allow-listed in pnpm-workspace.yaml.
       - name: Install dependencies
         run: pnpm install
 
-      # README step 5: install the CLI onto PATH. The exact path where Linux
+      # Contributor setup step 6: install the CLI onto PATH. The exact path where Linux
       # issues surfaced before (AHQ-169, AHQ-172). On Linux it prints two
       # documented, harmless warnings — they do not fail the step.
       - name: Install CLI onto PATH (npm link)
         run: npm link
 
-      # README step 5 verification, and our non-Claude smoke test: exercises
+      # Contributor setup step 6 verification, and our non-Claude smoke test: exercises
       # real CLI startup (Commander parsing, plugin/workflow discovery) AND
       # the Framework Build (1) the agentic-hq-dev wrapper runs first (AHQ-208),
       # which unit tests never touch.
       - name: Smoke test CLI (no Claude required)
         run: agentic-hq-dev list
 
-      # README step 6: the hard gate — typecheck + lint + format + unit tests.
+      # Contributor setup step 7: the hard gate — typecheck + lint + format + unit tests.
       - name: Validate (typecheck + lint + format + unit tests)
         run: pnpm validate

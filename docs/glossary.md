@@ -92,8 +92,8 @@ two roots, the other being your [local workspace](#local-workspace). Modelled in
 code by `AhqPackageImpl`.
 
 (For how these roots relate — including when the package and your local
-workspace are the same directory — see *The Three Root Concepts* in
-[AHQ-200's feature brief](tickets/AHQ-200/workflow-files/01-feature-brief.md#the-three-root-concepts--in-depth-analysis).)
+workspace are the same directory — see *The two roots* in
+[how-agentic-hq-works.md](dev/how-agentic-hq-works.md#the-two-roots).)
 
 ### AHQ package root (`ahq-package-root`)
 

@@ -46,8 +46,8 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq-dev binar
   it(
     'should process input number through math workflow from a separate workspace via the globally-linked binary',
     () => {
-      // Precondition: the `agentic-hq-dev` CLI must already be on PATH. Installation links
-      // it there via `npm link` (README Quick Start step 5) — putting it on PATH is the
+      // Precondition: the `agentic-hq-dev` CLI must already be on PATH. Contributor setup
+      // links it there via `npm link` (setting-up-agentic-hq-for-development.md step 6) — putting it on PATH is the
       // installer's job, not the test's, so we assert it rather than running `npm link`
       // here. A failure means the documented install step wasn't completed on this machine.
       const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
@@ -57,9 +57,9 @@ describe('Cross-Workspace Math Workflow via globally-linked agentic-hq-dev binar
       expect(
         agenticHqDevOnPath,
         '`agentic-hq-dev` is not on your PATH. It should have been linked during ' +
-          'installation — see README Quick Start step 5 (`npm link` from the repo ' +
-          'root). Run that, then re-run the e2e tests; if it still fails, see ' +
-          'docs/user-docs/troubleshooting-quickstart.md.'
+          'contributor setup — see docs/dev/setting-up-agentic-hq-for-development.md ' +
+          'step 6 (`npm link` from the repo root). Run that, then re-run the e2e ' +
+          'tests; if it still fails, see docs/user-docs/troubleshooting.md.'
       ).toBe(true);
 
       // Arrange — delete the Framework Build (1) output AND math's Workflow

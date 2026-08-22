@@ -14,21 +14,22 @@ cleanly on a machine that isn't the maintainer's (AHQ-176).
 
 ## What CI Runs
 
-Guiding principle: **CI follows, as closely as possible, what a real dev does
-on a fresh Ubuntu machine following the README Quick Start** — minus the
-Claude-dependent steps. Each CI step maps onto a numbered step of the
-[README](../../README.md) Quick Start:
+Guiding principle: **CI follows, as closely as possible, what a contributor
+does on a fresh Ubuntu machine following the contributor setup doc,
+[`setting-up-agentic-hq-for-development.md`](setting-up-agentic-hq-for-development.md)**
+— minus the Claude-dependent steps. Each CI step maps onto a numbered step of
+that doc:
 
-| README step       | CI step                 | Notes                                                                                                              |
+| Contributor setup step    | CI step                 | Notes                                                                                                              |
 | ----------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| 2 (clone + cd)    | `actions/checkout`      | Gets the code onto the VM (runs first so `.nvmrc` exists for the next step).                                         |
-| 1 (install Node)  | `actions/setup-node`    | Node version read from [`.nvmrc`](../../.nvmrc) — the same single source of truth a dev's nvm uses.                  |
-| 3 (enable pnpm)   | `corepack enable`       | Installs the exact pnpm pinned in `package.json`'s `packageManager` field, verified against its embedded sha512 hash. |
-| 4 (install deps)  | `pnpm install`          | Frozen install (the repo `.npmrc` sets `frozen-lockfile=true`). node-pty compiles from source on Linux (AHQ-170).     |
-| 5 (CLI onto PATH) | `npm link`              | Installs the `agentic-hq` binary onto `PATH`. Its two documented Linux warnings (see README step 5) don't fail CI.    |
-| 5 (verify)        | `agentic-hq list`       | The smoke test: exercises real CLI startup (Commander parsing, plugin/workflow discovery), which unit tests never do. |
-| 6 (validate)      | `pnpm validate`         | The hard gate: typecheck + lint + format + unit tests.                                                               |
-| 7 (run workflow)  | — not run —             | Needs real Claude Code — out of scope; a separate optional/manual e2e workflow is tracked in AHQ-177.                 |
+| 3 (clone + cd)    | `actions/checkout`      | Gets the code onto the VM (runs first so `.nvmrc` exists for the next step).                                         |
+| 2 (install Node)  | `actions/setup-node`    | Node version read from [`.nvmrc`](../../.nvmrc) — the same single source of truth a dev's nvm uses.                  |
+| 4 (enable pnpm)   | `corepack enable`       | Installs the exact pnpm pinned in `package.json`'s `packageManager` field, verified against its embedded sha512 hash. |
+| 5 (install deps)  | `pnpm install`          | Frozen install (the repo `.npmrc` sets `frozen-lockfile=true`). node-pty compiles from source on Linux (AHQ-170).     |
+| 6 (CLI onto PATH) | `npm link`              | Installs the `agentic-hq-dev` binary onto `PATH`. Its two documented Linux warnings (see contributor setup step 6) don't fail CI. |
+| 6 (verify)        | `agentic-hq-dev list`   | The smoke test: exercises real CLI startup (Commander parsing, plugin/workflow discovery), which unit tests never do. |
+| 7 (validate)      | `pnpm validate`         | The hard gate: typecheck + lint + format + unit tests.                                                               |
+| 8 (run workflow)  | — not run —             | Needs real Claude Code — out of scope; a separate optional/manual e2e workflow is tracked in AHQ-177.                 |
 
 ## CI Must Pass Before Merge
 
@@ -39,8 +40,8 @@ faster feedback than waiting for CI. See
 
 ## What Is Deliberately Absent
 
-- **No `apt-get install build-essential python3` step**, despite the README's
-  Linux-only prerequisite for compiling node-pty. GitHub's ubuntu-24.04 runner
+- **No `apt-get install build-essential python3` step**, despite the contributor setup
+  doc's Linux-only prerequisite for compiling node-pty. GitHub's ubuntu-24.04 runner
   image ships the full toolchain preinstalled (gcc/g++, make, Python — per the
   [`actions/runner-images`](https://github.com/actions/runner-images)
   manifest). An explicit install would either no-op or silently _upgrade_ the
@@ -85,13 +86,15 @@ attack):-
 
 ## Reproducing CI Locally
 
-CI runs nothing exotic — it's the README Quick Start. On your own checkout:
+CI runs nothing exotic — it's the contributor setup from
+[`setting-up-agentic-hq-for-development.md`](setting-up-agentic-hq-for-development.md).
+On your own checkout:
 
 ```bash
-corepack enable   # once per Node version
+corepack enable       # once per Node version
 pnpm install
 pnpm validate
-agentic-hq list   # assuming the CLI is linked (README step 5)
+agentic-hq-dev list   # assuming the CLI is linked (contributor setup step 6)
 ```
 
 If CI fails on a step that passes locally, the difference is almost always

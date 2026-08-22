@@ -1,7 +1,9 @@
 # Agentic HQ Documentation
 
-This directory contains all of Agentic HQ's documentation. New here? Start
-with the top-level [`README.md`](../README.md) for setup and the Quick Start.
+This directory contains all of Agentic HQ's documentation. New here? Normal
+Users start with the top-level [`README.md`](../README.md) Quick Start;
+contributors with the
+[contributor setup doc](dev/setting-up-agentic-hq-for-development.md).
 
 The folders are grouped below by audience. Live, maintained docs come first
 (User, Developer); generated outputs and historical material are at the bottom
@@ -20,14 +22,16 @@ workspaces.
   The Claude Code, Jira, and Confluence tools that AHQ auto-approves when
   running workflows via the CLI — what's on the list, why, and what it does
   and doesn't mean for your machine.
-- [`user-docs/troubleshooting-quickstart.md`](user-docs/troubleshooting-quickstart.md) —
-  What to do if a step in the README Quick Start fails.
+- [`user-docs/troubleshooting.md`](user-docs/troubleshooting.md) —
+  What to do when something goes wrong — grouped into Setup, Tool, and
+  Contributor sections.
 
 ## Developer Documentation
 
 For people working on the AHQ codebase or building their own workflows.
 
-- [`dev/`](dev/) — [Architecture](dev/how-agentic-hq-works.md),
+- [`dev/`](dev/) — [Contributor setup](dev/setting-up-agentic-hq-for-development.md),
+  [architecture](dev/how-agentic-hq-works.md),
   [design requirements](dev/project-design-requirements.md),
   [potential feature ideas](dev/potential-feature-ideas.md),
   [npm-commands reference](dev/npm-commands.md),
