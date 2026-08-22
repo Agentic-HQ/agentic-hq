@@ -11,10 +11,10 @@ Remember the following variable you will use in the rest of this command: comman
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a string like:
-`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
+`The variables used in this workflow creation workflow are: ahq-package-root=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
 
 Parse out:
-- `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
+- `ahq-package-root` — the absolute path to the Agentic HQ workspace (where reference/example files live)
 - `plugin-id` — the plugin where the workflow lives
 - `workflow-id` — the workflow identifier
 - `workflow-short-id` — the short CLI alias for the workflow
@@ -22,7 +22,7 @@ Parse out:
 ## Step 0b: Establish Variables
 
 ```
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 plugin-id = (parsed from input)
 workflow-id = (parsed from input)
 workflow-short-id = (parsed from input)
@@ -44,10 +44,10 @@ human-manual-testing-feedback-file = {workflow-creation-artifacts-dir}/05-human-
 Read the following to gain full context:
 
 1. **Previous command files**:
-   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md`
-   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md`
-   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/03-run-checks-on-workflow.md`
-   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/04-document-workflow.md`
+   - `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md`
+   - `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md`
+   - `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/03-run-checks-on-workflow.md`
+   - `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/04-document-workflow.md`
 2. **All files in `{workflow-creation-artifacts-dir}`** — spec, approval list, refactorings, etc.
 3. **All generated workflow code**:
    - All files in `{commands-dir}` — the command .md files

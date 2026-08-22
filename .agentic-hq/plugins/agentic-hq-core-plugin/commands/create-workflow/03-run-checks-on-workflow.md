@@ -11,10 +11,10 @@ Remember the following variable you will use in the rest of this command: comman
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a string like:
-`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
+`The variables used in this workflow creation workflow are: ahq-package-root=/path/to/agentic-hq and plugin-id=agentic-hq-demos-plugin and workflow-id=my-workflow and workflow-short-id=my`
 
 Parse out:
-- `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
+- `ahq-package-root` — the absolute path to the agentic-hq package (where reference/example files live)
 - `plugin-id` — the plugin where the workflow lives
 - `workflow-id` — the workflow identifier
 - `workflow-short-id` — the short CLI alias for the workflow
@@ -22,7 +22,7 @@ Parse out:
 ## Step 0b: Establish Variables
 
 ```
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 plugin-id = (parsed from input)
 workflow-id = (parsed from input)
 workflow-short-id = (parsed from input)
@@ -38,8 +38,8 @@ workflow-creation-artifacts-dir = {project-root}/docs/artifacts/workflow-creatio
 approved-workflow-spec-filename = {workflow-creation-artifacts-dir}/02a-APPROVED-workflow-spec.md
 workflow-implementation-approval-list-file = {workflow-creation-artifacts-dir}/03a-workflow-implementation-approval-list.md
 workflow-potential-refactorings-file = {workflow-creation-artifacts-dir}/03b-workflow-potential-refactorings.md
-example-workflow-commands-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow
-example-workflow-skill-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow
+example-workflow-commands-dir = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin/commands/math-workflow
+example-workflow-skill-dir = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow
 ```
 
 ---
@@ -49,8 +49,8 @@ example-workflow-skill-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins
 Read the following to gain full context:
 
 1. **Previous command files**:
-   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md`
-   - `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md`
+   - `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/01-explain-to-user-how-workflows-work-and-get-workflow-details.md`
+   - `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md`
 2. **All files in `{workflow-creation-artifacts-dir}`** — spec, verbatim copy, any other process docs
 3. **All generated workflow code**:
    - All files in `{commands-dir}` — the command .md files that were created
@@ -108,7 +108,7 @@ Create the file `{workflow-implementation-approval-list-file}` with the results:
 | Context loading in commands 02+ | PASS/FAIL | |
 | ahq-workflow.json present and well-formed | PASS/FAIL | |
 | Plugin manifest (plugin.json) present and well-formed | PASS/FAIL | |
-| Generated TS CLI installs and typechecks cleanly | PASS/FAIL | (filled in by Step 2A — leave as `PASS/FAIL` placeholder when writing the file in this step) |
+| Workflow Build (2) passes (install + framework symlink + compile) | PASS/FAIL | (filled in by Step 2A — leave as `PASS/FAIL` placeholder when writing the file in this step) |
 
 ---
 
@@ -121,63 +121,30 @@ Present the results to the user.
 
 ---
 
-## Step 2A: Install Deps + Typecheck the Generated TS CLI
+## Step 2A: Run the Workflow Build (2) on the Generated Workflow
 
-The Step 2 checks above verify file existence, JSON validity, and convention compliance. This step goes one level deeper and verifies the **generated TypeScript CLI actually compiles** — file-level checks alone could green-light a CLI with real type errors (wrong import path, wrong Commander API usage, bad tsconfig setting) that nobody would discover until the workflow is run for the first time (or until someone opens the file in VSCode and sees red squigglies).
+The Step 2 checks above verify file existence, JSON validity, and convention compliance. This step goes one level deeper and verifies the **generated workflow actually builds** — file-level checks alone could green-light a CLI with real type errors (wrong import path, wrong Commander API usage, bad tsconfig setting) that nobody would discover until the workflow is run for the first time (or until someone opens the file in VSCode and sees red squigglies).
 
-This step fills in the **"Generated TS CLI installs and typechecks cleanly"** row that Step 2 added to `{workflow-implementation-approval-list-file}` — that row is left as `PASS/FAIL` placeholder by Step 2 and resolved here.
+This step fills in the **"Workflow Build (2) passes"** row that Step 2 added to `{workflow-implementation-approval-list-file}` — that row is left as `PASS/FAIL` placeholder by Step 2 and resolved here.
 
-### 2A.1: Install dependencies
+### Run the Workflow Build (2)
 
-Run:
+Run the same build the shared workflow runner performs before every `build-first` run — one command that does the `pnpm install`, creates the `node_modules/agentic-hq` framework symlink, and compiles `src/` into `dist/`:
 
 ```bash
-cd {ts-workflow-dir} && pnpm install
+node {ahq-package-root}/scripts/build-workflow.cjs --workflow-dir={ts-workflow-dir} --ahq-package-root={ahq-package-root}
 ```
 
-A plain `pnpm install` is used (NOT `--ignore-workspace`). Each `ts-workflow`
-directory carries its own `pnpm-workspace.yaml`, so pnpm stops at that nearest
-workspace file and treats the `ts-workflow` directory as its own workspace root
-— isolated from the repo-root workspace. `--ignore-workspace` must NOT be used:
-under pnpm 11 it makes pnpm skip the local `pnpm-workspace.yaml`, so the
-`allowBuilds` approvals are not applied and `strictDepBuilds` fails the install.
+Because this is the exact build every later run of the workflow performs, a PASS here means the workflow will build identically at run time. The TypeScript version comes from the workflow's own `devDependencies` (the standard file set pins `typescript` there), so the compile matches what the workflow will use everywhere.
 
-This creates two things on disk:
-- **`{ts-workflow-dir}/node_modules/`** — gitignored by convention (every existing `ts-workflow/` directory in the repo follows this).
+This creates three things on disk:
+- **`{ts-workflow-dir}/node_modules/`** — gitignored (the standard `.gitignore` covers it).
+- **`{ts-workflow-dir}/dist/`** — the compiled CLI; also gitignored.
 - **`{ts-workflow-dir}/pnpm-lock.yaml`** — **NOT gitignored**; convention is to commit it. Tell the user explicitly: *"Generated `pnpm-lock.yaml` at `{ts-workflow-dir}/pnpm-lock.yaml` — please include this in your workflow's commit. Convention across all `ts-workflow/` directories in the repo is to track lockfiles."*
 
-If `pnpm install` fails, capture the error output verbatim, write FAIL into the row's Status column with the error in the Notes column, surface the failure to the user, and STOP this step (do not attempt the typecheck — it would fail for unrelated reasons). Do not attempt to fix the install error here; that's Command 02 scaffolding territory.
+If the build exits zero, write PASS into the row.
 
-### 2A.2: Typecheck the generated CLI
-
-#### Pick the TypeScript version
-
-Before running the typecheck, **verify the pinned TypeScript major.minor below still matches the agentic-hq root project's TypeScript version** so the typecheck behaves the same way as the root's `pnpm validate`.
-
-1. Read `{agentic-hq-workspace-root-dir}/package.json`.
-2. Find the `typescript` entry under `devDependencies` (or `dependencies`). It will be a semver range like `"^5.9.3"`.
-3. Extract the major.minor (e.g. `5.9` from `"^5.9.3"`).
-4. Compare against the pinned major.minor in the `pnpm dlx` command immediately below (currently `5.9`):
-   - **If they match**: proceed with the command as written.
-   - **If they don't match**: this Command 03 file's pin is stale relative to the root. Use the root's major.minor for *this* check (so the workflow-being-created is typechecked against the same TS the root uses), then surface the discrepancy to the user with: *"The TypeScript pin in `create-workflow`'s Command 03 (`typescript@<old>`) is older than the agentic-hq root's `typescript@<new>`. I used `typescript@<new>` for this check. Please bump the pin in `.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/03-run-checks-on-workflow.md` so future workflow-creation runs use the up-to-date version."*
-
-#### Run the typecheck
-
-```bash
-cd {ts-workflow-dir} && pnpm --package=typescript@5.9 dlx tsc --noEmit -p tsconfig.json
-```
-
-(Substitute the root's major.minor here if the previous sub-step found a mismatch.)
-
-**Why `pnpm dlx typescript@<version>` rather than adding `typescript` to the bundled `ts-workflow/package.json` as a devDep:**
-- Avoids inflating every workflow's `package.json` and `pnpm-lock.yaml` with a `typescript` entry.
-- Avoids ~50 MB of additional `node_modules/` per workflow (only partially mitigated by pnpm's content-addressable store).
-- `pnpm dlx` is a built-in subcommand of `pnpm` — which IS already a documented prerequisite of Agentic HQ (see README.md "Prerequisites" section) — so no new install requirement is introduced.
-- The pinned `typescript@5.9` lives once here in Command 03; bump it centrally and all future workflow-creation runs use the new version.
-
-If `tsc --noEmit` exits zero (no type errors), write PASS into the row.
-
-If `tsc --noEmit` exits non-zero, write FAIL into the row's Status column, paste the error output verbatim into the Notes column (or into a sub-section under the table if it's long), and surface the failure to the user. Do NOT attempt to fix the errors as part of this step — Command 03 is verification-only. The user decides whether to (a) regenerate the relevant file by hand, or (b) treat it as a Command 02 scaffolding bug to fix before the next `create-workflow` run.
+If the build fails, capture the error output verbatim, write FAIL into the row's Status column, paste the error into the Notes column (or into a sub-section under the table if it's long), and surface the failure to the user. Do NOT attempt to fix the errors as part of this step — Command 03 is verification-only. The user decides whether to (a) fix the relevant file by hand, or (b) treat it as a Command 02 scaffolding bug to fix before the next `create-workflow` run.
 
 ---
 

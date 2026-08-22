@@ -269,3 +269,7 @@ Run the self-termination skill immediately:
 - **Second gate:** if any fixes were applied at Step 5, the command must NOT end until the human has
   explicitly approved the applied fixes (Step 5's SECOND GATE). No fixes applied → no second gate
   needed.
+- **Human questions (at any point in this command):** if the human asks a question, answer it, then
+  **STOP and ask whether they would like you to continue** with the command. Do **not** carry on to
+  the next step (or the next action of the current step) off the back of answering a question — a
+  question is a pause, not a green light.

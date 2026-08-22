@@ -22,7 +22,7 @@ vi.mock('../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-
   }),
 }));
 
-const NODE_ARGV_PREFIX = ['/usr/bin/node', '/installed/dist/plugins/math-workflow-demo-cli.js'];
+const NODE_ARGV_PREFIX = ['/usr/bin/node', '/installed/dist/plugins/math-workflow-cli.js'];
 
 describe('DefaultWorkflowRuntime', () => {
   it('strips the framework options and preserves the remaining argv in order', () => {

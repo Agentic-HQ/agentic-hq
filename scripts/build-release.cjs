@@ -44,16 +44,12 @@ const SHIPPED_PLUGINS = [
   'agentic-hq-utilities-plugin',
 ];
 
-// AHQ-198: unmigrated workflows are excluded from the artifact until AHQ-208/
-// AHQ-209 migrate them — their legacy launch commands (pnpm install + tsx
-// inside the package) cannot work in the read-only npm install. Entries are
-// deleted as each workflow migrates. Dev mode is untouched: dev discovery
-// reads the repo plugins tree, never the staged one.
-const EXCLUDED_UNMIGRATED_SKILLS = [
-  'agentic-hq-core-plugin/skills/create-workflow',
-  'agentic-hq-demos-plugin/skills/add-feature-detailed-example',
-  'agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow',
-  'agentic-hq-demos-plugin/skills/quick-jira-workflow',
+// AHQ-209 Q4(b): the two skill-less draft command dirs are dev-only notes —
+// they have no skill, so they could never run from an install. Dev mode is
+// untouched: dev discovery reads the repo plugins tree, never the staged one.
+const EXCLUDED_DRAFT_COMMAND_DIRS = [
+  'agentic-hq-demos-plugin/commands/DRAFT-oo-refactoring-workflow',
+  'agentic-hq-demos-plugin/commands/research-plan-implement',
 ];
 
 // Per-workflow install files: needed to BUILD a workflow from source, useless
@@ -96,8 +92,6 @@ function listShippedWorkflowDirs() {
     if (!fs.existsSync(skillsDir)) continue;
     for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
-      const skillRelative = `${plugin}/skills/${entry.name}`;
-      if (EXCLUDED_UNMIGRATED_SKILLS.includes(skillRelative)) continue;
       const tsWorkflowDir = path.join(skillsDir, entry.name, TS_WORKFLOW_DIR_NAME);
       if (fs.existsSync(tsWorkflowDir)) {
         workflowDirs.push(tsWorkflowDir);
@@ -159,7 +153,7 @@ function isStrippedTsWorkflowFile(relativePath) {
 }
 
 // The shipped plugins, verbatim minus any ts-workflow node_modules, minus the
-// per-workflow install files, and minus the excluded unmigrated skills
+// per-workflow install files, and minus the skill-less draft command dirs
 for (const plugin of SHIPPED_PLUGINS) {
   fs.cpSync(
     path.join(pluginsRoot, plugin),
@@ -170,8 +164,8 @@ for (const plugin of SHIPPED_PLUGINS) {
         if (path.basename(source) === 'node_modules') return false;
         const rel = path.relative(pluginsRoot, source);
         if (isStrippedTsWorkflowFile(rel)) return false;
-        return !EXCLUDED_UNMIGRATED_SKILLS.some(
-          (skill) => rel === skill || rel.startsWith(skill + path.sep)
+        return !EXCLUDED_DRAFT_COMMAND_DIRS.some(
+          (draftDir) => rel === draftDir || rel.startsWith(draftDir + path.sep)
         );
       },
     }

@@ -69,9 +69,14 @@ const EXPECTED_EXPORTS = {
 };
 // Each shipped migrated workflow's compiled JS, which since AHQ-208 lives
 // inside the workflow's own ts-workflow/dist/
+// FUTURE REFACTOR: this should be derived from the shipped workflows' package.json exports and same for the EXPECTED_SHIPPED_SKILLS_BY_PLUGIN below.
 const COMPILED_WORKFLOW_JS_RELATIVE_PATHS = [
+  '.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/dist/create-workflow-cli.js',
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/ts-workflow/dist/add-feature-detailed-example-cli.js',
   '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/ts-workflow/dist/add-feature-cli.js',
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow/ts-workflow/dist/full-jira-tdd-story-workflow-cli.js',
   '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/dist/math-workflow-cli.js',
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/quick-jira-workflow/ts-workflow/dist/quick-jira-workflow-cli.js',
   '.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow/dist/string-reversal-cli.js',
 ];
 // Per-workflow install files must NOT ship inside any ts-workflow/ (AHQ-208
@@ -100,25 +105,38 @@ const EXPECTED_SHIPPED_PLUGINS = [
   'agentic-hq-utilities-plugin',
 ];
 
-// Shipped-skills boundary (AHQ-198): only the migrated workflows ship — the
-// remaining unmigrated skills are excluded from the artifact until AHQ-209
-// migrates them (their legacy launch commands mutate the package tree and
-// need pnpm/tsx, which cannot work in a read-only npm install). AHQ-208
-// restored string-reversal to the shipped set. The utilities plugin has no
-// skills/ directory, so it must not appear in this map.
+// Shipped-skills boundary (AHQ-198, completed by AHQ-209): all seven
+// workflows ship — any skill missing from this map, or any new skill
+// shipping without this list being updated, fails the publish safety net.
+// The utilities plugin has no skills/ directory, so it must not appear here.
 const EXPECTED_SHIPPED_SKILLS_BY_PLUGIN: Record<string, string[]> = {
-  'agentic-hq-core-plugin': ['self-termination'],
-  'agentic-hq-demos-plugin': ['add-feature', 'math-workflow', 'string-reversal'],
+  'agentic-hq-core-plugin': ['create-workflow', 'self-termination'],
+  'agentic-hq-demos-plugin': [
+    'add-feature',
+    'add-feature-detailed-example',
+    'full-jira-tdd-story-workflow',
+    'math-workflow',
+    'quick-jira-workflow',
+    'string-reversal',
+  ],
 };
 
-// The excluded skills must not surface in the installed `agentic-hq list`
-// output either — discovery is filesystem-driven against the installed tree.
+// Every shipped workflow must surface in the installed `agentic-hq list`
+// output — discovery is filesystem-driven against the installed tree.
 // Substrings match how each workflow actually renders in the listing.
-const EXCLUDED_WORKFLOW_LIST_SUBSTRINGS = [
+const SHIPPED_WORKFLOW_LIST_SUBSTRINGS = [
   'quick-jira',
   'full-jira',
   'add-feature-detailed-example',
   'create-workflow',
+];
+
+// The two skill-less draft command dirs are dev-only notes and must not ship
+// (AHQ-209 Q4(b)) — they have no skill, so they could never run from an
+// install anyway.
+const EXCLUDED_DRAFT_COMMAND_DIR_PREFIXES = [
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/commands/DRAFT-oo-refactoring-workflow/',
+  '.agentic-hq/plugins/agentic-hq-demos-plugin/commands/research-plan-implement/',
 ];
 
 interface PackageManifest {
@@ -303,6 +321,13 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
         skills.sort();
       }
       expect(shippedSkillsByPlugin).toEqual(EXPECTED_SHIPPED_SKILLS_BY_PLUGIN);
+      // The two skill-less draft command dirs never ship (AHQ-209 Q4(b))
+      for (const draftDirPrefix of EXCLUDED_DRAFT_COMMAND_DIR_PREFIXES) {
+        expect(
+          tarballFileList.filter((file) => file.startsWith(draftDirPrefix)),
+          `draft command dir ${draftDirPrefix} must not ship`
+        ).toEqual([]);
+      }
       // Exactly the runner and the Workflow Build it delegates to ship from
       // scripts/ (AHQ-208) — the rest of scripts/ is dev-machine tooling
       expect(tarballFileList.filter((file) => file.startsWith('scripts/'))).toEqual([
@@ -435,21 +460,22 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       expect(output).toContain('agentic-hq math');
       expect(output).toContain('Passes a number through three chained math steps');
 
-      // add-feature IS migrated and ships. 'agentic-hq add-feature' is a
-      // substring of the detailed-example's command line, so this presence
-      // assertion is only unambiguous together with the
-      // 'add-feature-detailed-example' absence assertion below
+      // add-feature ships. 'agentic-hq add-feature' is a substring of the
+      // detailed-example's command line (also shipped since AHQ-209), so the
+      // description line is what proves the plain add-feature entry rendered
       expect(output).toContain('agentic-hq add-feature');
+      expect(output).toContain(
+        'Add a small feature using a simple four-stage research/plan/implement/review workflow'
+      );
 
       // string-reversal ships again since AHQ-208 (it lists under the short
       // command `agentic-hq reversal`)
       expect(output).toContain('agentic-hq reversal');
 
-      // The excluded unmigrated workflows must not be listed from the
-      // installed package (AHQ-198 recorded Planner decision; AHQ-209
-      // restores them as it migrates each one)
-      for (const excludedSubstring of EXCLUDED_WORKFLOW_LIST_SUBSTRINGS) {
-        expect(output).not.toContain(excludedSubstring);
+      // All four workflows AHQ-209 migrated must render in the installed
+      // listing too — the shipped set is all seven
+      for (const shippedSubstring of SHIPPED_WORKFLOW_LIST_SUBSTRINGS) {
+        expect(output).toContain(shippedSubstring);
       }
     },
     FAST_TEST_TIMEOUT_MS

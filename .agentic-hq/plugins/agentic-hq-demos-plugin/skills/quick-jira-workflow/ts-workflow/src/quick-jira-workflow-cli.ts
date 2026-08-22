@@ -7,15 +7,17 @@
  * read Jira, then loop over test types (RED, GREEN, REFACTOR),
  * then transition the Jira to Done.
  *
- * This is the plugin-bundled version of the workflow CLI.
- * Import uses the agentic-hq package (resolved via link: protocol for local dev).
+ * The framework's required --build-mode / --ahq-package-root options
+ * (forwarded by the shared workflow runner) are consumed by
+ * DefaultWorkflowRuntime — this file contains only quick-jira-workflow code.
  *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-82
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-209
  */
 
 import { Command } from 'commander';
 
-import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultWorkflowRuntime } from 'agentic-hq/tools/claude-code';
 
 const COMMAND_01_READ_JIRA =
   '/agentic-hq-demos-plugin:quick-jira-workflow:01-read-jira-and-plan-tests-and-implementation-understand';
@@ -35,6 +37,9 @@ function buildVariablesString(jiraId: string, testType?: string): string {
   return variablesString;
 }
 
+const runtime = new DefaultWorkflowRuntime(process.argv);
+const tool = runtime.getClaudeCodeTool();
+
 const program = new Command();
 
 program
@@ -42,8 +47,6 @@ program
   .description('Run a multi-step Jira workflow using Claude Code')
   .requiredOption('--jira-id <string>', 'The Jira ID to implement (e.g. TEST-123)')
   .action(async (options: { jiraId: string }) => {
-    const tool = new DefaultClaudeCodeTool();
-
     // Step 1: Read Jira, get comma-separated test types
     const testTypesString = await tool.execute(
       COMMAND_01_READ_JIRA,
@@ -69,4 +72,4 @@ program
     await tool.execute(COMMAND_05_TRANSITION_DONE, buildVariablesString(options.jiraId));
   });
 
-program.parse();
+program.parse(runtime.getWorkflowArgs());

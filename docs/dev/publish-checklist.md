@@ -117,11 +117,16 @@ Then spot-check the file list:
 tar -tzf agentic-hq-<version>.tgz | grep '^package/\.agentic-hq/plugins/' | grep '/skills/' | cut -d/ -f4,6 | sort -u
 ```
 
-- **Expected:** exactly the migrated workflows' skills (currently
-  `agentic-hq-core-plugin/self-termination`, `agentic-hq-demos-plugin/add-feature`,
+- **Expected:** exactly the shipped skills (since AHQ-209, all seven workflows plus
+  self-termination):
+  `agentic-hq-core-plugin/create-workflow`,
+  `agentic-hq-core-plugin/self-termination`,
+  `agentic-hq-demos-plugin/add-feature`,
+  `agentic-hq-demos-plugin/add-feature-detailed-example`,
+  `agentic-hq-demos-plugin/full-jira-tdd-story-workflow`,
   `agentic-hq-demos-plugin/math-workflow`,
-  `agentic-hq-demos-plugin/string-reversal`) — none of the unmigrated skills
-  listed in `EXCLUDED_UNMIGRATED_SKILLS` in `scripts/build-release.cjs`.
+  `agentic-hq-demos-plugin/quick-jira-workflow`,
+  `agentic-hq-demos-plugin/string-reversal` — and nothing else.
 
 ```
 tar -tzf agentic-hq-<version>.tgz | grep node_modules
@@ -203,9 +208,11 @@ prefix-scoped global install} × {Node 24, Node 22}. Run each from a **fresh tem
 directory outside the repo** (inside the repo, the repo `.npmrc` makes npm print the
 cosmetic warning from §4).
 
-**Expected in every combo:** the workflow list shows **only** the migrated workflows
-(currently `math` and `add-feature`), and the math run ends with `Output number: 5`.
-The math workflow runs three real Claude steps — expect several minutes per combo.
+**Expected in every combo:** the workflow list shows **all seven** shipped workflows
+(since AHQ-209: `add-feature`, `add-feature-detailed-example`, `create-workflow`,
+`full-jira`, `math`, `quick-jira`, `reversal`), and the math run ends with
+`Output number: 5`. The math workflow runs three real Claude steps — expect several
+minutes per combo.
 
 **npx (per Node version):**
 

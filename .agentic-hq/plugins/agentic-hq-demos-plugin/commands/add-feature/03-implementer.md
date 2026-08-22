@@ -211,3 +211,10 @@ Write to: {command-input-output-files-directory}/command-output.json
 Run the self-termination skill immediately:
 
 /agentic-hq-core-plugin:self-termination
+
+## Important Notes
+
+- **Human questions (at any point in this command):** if the human asks a question, answer it, then
+  **STOP and ask whether they would like you to continue** with the command. Do **not** carry on to
+  the next step (or the next action of the current step) off the back of answering a question — a
+  question is a pause, not a green light.

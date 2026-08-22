@@ -56,15 +56,17 @@ list.
 
 Once you approve the spec, Create Workflow copies the source workflow's files into your project under your
 new workflow's id and **rewires** them so the copy is genuinely yours and runnable — it renames the CLI,
-repoints the internal command references, and rewrites the metadata (`ahq-workflow.json`, `package.json`,
-`SKILL.md`) to your new identity. It also **sweeps the copied docs and comments** so they describe your
-workflow, not the original.
+repoints the internal command references, and rewrites the metadata (`ahq-workflow.json`, `package.json`)
+to your new identity (`SKILL.md` needs no rewiring — it is the same template in every workflow and picks
+up the new name from its directory automatically). It also **sweeps the copied docs and comments** so they
+describe your workflow, not the original.
 
 If your changes **remove** a command (or **insert** one in the middle), it also renumbers the remaining
 command files and keeps the CLI's internal wiring in step, so the result runs end-to-end without errors.
 
-The copy runs in your project automatically — even if your project isn't the Agentic HQ workspace —
-because every workflow's `SKILL.md` re-links the `agentic-hq` framework from the AHQ install on first run.
+The copy runs in your project automatically — even if your project isn't the agentic-hq package — because
+every run builds the workflow in place (the framework's Workflow Build installs its dependencies, links
+the `agentic-hq` framework from your install, and compiles it before running).
 
 ## The Result
 

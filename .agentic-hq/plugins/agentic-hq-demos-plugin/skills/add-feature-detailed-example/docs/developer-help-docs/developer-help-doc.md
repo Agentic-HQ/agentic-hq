@@ -194,9 +194,10 @@ old workflow's structure.
 The CLI ([`ts-workflow/src/add-feature-detailed-example-cli.ts`](../../ts-workflow/src/add-feature-detailed-example-cli.ts))
 follows the same pattern as `create-workflow-cli.ts`:
 
-1. Read `AGENTIC_HQ_WORKSPACE_ROOT` from the environment and parse the passthrough params (`--verbosity`,
-   `--suggest-large-refactor`, `--ticket-id`), applying defaults (`low` / `false`; `ticket-id` only passed
-   through if supplied).
+1. Take the AHQ package root from the framework runtime (`DefaultWorkflowRuntime`, which consumes the
+   `--build-mode` / `--ahq-package-root` options the shared workflow runner forwards) and parse the
+   passthrough params (`--verbosity`, `--suggest-large-refactor`, `--ticket-id`), applying defaults
+   (`low` / `false`; `ticket-id` only passed through if supplied).
 2. Build Command 01's input string and run it. **Capture Command 01's return value as `allVariables`.**
 3. Re-inject that *same* `allVariables` string into Commands 02–07, and **ignore** their outputs.
 
@@ -218,10 +219,10 @@ verbose-but-explicit chain is one of the patterns the workflow deliberately keep
 
 Help docs and templates ship *with the skill* in its `docs/` and `resources/` directories, so they travel
 with it if the skill is versioned/distributed. Agents locate that directory by deriving it from
-`AGENTIC_HQ_WORKSPACE_ROOT` plus `plugin-id` and the workflow id — the same known-good pattern
+`ahq-package-root` plus `plugin-id` and the workflow id — the same known-good pattern
 `create-workflow` itself uses. (Current limitation, left for later: this resolves the skill dir *via the
-workspace root*, so the workflow must run with `AGENTIC_HQ_WORKSPACE_ROOT` set. Resolving a plugin's own
-skill root independently of the workspace — so a marketplace-installed skill finds its bundled docs
+AHQ package root*, so the plugin must live inside the agentic-hq package tree. Resolving a plugin's own
+skill root independently of that root — so a marketplace-installed skill finds its bundled docs
 anywhere — is a future improvement.)
 
 ### Help docs, `verbosity=medium`, and "Tell Me More"
