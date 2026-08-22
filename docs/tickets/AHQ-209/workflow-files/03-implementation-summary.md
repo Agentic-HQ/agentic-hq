@@ -46,7 +46,8 @@ the approved plan's five slices:
   and their seven compiled `dist/<skill-id>-cli.js`, no node_modules, no stray ts-workflow install
   files, no draft dirs, exactly the two shipped scripts. The pnpm-shim cleanup, human-run
   `npm publish` (real Terminal), and registry verification matrix are **pending — done with the
-  human after the Approval Gate** (see below).
+  human after the Approval Gate** (see below). *(Completed 2026-08-22 — see
+  `## Publish Completion (2026-08-22)` at the end of this doc.)*
 
 ## Files Changed/Added/Deleted
 
@@ -118,7 +119,8 @@ No new test files (per plan). Results, in RED→GREEN order:
   workflow output files, the implementation files, and the Jira's Done transition.
 - **Manual acceptance walk-through** (fresh dir + tarball install → `agentic-hq create-workflow
   -- --using=add-feature` → scaffold → commit → collaborator run): **pending — run with the human
-  after the Approval Gate.**
+  after the Approval Gate.** *(2026-08-22: deliberately deferred by the human to the following
+  week — weekly token budget nearly exhausted; the 0.2.0 publish went ahead without it.)*
 
 ## Approved Deviations From The Plan
 
@@ -139,3 +141,38 @@ None.
 ## Human Approval Confirmation
 
 I'm running a bit low on tokens for this week (nearing the limit) so I'm manually approving this and skipping the Review section for this Jira, and will commit and set it to done.
+
+## Publish Completion (2026-08-22)
+
+The pending Slice 5 items were completed with the human on 2026-08-22 (run from the AHQ-199
+Researcher session, following `docs/dev/publish-checklist.md` top to bottom):
+
+- **pnpm-shim cleanup:** `pnpm uninstall --global agentic-hq` removed the stale global link, but
+  left the shim file `~/Library/pnpm/bin/agentic-hq` orphaned (pnpm matches shims against the
+  package's *current* manifest, whose bin is now `agentic-hq-dev`). The dead shim was deleted
+  manually; `which agentic-hq` now finds nothing until a real registry install.
+- **Checklist §1:** pnpm 11.1.2 = pin; `npm whoami` → `halso`; tree made clean via WIP commit
+  `da13218`; all §1d safety nets green — `pnpm validate` (190/190 unit),
+  build-determinism 1/1, publish-guards 3/3, prebuilt-tarball e2e 5/5 (245s, real Claude).
+- **Checklist §2–§3:** fresh `pnpm build` + `pnpm pack` from `release/` →
+  `agentic-hq-0.2.0.tgz` (305,368 bytes); every §3 tarball-manifest and file-list inspection
+  passed.
+- **Checklist §4:** human ran `npm publish ./agentic-hq-0.2.0.tgz` in a real Terminal (browser
+  passkey ceremony) → `+ agentic-hq@0.2.0`. Registry confirmed:
+  versions `[0.0.1, 0.1.0, 0.1.1, 0.2.0]`, `dist-tags.latest` → `0.2.0`.
+- **Checklist §5 — run in a deliberately token-frugal form (human-approved deviation, 82% of the
+  weekly Claude budget already used):** `list` verified in **all four combos**, but the per-combo
+  math run (3 Claude steps each) was replaced by a **single reversal end-to-end run** (1 step) —
+  the substitution this doc's own follow-up note already endorsed. The full math matrix was last
+  run for 0.1.1 in AHQ-198; AHQ-207's Ubuntu-VM run remains the closing end-to-end proof.
+
+  | Node | Route | list | end-to-end |
+  |---|---|---|---|
+  | v24.15.0 | npx (`npx --yes agentic-hq list`) | all 7 workflows | — |
+  | v22.20.0 | npx (PATH-pinned) | all 7 workflows | — |
+  | v24.15.0 | global (`npm install -g --prefix <temp>`) | all 7 workflows | `reversal` → `deifirev 0.2.0 hsilbup` ✅ |
+  | v22.20.0 | global (PATH-pinned) | all 7 workflows | — |
+
+  All runs from fresh directories under the trusted `/tmp/agentic-hq-test-workspaces/` parent.
+- **Still deferred:** the manual create-workflow acceptance walk-through (next week, when the
+  token budget renews — see the dated note in the test-results section above).

@@ -479,7 +479,8 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    name-collision handling, so every invocation from such a directory fails, including `list` and
    `--help`. Full description:
    `docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md`. Further instructions
-   for this Sub-Task are in *Open Sub-Task Instructions* below.
+   for this Sub-Task are in *Open Sub-Task Instructions* below. **Done** (outside the add-feature
+   workflow — docs in `docs/tickets/AHQ-205/`; AHQ-208 builds on its first-wins registration fix).
 7. **[AHQ-201](https://agentic-hq.atlassian.net/browse/AHQ-201) — Migrate All Remaining Workflows And The Scaffolder Onto The Proven Prebuilt Pattern And
    Restore Them To Working** — with the pattern locked down, migrate the remaining five skills
    (string-reversal, quick-jira-workflow, full-jira-tdd-story-workflow,
@@ -489,7 +490,8 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
    request):** on completion, `AGENTIC_HQ_WORKSPACE_ROOT` and its equivalent names (e.g.
    `agentic-hq-workspace-root-dir`, `agenticHqWorkspaceRoot`) are fully eliminated — verified by a
    grep of the whole workspace that finds them only in legacy and old conversation/spec files
-   (e.g. `docs/jira-docs/`, ticket history under `docs/tickets/`, `LEGACY/` copies).
+   (e.g. `docs/jira-docs/`, ticket history under `docs/tickets/`, `LEGACY/` copies). **Done**
+   (delivered as AHQ-208 + AHQ-209 — see the Sub-Task 7 section below).
 8. **[AHQ-199](https://agentic-hq.atlassian.net/browse/AHQ-199) — README And Docs: npm/npx Quickstart For Tool Users, Separate From Contributor Clone Path** —
    README npm/npx Quickstart vs contributor split, tool-user prerequisites (Claude CLI; Linux build
    toolchain for node-pty), troubleshooting updates — written against the working add-feature flow.
@@ -507,9 +509,12 @@ Sub-Tasks (Jira IDs assigned by the human; each links to its Jira issue):
 
 ## Open Sub-Task Instructions (consolidated 2026-08-16)
 
-Sub-Tasks 1–5 are **complete**: AHQ-196, AHQ-197, AHQ-198, AHQ-202 (with its migration half done as
-AHQ-204), and AHQ-200. This section holds only what a **remaining** Sub-Task agent needs in order to
-do the right thing — read the Sub-Task list above for scope, then your own Sub-Task's items here.
+Sub-Tasks 1–7 are **complete**: AHQ-196, AHQ-197, AHQ-198, AHQ-202 (with its migration half done as
+AHQ-204), AHQ-200, AHQ-205 (done outside the add-feature workflow — docs in
+`docs/tickets/AHQ-205/`), and AHQ-201 (umbrella, delivered as AHQ-208 + AHQ-209;
+`agentic-hq@0.2.0` published and registry-verified 2026-08-22). This section holds only what a
+**remaining** Sub-Task agent needs in order to do the right thing — read the Sub-Task list above
+for scope, then your own Sub-Task's items here.
 
 > Eight dated "Update …" sections appended between 2026-08-06 and 2026-08-16 were consolidated into
 > this one on 2026-08-16, at the human's request: decision narratives, superseded scheduling,
@@ -534,6 +539,13 @@ do the right thing — read the Sub-Task list above for scope, then your own Sub
   record it. If this Sub-Task is not run via add-feature, carry the check to whichever one is.
 
 ### Sub-Task 7 — AHQ-201 (migrate the remaining workflows and the scaffolder)
+
+**Done (2026-08-22):** delivered as AHQ-208 (approved 2026-08-20) and AHQ-209 (approved
+2026-08-22; the human skipped the review stage, recorded in its summary). All seven shipped
+workflows migrated and restored to working, the grep-clean AC verified, and `agentic-hq@0.2.0`
+published and registry-verified on 2026-08-22 — see
+`docs/tickets/AHQ-209/workflow-files/03-implementation-summary.md` (§ Publish Completion). The
+items below are retained as the historical instruction record.
 
 - **Open design question this Sub-Task must answer deliberately: how do user-created workflows work
   against a pure npm install, with no agentic-hq clone anywhere?** Today's mechanism (scaffolded
