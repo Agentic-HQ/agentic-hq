@@ -591,7 +591,9 @@ do the right thing — read the Sub-Task list above for scope, then your own Sub
   `build-mode`; `agentic-hq-dev`), then [AHQ-209](https://agentic-hq.atlassian.net/browse/AHQ-209) —
   *Migrate Remaining Workflows And create-workflow Scaffolder Onto Two-Builds Pattern, Restore All To
   Working, Publish 0.2.0* — which delivers everything listed for Sub-Task 7 above. Sequence:
-  AHQ-208 → AHQ-209 → AHQ-207 → AHQ-199. The parent brief for both is
+  AHQ-208 → AHQ-209 → AHQ-199 → AHQ-207 *(corrected 2026-08-22 during the AHQ-199 Researcher
+  stage — everything is documented first in AHQ-199, then the human follows that documentation
+  exactly in AHQ-207 on the Ubuntu VM)*. The parent brief for both is
   `docs/tickets/AHQ-201/workflow-files/01-feature-brief.md` (+ its `supporting-docs/01|02|03`); read
   its `Split Suggestion (Accepted)` first.
 
