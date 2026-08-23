@@ -13,6 +13,15 @@ import { runCliAndLogOutput } from './cli-test-helper-functions.js';
 
 const SETUP_TIMEOUT_MS = 600_000; // build + pack + npm registry-style install
 
+/**
+ * The install-script allowlist the README tells users to install with (AHQ-207).
+ * npm 12 blocks package install scripts by default; agentic-hq needs two of them
+ * (node-pty builds its native binding, and our own postinstall makes that
+ * binding's spawn-helper executable on macOS). Exported so every tarball install
+ * across the e2e suite matches the documented install command.
+ */
+export const ALLOW_SCRIPTS_FLAG = '--allow-scripts=agentic-hq,node-pty';
+
 export interface TarballInstall {
   tarballPath: string;
   installedPackageRoot: string;
@@ -44,10 +53,15 @@ export function buildPackAndInstallTarball(runDir: string): TarballInstall {
   }
   const tarballPath = path.join(runDir, tarballs[0]);
 
-  // Install the tarball the way npm would install from the registry
+  // Install the tarball the way npm would install from the registry — including
+  // the --allow-scripts flag the README tells users to install with (AHQ-207).
+  // npm 12 blocks package install scripts by default, which would leave node-pty
+  // without its native binding (Linux) or without an executable spawn-helper
+  // (macOS). Keeping the flag here means this test installs the documented way,
+  // and does not start failing the day the machine's npm reaches 12.
   const installPrefix = path.join(runDir, 'install-prefix');
   runCliAndLogOutput(
-    `npm install -g --prefix "${installPrefix}" "${tarballPath}"`,
+    `npm install -g ${ALLOW_SCRIPTS_FLAG} --prefix "${installPrefix}" "${tarballPath}"`,
     'prebuilt-tarball-npm-install',
     SETUP_TIMEOUT_MS,
     repoRoot

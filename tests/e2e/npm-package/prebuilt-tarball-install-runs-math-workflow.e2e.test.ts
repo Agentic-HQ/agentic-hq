@@ -35,7 +35,10 @@ import { describe, it, expect, beforeAll } from 'vitest';
 
 import { hashTree } from '../../helpers/file-tree-helper-functions.js';
 import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
-import { buildPackAndInstallTarball } from '../helpers/tarball-install-helper-functions.js';
+import {
+  ALLOW_SCRIPTS_FLAG,
+  buildPackAndInstallTarball,
+} from '../helpers/tarball-install-helper-functions.js';
 
 const SETUP_TIMEOUT_MS = 600_000; // build + pack + npm registry install
 const FAST_TEST_TIMEOUT_MS = 60_000; // no Claude invocation
@@ -416,7 +419,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       );
 
       runCliAndLogOutput(
-        `npm install "${tarballPath}"`,
+        `npm install ${ALLOW_SCRIPTS_FLAG} "${tarballPath}"`,
         'prebuilt-tarball-hoisted-install',
         HOISTED_INSTALL_TIMEOUT_MS,
         projectDir

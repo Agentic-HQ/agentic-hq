@@ -27,6 +27,7 @@ Unsupported:
 ### Prerequisites
 
 - Claude Code - https://code.claude.com/docs/en/quickstart
+- npm - version 11 or 12.
 
 Linux only:
 - A C/C++ build toolchain (`make`, a compiler, and Python). This is for compiling `node-pty` from source during `npm install -g agentic-hq`. On Ubuntu/Debian simply run:
@@ -42,8 +43,12 @@ Linux only:
 2. **Install Agentic HQ:**
 
    ```bash
-   npm install -g agentic-hq
+   npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
    ```
+
+   `--allow-scripts` is required from npm 12 onwards, which blocks package install scripts by default. Agentic HQ needs two of them: `node-pty` builds its native terminal binding, and Agentic HQ's own script makes that binding executable on macOS. Without the flag, npm 12 reports a successful install but Agentic HQ will not run.
+
+   Older versions of npm may report `Unknown cli config "--allow-scripts"`. This can be safely ignored — the install still completes correctly.
 
    Verify it's on your `PATH`:
 
@@ -51,7 +56,7 @@ Linux only:
    agentic-hq list
    ```
 
-   (Prefer to try first without installing? `npx --yes agentic-hq list` runs it directly without installing it.)
+   (Prefer to try first without installing? `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list` runs it directly without installing it. `npx` needs the same flag, for the same reason.)
 
 3. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
@@ -61,7 +66,7 @@ Linux only:
 
 Or if you want to run it without installing it:
    ```bash
-   npx --yes agentic-hq reversal -- --string-to-reverse="wow this is amazing"
+   npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
    NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Run The add-feature Workflow](#run-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).

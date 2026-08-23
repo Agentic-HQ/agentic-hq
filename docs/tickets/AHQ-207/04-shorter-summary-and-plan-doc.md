@@ -37,9 +37,11 @@ npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
 
 ---
 
-## The plan — 5 changes
+## The plan — 6 changes
 
-*(Changes 1–4 below. Change 5 is a one-line docs addition, explained in
+**Status: all 6 made, `pnpm validate` green, and the changed e2e test run (5 passed, 222s).**
+
+*(Changes 1–4 and 6 below. Change 5 sits inside
 [Should we just move everything to npm 12?](#should-we-just-move-everything-to-npm-12) — it only
 makes sense alongside that reasoning.)*
 
@@ -83,6 +85,22 @@ Lines 211 and 419 install the tarball with the dev machine's npm and no flag. Ad
 
 - It stops a **mystery red build** the day CI or a contributor's npm reaches 12.
 - It makes the test **honest** — it should install the way we document installing.
+
+---
+
+### 6. `README.md:59` and `:69` — `npx` needs the flag too
+
+The README advertises `npx --yes agentic-hq …` as the no-install route. **npx hits the identical
+npm 12 block** — it fetches and installs the same way. Verified on the VM:
+
+| Command (npm 12.0.2, npx cache cleared, no global install) | Result |
+| --- | --- |
+| `npx --yes agentic-hq list` | **Crashes**, exit 1 — `Failed to load native module: pty.node` |
+| `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list` | **Works**, exit 0 |
+
+So both npx lines get the same flag. *(First attempt at this test was invalid — the global install
+was on `PATH`, so npx ran that instead of fetching. Re-run with `npm uninstall -g agentic-hq` first;
+the `Agentic HQ Package:` line then correctly showed a `~/.npm/_npx/…` path.)*
 
 ---
 
@@ -139,7 +157,7 @@ hit. Fixed with one line rather than a version bump — see change 5.
 
 ### 5. `README.md` Prerequisites — state the supported npm range
 
-> **npm** — any version from npm 11 onwards (npm 12 included). The install command below works on both.
+> npm - version 11 or 12.
 
 No user action required, and it quietly explains why the install command looks unusual.
 
@@ -148,7 +166,7 @@ No user action required, and it quietly explains why the install command looks u
 
 ## Approve?
 
-Say go and I'll make all 5 changes, then run `pnpm validate`.
+Say go and I'll make all 6 changes, then run `pnpm validate`.
 
 Two things worth deciding at the same time:
 

@@ -55,13 +55,46 @@ This section is for **Normal Users** installing the tool from npm and following 
   needed by node-gyp's configure step. Verify the install works with
   `agentic-hq list`.
 
-#### `node-pty` install fails / `posix_spawnp failed` at runtime (older macOS)
+#### `Failed to load native module: pty.node` on Linux — every command crashes at startup
 
-- **Cause:** Your macOS version is older than **13.5**. The `node-pty`
-  dependency ships prebuilt native binaries that require macOS 13.5 or
-  newer; on older macOS the install fails to produce a working `node-pty`,
-  or you hit a runtime `Error: posix_spawnp failed` when a workflow starts
-  Claude Code.
+- **Symptom:** The install reported success, but every `agentic-hq` command —
+  including `agentic-hq list` — exits immediately with:
+  ```
+  Error: Failed to load native module: pty.node, checked: build/Release, build/Debug, prebuilds/linux-x64
+  ```
+- **Cause:** You installed without `--allow-scripts` on **npm 12 or newer**,
+  which blocks package install scripts by default. On Linux `node-pty` has
+  no prebuilt binary, so its blocked install script never compiled one —
+  and npm still reported a successful install.
+- **Fix:** reinstall with the flag:
+  ```bash
+  npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
+  ```
+  Check your npm version with `npm -v`. This cannot happen on npm 11, where
+  install scripts still run (you get a warning instead of a block).
+- **Using `npx` instead of installing?** It fetches and installs the same way,
+  so it needs the same flag:
+  `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list`
+
+#### `posix_spawnp failed` at runtime on macOS
+
+Two different causes — check the npm one first, as it is by far the more
+common now.
+
+- **Cause 1 — install scripts blocked (npm 12+).** You installed without
+  `--allow-scripts` on npm 12 or newer. Unlike Linux, macOS *does* have a
+  prebuilt `node-pty` binary, so the CLI starts and `agentic-hq list` works
+  normally — but Agentic HQ's blocked install script never marked the
+  binding's `spawn-helper` executable, so the failure only appears when a
+  workflow launches Claude Code.
+- **Fix:** reinstall with the flag:
+  ```bash
+  npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
+  ```
+- **Cause 2 — macOS older than 13.5.** The `node-pty` dependency ships
+  prebuilt native binaries that require macOS 13.5 or newer; on older macOS
+  the install fails to produce a working `node-pty`, or you hit a runtime
+  `Error: posix_spawnp failed` when a workflow starts Claude Code.
 - **Fix:** Agentic HQ requires **macOS 13.5 or newer**. Check your version
   with `sw_vers --productVersion`; if it is below 13.5, upgrade macOS or
   use a machine that meets the floor.
@@ -105,7 +138,8 @@ This section is for **Normal Users** installing the tool from npm and following 
   (`posix_spawnp failed`). Version 0.1.1 was the first working release, and
   the current release is **0.2.0**. `npm install -g agentic-hq` and
   `npx --yes agentic-hq` fetch the latest version by default; if you're
-  somehow on 0.1.0, upgrade with `npm install -g agentic-hq@latest`.
+  somehow on 0.1.0, upgrade with
+  `npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq@latest`.
 
 ---
 
