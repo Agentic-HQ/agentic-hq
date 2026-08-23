@@ -1,3 +1,4 @@
+import type { BuildMode } from '../../interfaces/build-mode.js';
 import type { AhqFile } from '../interfaces/ahq-file.js';
 import type { AhqWorkflow } from '../interfaces/ahq-workflow.js';
 import type { ExampleCommand } from '../interfaces/example-command.js';
@@ -30,8 +31,16 @@ import { WorkflowShortNameImpl } from './workflow-short-name-impl.js';
 export class AhqWorkflowImpl implements AhqWorkflow {
   private readonly metadata: WorkflowMetadata;
 
-  constructor(file: AhqFile) {
+  constructor(
+    file: AhqFile,
+    private readonly buildMode: BuildMode
+  ) {
     this.metadata = new JsonFileWorkflowMetadata(file);
+  }
+  /** Return the constructor-injected build mode (AHQ-208) — location is identity:
+   *  the workspace this workflow was discovered under decided it. */
+  getBuildMode(): BuildMode {
+    return this.buildMode;
   }
   /** Return the workflow's description (delegates to WorkflowDescriptionImpl.createFrom). */
   getDescription(): WorkflowDescription {

@@ -13,27 +13,27 @@ Read the file: {command-input-output-files-directory}/command-input.json
 Extract the `command-input-string` value. It comes in one of two shapes.
 
 Without `--using` (the create-from-scratch path — the default):
-`The variable used in this workflow creation workflow is: agentic-hq-workspace-root-dir=/path/to/agentic-hq`
+`The variable used in this workflow creation workflow is: ahq-package-root=/path/to/agentic-hq`
 
 With `--using=<short-id>` (the copy-an-existing-workflow path):
-`The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and short-id-of-workflow-to-copy=add-feature`
+`The variables used in this workflow creation workflow are: ahq-package-root=/path/to/agentic-hq and short-id-of-workflow-to-copy=add-feature`
 
 Parse out:
-- `agentic-hq-workspace-root-dir` — the absolute path to the Agentic HQ workspace (where reference/example files live)
+- `ahq-package-root` — the absolute path to the agentic-hq package (where reference/example files live)
 - `short-id-of-workflow-to-copy` — **optional**; present only when the user passed `-- --using=<short-id>`. The short-id of an existing workflow this new workflow should be based on (copied and then modified). When this clause is absent, this is a normal create-from-scratch run.
 
 ## Step 0b: Establish Variables
 
 ```
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 short-id-of-workflow-to-copy = (parsed from input; absent on a create-from-scratch run)
 project-root = (your primary working directory)
-readme-file = {agentic-hq-workspace-root-dir}/README.md
-how-agentic-hq-works-file = {agentic-hq-workspace-root-dir}/docs/dev/how-agentic-hq-works.md
-demos-plugin-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
+readme-file = {ahq-package-root}/README.md
+how-agentic-hq-works-file = {ahq-package-root}/docs/dev/how-agentic-hq-works.md
+demos-plugin-dir = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin
 example-workflow-commands-dir = {demos-plugin-dir}/commands/math-workflow
 example-workflow-skill-dir = {demos-plugin-dir}/skills/math-workflow
-example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-demo-cli.ts
+example-workflow-cli-file = {example-workflow-skill-dir}/ts-workflow/src/math-workflow-cli.ts
 example-workflow-skill-file = {example-workflow-skill-dir}/SKILL.md
 example-workflow-package-json = {example-workflow-skill-dir}/ts-workflow/package.json
 ```
@@ -48,14 +48,14 @@ When `short-id-of-workflow-to-copy` IS set, the new workflow will be built by **
 
 ### Resolve across BOTH roots
 
-There is no lookup helper exposed to you, so resolve the same way the CLI itself discovers workflows (it registers both an AHQ workspace and the current-user workspace): scan every `ahq-workflow.json` under `.agentic-hq/plugins/**` in **both** roots and match on the `shortId` field:
+There is no lookup helper exposed to you, so resolve the same way the CLI itself discovers workflows (it registers both the AHQ package and the current-user workspace): scan every `ahq-workflow.json` under `.agentic-hq/plugins/**` in **both** roots and match on the `shortId` field:
 
-- `{agentic-hq-workspace-root-dir}` — the AHQ install, where the bundled workflows (`add-feature`, etc.) live, **and**
+- `{ahq-package-root}` — the AHQ install, where the bundled workflows (`add-feature`, etc.) live, **and**
 - `{project-root}` — the user's own workspace, which may hold a workflow a colleague shared.
 
-A user commonly runs `create-workflow` from a fresh, empty project, so the source is frequently present **only** under `{agentic-hq-workspace-root-dir}` — scanning `{project-root}` alone would miss it. Scan both. (For example: list every match with `find {agentic-hq-workspace-root-dir}/.agentic-hq/plugins -name ahq-workflow.json` and the same under `{project-root}`, then read each file's `shortId`.)
+A user commonly runs `create-workflow` from a fresh, empty project, so the source is frequently present **only** under `{ahq-package-root}` — scanning `{project-root}` alone would miss it. Scan both. (For example: list every match with `find {ahq-package-root}/.agentic-hq/plugins -name ahq-workflow.json` and the same under `{project-root}`, then read each file's `shortId`.)
 
-**De-dup when the two roots are the same directory** — i.e. when `{project-root}` equals `{agentic-hq-workspace-root-dir}` (running `create-workflow` against the AHQ install itself). Don't count the same file twice.
+**De-dup when the two roots are the same directory** — i.e. when `{project-root}` equals `{ahq-package-root}` (running `create-workflow` against the AHQ install itself). Don't count the same file twice.
 
 ### Handle the match count
 
@@ -68,7 +68,7 @@ A user commonly runs `create-workflow` from a fresh, empty project, so the sourc
 Once resolved (and disambiguated, if needed):
 
 ```
-source-workspace-root = (the root the match was found under — {agentic-hq-workspace-root-dir} or {project-root})
+source-workspace-root = (the root the match was found under — {ahq-package-root} or {project-root})
 source-plugin-id = (pluginId from the matched ahq-workflow.json)
 source-workflow-id = (skillId from the matched ahq-workflow.json)
 source-commands-dir = {source-workspace-root}/.agentic-hq/plugins/{source-plugin-id}/commands/{source-workflow-id}
@@ -99,16 +99,16 @@ Read the following files to understand how Agentic HQ workflows are built:
 3. All `.md` files in `{example-workflow-commands-dir}` — Math workflow command files (times-two.md, plus-three.md, div-five.md) showing the simple command pattern
 4. `{example-workflow-cli-file}` — TypeScript orchestrator showing how commands are chained
 5. `{example-workflow-skill-file}` — SKILL.md showing how skills return shell commands
-6. `{example-workflow-package-json}` — Package structure with link: protocol
-7. `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/src/create-workflow-cli.ts` — TypeScript CLI showing the **`AGENTIC_HQ_WORKSPACE_ROOT` env-var pattern** (how a workflow CLI reads from the user's environment and propagates constants into every command's input). The math-workflow CLI is intentionally too simple to show this — read this one too.
-8. `{agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md` (just the Step 0a/0b at lines 9-43, and the "Keep input/output variables simple" subsection at lines 132-146) — the canonical Establish Variables block and the canonical guidance on what to pass between commands.
+6. `{example-workflow-package-json}` — the standard ts-workflow package structure (`commander` dependency + `typescript`/`@types/node` devDependencies; **no** `agentic-hq` dependency — the Workflow Build (2) links the framework)
+7. `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/src/create-workflow-cli.ts` — TypeScript CLI showing the **`DefaultWorkflowRuntime` pattern** (how a workflow CLI obtains the AHQ package root from the framework runtime and propagates constants into every command's input). The math-workflow CLI is intentionally too simple to show this — read this one too.
+8. `{ahq-package-root}/.agentic-hq/plugins/agentic-hq-core-plugin/commands/create-workflow/02-confirm-spec-approved-and-build.md` (just the Step 0a/0b at lines 9-43, and the "Keep input/output variables simple" subsection at lines 132-146) — the canonical Establish Variables block and the canonical guidance on what to pass between commands.
 
 After reading, you should understand:
 - What a workflow is (a chain of commands executed sequentially)
 - How commands communicate (file-based I/O via command-input.json / command-output.json)
 - How the TypeScript CLI orchestrates the command chain
 - How SKILL.md returns the shell command to run the CLI
-- How variables flow at runtime: env vars (read by the CLI), CLI passthrough parameters, Claude's primary working directory, and previous-command output (the four sources elaborated in Step 1.5 below).
+- How variables flow at runtime: CLI passthrough parameters, the two runner-relayed framework options (consumed by `DefaultWorkflowRuntime`), previous-command output, and answers the human gives during a command (the four sources elaborated in Step 1.5 below).
 
 ---
 
@@ -120,33 +120,35 @@ Variable handling is one of the most important things to get right when designin
 
 Every variable a command uses comes from one of these:
 
-1. **From the user's environment** — env vars read by the workflow's TypeScript CLI via `process.env.X` and then injected into every command's `command-input-string`. **Example**: `create-workflow-cli.ts:43-49` reads `AGENTIC_HQ_WORKSPACE_ROOT` and passes it as `agentic-hq-workspace-root-dir` to Command 01. **Use for**: install-time constants (paths to AHQ itself, paths to credentials, etc.).
+1. **From CLI passthrough parameters** — anything after `-- ` on the `agentic-hq <short-id> -- ...` invocation. **Example**: `agentic-hq full-jira -- --jira-id=AHQ-107`. The TS CLI parses these and forwards them. **Use for**: per-invocation user input that has to come from the command line.
 
-2. **From CLI passthrough parameters** — anything after `-- ` on the `agentic-hq <short-id> -- ...` invocation. **Example**: `agentic-hq full-jira -- --jira-id=AHQ-107`. The TS CLI parses these and forwards them. **Use for**: per-invocation user input that has to come from the command line.
+2. **From the runner-relayed framework options** — the shared workflow runner forwards `--build-mode` and `--ahq-package-root` to every workflow program, where `DefaultWorkflowRuntime` consumes them. The CLI can surface the package root via `runtime.getAhqPackageRoot().getPath()` and inject it into a command's `command-input-string`. **Example**: `create-workflow-cli.ts` passes it as `ahq-package-root` to Command 01. **Use for**: locating the agentic-hq package and the skill assets bundled inside it.
 
-3. **From Claude's primary working directory** — set automatically per command. Conventionally surfaced as `project-root = (your primary working directory)`. This is wherever the user `cd`'d before running `agentic-hq`. **Use for**: the directory the user is targeting (the project being converted, the directory containing the Jira docs, etc.).
+3. **From a previous command's output** — written by command N to `command-output.json`, passed by the TS CLI as command N+1's `command-input.json`. **Use for**: anything genuinely produced by an earlier phase (a chosen ID, a confirmation, a derived setting).
 
-4. **From a previous command's output** — written by command N to `command-output.json`, passed by the TS CLI as command N+1's `command-input.json`. **Use for**: anything genuinely produced by an earlier phase (a chosen ID, a confirmation, a derived setting).
+4. **From answers the human gives during a command** — commands run interactively, so a command can ask the human for a value mid-run (via `AskUserQuestion` or conversation) and record it in its output for later commands. **Example**: Command 01 of this very workflow collects `plugin-id` and `workflow-id` from the human. **Use for**: decisions only the human can make.
+
+(Each command also runs with Claude's primary working directory set to wherever the user `cd`'d before running `agentic-hq` — conventionally surfaced as `project-root = (your primary working directory)`. That is ambient context every command gets for free, not a variable that travels through input strings — see "Two roots" below.)
 
 ### Anti-patterns
 
 - **Don't derive `project-root` via `git rev-parse --show-toplevel`** — redundant with the AHQ harness already setting Claude's cwd, and breaks for non-git projects.
 - **Don't pass between commands what every command can derive itself.** If command N+1 can compute the path from `project-root` + a known suffix, don't put it in the input string.
-- **Don't recompute env-var-derived values inside Claude commands.** The TS CLI is the only place that reads `process.env`. Commands always treat such values as `(parsed from input)`.
+- **Don't recompute framework-relayed values inside Claude commands.** The TS CLI (via `DefaultWorkflowRuntime`) is the only place that consumes the framework options. Commands always treat such values as `(parsed from input)`.
 
 ### Two roots (most workflows have both)
 
-- **`project-root`** — Claude's primary working directory; the user's target.
-- **`agentic-hq-workspace-root-dir`** — the AHQ install location, where this plugin's bundled skill assets live. Read from `AGENTIC_HQ_WORKSPACE_ROOT`.
+- **`project-root`** — Claude's primary working directory, set automatically per command; the user's target (the project being converted, the directory containing the Jira docs, etc.).
+- **`ahq-package-root`** — the agentic-hq package location, where this plugin's bundled skill assets live. Relayed by the shared workflow runner and surfaced by `DefaultWorkflowRuntime` (source 2 above).
 
-These coincide only when a workflow is run against agentic-hq itself; in general they differ. If the workflow doesn't need bundled skill assets, the spec can omit `agentic-hq-workspace-root-dir` from per-command variable blocks.
+These coincide only when a workflow is run against agentic-hq itself; in general they differ. If the workflow doesn't need bundled skill assets, the spec can omit `ahq-package-root` from per-command variable blocks.
 
 ### Skill-bundled assets
 
 A skill can ship reference files (SAMPLE docs, templates, fixtures) under `{skills-dir}/docs/` (e.g. `{skills-dir}/docs/sample-docs/SAMPLE-X.md`). Commands access them by deriving:
 
 ```
-plugin-dir = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/{plugin-id}
+plugin-dir = {ahq-package-root}/.agentic-hq/plugins/{plugin-id}
 skills-dir = {plugin-dir}/skills/{workflow-id}
 skills-docs-dir = {skills-dir}/docs
 ```
@@ -170,9 +172,9 @@ project-root = (your primary working directory)      # if the command needs cwd
 
 Command 02 of `create-workflow` has a "Keep input/output variables simple" rule (Step 4a, lines 132-146): prefer passing a single directory and let each command derive paths from it.
 
-The rule applies to **runtime filesystem paths under a known parent directory**. It does NOT apply to **install-time constants the TS CLI reads from the user's environment** (e.g. `agentic-hq-workspace-root-dir`, `plugin-id`, `workflow-id`) — those legitimately propagate as multiple individual variables. `create-workflow` itself propagates 4 such constants between its 5 commands, and that's correct.
+The rule applies to **runtime filesystem paths under a known parent directory**. It does NOT apply to **workflow-level constants the TS CLI injects** (e.g. `ahq-package-root` from the framework runtime, `plugin-id`, `workflow-id`) — those legitimately propagate as multiple individual variables. `create-workflow` itself propagates 4 such constants between its 5 commands, and that's correct.
 
-Quick test: if the value is a path that could be derived from a parent + a known suffix, pass the parent. If the value is a constant the TS CLI got from `process.env` or from CLI passthrough, propagate it as its own named variable.
+Quick test: if the value is a path that could be derived from a parent + a known suffix, pass the parent. If the value is a constant the TS CLI got from the framework runtime or from CLI passthrough, propagate it as its own named variable.
 
 ---
 
@@ -182,11 +184,11 @@ Explain to the user clearly and concisely:
 
 1. **What a workflow is**: A series of numbered command files (.md) that Claude executes sequentially, with a TypeScript CLI orchestrating the chain.
 2. **How commands work**: Each command runs in a fresh Claude session. It reads input from a JSON file, does its work (potentially interacting with the user), writes output to a JSON file, and self-terminates.
-3. **How variables flow in a workflow**: Variables come from four sources — (a) the user's environment via env vars read by the workflow's TS CLI, (b) CLI passthrough parameters after `-- `, (c) Claude's primary working directory (the user's `cwd`), and (d) previous-command output. The TS CLI orchestrates: it reads env vars and forwards them in every command's input; it stores each command's output and passes it as the next command's input. (See Step 1.5 above for the full model.)
+3. **How variables flow in a workflow**: Variables come from four sources — (a) CLI passthrough parameters after `-- `, (b) the runner-relayed framework options consumed by `DefaultWorkflowRuntime` (how the CLI knows the agentic-hq package root), (c) previous-command output, and (d) answers the human gives during a command. The TS CLI orchestrates: it builds Command 01's input from sources (a) and (b); it stores each command's output and passes it as the next command's input. Each command also runs with Claude's working directory set to the user's `cwd` (`project-root`). (See Step 1.5 above for the full model.)
 4. **What files make up a workflow**: Command .md files (the instructions), a TypeScript CLI (the orchestrator), a SKILL.md (the entry point), and a package.json.
 5. **Two concrete examples to illustrate**:
-   - **`math-workflow`** — 3 commands (times-two → plus-three → div-five), each doing simple math and passing the result forward. Shows source (d) only.
-   - **`create-workflow`** (the workflow you're running right now) — Shows source (a): the CLI reads `AGENTIC_HQ_WORKSPACE_ROOT` and propagates `agentic-hq-workspace-root-dir` plus 3 other constants through all 5 commands.
+   - **`math-workflow`** — 3 commands (times-two → plus-three → div-five), each doing simple math and passing the result forward. Shows source (c) only.
+   - **`create-workflow`** (the workflow you're running right now) — Shows sources (b) and (d): the CLI takes the AHQ package root from the framework runtime and propagates `ahq-package-root` plus 3 other human-collected constants through all 5 commands.
 
 Ask the user if they have any questions before proceeding.
 
@@ -296,7 +298,7 @@ Before drafting the spec, work with the user to decide whether the new workflow 
 If you resolved a source workflow in Step 0c, the spec must carry a concrete **plan** telling Command 02 exactly what to copy and how to rewire it. Command 01 is the **planner**; Command 02 is the doer. This plan does **not** travel through the inter-command output string (which stays unchanged — see Step 6); it lives **in the spec**, as the "Source Workflow & Copy Plan" section of the template below. Rules for that section:
 
 - **Include it ONLY when copying.** On a create-from-scratch run, **omit the entire section** — its presence in the APPROVED spec is the *only* signal Command 02 uses to enter copy mode, so a stray or empty copy-plan section on a from-scratch run would wrongly trigger a copy.
-- **Use resolved, absolute paths — real values, not placeholders.** Fill in the actual source dirs you resolved in Step 0c (`source-workspace-root`, `source-plugin-id`, `source-workflow-id`) and the new workflow's identity from Steps 3–4 (`plugin-id`, `workflow-id`, `workflow-short-id`, `one-sentence-description`). It is commonly a **cross-root copy**: bundled source under `{agentic-hq-workspace-root-dir}` → new workflow under `{project-root}`, so the source root and destination root usually differ.
+- **Use resolved, absolute paths — real values, not placeholders.** Fill in the actual source dirs you resolved in Step 0c (`source-workspace-root`, `source-plugin-id`, `source-workflow-id`) and the new workflow's identity from Steps 3–4 (`plugin-id`, `workflow-id`, `workflow-short-id`, `one-sentence-description`). It is commonly a **cross-root copy**: bundled source under `{ahq-package-root}` → new workflow under `{project-root}`, so the source root and destination root usually differ.
 - **Keep it as a blockquote addressed to "the execution agent".** Command 02 acts on blockquote callouts addressed to the execution agent (its Step 1) — that's the mechanism this plan rides on.
 - **Place it near the top of the spec — immediately after "Workflow Metadata"** (as positioned in the template below) — so the execution agent meets it early, before the detailed Variable Flow / Commands sections.
 
@@ -359,18 +361,18 @@ These values will be written to `{skills-dir}/ahq-workflow.json` in Command 02.
 > Copy everything that makes up the source workflow:
 > - every command `NN-*.md` file from the source commands dir,
 > - `SKILL.md`,
-> - the whole `ts-workflow/` **source and config** — `src/`, `package.json`, `tsconfig.json`, `pnpm-workspace.yaml`, **`.npmrc`**, **and `pnpm-lock.yaml`**,
+> - the whole `ts-workflow/` **source and config** — `src/`, `package.json`, `tsconfig.json`, `pnpm-workspace.yaml`, **`.npmrc`**, **`.gitignore`**, **and `pnpm-lock.yaml`**,
 > - any templates and the `docs/` directory.
 >
-> **Exclude only `node_modules/`** — it is large and holds a now-wrong `agentic-hq` symlink; the copied `SKILL.md` rebuilds deps with `pnpm install` (and re-links `agentic-hq` via the `$AGENTIC_HQ_WORKSPACE_ROOT` env-var symlink standard, AHQ-162) on first run. **Keep `.npmrc` + `pnpm-lock.yaml`** so the copy preserves the frozen-lockfile supply-chain standard (AHQ-152) and installs reproducibly — the lockfile is portable (importer key `.`, `agentic-hq` recorded as a depth-relative `link:`, no absolute paths or workflow names), so a frozen `pnpm install` still passes after the `name` rewrite below.
+> **Exclude `node_modules/` and `dist/`** — both are build products the Workflow Build (2) recreates: `node_modules/` holds a now-wrong `agentic-hq` symlink, and `dist/` holds compiled JS for the source workflow. Command 03's checks (and every later run) rebuild both via `node {ahq-package-root}/scripts/build-workflow.cjs`. **Keep `.npmrc` + `pnpm-lock.yaml`** so the copy preserves the frozen-lockfile supply-chain standard (AHQ-152) and installs reproducibly — the lockfile is portable (importer key `.`, no absolute paths or workflow names), so a frozen `pnpm install` still passes after the `name` rewrite below.
 >
 > ### Rewire manifest (resolved target values)
 > - Rename the CLI file `{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`.
 > - In the CLI: set `.name('{workflow-id}-cli')`, and repoint **every** `COMMAND_NN_*` constant's path string to `/{plugin-id}:{workflow-id}:NN-{command-name}`.
 > - `ahq-workflow.json`: `pluginId={plugin-id}`, `skillId={workflow-id}`, `shortId={workflow-short-id}`, `description={one-sentence-description}`.
-> - `package.json`: set `name` to the new workflow's package name, **and** update any `scripts` that still run the old CLI file (e.g. `tsx src/{source-workflow-id}-cli.ts` → `tsx src/{workflow-id}-cli.ts`).
-> - `SKILL.md`: update the CLI filename it points at (`{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`). (`skill-base-dir` is supplied at runtime, so nothing else is hardcoded there.)
-> - **No dependency rewiring needed**: `package.json`'s `agentic-hq` `link:` is depth-relative and the copied `SKILL.md`'s `ln -sfn` re-links it from any workspace (AHQ-162).
+> - `package.json`: set `name` to the new workflow's package name (the standard file set has no `scripts` to update).
+> - `SKILL.md`: **nothing to rewire — the copy is verbatim, byte-identical.** It derives `skill-id` from its own directory name at runtime and runs `dist/{skill-id}-cli.js`, so the CLI rename above is picked up automatically.
+> - **No dependency rewiring needed**: the workflow has no `agentic-hq` dependency in `package.json` — the Workflow Build (2) (`scripts/build-workflow.cjs`) creates the `node_modules/agentic-hq` symlink after each install.
 >
 > ### Identity sweep
 > After copying, the `SKILL.md`, help docs (`docs/`), and any CLI/command-file comments still name the **source** workflow (its short-id, workflow-id, description, example invocations). Replace these with the new workflow's identity so the copy doesn't advertise the original.
@@ -387,11 +389,11 @@ This section makes the variable plumbing of the workflow explicit so it's record
 ### Roots used
 
 - **`project-root`** — Claude's primary working directory (= the user's `cwd` when they ran `agentic-hq {workflow-short-id}`). {Describe what the user is targeting in this workflow — the directory the workflow is acting on.}
-- **`agentic-hq-workspace-root-dir`** — read by the TS CLI from `AGENTIC_HQ_WORKSPACE_ROOT`. {Either: "Used to locate skill-bundled assets — see below" OR "Not used by this workflow; commands omit it from their variable blocks".}
+- **`ahq-package-root`** — supplied by the framework runtime (`DefaultWorkflowRuntime`, from the runner-relayed `--ahq-package-root` option). {Either: "Used to locate skill-bundled assets — see below" OR "Not used by this workflow; commands omit it from their variable blocks".}
 
-### Inputs from the environment / CLI
+### Inputs from the framework / CLI
 
-- **Env vars consumed by the TS CLI**: {list, e.g. `AGENTIC_HQ_WORKSPACE_ROOT`, or "none beyond the standard"}.
+- **Framework options handled by `DefaultWorkflowRuntime`**: `--build-mode` and `--ahq-package-root` (standard for every workflow). {Note whether the CLI surfaces `ahq-package-root` into any command's input string, or "the CLI does not surface them"}.
 - **CLI passthrough parameters**: {list with format, or "none — see `exampleParameters` above"}.
 
 ### Skill-bundled assets used at runtime
@@ -416,13 +418,13 @@ Captures the structure of the orchestrator CLI that Command 02 of `create-workfl
 ### Pattern to follow
 
 {Pick one and justify briefly:
-- **`math-workflow-demo-cli.ts`** — simplest. Each command's output is fed as the next command's input. Use when downstream commands genuinely need values produced earlier (a chosen ID, a derived path).
-- **`create-workflow-cli.ts`** — env-var-driven. CLI reads an env var, constructs one input string, passes the **same** string to every command, ignores per-command outputs. Phase gating done via filesystem state. Use when commands are stateless w.r.t. each other and gating is on disk.
+- **`math-workflow-cli.ts`** — simplest. Each command's output is fed as the next command's input. Use when downstream commands genuinely need values produced earlier (a chosen ID, a derived path).
+- **`create-workflow-cli.ts`** — broadcast-driven. CLI takes the AHQ package root from `DefaultWorkflowRuntime`, weaves it (plus any passthrough params) into Command 01's input string, captures Command 01's output and passes that **same** string to every later command, ignoring their outputs. Phase gating done via filesystem state. Use when Command 01 establishes the full variable set and later commands are stateless w.r.t. each other.
 - **Custom** — describe.}
 
-### Env vars consumed (recap of "Variable Flow" above)
+### Framework options (recap of "Variable Flow" above)
 
-{list, e.g. `AGENTIC_HQ_WORKSPACE_ROOT` (required — CLI exits with error if unset)}.
+{standard: `--build-mode` / `--ahq-package-root`, consumed by `DefaultWorkflowRuntime`; note whether the CLI surfaces `ahq-package-root` into any command's input string}.
 
 ### CLI passthrough parameters (recap)
 
@@ -441,13 +443,13 @@ Linear:
 The exact string the CLI will pass to `tool.execute(COMMAND_01_{DESCRIPTIVE_NAME}, ...)` (see the constant-naming convention below):
 
 ```
-{e.g. "The variables used in this workflow are: agentic-hq-workspace-root-dir=${agenticHqWorkspaceRoot}."}
+{e.g. "The variables used in this workflow are: ahq-package-root=${runtime.getAhqPackageRoot().getPath()}."}
 ```
 
 ### Output handling
 
 {Describe what the CLI does with each command's output:
-- **Re-inject** (matches `create-workflow-cli.ts`): the CLI constructs Command 01's input (from env vars / CLI params), then **captures Command 01's output** — a combined variables string — and re-injects that **same** string as the input to every subsequent command (02..N), **ignoring 02..N's outputs**. Note this means Command 01's output *is* used (it's the whole source of the broadcast string); only the later commands' outputs are ignored. Commands 02..N each output `"Completed"` (or similar — their return value is unused). Use when Command 01 establishes the full variable set and later commands are stateless w.r.t. each other (any gating done via filesystem state).
+- **Re-inject** (matches `create-workflow-cli.ts`): the CLI constructs Command 01's input (from the framework runtime / CLI params), then **captures Command 01's output** — a combined variables string — and re-injects that **same** string as the input to every subsequent command (02..N), **ignoring 02..N's outputs**. Note this means Command 01's output *is* used (it's the whole source of the broadcast string); only the later commands' outputs are ignored. Commands 02..N each output `"Completed"` (or similar — their return value is unused). Use when Command 01 establishes the full variable set and later commands are stateless w.r.t. each other (any gating done via filesystem state).
 - **Propagate** (matches math-workflow): CLI feeds each command's output as the next command's input. Each command outputs the variables it wants downstream commands to see.
 - **Hybrid** — describe per command.}
 
@@ -577,11 +579,11 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "The variables used in this workflow creation workflow are: agentic-hq-workspace-root-dir={agentic-hq-workspace-root-dir} and plugin-id={plugin-id} and workflow-id={workflow-id} and workflow-short-id={workflow-short-id}"
+  "command-output-string": "The variables used in this workflow creation workflow are: ahq-package-root={ahq-package-root} and plugin-id={plugin-id} and workflow-id={workflow-id} and workflow-short-id={workflow-short-id}"
 }
 ```
 
-Replace `{agentic-hq-workspace-root-dir}`, `{plugin-id}`, `{workflow-id}`, and `{workflow-short-id}` with their actual values.
+Replace `{ahq-package-root}`, `{plugin-id}`, `{workflow-id}`, and `{workflow-short-id}` with their actual values.
 
 ---
 

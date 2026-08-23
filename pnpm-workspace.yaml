@@ -41,6 +41,10 @@ packages:
   # project with its OWN pnpm-workspace.yaml, installed with a plain
   # `pnpm install` run from its own directory (NOT --ignore-workspace).
   - '!.agentic-hq/plugins/**'
+  # Exclude the staged release tree (AHQ-197) — its generated package.json is
+  # also named "agentic-hq" and must never be auto-detected as a workspace
+  # member colliding with the root package
+  - '!release/**'
 
 allowBuilds: { esbuild: false, node-pty: true, unrs-resolver: false }
 

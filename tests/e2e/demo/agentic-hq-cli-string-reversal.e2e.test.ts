@@ -1,13 +1,21 @@
 /**
  * E2E Test: agentic-hq CLI String Reversal
  *
- * Verifies the full end-to-end flow of the agentic-hq CLI:
- * 1. Run: agentic-hq reversal -- --string-to-reverse="<input>"
+ * Verifies the full end-to-end flow of the agentic-hq CLI, invoking the dev
+ * wrapper file directly (`node bin/agentic-hq.cjs` — installed as
+ * `agentic-hq-dev`; the command is unchanged by the AHQ-208 rename because it
+ * names the file, not the bin):
+ * 1. Run: node bin/agentic-hq.cjs reversal -- --string-to-reverse="<input>"
  * 2. The CLI invokes the skill to get the workflow command
  * 3. The workflow runs and reverses the string via the reverse-a-string command
  * 4. The reversed string appears in stdout
  *
+ * This test was the honest red marker of the AHQ-197 break (string-reversal's
+ * legacy launch chain stopped compiling); AHQ-208 migrates string-reversal
+ * onto the two-builds template and turns it green again.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-56
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-208
  */
 
 import * as fs from 'node:fs';

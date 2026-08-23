@@ -1,0 +1,359 @@
+# AHQ-195 — Feature Brief
+
+## Human Prompt
+
+Publish the agentic-hq tool to npm so people can:
+
+- Try it using npx (without installing it)
+- Install it using npm and then run it using the usual "agentic-hq" cli
+
+### Context
+
+This is being done now because of the following feedback from a friend in email about Agentic HQ, which currently can only be run by cloning the repo and following a set of installation instruction:
+
+*"Also, it's probably worth making a distinction between users who might want to play with / extend / contribute the source code and users who might naturally expect to be able to use it as an off-the-shelf tool without actually cloning the repo. So to this end, I would have thought you could lower the friction a bit by publishing the built tool to npm, so that users can install / run it as a tool like that. Anything which makes an Installation section of a project Readme smaller (or indeed help provide a separate Quickstart section) generally helps encourage more devs reading docs to actually try something out."*
+
+I agree. We want to make **trying** the tool a lot easier. People should just be able to try it very quickly by running:
+
+```
+npm install -g agentic-hq
+cd my-workspace-dir
+agentic-hq add-feature -- --ticket-id=PROJ-123
+```
+
+### Gemini Notes About npx And npm Install
+
+Question:
+
+I have a CLI tool called "agentic-hq" I want to publish to npmjs.org. Can people then try running it using npx (without installing it) and also install it using npm? What are the commands, how does it work? The CLI runs using e.g. "agentic-hq list" or "agentic-hq reverse-string -- -string-to-reverse=blah"
+
+Answer:
+
+Yes, once published to npm, users can instantly run your tool via `npx` without installing it permanently, or install it globally or locally using `npm`.
+
+**Command Reference**
+
+| Execution Method | Commands |
+|---|---|
+| **npx (No installation)** | `npx agentic-hq list`<br>`npx agentic-hq reverse-string -- -string-to-reverse=blah` |
+| **npm (Global installation)** | `npm install -g agentic-hq`<br>Then run directly: `agentic-hq list` |
+| **npm (Local project installation)** | `npm install agentic-hq`<br>Then run via local scripts or: `npx agentic-hq list` |
+
+**Required Package Setup**
+
+For npm and npx to recognize your command, you need two essential elements in your project:
+
+1. **The `bin` key in `package.json`:**
+
+```json
+{
+  "name": "agentic-hq",
+  "version": "1.0.0",
+  "bin": {
+    "agentic-hq": "./index.js"
+  }
+}
+```
+
+2. **The Shebang line:** The top line of your entry file (`index.js`) must include a shebang so the operating system knows to run it using Node.js:
+
+```javascript
+#!/usr/bin/env node
+
+// Your CLI execution logic here
+```
+
+**How It Works**
+
+- `npx` **mechanism:** `npx` checks if the package is already local/global. If not, it fetches `agentic-hq` from npm into a temporary cache directory, runs the file mapped in your `package.json` `"bin"` entry, passes along all CLI arguments, and cleans up.
+- `npm install -g` **mechanism:** npm downloads the package globally and creates a symbolic link (symlink) from your executable file into your system's global environment `$PATH`. This makes the `agentic-hq` command available globally in any terminal shell.
+
+### Additional Notes From Humam About Complexities In This Task
+
+There's quite a lot of complexity to this, so I'd like a reasonable amount of research done before deciding whether and how to split out sub-tasks. As it's quite complex and there's quite a lot of technology involved, I'm thinking it may be good to have some spike investigations as part of the research. You try things out in temp directories or in AHQ workspace, then roll back, to see if they work, just to get feedback before trying things properly in the tasks. The complexity I'm thinking of is the workflows and how they are stored and run. Currently a user can change directory into their dev workspace and run the agentic-hq CLI, which is added to the path, and they have the abililty to run all of the "demo" and "core"  workflows that are stored in the main Agentic HQ workspace elsewhere on their disk.   This is done by agentic-hq starting up Claude CLI with the paths to the plugins added on the Claude CLI command line manually. Getting this all so it works **without** having the cloned repo on disk is going to be challenging.
+My original idea on how this was going to work was that the user would "install" my demo and core workflow plugins using the Claude Code Marketplace. Plugins in the marketplace can be installed by the user on their laptop, and then all the skills that are part of that plugin are then available.   When those Skills run they have access to the bundled docs and commands and scripts, which are all part of the Plugin.  It's not simple though.   It's likely that would be the best way of doing all this. Not sure if there's a good alternative? I don't think I can see a way of having the workflows downloaded and accessible from Claude code if they're installed by NPM.
+What I'm really kind of saying is that this is a very non-trivial task. It sounds very easy because it's all working now. We just want to make it so people can run it and install it from NPM. Sounds simple, but it's not. Over to you...
+
+### UPDATE 1 (from chat, while reading the brief)
+
+*"I'm halfway through reading this, and I've got a little bit of a question. It seems like there may be some complexity around the idea that we ship the workflows inside the tarball that lands on the user's machines. When those workflows are run, they actually have to compile and run inside that directory, which then changes that directory. This sounds like something that's very non-standard, and maybe we should avoid it. I don't know."*
+
+*"I'm wondering whether it's actually the correct thing to do to create a build tarball that includes compiled versions of all the workflows, and we stop that then becoming a read-only artefact. Does that sound like maybe the correct way of doing this versus the kind of hacky way we're looking at now?"*
+
+## My Understanding of This Task
+
+Make Agentic HQ installable and runnable from npm (`npx agentic-hq …` and `npm install -g agentic-hq`) so people can try it without cloning the repo — replacing today's clone → `pnpm install` → `npm link` installation path for "just try it" users, while keeping the cloned-repo path for contributors. The research shows the feared "how do workflows get onto the user's disk?" problem has a promising answer: the entire runtime chain (CLI → plugin discovery → Claude `--plugin-dir` flags → ts-workflow launch) resolves every path relative to the package's own root (via `AGENTIC_HQ_WORKSPACE_ROOT`, set by `bin/agentic-hq.cjs` to its parent directory), and `npm pack` already includes `.agentic-hq/plugins/` in the tarball — so the npm-installed package directory can simply *be* the "AHQ workspace", with no marketplace step needed for v1 (details and caveats in Research Findings).
+
+That said, the task is confirmed non-trivial: the package is currently `"private": true` with no `files` whitelist (732 files packed, including `tests/` and `steve-test-plugin`); the bin wrapper needs `tsx` at runtime but `tsx` is only a devDependency (so a fresh `npm install -g` would be broken immediately); workflow skills run `pnpm install` *at runtime inside the installed package directory* (write-access + "user has pnpm" + npx-cache-lifetime concerns); and `node-pty` compiles from source on Linux. This is a strong candidate for splitting into sub-tasks, with an early tracer-bullet spike (pack → install tarball into a temp prefix → run a workflow from a clean directory) to validate the "package dir as workspace" model before investing in the rest.
+
+## Research Findings
+
+### How the runtime chain works today (all paths repo-relative)
+
+1. **`bin/agentic-hq.cjs`** (the `bin` entry in `package.json`, has shebang already) sets `process.env.AGENTIC_HQ_WORKSPACE_ROOT = path.join(__dirname, '..')` — i.e. *the package's own root* — then runs `node_modules/.bin/tsx src/cli/main.ts`. There is **no build step**: the CLI runs TypeScript source via tsx.
+2. **Workflow discovery** (`src/workflow-discovery/workspace/*.ts`) scans two workspaces for `.agentic-hq/plugins/*` — the AHQ workspace (from `AGENTIC_HQ_WORKSPACE_ROOT`) and the user's current directory.
+3. **`ClaudeCommandBuilder`** (`src/tools/marshalled-io-tools/claude-code/claude-command-builder.ts`) launches the `claude` CLI with one `--plugin-dir=<abs path>` flag per discovered plugin, plus `--allowedTools=…` including `Read(<ahq-workspace>/.agentic-hq)`.
+4. The workflow's **SKILL.md** (e.g. `add-feature`) returns a launch command via file-IO marshalling: `cd {skill}/ts-workflow && pnpm install && ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq && tsx … <workflow>-cli.ts`. The ts-workflow's `package.json` depends on `"agentic-hq": "link:../../../../../.."` — six levels up, which is the package root *in any install location*, so both the `link:` and the `ln -sfn` still resolve correctly inside an npm-installed copy.
+5. The ts-workflow program imports `agentic-hq/tools/claude-code` — served by the root `package.json` `exports` map, which points at **`.ts` source** (works because ts-workflows run under their own `tsx` dependency).
+
+**Implication:** nothing in the chain hardcodes "the cloned repo" — it hardcodes "the directory the package lives in". If the npm tarball contains `bin/`, `src/`, and `.agentic-hq/plugins/`, an npm-installed copy is structurally identical to the cloned repo minus dev files. This is why shipping plugins inside the npm package looks viable without the Claude Code Marketplace.
+
+### Spike results (read-only, performed during this research)
+
+- **npm name:** `agentic-hq@0.0.1` already exists on npmjs.org, owned by `halso` (published 2025-08-11 as a placeholder "first test package") — **the name is already yours**; publishing is an update, not a new claim.
+- **`npm pack --dry-run` (works despite `private: true`):** 732 files, 1.7 MB tarball / 5.8 MB unpacked. It **does include** `.agentic-hq/plugins/` (131 files — dot-directories are packed by default), and **auto-excludes** all `node_modules` (including inside ts-workflows). But it also includes things that must not ship: `tests/` (the bulk of the file count), `steve-test-plugin` (15 files), vitest configs, and the root `.npmrc` whose pnpm-only `frozen-lockfile` key makes npm print a warning on every command.
+
+### Blockers / gaps that the sub-tasks must address
+
+1. **`"private": true`** blocks `npm publish`; no `files` whitelist and no `prepublishOnly` safety net exists.
+2. **`tsx` is a devDependency** but is required at runtime by `bin/agentic-hq.cjs`. `npm install -g` installs only `dependencies` → the CLI dies on first run. Either move `tsx` (and arguably `typescript`-adjacent bits) to `dependencies`, or introduce a build step to `dist/` and repoint `bin` + `exports`.
+3. **Runtime `pnpm install` inside the installed package** (from each workflow's SKILL.md command): (a) end users installing via npm may not have pnpm (corepack is not enabled by default, and Node is phasing corepack out); (b) the global npm prefix may not be user-writable on some setups; (c) under `npx`, the package lives in an ephemeral cache (`~/.npm/_npx/…`) — installs there are throwaway and re-run per invocation. The `engines.pnpm` + `packageManager` fields also affect npm consumers.
+4. **`node-pty`** (pinned, native): compiles from source on Linux at install time → `npm install -g agentic-hq` on Linux needs `build-essential`/Python (already a documented repo prereq, but it becomes a *tool-user* prereq too).
+5. **Prereq on `claude` CLI** being installed/authenticated remains regardless of install method.
+6. **Docs:** README currently has one clone-based Installation section; the friend's feedback asks for a separate low-friction Quickstart (npm/npx) vs contributor (clone) split.
+7. **`agentic-hq list` includes user-workspace plugins** — unaffected by install method (scans `cwd`), no change expected, but should be covered by the eventual end-to-end validation.
+
+### Existing assets that help
+
+- All four plugins already have `.claude-plugin/plugin.json` manifests (marketplace-shaped, if that route is ever wanted later).
+- Cross-workspace e2e tests exist (`tests/e2e/demo/cross-workspace-*.e2e.test.ts`) proving the "run from another directory" model — a template for "run from an npm-installed copy" tests.
+- `bin/agentic-hq.cjs` already has the `#!/usr/bin/env node` shebang and correct `bin` mapping.
+
+### UPDATE (assessment of Human Prompt UPDATE 1 — prebuilt read-only artifact)
+
+The human's instinct is assessed as **correct**: mutating an installed npm package at runtime is
+non-standard and fragile — the global prefix may be root-owned; the npx cache is ephemeral (any
+runtime install is throwaway and repeated per run); pnpm-based global installs use a
+content-addressed store with hard links, where in-place mutation can corrupt shared state; and
+mid-workflow install failures are far more confusing to users than install-time failures.
+
+A **publish-time build producing a read-only artifact** dissolves two blockers at once: Blocker 2
+(`tsx` at runtime) disappears if the main CLI is compiled too, and Blocker 3 (runtime `pnpm
+install`) disappears entirely for shipped plugins — a compiled workflow's only third-party import
+(`commander`) resolves by Node's normal upward `node_modules` walk to the package root's own
+dependencies, so no per-workflow install is needed at all. The one build-time problem to solve is
+the `import 'agentic-hq/tools/claude-code'` specifier in workflow programs (options: rewrite to
+relative paths at build time, bundle each workflow with a bundler, or drop the nested
+`package.json` from the shipped copy so Node package self-reference applies) — exactly what the
+tracer-bullet spike should prove.
+
+Costs acknowledged: a build pipeline where none exists; the shipped SKILL.md launch command must
+become `node …/dist/<workflow>-cli.js` while the dev workspace keeps the current
+`pnpm install` + `tsx` command (two execution modes to keep working — the main ongoing tax); and
+the create-workflow scaffolder embeds the current command template. **User-authored workflows in
+the user's own workspace keep the current mutable tsx/pnpm model** — the read-only constraint
+applies only to the shipped artifact.
+
+### UPDATE 2 (assessment of Second Update From Human — dev/prod parity and the mode parameter)
+
+The Second Update supersedes part of UPDATE 1's cost analysis: dev mode will **not** keep the
+current tsx/`pnpm install` path for shipped workflows. Instead, **both modes run the same built
+JavaScript** — dev mode simply runs the (deterministic, byte-identical) build first, then executes
+the same artifact production users get. One shared build script (used by both the publish step and
+dev-mode runs — single source of truth) is what makes "byte-identical" achievable: tsc/esbuild
+produce identical output for identical inputs, config, and tool versions. The tracer-bullet spike
+should verify determinism (build twice, compare hashes).
+
+**Parameter-flow requirements (from the human, binding):**
+- No hidden environment variables. The mode is an **explicit, visible parameter** everywhere: a
+  literal in each entry point, constructor/method parameters through the TypeScript, and a
+  command-line parameter to the shared runner script.
+- The mode's value originates **structurally, not by detection**: the repo's dev entry point passes
+  the dev value; the *build-generated* published entry point passes the production value. Which
+  artifact you invoked is the truth — nothing sniffs the filesystem or environment to guess.
+- **One centralized runner script shared by all skills** replaces every per-SKILL.md command blob.
+  It deterministically either builds-then-runs (dev) or just runs the built artifact (production).
+- **The AI/skill passes the mode value on without interpreting it** — per the human's Question 8
+  clarification, the AI may *see* the value (it relays it verbatim, like the io-files directory
+  today), but must never think about it or change behavior based on it; only the shared runner
+  script acts on it.
+
+**Naming research (standards reviewed):** `NODE_ENV=development|production` (env var — excluded;
+also connotes *behavioral* differences, the opposite of the parity guarantee); Vite/webpack
+`--mode development|production` (CLI-visible, but describes *different build outputs* — ours are
+identical); Cargo `dev`/`release` profiles and C++/.NET Debug/Release (different optimization
+artifacts — again ours are identical). The closest true analog is `cargo run` (build-if-needed,
+then run) vs running a released binary — where the difference is *which entry command you invoked*,
+not an environment. Conclusion: name the parameter for the **one behavior it controls** (build
+before running, or not), not "dev/prod environment" — see Question 7.
+
+### UPDATE 3 (answer to Human Update 3 — what AGENTIC_HQ_WORKSPACE_ROOT actually is)
+
+Verified usage inventory (live code only; the many `docs/jira-docs/` hits are historical records):
+
+- **Set in exactly one place:** `bin/agentic-hq.cjs` sets it to the package's own root (parent of
+  `bin/`).
+- **Read 1 — `AhqWorkspaceImpl.getRoot()`** (`src/workflow-discovery/workspace/ahq-workspace-impl.ts:44`,
+  env var ?? `process.cwd()`): the root from which the CLI derives (a) shipped-plugin discovery
+  (`{root}/.agentic-hq/plugins/*` → the `list` command and workflow registry), (b) the
+  `--plugin-dir` flags for Claude launches, and (c) the `Read({root}/.agentic-hq)` allowedTools
+  grant.
+- **Read 2 — `WorkspaceImpl.isAhqWorkspace()`** (string equality with the env var): dedup guard so
+  that when the user runs the CLI *from* the AHQ root itself, its plugins aren't registered twice.
+- **Read 3 — 7 SKILL.md launch commands** (shell `$AGENTIC_HQ_WORKSPACE_ROOT`):
+  `ln -sfn "$AGENTIC_HQ_WORKSPACE_ROOT" node_modules/agentic-hq` — locates the agentic-hq *package*
+  so ts-workflow imports resolve. **This use disappears entirely under the prebuilt model.**
+- **Read 4 — 3 ts-workflow CLI programs** (add-feature, add-feature-detailed-example,
+  create-workflow): read the env var and pass it into their Command 01 input as
+  `agentic-hq-workspace-root-dir`, which the command .md files use to locate plugin-bundled help
+  docs and skills dirs.
+- **Read 5 — create-workflow scaffolding templates** embed the same patterns into newly scaffolded
+  workflows.
+- Plus: 2 dev docs describe it; 5 unit test files exercise it.
+- **Checked and clear:** the io-files marshalling temp dir comes from the **user's** workspace
+  (`composition-root.ts:41–43` wires `JsonFileIOMarshallerSessionFactory` with
+  `getCurrentUserWorkspace()`), *not* the AHQ root — so runtime marshalling does not write into the
+  installed package, and the read-only-artifact model is not violated by it.
+
+**What it means today:** one variable conflating three roles — "where the shipped plugins live"
+(Reads 1, 4, 5), "where the agentic-hq package resolves from" (Read 3), and "workspace identity for
+dedup" (Read 2).
+
+**What it points to semantically under the build→run model:** *the root directory of the
+agentic-hq package as currently executed* — in production the npm-installed package directory; in
+dev the repo checkout (or its built package image — a Planner decision on strict parity). The
+module-resolution role (Read 3) vanishes; the remaining roles are all "locate things inside the
+agentic-hq package" plus the dedup identity check. It is genuinely **no longer a "workspace"** —
+the user's workspace is a separate, already-distinct concept (`CurrentUserWorkspaceImpl`).
+
+### PARKED (updated by Question 10 decision — see below): AGENTIC_HQ_WORKSPACE_ROOT refactor
+
+The `AGENTIC_HQ_WORKSPACE_ROOT` env var is to be **replaced with an explicit, visible parameter**
+(CLI parameter + constructor/method parameters — same rules as the mode parameter above), and
+**renamed**: the concept it holds is no longer "the AHQ workspace" — after this feature it is the
+root of the installed/built artifact (naming to be decided when the refactor is planned). Human's
+sequencing decision: do this as its **own isolated refactor stage at the end**, changing nothing
+else, with everything green before and after. Note: the REFACTOR comment in `bin/agentic-hq.cjs`
+(lines 17–23) already flags this exact env var as needing this exact treatment.
+
+## Web/Perplexity Research
+
+No web/Perplexity research was required beyond two live npm-registry checks run locally: `npm view agentic-hq` (confirmed the name is already owned by `halso`, placeholder v0.0.1 published 2025-08-11) and `npm pack --dry-run` (tarball contents listed above). The npx/npm mechanics in the Human Prompt's Gemini notes match the repo's existing setup (shebang + `bin` field already present), so no further external verification was needed at this stage.
+
+## Questions And Answers
+
+### Question 1
+
+**Question:** For v1, should the demo/core workflow plugins be distributed *inside the npm package itself* (the installed package directory becomes the "AHQ workspace" — research suggests this works because every runtime path already resolves relative to the package root), rather than via the Claude Code Marketplace?
+
+**AI Recommendation:** Yes — ship plugins inside the npm package for v1. It requires no new distribution channel, no changes to the plugin-discovery/`--plugin-dir` model, and the `link:`/`ln -sfn` mechanics already resolve correctly from any install location. Keep the Marketplace as a possible later feature (the plugins are already marketplace-shaped with `.claude-plugin/plugin.json` manifests), not a blocker for npm publishing.
+
+**Human Answer ('Yes' means follow AI Recommendation):** Yes
+
+### Question 2
+
+**Question:** How should the published package execute: (a) keep shipping TypeScript source and move `tsx` from devDependencies to dependencies (smallest change; ts-workflows already run under tsx and import `agentic-hq/tools/claude-code` as `.ts` source), or (b) add a proper build step to `dist/` with `bin`/`exports` repointed (more standard for published CLIs, but touches the exports map the ts-workflows rely on and adds a build pipeline)?
+
+**AI Recommendation:** Option (a) for v1 — ship source + `tsx` as a runtime dependency. It keeps one execution model everywhere (dev, tests, ts-workflows, published package) and avoids rewiring `exports` and every ts-workflow. Note a build step as a possible future improvement once publishing is proven.
+
+**AI Recommendation UPDATE (after Human Prompt UPDATE 1):** Recommendation flipped to **option (b)** — a publish-time build to `dist/` (CLI *and* workflow programs), shipping a read-only artifact. See the "UPDATE (assessment of Human Prompt UPDATE 1)" subsection under Research Findings: compiling everything removes both the runtime-`tsx` and runtime-`pnpm install` problems, at the cost of a build pipeline and a dev/published command divergence to manage.
+
+**Human Answer ('Yes' means follow AI Recommendation UPDATE, i.e. option (b)):**  
+
+### Question 3
+
+**Question:** Workflow skills run `pnpm install` at runtime inside the installed package. For npm-installed users who may not have pnpm, do we (a) document `corepack enable`/pnpm as a tool-user prerequisite for v1 and verify it in the tracer-bullet spike, or (b) rework the generated launch commands to use npm instead of pnpm (bigger change: lockfiles, `.npmrc`s, and the create-workflow scaffolder all assume pnpm)?
+
+**AI Recommendation:** Option (a) for v1 — document pnpm/corepack as a prerequisite and validate the whole runtime-install story in the tracer-bullet spike (including the npx ephemeral-cache and global-prefix write-access questions). Only take on the pnpm→npm rework if the spike shows prerequisite-pnpm is unacceptable in practice.
+
+**AI Recommendation UPDATE (after Human Prompt UPDATE 1):** Under the prebuilt read-only model this question becomes **largely moot for shipped workflows** — compiled workflows need no runtime install at all, so end users need **neither pnpm nor corepack**. pnpm remains a *contributor* prerequisite only, and user-authored workflows in the user's own workspace keep the current pnpm model (their directory is theirs to mutate). Recommend answering "Yes" to confirm that framing.
+
+**Human Answer ('Yes' means follow AI Recommendation UPDATE):** 
+
+### Question 4
+
+**Question:** This looks too large for one add-feature run. Should the split start with a **Tracer Bullet sub-task** — `npm pack` the repo, install the tarball into a temp prefix (not global), and get `agentic-hq list` + the string-reversal workflow running from a clean directory with the cloned repo out of the picture — before any packaging/docs sub-tasks are locked in?
+
+**AI Recommendation:** Yes. The tracer bullet validates the riskiest assumption (installed-package-dir-as-workspace, including runtime `pnpm install` and the `tsx` fix) for a few hours' work, and its findings will reshape the remaining sub-tasks far more cheaply than discovering problems mid-build. Note: actually running it means installing the tarball + registry deps into a temp directory — I'd ask before running that step, per your no-installs-without-approval rule.
+
+**Human Answer ('Yes' means follow AI Recommendation):** Yes
+
+### Question 5
+
+**Question:** For v1, is the publish process itself manual (you run a documented `npm publish` checklist locally, as `halso`), with CI/GitHub-Actions-based release automation explicitly out of scope?
+
+**AI Recommendation:** Yes — manual, documented publish for v1 (with `prepublishOnly` guard scripts so a bad publish is hard). Release automation is a separate feature once the package shape has settled.
+
+**Human Answer ('Yes' means follow AI Recommendation):** Yes
+
+### Question 6
+
+**Question:** (Added after Human Prompt UPDATE 1) Do we adopt the **prebuilt read-only artifact** as the target model for the published package — publish-time build compiles the CLI and all shipped workflow programs to JS, the shipped SKILL.md launch commands become plain `node …/dist/<workflow>-cli.js` invocations, and the installed package directory is never written to at runtime — with the dev workspace keeping the current tsx/`pnpm install` model?
+
+**AI Recommendation:** Yes. It is the standard, robust shape for a published npm CLI, removes the runtime-install and runtime-tsx problems entirely (see Research Findings UPDATE), and confines the cost to a build pipeline plus a managed dev/published divergence. The tracer-bullet spike (Question 4) should validate this model specifically — including how the `agentic-hq/tools/claude-code` import is resolved in compiled workflows.
+
+**AI Recommendation UPDATE (after Second Update From Human):** Same answer (Yes), with one amendment to the question's wording: the dev workspace does **not** "keep the current tsx/`pnpm install` model" for shipped workflows — per the Second Update, dev mode runs the same shared build and executes the same byte-identical artifact as production (see Research Findings UPDATE 2). Only *user-authored* workflows in the user's own workspace keep the current model.
+
+**Human Answer ('Yes' means follow AI Recommendation UPDATE):** 
+
+### Question 7
+
+**Question:** (Added after Second Update From Human) What do we name the mode parameter and its two values? Leading options: (a) name it for the behavior it controls — `build-mode` (CLI: `--build-mode=…`; TS: `buildMode`) with values **`build-first`** (dev: run the shared build, then execute the built artifact) and **`prebuilt`** (production: execute the built artifact as-is); (b) conventional naming — `mode` with values `dev`/`release` or `dev`/`prod`, familiar from Vite/Cargo but connoting *different artifacts or behaviors*, which contradicts the byte-identical parity guarantee.
+
+**AI Recommendation:** Option (a): `build-mode` = `build-first` | `prebuilt`, and make it a **required parameter with no default** at every link in the chain (entry-point literal → constructor/method parameters → `--build-mode=…` on the shared runner script), so omission is a loud error rather than a silent wrong default. Naming the behavior rather than the environment makes the parity guarantee structural: nobody can later hang "dev-only behavior" off a parameter whose name only speaks about building, whereas a `dev|prod` flag invites exactly that divergence.
+
+**Human Answer ('Yes' means follow AI Recommendation):** 
+
+### Question 8
+
+**Question:** (Added after Second Update From Human) How does the mode cross the Claude/skill hop while keeping the AI ignorant of it: (a) the SKILL.md returns a mode-agnostic invocation of the shared runner script, and the TypeScript runtime — which holds the mode — appends `--build-mode=<value>` to the returned command before executing it (the AI never sees, relays, or interprets the value); or (b) the skill relays it verbatim as an opaque positional argument, like `$0` (the io-files directory) today?
+
+**AI Recommendation:** Option (a). It literally satisfies "the AI shouldn't know anything about whether it's running production or dev" — the value never enters the AI's context — and it keeps SKILL.md templates one parameter simpler. Option (b) works but makes the AI a (blind) carrier of the value, one more thing a template edit could break.
+
+**Human Answer ('Yes' means follow AI Recommendation):**  Please don't take "the AI shouldn't know anything about whether it's running production or dev" fully literally.  I'd expect it to have visibility into the value of build-mode, but it shouldn't have to **think** about that or how to behave based on it.  It should just pass that value on...
+
+**AI Note (acknowledged):** This selects **option (b)** — the skill receives the build-mode value as an opaque pass-through argument (alongside the io-files directory it already relays as `$0` today) and embeds it verbatim in the shared-runner invocation it returns (e.g. `--build-mode=$1`). The AI has visibility of the value but never interprets it or branches on it; only the shared runner script acts on it.
+
+### Question 9
+
+**Question:** (Added after Human Update 3) What do we name the successor to `AGENTIC_HQ_WORKSPACE_ROOT`, given its post-build→run semantics — "the root directory of the agentic-hq package as currently executed" (production: the npm-installed package dir; dev: the repo checkout or its built package image)? Options: (a) **`ahq-package-root`** (TS: `ahqPackageRoot`) — npm-accurate and true in both modes; (b) **`ahq-artifact-root`** — pairs nicely with `build-mode`, but is only strictly accurate if dev mode points at the *built image* (undecided Planner detail), and is wrong if dev resolves plugins from the repo source; (c) `ahq-install-root` / `ahq-home` — "install" is untrue in dev, and `-home` has env-var (JAVA_HOME) connotations.
+
+**AI Recommendation:** Option (a): `ahq-package-root` / `ahqPackageRoot`. It answers exactly the question every reader has ("where is the agentic-hq package I'm running?"), it is correct in both modes regardless of how the dev-mode plugin-source question lands, and — like `build-mode` — it names a *thing* rather than an *environment*, so it can't drift. Same flow rules as `build-mode`: explicit, required, no default, no env var.
+
+**Human Answer ('Yes' means follow AI Recommendation):** 
+
+### Question 10
+
+**Question:** (Added after Human Update 3) When do we introduce the new variable: (a) **now, for all NEW code** — the build-mode chain, shared runner script, entry points, and rewritten SKILL.md templates carry `ahq-package-root` explicitly from day one (they all need this value anyway, and their templates/interfaces should not be written against a doomed name), while existing legacy call sites keep reading the env var (the entry point dual-writes both during the transition); the parked end-stage refactor then shrinks to "migrate the remaining legacy readers and delete the env var"; or (b) keep the original plan — new code also uses the env var, and everything is renamed in the parked end-stage refactor?
+
+**AI Recommendation:** Option (a) — the strangler pattern. The new seams (runner script CLI, SKILL.md command templates, entry-point signatures) are being designed in this feature and are expensive to re-touch later, so they should be born with the right name; meanwhile nothing existing is churned, which honors the "isolated refactor stage at the end, changing nothing else" instinct. The end-stage refactor becomes a purely mechanical migration of Reads 1, 2, 4, and 5 (see Research Findings UPDATE 3) plus env-var deletion.
+
+**Human Answer ('Yes' means follow AI Recommendation):** 
+
+
+
+
+
+### Second Update From Human
+
+I've read through the document, and it looks good. My only concern is that this is going to involve a lot of changes. And it would be good to handle that as well as possible. My
+  other concern is that if we create two different routes, things go down depending on whether you're in dev mode or in production mode. One where you're running already-built
+  JavaScript and the other where you're building it on the fly. I want that to be handled really well. And I want it to do exactly the same thing when you're in dev mode as happens in
+  production mode. I want it so that when you run a workflow in dev mode, it basically, on the fly, automatically does the build and produces the byte-identical JavaScript that you
+  would end up with in production. That way, a dev will always be guaranteed to get exactly what someone who is running the code in production gets. Now, I don't want this controlled
+  using hidden environment variables because I hate that, because they can just pop up anywhere. They're hidden, and it's not explicit in the code where they're coming from or how
+  they get passed. I don't like that at all. I want explicit variables that pass through the whole chain explicitly and are visible and are not environment variables. They are
+  command-line parameters to CLIs. They are method parameters in JavaScript, and they are completely visible. This is a system for developers, written by developers and worked on by
+  developers. It's fine to have things related to whether it's running in a dev environment or running in a production environment visible throughout the programme. I also want this
+  to be as simple as possible. For example, when the skill runs and tries to run the code, it needs to run the same code and pass in the parameter that tells it whether it is
+  production or test. The AI shouldn't know anything about whether it's running production or dev.                                                                        
+                                                                                                                                                     
+  The script that it's calling should be a generic script that then controls deterministically whether a build gets done and the results of that build are run (which is what happens
+  when it's in dev mode), or whether, if you're in production mode, obviously you don't need to do the build. You just run the built artefact. This needs to be in a centralised script
+  that's shared amongst all of the different skills. Now, we don't have to do this right now, but there's another change I want to add, bolted on at the end, and that's the
+  agentic-hq workspace variable name. This is currently an environment parameter that's one of these horrible hidden-away parameters that disappears and then reappears and gets used.
+  I want that gone, and I want it replaced with a parameter that is entirely visible throughout the system and explicit, not hidden away, not an environment variable. And as we are
+  having this discussion, it's becoming very clear that this thing that we used to use, this environment variable for an agentic-hq workspace, is now no longer the workspace. It's
+  actually the root of the build artefact, or the root of something. We shouldn't try and do too much in one go, so let's refactor this at the end, but remember it as something to do.
+  I think it should probably be refactored in a stage where we are changing nothing else and everything else is working.  So let's park the environment variable rename for the
+  agentic-hq workspace, but bear it in mind. Let's discuss now the really important thing, which is how to get this system so that it's controlled based on whether you're running in
+  dev mode or you're running the production deployed version of it. We should get the naming around that accurate first and think about that. Let's think about what the standards are
+  for doing this, and let's think about how to name this variable and its values. Also think about how to name the variable and where it will flow.
+
+
+
+  ### Human Update 3 - About Replacing AGENTIC_HQ_WORKSPACE_ROOT Now
+
+  I really like your build-mode={build-first|prebuilt} naming and plan.  Especially that it's self documenting, and I like your plan for passing it through the whole chain.  I'm        
+  wondering whether we should think about just creating a new variable *now* to supercede AGENTIC_HQ_WORKSPACE_ROOT which flows along with it, and is named equally well (self           
+  documenting).  What actually *is* AGENTIC_HQ_WORKSPACE_ROOT used for, and what will it point to (sementically) once we are doing this new build -> run system?

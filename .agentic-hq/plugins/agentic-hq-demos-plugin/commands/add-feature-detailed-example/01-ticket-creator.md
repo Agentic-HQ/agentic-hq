@@ -39,10 +39,10 @@ and output files)
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`The variables used in this workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and verbosity=low and suggest-large-refactor=false and ticket-id=PROJ-123`
+`The variables used in this workflow are: ahq-package-root=/path/to/agentic-hq and verbosity=low and suggest-large-refactor=false and ticket-id=PROJ-123`
 
 Parse out the four variables:
-- `agentic-hq-workspace-root-dir`
+- `ahq-package-root`
 - `verbosity`
 - `suggest-large-refactor`
 - `ticket-id` (optional)
@@ -51,14 +51,14 @@ Parse out the four variables:
 
 ```
 # Group A — Inputs & roots: the four parsed inputs + project-root
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 verbosity                     = (parsed from input)
 suggest-large-refactor        = (parsed from input)
 ticket-id                     = (parsed from input; may be empty — finalised in Step 3)
 project-root                  = (your primary working directory)
 
-# Group B — Skill & docs directories: this workflow's bundled-asset roots (from the workspace root)
-demos-plugin-dir            = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
+# Group B — Skill & docs directories: this workflow's bundled-asset roots (from the AHQ package root)
+demos-plugin-dir            = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin
 current-workflow-id         = add-feature-detailed-example
 current-workflow-skills-dir = {demos-plugin-dir}/skills/{current-workflow-id}
 skill-resources-dir         = {current-workflow-skills-dir}/resources
@@ -98,7 +98,7 @@ ticket-file              = {ticket-creator-directory}/02-ticket-file.md
 
 ## Step 1: Validate Input
 
-- `agentic-hq-workspace-root-dir` — required
+- `ahq-package-root` — required
 - `verbosity` — required
 - `suggest-large-refactor` — required
 - `ticket-id` — optional (handled in Step 3)
@@ -251,7 +251,7 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "The variables used in this workflow are: agentic-hq-workspace-root-dir={agentic-hq-workspace-root-dir} and verbosity={verbosity} and suggest-large-refactor={suggest-large-refactor} and ticket-id={ticket-id}"
+  "command-output-string": "The variables used in this workflow are: ahq-package-root={ahq-package-root} and verbosity={verbosity} and suggest-large-refactor={suggest-large-refactor} and ticket-id={ticket-id}"
 }
 ```
 

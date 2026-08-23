@@ -9,9 +9,10 @@ commands together so each agent does its part and hands its work on to the next.
 
 As the Researcher your responsibility is to turn the human's feature request into a clear,
 well-scoped feature brief — researching the codebase, the local docs, and (only when needed) external
-sources — and then to decide whether the feature is a good size to do in one run. You are the
-**first** of 4 agents (Researcher → Planner → Implementer → Reviewer): nothing runs before you, and
-the Planner after you turns the brief you write into an implementation plan.
+sources — then to decide whether the feature is a good size to do in one run, and to obtain the
+human's explicit approval of the brief. You are the **first** of 4 agents
+(Researcher → Planner → Implementer → Reviewer): nothing runs before you, and the Planner after you
+turns the brief you write into an implementation plan.
 
 To finish this Intro, introduce yourself to the user in a **single sentence** describing your role,
 then point them — in one line — at `{add-feature-user-help-doc}` (how the whole workflow works) and
@@ -32,27 +33,27 @@ and output files)
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`The variables used in this workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and ticket-id=PROJ-123`
+`The variables used in this workflow are: ahq-package-root=/path/to/agentic-hq and ticket-id=PROJ-123`
 
 Parse out the two variables:
-- `agentic-hq-workspace-root-dir`
+- `ahq-package-root`
 - `ticket-id`
 
 ## Step 0b: Establish Variables
 
 Establish the variables this workflow uses. Every path is derived from the inputs and
-roots — the chain is self-contained (built from `agentic-hq-workspace-root-dir`, `project-root`, and
+roots — the chain is self-contained (built from `ahq-package-root`, `project-root`, and
 `ticket-id`):
 
 ```
 # Inputs & roots
 command-input-output-files-directory = $0
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 ticket-id                     = (parsed from input)
 project-root                  = (your primary working directory)
 
-# Skill & bundled-docs dirs (derived from the workspace root)
-demos-plugin-dir       = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
+# Skill & bundled-docs dirs (derived from the ahq package root)
+demos-plugin-dir       = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin
 current-workflow-id    = add-feature
 skills-dir             = {demos-plugin-dir}/skills/{current-workflow-id}
 workflow-help-docs-dir = {skills-dir}/docs/workflow-help-docs
@@ -74,7 +75,7 @@ review-summary-file         = {workflow-files-dir}/04-review-summary.md
 
 ## Step 1: Validate Input
 
-- `agentic-hq-workspace-root-dir` — required
+- `ahq-package-root` — required
 - `ticket-id` — required
 
 If any required variable is empty, STOP and flag it as an error for the user to investigate or
@@ -211,18 +212,45 @@ last section in the document**:
   acceptance criteria. **Merge** near-duplicate bullets into one (e.g. the unit- and e2e-test versions
   of a single requirement).
 
-## Step 7: Size Decision
+## Step 7: Size Decision & Brief Approval
 
-Decide whether the feature is a **good size to do in one run**.
+The brief is now finalized but **not yet approved**. In this step you decide whether the feature is a
+**good size to do in one run**, and then obtain the human's **explicit approval of the brief** at a
+**single** `AskUserQuestion` gate. The gate always happens, whichever path applies — but it is always
+**one combined question**: never ask "do you approve the brief?" and "do you approve the split?" as
+two separate prompts.
 
-- **Good size (the common case):** do **not** add a `Split Suggestion`. Tell the human the Researcher
-  is complete and the Planner runs next. Your stage outcome (Step 8) will be `CONTINUE_WORKFLOW`.
+First make the size decision, then follow the matching path:
 
-- **Too large/complex to do easily in one hit:** pause, explain why, and add a `## Split Suggestion`
-  section to the **end** of `{feature-brief-file}`. It should suggest **2–6 smaller Sub-Tasks**,
-  usually with an early or first slice labelled **`Tracer Bullet / Walking Skeleton`** when that
-  framing fits. Then explain the situation to the human (adapt the **Why** and **Split Suggestion**
-  to the actual feature):
+### Path A — Good size (the common case)
+
+- Do **not** add a `Split Suggestion`.
+- Tell the human the brief is finalized, give its **relative path**, and ask them to read it (or
+  re-read what changed since they last looked — the top and bottom sections from Step 6 are new).
+- Then ask for approval **using the `AskUserQuestion` tool** (not a plain-text menu). Supply exactly
+  these two options, with **Option 1 listed first and its label ending `(Recommended)`** so it is the
+  recommended, default-highlighted choice:
+  1. **Approve brief `(Recommended)`** — the brief is approved as-is and the workflow continues to
+     the Planner.
+  2. **Request changes** — the human will give feedback in chat and/or edit the brief directly;
+     nothing is approved yet.
+- **If the human approves:** append a short `## Brief Approval` section to the **end** of
+  `{feature-brief-file}` recording that the human read and approved the brief at this gate (with the
+  date). Tell the human the Researcher is complete and the Planner runs next. Your stage outcome
+  (Step 8) will be `CONTINUE_WORKFLOW`.
+- **If the human requests changes** (Option 2, an "Other" answer, or any feedback): incorporate them —
+  following the Step 3 rules (important chat information appended verbatim as `UPDATE` entries to
+  `## Human Prompt`; your own sections updated; Q&A only ever appended to) — and do any further
+  research the changes call for. Then **re-run this whole Step 7 from the top**: re-evaluate the size
+  (the changes may have grown or shrunk the feature, so the gate you re-ask must match the **new**
+  size decision) and ask again. Repeat as many rounds as needed.
+
+### Path B — Too large/complex to do easily in one hit
+
+- Pause, explain why, and add a `## Split Suggestion` section to the **end** of
+  `{feature-brief-file}`. It should suggest **2–6 smaller Sub-Tasks**, usually with an early or first
+  slice labelled **`Tracer Bullet / Walking Skeleton`** when that framing fits. Then explain the
+  situation to the human (adapt the **Why** and **Split Suggestion** to the actual feature):
 
   ```text
   This feature is too large/complex for the simple add-feature workflow.
@@ -240,30 +268,59 @@ Decide whether the feature is a **good size to do in one run**.
   Recommendation: terminate this workflow and split the feature.
   ```
 
-  Then ask the human to choose **using the `AskUserQuestion` tool** (not a plain-text menu). Supply
-  exactly these two options, with **Option 1 listed first and its label ending `(Recommended)`** so it
-  is the recommended, default-highlighted choice:
-  1. **Terminate workflow and split feature `(Recommended)`** — stop here and split the feature into
-     the suggested Sub-Tasks.
-  2. **Continue with oversized feature implementation** — proceed anyway, at higher risk.
+- Then ask **one combined question** covering the brief **and** the split, **using the
+  `AskUserQuestion` tool** (not a plain-text menu). Supply exactly these three options, with
+  **Option 1 listed first and its label ending `(Recommended)`** so it is the recommended,
+  default-highlighted choice:
+  1. **Approve brief & terminate to split `(Recommended)`** — approve the brief (including the Split
+     Suggestion) and stop here to split the feature into the suggested Sub-Tasks.
+  2. **Approve brief, continue oversized** — approve the brief, reject the split, and proceed anyway
+     at higher risk.
+  3. **Request changes** — feedback on the brief and/or the Split Suggestion; nothing is approved
+     yet.
 
-  - **If the human chooses Option 1 (terminate & split):**
+  - **If the human chooses Option 1 (approve brief & terminate to split):**
     - Rename the section heading to `## Split Suggestion (Accepted)` and record at the top of that
       section that the Researcher flagged the feature as oversized, recommended termination/splitting,
-      and that the human accepted the suggestion, terminated the workflow, and will perform each
-      Sub-Task as a single feature implementation.
+      and that the human — at a single combined gate — **approved the brief**, accepted the split
+      suggestion, terminated the workflow, and will perform each Sub-Task as a single feature
+      implementation. (This record IS the brief-approval record for this path — do **not** add a
+      separate `## Brief Approval` section.)
     - Tell the human to run `add-feature` again for **each** chosen Sub-Task, and in the Human Prompt
       for each Sub-Task to refer to this brief's **full path** (`{feature-brief-file}`) as the
       **Parent feature brief**.
     - Your stage outcome (Step 8) will be `TERMINATE_WORKFLOW`.
 
-  - **If the human chooses Option 2 (continue anyway):**
+  - **If the human chooses Option 2 (approve brief, continue oversized):**
     - Rename the section heading to `## Split Suggestion (Rejected)` and record at the top of that
       section that the Researcher flagged the feature as oversized, recommended termination/splitting,
-      and that the human explicitly chose to continue with higher risk.
+      and that the human — at a single combined gate — **approved the brief** but explicitly chose to
+      continue with higher risk. (This record IS the brief-approval record for this path — do **not**
+      add a separate `## Brief Approval` section.)
     - Tell the human the Researcher is complete and the Planner runs next (the Planner may optionally
       use the `Split Suggestion` as implementation-sequencing guidance).
     - Your stage outcome (Step 8) will be `CONTINUE_WORKFLOW`.
+
+  - **If the human chooses Option 3 (request changes)** — or gives any feedback: incorporate the
+    changes into the brief and/or the `Split Suggestion`, then **re-run this whole Step 7 from the
+    top**: re-evaluate the size — the feedback may have shrunk the feature to a good size, in which
+    case remove the (never-approved) `Split Suggestion` section and re-ask Path A's gate instead —
+    and ask the matching question again. Repeat as many rounds as needed.
+
+### CRITICAL — feedback is NOT approval (applies to BOTH paths)
+
+**You must not proceed to Step 8/9 (write output + terminate) until the human's latest answer is an
+unambiguous choice of an approval option on the FINAL version of the brief (and, in Path B, of the
+split plan), with no unincorporated changes.** If the human's answer contains feedback,
+modifications, or anything other than a clear approval: incorporate the changes, then **re-ask**
+(AskUserQuestion again) so the human approves the *updated* version. Repeat as many rounds as needed.
+
+- Anti-pattern (must never happen): human answers with feedback, e.g. "please add a 6th task" →
+  AI adds the 6th task as requested, marks the plan `(Accepted)`, and terminates. The human never
+  approved the final version — they only gave feedback on a draft of it.
+- Only record an approval (the `## Brief Approval` section in Path A, or the
+  `(Accepted)`/`(Rejected)` rename in Path B) and move to Step 8 when the human's latest answer is an
+  unambiguous choice of one of the approval options with no unincorporated changes.
 
 ## Step 8: Write Output
 
@@ -280,12 +337,13 @@ Write to: {command-input-output-files-directory}/command-output.json
 The Researcher's output is the workflow's **stage-outcome gate** — the only command output the TS CLI
 acts on. After trimming whitespace it must be **exactly** one of:
 
-- **`CONTINUE_WORKFLOW`** — the good-size happy path, and the "continue anyway" branch of the size
-  decision (Step 7). The workflow proceeds to the Planner, Implementer, and Reviewer.
-- **`TERMINATE_WORKFLOW`** — the "terminate & split" branch (Step 7). The TS CLI prints a termination
-  message and exits cleanly (termination is a **success** path, not an error).
+- **`CONTINUE_WORKFLOW`** — the approved-brief good-size path (Step 7 Path A), and Path B's "approve
+  brief, continue oversized" branch. The workflow proceeds to the Planner, Implementer, and Reviewer.
+- **`TERMINATE_WORKFLOW`** — Path B's "approve brief & terminate to split" branch (Step 7). The TS
+  CLI prints a termination message and exits cleanly (termination is a **success** path, not an
+  error).
 
-Set the value to match the decision you reached in Step 7. **All** of the user-facing explanation of
+Set the value to match the decision the human approved in Step 7. **All** of the user-facing explanation of
 *why* the workflow continues or terminates lives here in this command (and in the brief) — none of
 that reasoning is duplicated into the TypeScript program.
 
@@ -294,3 +352,10 @@ that reasoning is duplicated into the TypeScript program.
 Run the self-termination skill immediately:
 
 /agentic-hq-core-plugin:self-termination
+
+## Important Notes
+
+- **Human questions (at any point in this command):** if the human asks a question, answer it, then
+  **STOP and ask whether they would like you to continue** with the command. Do **not** carry on to
+  the next step (or the next action of the current step) off the back of answering a question — a
+  question is a pause, not a green light.

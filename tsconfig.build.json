@@ -1,0 +1,26 @@
+{
+  // Framework Build (1) config (AHQ-208). The root tsconfig.json is
+  // typecheck-only (noEmit); this one compiles the framework — src/ only,
+  // never any workflow — to <repo>/dist as JS + .d.ts + source maps. The dev
+  // bin wrapper (agentic-hq-dev) runs it incrementally before every run, and
+  // the release build runs it as its first step. Workflows are compiled
+  // separately by the Workflow Build (2) — scripts/build-workflow.cjs — one
+  // per ts-workflow/ directory, wherever the workflow lives.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": ".", // keeps dist/src/cli/main.js — the path both wrappers and exports use
+    "outDir": "dist",
+    "declaration": true,
+    // inlineSources rides the .ts text inside each .js.map, so an installed
+    // package (which ships no src/) can still show original lines in traces
+    "sourceMap": true,
+    "inlineSources": true,
+    "incremental": true,
+    // lives inside dist/ so `rm -rf dist` can never leave a stale buildinfo
+    // that suppresses emit
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["src/**/*"]
+}

@@ -189,3 +189,11 @@ Real example: AI was about to swap `process.cwd()` for a config-manager helper. 
 ## Before Deleting/Renaming/Moving Files: Search for References First
 
 **RULE: Use Grep to search for references BEFORE deleting, renaming, or moving files.** Even files named `.BACKUP`, `DELME`, or `test-*` may be active test fixtures. Grep is faster than running tests and prevents breakage.
+
+## Always Run Code Before And After Modifications
+
+Before changing code, run it (or its tests) to confirm current behaviour. After changing, run again to confirm it still works. Applies to test code and scripts too, not just prod code — "looks right" is not the same as "executed and passed".
+
+**IMPORTANT — this is per-FILE, not per-suite. `pnpm validate`/`pnpm test` run UNIT tests only, so they execute nothing when you edit an e2e/integration file. For every file you changed, name the command that ran *that file*, or you have not verified it.**
+
+**Violation (2026-08-23):** edited an e2e test + its helper, ran `pnpm validate`, reported "all four checks pass" — the edited e2e file never executed. This rule was in context and still ignored.

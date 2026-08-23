@@ -1,3 +1,5 @@
+import type { AhqPackageRoot } from '../../interfaces/ahq-package-root.js';
+import { BuildMode } from '../../interfaces/build-mode.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import type { Plugin } from '../plugin/plugin.js';
@@ -9,22 +11,26 @@ const LOCAL_WORKSPACE_DISPLAY_NAME = 'Local Workspace';
 /**
  * CurrentUserWorkspaceImpl — Concrete Workspace for the user's
  * current working directory. Delegates to a WorkspaceImpl created
- * on the fly with cwd as rootDir.
+ * on the fly with cwd as rootDir and the injected AhqPackageRoot
+ * (used by the same-as-AHQ dedup guard).
  *
  * SRP Does: Build a WorkspaceImpl for the current working directory
  * (with the "Local Workspace" display name) and delegate all Workspace
  * methods to it. The same-as-AHQ duplicate-prevention applies only to
  * `registerWorkflowsWith` (so workflows aren't registered twice) — the
  * listing's "Same as AHQ" message is rendered by `ListingFormatter`,
- * which reads `isAhqWorkspace()` itself.
+ * which reads `isAhqPackage()` itself.
  *
- * SRP Knows About: The "Local Workspace" display name, and that the
- * cwd is the workspace root.
+ * SRP Knows About: The "Local Workspace" display name, that the
+ * cwd is the workspace root, and the injected AhqPackageRoot it
+ * passes to its delegate.
  *
  * SRP Knows Nothing About: How plugins are discovered, how listings
  * are formatted, or the "Same as AHQ" message text.
  */
 export class CurrentUserWorkspaceImpl implements Workspace {
+  constructor(private readonly ahqPackageRoot: AhqPackageRoot) {}
+
   /** Return the local workspace display name. */
   getDisplayName(): string {
     return this.createDelegate().getDisplayName();
@@ -37,7 +43,7 @@ export class CurrentUserWorkspaceImpl implements Workspace {
 
   /** Register workflows from local workspace, or nothing if same as AHQ (no duplicates). */
   registerWorkflowsWith(registry: WorkflowRegistry): void {
-    if (this.isAhqWorkspace()) {
+    if (this.isAhqPackage()) {
       return;
     }
     this.createDelegate().registerWorkflowsWith(registry);
@@ -58,12 +64,24 @@ export class CurrentUserWorkspaceImpl implements Workspace {
     return this.createDelegate().getDotAgenticHqDir();
   }
 
-  /** Return true iff cwd equals the AHQ workspace root (via delegate). */
-  isAhqWorkspace(): boolean {
-    return this.createDelegate().isAhqWorkspace();
+  /** Return true iff cwd equals the AHQ package root (via delegate). */
+  isAhqPackage(): boolean {
+    return this.createDelegate().isAhqPackage();
+  }
+
+  /** Always BUILD_FIRST (AHQ-208): a user workspace holds workflow SOURCE, so its
+   *  workflows must be built before running — whatever mode the wrapper was
+   *  invoked with (this class never even receives the wrapper's mode). */
+  getBuildMode(): BuildMode {
+    return BuildMode.BUILD_FIRST;
   }
 
   private createDelegate(): WorkspaceImpl {
-    return new WorkspaceImpl(LOCAL_WORKSPACE_DISPLAY_NAME, process.cwd());
+    return new WorkspaceImpl(
+      LOCAL_WORKSPACE_DISPLAY_NAME,
+      process.cwd(),
+      this.ahqPackageRoot,
+      this.getBuildMode()
+    );
   }
 }

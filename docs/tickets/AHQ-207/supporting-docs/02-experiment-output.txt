@@ -1,0 +1,97 @@
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$   npm uninstall -g agentic-hq
+  echo "=== INSTALLING WITH SCRIPTS BLOCKED (npm 12 proxy) ==="
+  npm_config_ignore_scripts=true npm install -g agentic-hq
+  echo "=== EXIT CODE: $? ==="
+
+removed 22 packages in 763ms
+=== INSTALLING WITH SCRIPTS BLOCKED (npm 12 proxy) ===
+
+added 22 packages in 3s
+
+3 packages are looking for funding
+  run `npm fund` for details
+=== EXIT CODE: 0 ===
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$ agentic-hq reversal
+/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/utils.ts:28
+  throw new Error(`Failed to load native module: ${name}.node, checked: ${dirs.join(', ')}: ${lastError}`);
+        ^
+
+Error: Failed to load native module: pty.node, checked: build/Release, build/Debug, prebuilds/linux-x64: Error: Cannot find module './prebuilds/linux-x64//pty.node'
+Require stack:
+- /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/lib/utils.js
+- /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/lib/index.js
+    at Object.loadNativeModule (/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/utils.ts:28:9)
+    at Object.<anonymous> (/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/unixTerminal.ts:15:16)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at Object.<anonymous> (/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/index.ts:15:18)
+
+Node.js v24.18.0
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$ ^C
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$   AHQ="$(npm prefix -g)/lib/node_modules/agentic-hq"
+  echo "--- build/Release (expect: missing or no pty.node) ---"
+  ls -la "$AHQ/node_modules/node-pty/build/Release/" 2>&1
+  echo "--- prebuilds (expect: darwin + win32 only) ---"
+  ls "$AHQ/node_modules/node-pty/prebuilds/" 2>&1
+  echo "--- any loadable native module at all? ---"
+  find "$AHQ" -name "pty.node" -exec ls -la {} \;
+--- build/Release (expect: missing or no pty.node) ---
+ls: cannot access '/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/build/Release/': No such file or directory
+--- prebuilds (expect: darwin + win32 only) ---
+darwin-arm64  darwin-x64  win32-arm64  win32-x64
+--- any loadable native module at all? ---
+-rw-rw-r-- 1 steve-personal steve-personal 303104 Aug 23 14:49 /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/prebuilds/win32-x64/pty.node
+-rw-rw-r-- 1 steve-personal steve-personal 293376 Aug 23 14:49 /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/prebuilds/win32-arm64/pty.node
+-rw-rw-r-- 1 steve-personal steve-personal 85496 Aug 23 14:49 /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/prebuilds/darwin-arm64/pty.node
+-rw-rw-r-- 1 steve-personal steve-personal 52864 Aug 23 14:49 /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/prebuilds/darwin-x64/pty.node
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$   echo "=== agentic-hq list ==="
+  agentic-hq list 2>&1 | head -30
+  echo "=== EXIT CODE: $? ==="
+=== agentic-hq list ===
+/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/utils.ts:28
+  throw new Error(`Failed to load native module: ${name}.node, checked: ${dirs.join(', ')}: ${lastError}`);
+        ^
+
+Error: Failed to load native module: pty.node, checked: build/Release, build/Debug, prebuilds/linux-x64: Error: Cannot find module './prebuilds/linux-x64//pty.node'
+Require stack:
+- /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/lib/utils.js
+- /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/lib/index.js
+    at Object.loadNativeModule (/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/utils.ts:28:9)
+    at Object.<anonymous> (/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/unixTerminal.ts:15:16)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16)
+    at Object.<anonymous> (/home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq/node_modules/node-pty/src/index.ts:15:18)
+
+Node.js v24.18.0
+=== EXIT CODE: 0 ===
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$   npm uninstall -g agentic-hq
+  npm install -g agentic-hq
+  agentic-hq list | head -5   # confirm you're back to working
+
+removed 22 packages in 483ms
+
+added 22 packages in 6s
+
+3 packages are looking for funding
+  run `npm fund` for details
+npm warn allow-scripts 2 packages have install scripts not yet covered by allowScripts:
+npm warn allow-scripts   agentic-hq@0.2.0 (postinstall: chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper ../node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true)
+npm warn allow-scripts   node-pty@1.1.0 (install: node scripts/prebuild.js || node-gyp rebuild; postinstall: node scripts/post-install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+Available workflows
+
+  Agentic HQ Package: /home/steve-personal/.nvm/versions/node/v24.18.0/lib/node_modules/agentic-hq
+
+steve-personal@ubuntu-vm1:~/dev/claude/test-project-001$ 

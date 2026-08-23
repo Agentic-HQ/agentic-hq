@@ -1,24 +1,15 @@
 {
-  "name": "agentic-hq-demo-add-feature-detailed-example-workflow",
+  "name": "agentic-hq-demo-add-feature-detailed-example",
   "version": "0.0.1",
   "type": "module",
   "engines": {
     "node": "^22.0.0 || ^24.0.0"
   },
-  "// TEMPORARY-LOCAL-DEPENDENCY": {
-    "summary": "The agentic-hq dependency uses link: protocol (symlink) for local dev. Will be replaced with a registry-based versioned dependency later.",
-    "currentState": "link:../../../../../.. symlinks to the main agentic-hq project so that package imports (e.g. 'agentic-hq/tools/claude-code') work.",
-    "history": "Changed from file: to link: in AHQ-80/AHQ-81. file: caused ENAMETOOLONG due to recursive copying. link: creates a symlink instead — zero disk usage, instant install.",
-    "keyInsight": "The import paths (e.g. 'agentic-hq/tools/claude-code') NEVER change regardless of dependency protocol."
-  },
-  "scripts": {
-    "// POSTINSTALL": "FIX: node-pty posix_spawnp failed. pnpm extracts spawn-helper without +x. Same fix as main project. See: https://github.com/pnpm/pnpm/issues/7366",
-    "postinstall": "chmod +x node_modules/.pnpm/node-pty@*/node_modules/node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true",
-    "demo:add-feature-detailed-example": "tsx src/add-feature-detailed-example-cli.ts"
-  },
   "dependencies": {
-    "agentic-hq": "link:../../../../../..",
-    "tsx": "^4.20.6",
     "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^22"
   }
 }

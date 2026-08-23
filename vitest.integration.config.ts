@@ -17,5 +17,13 @@ export default defineConfig({
     include: ['tests/integration/**/*.integration.test.ts'],
     environment: 'node',
     globals: true,
+    // Several integration files mutate SHARED repo build state — the
+    // build-determinism and publish-guards tests both run build-release.cjs
+    // (clean + rebuild of dist/ and release/), and the bin-wrapper test
+    // deletes dist/ and release/ to prove the wrapper rebuilds from nothing
+    // (AHQ-208). Running test FILES in parallel makes them race over those
+    // trees (observed: build-release.cjs dying mid-stage when another file
+    // deleted dist/ under it), so integration files run one at a time.
+    fileParallelism: false,
   },
 });

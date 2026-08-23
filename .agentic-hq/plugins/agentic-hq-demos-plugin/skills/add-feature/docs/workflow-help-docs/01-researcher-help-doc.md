@@ -16,10 +16,12 @@ on. It:
 3. Writes its **understanding** and **findings**, and asks you any **questions** it needs answered.
 4. Once you've answered, **finalizes** the brief (outcome, acceptance criteria, files reviewed).
 5. Makes a **size decision**: is this a good size to do in one run, or is it too big and better split?
+6. Asks you to **approve the brief** — a single multiple-choice gate that always happens; when a
+   split is suggested, the brief approval and the split decision are **combined into one question**.
 
 It is the **first** of four agents (Researcher → Planner → Implementer → Reviewer), and its decision
-**gates** the workflow — it either lets the workflow continue to the Planner, or stops it so you can
-split the feature into smaller pieces.
+**gates** the workflow — it either lets the workflow continue to the Planner (with your approved
+brief), or stops it so you can split the feature into smaller pieces.
 
 ## The Feature Brief
 
@@ -34,7 +36,9 @@ contains, top to bottom:
 - **Questions And Answers** (if any were needed);
 - **Relevant Files Reviewed** (at the bottom, mainly Planner pointers);
 - A short **Acceptance Criteria** checklist
-- and, only if the feature is too big, a **Split Suggestion** section.
+- and one record of your approval: a short **Brief Approval** section (good-size path), or — only if
+  the feature is too big — a **Split Suggestion** section whose header records your combined
+  brief-and-split decision.
 
 This one file is what the Planner reads next, so it's where the shared understanding of the feature
 lives.
@@ -87,24 +91,37 @@ Once it has everything it needs, the Researcher adds the framing the downstream 
   pointers) and **Acceptance Criteria** — a short, scannable checklist of the few **key, observable outcomes**, not a re-spec of everything
   already in your Human Prompt and the Q&A;
 
-## The Size Decision
+## The Size Decision & Brief Approval
 
-Finally, the Researcher decides whether the feature is a **good size to do in one run**:
+Finally, the Researcher decides whether the feature is a **good size to do in one run**, and then
+asks you to **approve the brief** — always as a **single** multiple-choice question, whichever way
+the size decision went:
 
-- **Good size (the common case):** no `Split Suggestion` is added; the workflow continues to the
-  **Planner**.
+- **Good size (the common case):** no `Split Suggestion` is added. You're pointed at the finished
+  brief and asked to choose:
+  1. **Approve brief** *(recommended, the default)* — your approval is recorded in the brief and the
+     workflow continues to the **Planner**.
+  2. **Request changes** — give feedback in chat and/or edit the brief directly; the AI incorporates
+     it, re-checks the size, and asks again.
 - **Too large/complex:** the AI pauses, explains why, and adds a **Split Suggestion** to the brief —
   **2–6 smaller Sub-Tasks**, usually starting with a **Tracer Bullet / Walking Skeleton** (a minimal
-  end-to-end slice). It then asks you to choose:
-  1. **Terminate and split** *(recommended, the default)* — the workflow stops cleanly, and you rerun
-     `add-feature` for **each** Sub-Task, pointing each one's Human Prompt at this brief as the
-     **parent feature brief**.
-  2. **Continue anyway** *(not recommended)* — the workflow carries on to the Planner with the
-     oversized feature, at higher risk; the Planner may use the Split Suggestion as sequencing
-     guidance.
+  end-to-end slice). The brief approval and the split decision are then **one combined question**
+  (you're never asked "approve the brief?" and "approve the split?" separately):
+  1. **Approve brief & terminate to split** *(recommended, the default)* — the workflow stops
+     cleanly, and you rerun `add-feature` for **each** Sub-Task, pointing each one's Human Prompt at
+     this brief as the **parent feature brief**.
+  2. **Approve brief, continue oversized** *(not recommended)* — the workflow carries on to the
+     Planner with the oversized feature, at higher risk; the Planner may use the Split Suggestion as
+     sequencing guidance.
+  3. **Request changes** — feedback on the brief and/or the split; the AI incorporates it, re-checks
+     the size (your feedback may have shrunk the feature to a good size), and asks again.
+
+**Feedback is never treated as approval**: if your answer contains changes, the AI incorporates them
+and asks again — nothing is recorded as approved, and the workflow can't move on (or terminate),
+until you explicitly pick an approval option on the final version.
 
 ## What Happens Next
 
-If the feature is a good size (or you chose to continue anyway), the workflow moves on to the
-**Planner** (agent 02), which reads the finalized brief and turns it into a compact, approved
-implementation plan before any code is written.
+Once you've approved the brief — and the feature is a good size (or you chose to continue anyway) —
+the workflow moves on to the **Planner** (agent 02), which reads the finalized brief and turns it
+into a compact, approved implementation plan before any code is written.

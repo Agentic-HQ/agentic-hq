@@ -23,7 +23,7 @@ AI-assisted contributions are welcome, but the human submitting the PR is expect
 
 ## Project status & maintainer bandwidth
 
-Agentic HQ is **pre-1.0** (currently v0.1.0). Expect rough edges, evolving APIs, and the occasional rename.
+Agentic HQ is **pre-1.0** (currently v0.2.0). Expect rough edges, evolving APIs, and the occasional rename.
 
 It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5) and **Linux** (tested on Ubuntu 24.04 LTS). Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
 
@@ -66,14 +66,11 @@ You do not need to ask for permission to work on an existing open issue. If you'
 
 ## Local development setup
 
-The full setup is in the [`README.md`](./README.md) Quick Start section. Summarised here:
+Agentic HQ has two kinds of user: **Normal Users**, who install the published `agentic-hq` package from npm and never clone this repo (their setup is the [`README.md`](./README.md) Quick Start), and **Contributors**, who clone this repo and run their working copy via the `agentic-hq-dev` command.
 
-- **macOS or Ubuntu** — macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries need it; the maintainer develops on 15.7.5); Ubuntu 24.04 LTS is also supported and tested; other platforms are untested but contributions to support them are welcome
-- **Node.js 24 LTS** (default/recommended) — Node 22 and 24 LTS are both supported (not Node 23); install via [nvm](https://github.com/nvm-sh/nvm) (the repo has a root `.nvmrc` pinned to Node 24, currently `24.15.0`)
-- **pnpm** via `corepack enable` (corepack ships with Node 22 and 24; it auto-installs the pinned pnpm version from `package.json`)
-- Then `pnpm install` to install dependencies
+The full Contributor setup — prerequisites, clone, Corepack/pnpm, `npm link`, validation, and a smoke test — is in [`docs/dev/setting-up-agentic-hq-for-development.md`](./docs/dev/setting-up-agentic-hq-for-development.md).
 
-If anything in the Quick Start fails, see [`docs/user-docs/troubleshooting-quickstart.md`](./docs/user-docs/troubleshooting-quickstart.md). If it's not covered there, that's a documentation bug — please report it.
+If anything in that setup fails, see [Contributor Troubleshooting](./docs/user-docs/troubleshooting.md#contributor-troubleshooting).
 
 ## Tests and `pnpm validate`
 
@@ -98,7 +95,7 @@ If `pnpm validate` fails on `format:check`, please run `pnpm format:check` to co
 
 ## Continuous Integration (CI)
 
-Every PR targeting `main` (and every push to `main`) automatically runs the CI workflow on a fresh Ubuntu VM via GitHub Actions. It follows the same steps a new contributor follows in the README Quick Start — pinned pnpm via Corepack, frozen `pnpm install`, `npm link`, an `agentic-hq list` smoke test, and `pnpm validate` — everything except the Claude-dependent steps.
+Every PR targeting `main` (and every push to `main`) automatically runs the CI workflow on a fresh Ubuntu VM via GitHub Actions. It follows the same steps a new contributor follows in [`docs/dev/setting-up-agentic-hq-for-development.md`](./docs/dev/setting-up-agentic-hq-for-development.md) — pinned pnpm via Corepack, frozen `pnpm install`, `npm link`, an `agentic-hq-dev list` smoke test, and `pnpm validate` — everything except the Claude-dependent steps.
 
 **A green "CI / validate" check is required before a PR is merged.** If CI fails, open the failing step's log from the PR's Checks tab (click the `validate` job in the left sidebar, then expand the red step), fix, and push again — CI re-runs automatically on every push to the PR branch.
 

@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import type { AhqPackageRoot } from '../../interfaces/ahq-package-root.js';
+import type { BuildMode } from '../../interfaces/build-mode.js';
 import type { WorkflowRegistry } from '../interfaces/workflow-registry.js';
 import type { Workspace } from '../interfaces/workspace.js';
 import { PluginImpl } from '../plugin/plugin-impl.js';
@@ -9,7 +11,6 @@ import type { Plugin } from '../plugin/plugin.js';
 const DOT_AGENTIC_HQ_DIR_NAME = '.agentic-hq';
 const TEMP_SUBDIR_NAME = 'temp';
 const PLUGINS_DIR = path.join(DOT_AGENTIC_HQ_DIR_NAME, 'plugins');
-const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR = 'AGENTIC_HQ_WORKSPACE_ROOT';
 
 /**
  * WorkspaceImpl — Concrete Workspace that scans for plugin directories
@@ -22,7 +23,8 @@ const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR = 'AGENTIC_HQ_WORKSPACE_ROOT';
  * method call (see `feedback_avoid_cached_state`).
  *
  * SRP Knows About: The `.agentic-hq/plugins/` directory convention,
- * the workspace display name and root path, and the PluginImpl constructor.
+ * the workspace display name and root path, the injected AhqPackageRoot
+ * (for the isAhqPackage comparison), and the PluginImpl constructor.
  *
  * SRP Knows Nothing About: How plugins discover workflows, how the
  * listing is formatted, or how registration works.
@@ -30,10 +32,12 @@ const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR = 'AGENTIC_HQ_WORKSPACE_ROOT';
 export class WorkspaceImpl implements Workspace {
   constructor(
     private readonly displayName: string,
-    private readonly rootDir: string
+    private readonly rootDir: string,
+    private readonly ahqPackageRoot: AhqPackageRoot,
+    private readonly buildMode: BuildMode
   ) {}
 
-  /** Return the workspace's display name (e.g. `Agentic HQ Workspace`, `Local Workspace`). */
+  /** Return the workspace's display name (e.g. `Agentic HQ Package`, `Local Workspace`). */
   getDisplayName(): string {
     return this.displayName;
   }
@@ -45,7 +49,14 @@ export class WorkspaceImpl implements Workspace {
       return [];
     }
     const entries = fs.readdirSync(pluginsPath, { withFileTypes: true });
-    return entries.filter((e) => e.isDirectory()).map((e) => new PluginImpl(e.name, this.rootDir));
+    return entries
+      .filter((e) => e.isDirectory())
+      .map((e) => new PluginImpl(e.name, this.rootDir, this.buildMode));
+  }
+
+  /** Return the constructor-injected mode every workflow under this workspace carries (AHQ-208). */
+  getBuildMode(): BuildMode {
+    return this.buildMode;
   }
 
   /** Tell each discovered plugin to register its workflows with the registry. */
@@ -70,8 +81,17 @@ export class WorkspaceImpl implements Workspace {
     return path.join(this.rootDir, DOT_AGENTIC_HQ_DIR_NAME);
   }
 
-  /** Return true iff rootDir equals the AGENTIC_HQ_WORKSPACE_ROOT env var (plain string equality, per Q5). */
-  isAhqWorkspace(): boolean {
-    return this.rootDir === process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VAR];
+  /**
+   * Return true iff rootDir equals the injected AhqPackageRoot.
+   *
+   * This is a plain string comparison with no path normalisation, and that is a considered
+   * choice rather than an oversight (see AHQ-205): a symlinked invocation still compares equal,
+   * because both `process.cwd()` and the bin wrappers' `__dirname` resolve to the physical path;
+   * and the only input that would make two spellings of the same directory compare unequal — a
+   * trailing separator on `--ahq-package-root` — cannot come from either shipped bin wrapper,
+   * since both build that value with `path.join`, which never yields one.
+   */
+  isAhqPackage(): boolean {
+    return this.rootDir === this.ahqPackageRoot.getPath();
   }
 }

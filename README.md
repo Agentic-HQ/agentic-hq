@@ -26,13 +26,11 @@ Unsupported:
 
 ### Prerequisites
 
-The following are prerequisites:
 - Claude Code - https://code.claude.com/docs/en/quickstart
-- git - https://git-scm.com/install/
-- gh - The GitHub CLI from https://cli.github.com/
+- npm - version 11 or 12.
 
 Linux only:
-- A C/C++ build toolchain (`make`, a compiler, and Python). This is for compiling `node-pty` from source during `pnpm install`. On Ubuntu/Debian simply run:
+- A C/C++ build toolchain (`make`, a compiler, and Python). This is for compiling `node-pty` from source during `npm install -g agentic-hq`. On Ubuntu/Debian simply run:
    - `sudo apt-get update && sudo apt-get install -y build-essential python3`
 
 ### Installation
@@ -42,36 +40,15 @@ Linux only:
    node -v
    ```
 
-2. **Clone the repo and cd into the directory:**
+2. **Install Agentic HQ:**
 
    ```bash
-   git clone https://github.com/Agentic-HQ/agentic-hq
-   cd agentic-hq
+   npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
    ```
 
-3. **Enable pnpm via Corepack.**
+   `--allow-scripts` is required from npm 12 onwards, which blocks package install scripts by default. Agentic HQ needs two of them: `node-pty` builds its native terminal binding, and Agentic HQ's own script makes that binding executable on macOS. Without the flag, npm 12 reports a successful install but Agentic HQ will not run.
 
-   ```bash
-   corepack enable
-   ```
-
-   NOTE: Corepack auto-manages the exact pnpm version pinned in `package.json` and so you must re-run `corepack enable` if you switch to a different Node version.
-
-4. **Install dependencies:**
-
-   ```bash
-   pnpm install
-   ```
-
-5. **Install the `agentic-hq` CLI onto your `PATH`** so you can run workflows from any directory:
-
-   ```bash
-   npm link
-   ```
-
-   > [!NOTE]
-   > **Linux users:** `npm link` prints two warnings — an *"Unknown project config `frozen-lockfile`"* and an *allow-scripts* note about a `darwin-*` `postinstall`. Both are expected and safe to ignore (the config is a pnpm key npm doesn't read; the postinstall is a macOS-only step that no-ops on Linux).
-
+   Older versions of npm may report `Unknown cli config "--allow-scripts"`. This can be safely ignored — the install still completes correctly.
 
    Verify it's on your `PATH`:
 
@@ -79,21 +56,22 @@ Linux only:
    agentic-hq list
    ```
 
-6. **Run unit tests and other validation** (should take less than 10 seconds):
+   (Prefer to try first without installing? `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list` runs it directly without installing it. `npx` needs the same flag, for the same reason.)
 
-   ```bash
-   pnpm validate
-   ```
-
-7. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
+3. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
    ```bash
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
-   NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Running the add-feature Workflow](#running-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
+Or if you want to run it without installing it:
+   ```bash
+   npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq reversal -- --string-to-reverse="wow this is amazing"
+   ```
 
-If any step above fails, see [Quick Start Troubleshooting](docs/user-docs/troubleshooting-quickstart.md).
+   NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Run The add-feature Workflow](#run-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
+
+If any step above fails, see [Setup Troubleshooting](docs/user-docs/troubleshooting.md#setup-troubleshooting).
 
 ### Run The add-feature Workflow
 
@@ -116,7 +94,7 @@ agentic-hq add-feature -- --ticket-id=PROJ-1
 Each of the four agents reads the previous agent's document and writes its own, so the shared understanding lives on disk (under `docs/tickets/<ticket-id>/workflow-files/`) while the actual code and tests land in your codebase as normal. For the full walkthrough — what each agent does, where it pauses for you, and the files it produces — see the [Add Feature user help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature/docs/workflow-help-docs/00-add-feature-user-help-doc.md).
 
 > [!TIP]
-> If you're not sure what feature to add or what project to add it to, you can just run the above command from within the Agentic HQ workspace and fill in the following as the Human Prompt in the `docs/tickets/PROJ-1/workflow-files/01-feature-brief.md` file once the agent has created it:
+> If you're not sure what feature to add or what project to add it to, you can just create a fresh empty directory, run the above command from it, and fill in the following as the Human Prompt in the `docs/tickets/PROJ-1/workflow-files/01-feature-brief.md` file once the agent has created it:
 >
 > _"A TypeScript hello world program that runs using `pnpm hello`, with a unit test that runs using `pnpm test:unit:hello` and an e2e test that runs using `pnpm test:e2e:hello`"_
 
@@ -220,7 +198,7 @@ You can also:
 - See the list of [Potential Feature Ideas](docs/dev/potential-feature-ideas.md)
 - Refer to the [NPM Commands](docs/dev/npm-commands.md) documentation
 - If you're interested, you can read the founder's [Project Philosophy & Origin Story](docs/dev/project-philosophy-and-origin-story.md).
-- See the [Quickstart Troubleshooting](docs/user-docs/troubleshooting-quickstart.md) guide if a Quick Start step fails
+- See the [Troubleshooting](docs/user-docs/troubleshooting.md) guide if anything fails during setup or a workflow run
 
 ## Support
 
@@ -243,6 +221,8 @@ The simplest way to publish the project and maintain the same MIT license is to 
 ## Developer Documentation
 
 If you're interested in working on the project, contact Steve (the repo owner) on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) or via the contact form at https://agentichq.ai/. Then read [CONTRIBUTING.md](CONTRIBUTING.md) to see how to file issues, propose changes, and submit pull requests.
+
+To get a development clone running, follow [docs/dev/setting-up-agentic-hq-for-development.md](docs/dev/setting-up-agentic-hq-for-development.md).
 
 Every PR runs CI (GitHub Actions) automatically and a green check is required before merge — see [docs/dev/ci-configuration.md](docs/dev/ci-configuration.md) for what CI runs and how to view run logs.
 

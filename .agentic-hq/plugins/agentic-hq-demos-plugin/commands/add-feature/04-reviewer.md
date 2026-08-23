@@ -33,27 +33,27 @@ and output files)
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`The variables used in this workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and ticket-id=PROJ-123`
+`The variables used in this workflow are: ahq-package-root=/path/to/agentic-hq and ticket-id=PROJ-123`
 
 Parse out the two variables:
-- `agentic-hq-workspace-root-dir`
+- `ahq-package-root`
 - `ticket-id`
 
 ## Step 0b: Establish Variables
 
 Establish the variables this workflow uses. Every path is derived from the inputs and
-roots — the chain is self-contained (built from `agentic-hq-workspace-root-dir`, `project-root`, and
+roots — the chain is self-contained (built from `ahq-package-root`, `project-root`, and
 `ticket-id`):
 
 ```
 # Inputs & roots
 command-input-output-files-directory = $0
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 ticket-id                     = (parsed from input)
 project-root                  = (your primary working directory)
 
-# Skill & bundled-docs dirs (derived from the workspace root)
-demos-plugin-dir       = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
+# Skill & bundled-docs dirs (derived from the ahq package root)
+demos-plugin-dir       = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin
 current-workflow-id    = add-feature
 skills-dir             = {demos-plugin-dir}/skills/{current-workflow-id}
 workflow-help-docs-dir = {skills-dir}/docs/workflow-help-docs
@@ -75,7 +75,7 @@ review-summary-file         = {workflow-files-dir}/04-review-summary.md
 
 ## Step 1: Validate Input
 
-- `agentic-hq-workspace-root-dir` — required
+- `ahq-package-root` — required
 - `ticket-id` — required
 
 If any required variable is empty, STOP and flag it as an error for the user to investigate or
@@ -94,6 +94,16 @@ Read everything you need to review the change against what was actually asked fo
   `## Approved Deviations From The Plan`, and any `## Out Of Plan Follow-up Ideas/Concerns`.
 - **The actual changed files** named in the summary — read the real code, so your review is grounded in
   what shipped, not in the summary's description of it.
+- **The git history for this ticket AND any not-yet-committed changes** — build the real changed-file
+  list from both sources, since the work may be spread across commits, sitting uncommitted, or both:
+  - **Commits**: list the commits whose messages mention `{ticket-id}` and the files they changed
+    (e.g. `git log --oneline --grep={ticket-id}` and `git log --name-only --grep={ticket-id}`).
+  - **Uncommitted work**: list staged/unstaged/untracked changes (e.g. `git status --short` and
+    `git diff --name-only` / `git diff --cached --name-only`).
+
+  Cross-check the combined file list against the summary's `## Files Changed/Added/Deleted`: any file
+  that actually changed but the summary does not mention must still be read and reviewed — the summary
+  may under-report what actually changed.
 
 ## Step 2b: Check Pre-requisites
 
@@ -219,8 +229,13 @@ and look at the `Fix?` column of the `## Potential Fixes` table:
     regression: keep working within the agreed fix scope until they pass again, or stop and tell the
     human.
   - Record what you changed under **`## Selected Fixes Applied`** (what was fixed, the files touched,
-    and the **result of re-running the Implementer's tests**), and record the decision under
-    `## Final Human Confirmation`.
+    and the **result of re-running the Implementer's tests**).
+  - **SECOND GATE — the human approves the applied fixes:** present the results (what changed, in
+    which files, and the test outcomes) and **wait** for the human's explicit approval. If they raise
+    problems or want further changes, agree and apply them under the same rules of this step
+    (including the regression re-run), update `## Selected Fixes Applied`, and re-present at this
+    gate. Only once the human explicitly approves may the command continue.
+  - Record the human's approval under `## Final Human Confirmation`, then continue to Step 6.
   - You still **never weaken, delete, or skip a failing test** to force a pass.
 
 > **Must Not Do:**
@@ -248,3 +263,13 @@ The CLI ignores this command's output. You are the final agent in the workflow.
 Run the self-termination skill immediately:
 
 /agentic-hq-core-plugin:self-termination
+
+## Important Notes
+
+- **Second gate:** if any fixes were applied at Step 5, the command must NOT end until the human has
+  explicitly approved the applied fixes (Step 5's SECOND GATE). No fixes applied → no second gate
+  needed.
+- **Human questions (at any point in this command):** if the human asks a question, answer it, then
+  **STOP and ask whether they would like you to continue** with the command. Do **not** carry on to
+  the next step (or the next action of the current step) off the back of answering a question — a
+  question is a pause, not a green light.

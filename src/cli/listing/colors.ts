@@ -26,6 +26,7 @@ const dim = wrap(2, 22);
 const cyan = wrap(36, 39);
 const yellow = wrap(33, 39);
 const green = wrap(32, 39);
+const red = wrap(31, 39);
 
 export const formatTitle = (s: string): string => bold(cyan(s));
 export const formatWorkspaceName = (s: string): string => bold(s);
@@ -34,3 +35,4 @@ export const formatPluginHeading = (s: string): string => bold(yellow(s));
 export const formatCommandText = (s: string): string => bold(green(s));
 export const formatArgsText = (s: string): string => dim(s);
 export const formatSameAsAhqMessageLine = (s: string): string => dim(s);
+export const formatDisabledFlag = (s: string): string => bold(red(s));

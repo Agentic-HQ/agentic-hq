@@ -2,12 +2,16 @@
  * ListingFormatter — Renders the `agentic-hq list` output by reading
  * structured data from Workspace / Plugin / AhqWorkflow entities.
  *
- * SRP Does: Take an AHQ workspace and a current-user workspace and
- * produce the full coloured, indented listing string ready to print.
+ * SRP Does: Take an AHQ package and a current-user workspace and
+ * produce the full coloured, indented listing string ready to print —
+ * including which entries are DISABLED because their short name was
+ * already claimed (by the built-in `list`, or by an entry earlier in
+ * the same first-claim walk that registration performs; AHQ-205).
  *
  * SRP Knows About: The visual contract (title text, headers, "Same
- * as AHQ" message, blank-line spacing) and the colour/indent helpers
- * under `src/cli/listing/`.
+ * as AHQ" message, DISABLED flag, blank-line spacing), the first-claim
+ * walk order (built-in `list`, then local workspace, then AHQ package),
+ * and the colour/indent helpers under `src/cli/listing/`.
  *
  * SRP Knows Nothing About: How plugins or workflows are discovered.
  * It reads them as plain data via the getter methods on Workspace,
@@ -17,10 +21,12 @@
 import type { AhqWorkflow } from '../../workflow-discovery/interfaces/ahq-workflow.js';
 import type { Workspace } from '../../workflow-discovery/interfaces/workspace.js';
 import type { Plugin } from '../../workflow-discovery/plugin/plugin.js';
+import { LIST_SUBCOMMAND_NAME } from '../agentic-hq-program.js';
 
 import {
   formatArgsText,
   formatCommandText,
+  formatDisabledFlag,
   formatPluginHeading,
   formatSameAsAhqMessageLine,
   formatTitle,
@@ -39,7 +45,9 @@ const TITLE_TEXT = 'Available workflows';
 const PLUGIN_LABEL = 'Plugin: ';
 const WORKSPACE_NAME_SUFFIX = ':';
 const SAME_AS_AHQ_MESSAGE_TEXT =
-  'Same as Agentic HQ Workspace (running from within the AHQ directory)';
+  'Same as Agentic HQ Package (running from within the AHQ package directory)';
+const DISABLED_FLAG_PREFIX = "DISABLED — shortId '";
+const DISABLED_FLAG_SUFFIX = "' is already used by existing workflow";
 
 // Structural punctuation — keeps line-assembly readable as prose.
 const LINE_BREAK = '\n';
@@ -52,14 +60,18 @@ export class ListingFormatter {
    * with a leading and trailing blank line (matches prior output so
    * the visible result is byte-identical).
    */
-  formatWorkflowsListing(ahqWorkspace: Workspace, localWorkspace: Workspace): string {
+  formatWorkflowsListing(ahqPackage: Workspace, localWorkspace: Workspace): string {
+    // Rendered in REGISTRATION order (the local workspace claims short names first — AHQ-205)
+    // but assembled in DISPLAY order (package block first). This is the same first-claim walk
+    // WorkflowSearchResultsImpl.registerWorkflowsWith performs (`list` is registered before any
+    // workflow, so it is pre-claimed), so what is flagged DISABLED here is exactly what
+    // registration skipped.
+    const claimedShortNames = new Set<string>([LIST_SUBCOMMAND_NAME]);
+    const localBlock = this.localWorkspaceBlock(localWorkspace, claimedShortNames);
+    const packageBlock = this.workspaceBlock(ahqPackage, claimedShortNames);
     // Leading + trailing LINE_BREAK give the output a blank line top and bottom, matching
     // the pre-refactor `['', ...sections, ''].join('\n')` shape so output stays byte-identical.
-    const body = [
-      this.titleLine(),
-      this.workspaceBlock(ahqWorkspace),
-      this.localWorkspaceBlock(localWorkspace),
-    ].join(BLANK_LINE_BETWEEN_BLOCKS);
+    const body = [this.titleLine(), packageBlock, localBlock].join(BLANK_LINE_BETWEEN_BLOCKS);
     return LINE_BREAK + body + LINE_BREAK;
   }
 
@@ -73,9 +85,9 @@ export class ListingFormatter {
    * non-empty plugin block, separated by blank lines. When the workspace
    * has no plugins (or only empty plugins), just the header is returned.
    */
-  private workspaceBlock(workspace: Workspace): string {
+  private workspaceBlock(workspace: Workspace, claimedShortNames: Set<string>): string {
     const header = this.workspaceHeaderLine(workspace);
-    const pluginBlocks = this.allPluginBlocksIn(workspace);
+    const pluginBlocks = this.allPluginBlocksIn(workspace, claimedShortNames);
     if (pluginBlocks.length === 0) {
       return header;
     }
@@ -85,13 +97,14 @@ export class ListingFormatter {
   /**
    * The local workspace's section. When the local workspace IS the AHQ
    * workspace, we don't repeat its content — instead a one-line "Same as
-   * AHQ" message is shown under the local-workspace header.
+   * AHQ" message is shown under the local-workspace header (and, mirroring
+   * CurrentUserWorkspaceImpl.registerWorkflowsWith, no short names are claimed).
    */
-  private localWorkspaceBlock(localWorkspace: Workspace): string {
-    if (localWorkspace.isAhqWorkspace()) {
+  private localWorkspaceBlock(localWorkspace: Workspace, claimedShortNames: Set<string>): string {
+    if (localWorkspace.isAhqPackage()) {
       return this.sameAsAhqMessageLine(localWorkspace);
     }
-    return this.workspaceBlock(localWorkspace);
+    return this.workspaceBlock(localWorkspace, claimedShortNames);
   }
 
   /** `  {display name}: {root path}` — single-line workspace header, indented one level. */
@@ -106,10 +119,10 @@ export class ListingFormatter {
    * Plugins with no workflows produce an empty string from `pluginBlock`
    * and are filtered out — the user never sees an empty plugin heading.
    */
-  private allPluginBlocksIn(workspace: Workspace): string[] {
+  private allPluginBlocksIn(workspace: Workspace, claimedShortNames: Set<string>): string[] {
     return workspace
       .getPlugins()
-      .map((plugin) => this.pluginBlock(plugin))
+      .map((plugin) => this.pluginBlock(plugin, claimedShortNames))
       .filter((block) => block.length > 0);
   }
 
@@ -118,8 +131,10 @@ export class ListingFormatter {
    * workflow's entry, separated by blank lines. Returns the empty
    * string when the plugin contains no workflows.
    */
-  private pluginBlock(plugin: Plugin): string {
-    const entries = plugin.getWorkflows().map((workflow) => this.workflowEntry(workflow));
+  private pluginBlock(plugin: Plugin, claimedShortNames: Set<string>): string {
+    const entries = plugin
+      .getWorkflows()
+      .map((workflow) => this.workflowEntry(workflow, claimedShortNames));
     if (entries.length === 0) {
       return '';
     }
@@ -135,9 +150,30 @@ export class ListingFormatter {
     return PLUGIN_INDENT + formatPluginHeading(PLUGIN_LABEL + plugin.getName());
   }
 
-  /** A workflow's two-line entry: command line on top, description line below. */
-  private workflowEntry(workflow: AhqWorkflow): string {
-    return this.workflowCommandLine(workflow) + LINE_BREAK + this.workflowDescriptionLine(workflow);
+  /**
+   * A workflow's two-line entry: command line on top, description line below.
+   * When the short name is already claimed (by the built-in `list`, or by an
+   * entry rendered earlier in the walk) the entry lost the collision and is not
+   * a subcommand — a bold-red DISABLED flag line is prepended. Claims the name.
+   */
+  private workflowEntry(workflow: AhqWorkflow, claimedShortNames: Set<string>): string {
+    const shortName = workflow.getShortName().toString();
+    const isDisabled = claimedShortNames.has(shortName);
+    claimedShortNames.add(shortName);
+    const flagLine = isDisabled ? this.disabledFlagLine(shortName) + LINE_BREAK : '';
+    return (
+      flagLine +
+      this.workflowCommandLine(workflow) +
+      LINE_BREAK +
+      this.workflowDescriptionLine(workflow)
+    );
+  }
+
+  /** `      DISABLED — shortId '{x}' is already used by existing workflow` — bold-red, command indent. */
+  private disabledFlagLine(shortName: string): string {
+    return (
+      COMMAND_INDENT + formatDisabledFlag(DISABLED_FLAG_PREFIX + shortName + DISABLED_FLAG_SUFFIX)
+    );
   }
 
   /**
@@ -162,9 +198,9 @@ export class ListingFormatter {
   }
 
   /**
-   * The single-line "Same as Agentic HQ Workspace" message that replaces
-   * the local-workspace block when local IS the AHQ workspace. Renders as:
-   *   `  Local Workspace: Same as Agentic HQ Workspace (...)` — dim suffix.
+   * The single-line "Same as Agentic HQ Package" message that replaces
+   * the local-workspace block when local IS the AHQ package. Renders as:
+   *   `  Local Workspace: Same as Agentic HQ Package (...)` — dim suffix.
    */
   private sameAsAhqMessageLine(localWorkspace: Workspace): string {
     const labelledName = formatWorkspaceName(

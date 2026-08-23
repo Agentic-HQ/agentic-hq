@@ -1,10 +1,10 @@
 /**
- * E2E Test: Cross-Workspace String Reversal via globally-linked agentic-hq binary
+ * E2E Test: Cross-Workspace String Reversal via globally-linked agentic-hq-dev binary
  *
  * Verifies that the agentic-hq CLI works from a SEPARATE workspace (not within the repo):
- * 1. Precondition: `agentic-hq` is already on PATH (installed via README `npm link`)
+ * 1. Precondition: `agentic-hq-dev` is already on PATH (installed via README `npm link`)
  * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
- * 3. Run: agentic-hq reversal -- --string-to-reverse="cross workspace test"
+ * 3. Run: agentic-hq-dev reversal -- --string-to-reverse="cross workspace test"
  * 4. Assert: Output contains the reversed string "tset ecapskrow ssorc"
  * 5. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
  *
@@ -41,30 +41,33 @@ const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
 
-describe('Cross-Workspace String Reversal via globally-linked agentic-hq binary', () => {
+describe('Cross-Workspace String Reversal via globally-linked agentic-hq-dev binary', () => {
   it(
     'should reverse a string from a separate workspace via the globally-linked binary',
     () => {
-      // Precondition: the `agentic-hq` CLI must already be on PATH. Installation links it
-      // there via `npm link` (README Quick Start step 5) — putting it on PATH is the
-      // installer's job, not the test's, so we assert it rather than running `npm link`
-      // here. A failure means the documented install step wasn't completed on this machine.
+      // Precondition: the `agentic-hq-dev` CLI must already be on PATH. Contributor setup
+      // links it there via `npm link` (setting-up-agentic-hq-for-development.md step 6) —
+      // putting it on PATH is the installer's job, not the test's, so we assert it rather
+      // than running `npm link` here. A failure means the documented setup step wasn't
+      // completed on this machine.
       const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
-      const agenticHqOnPath = pathDirs.some((dir) => fs.existsSync(path.join(dir, 'agentic-hq')));
+      const agenticHqDevOnPath = pathDirs.some((dir) =>
+        fs.existsSync(path.join(dir, 'agentic-hq-dev'))
+      );
       expect(
-        agenticHqOnPath,
-        '`agentic-hq` is not on your PATH. It should have been linked during ' +
-          'installation — see README Quick Start step 5 (`npm link` from the repo ' +
-          'root). Run that, then re-run the e2e tests; if it still fails, see ' +
-          'docs/user-docs/troubleshooting-quickstart.md.'
+        agenticHqDevOnPath,
+        '`agentic-hq-dev` is not on your PATH. It should have been linked during ' +
+          'contributor setup — see docs/dev/setting-up-agentic-hq-for-development.md ' +
+          'step 6 (`npm link` from the repo root). Run that, then re-run the e2e ' +
+          'tests; if it still fails, see docs/user-docs/troubleshooting.md.'
       ).toBe(true);
 
       // Arrange — create a unique temp workspace
       const tempWorkspace = path.join(TEMP_WORKSPACES_BASE, `test-ws-${randomUUID()}`);
       fs.mkdirSync(tempWorkspace, { recursive: true });
 
-      // Act — run agentic-hq from the temp workspace (exactly as a developer would)
-      const command = `agentic-hq reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
+      // Act — run agentic-hq-dev from the temp workspace (exactly as a developer would)
+      const command = `agentic-hq-dev reversal -- --string-to-reverse="${TEST_INPUT_STRING}"`;
 
       let output: string;
       try {

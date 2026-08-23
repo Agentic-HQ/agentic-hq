@@ -1,0 +1,454 @@
+> # ⛔ SUPERSEDED — DO NOT FOLLOW §6 OR §7
+>
+> Written by Claude Opus 5 on 2026-08-16, then rejected the same day. **§6 (Design Decision) and
+> §7 (Plan Of Action) are wrong** and are kept only as a record.
+>
+> **What is wrong:** §7 Step 2 recommends putting the duplicate-`shortId` handling in a *new*
+> `WorkflowRegistry` decorator, "so `WorkflowRegistryImpl` keeps its single responsibility". That
+> reasoning is a misapplication of SRP. `WorkflowRegistryImpl` (`src/cli/workflow-registry-impl.ts`)
+> *already* wraps Commander and *already* owns turning workflows into subcommands — rejecting a name
+> that is already taken belongs there, in about six lines, with no new class. §4 of this very
+> document localises the defect to `workflow-registry-impl.ts:35-36` and then §7 routes the fix
+> around it.
+>
+> **What is still good:** §1–§5 (the reproduction and the research findings) were verified
+> empirically and stand. §9 (out of scope) stands.
+>
+> Post-mortem of how the bad recommendation was arrived at:
+> `../supporting-docs/bad-coding-conversation-with-Opus.md`.
+
+# AHQ-205 — Research And Plan Of Action
+
+> **Ticket:** [AHQ-205](https://agentic-hq.atlassian.net/browse/AHQ-205) — *Bug: agentic-hq CLI
+> Installed From Npm Crashes When add-feature Workflow Runs From AHQ Workspace Root*
+> **Type:** Sub-task (Bug) · **Parent:** [AHQ-195](https://agentic-hq.atlassian.net/browse/AHQ-195)
+> — *Publish agentic-hq Tool To Npm* · **Status:** Backlog · **Priority:** Medium
+> **Reported:** 2026-08-14 · **Researched:** 2026-08-16
+> **Sources read:** the Jira itself (via MCP), `docs/tickets/AHQ-195/workflow-files/01-feature-brief.md`
+> (§ *Split Suggestion* item 6 and § *Open Sub-Task Instructions → Sub-Task 6*), and
+> `docs/tickets/AHQ-202/workflow-files/supporting-files/AHQ-205_bug_Jira.md` (the full filed description).
+
+---
+
+## 1. Ticket At A Glance
+
+When the `agentic-hq` CLI is run from a directory whose **local workspace** defines a workflow with
+the same short name as one shipped in the **AHQ package**, the CLI crashes during program
+construction with an uncaught Commander error — *before any subcommand runs*:
+
+```
+Error: cannot add command 'add-feature' as already have command 'add-feature'
+```
+
+Every invocation from such a directory fails: `list`, `add-feature`, `--help`, and a bare
+`agentic-hq`. Exit code 1. There is no workaround other than changing directory or renaming the
+local workflow.
+
+**Expected behaviour (per the Jira):** a *deliberate collision policy* instead of a crash. The Jira
+offers three candidate behaviours and explicitly says a **decision is needed** — see §6.
+
+---
+
+## 2. Where This Sits In AHQ-195
+
+AHQ-205 is **Sub-Task 6 of 8** in the parent npm-publish story. Sub-Tasks 1–5 (AHQ-196, AHQ-197,
+AHQ-198, AHQ-202 + AHQ-204, AHQ-200) are complete. Remaining after this one: AHQ-201 (migrate the
+five unmigrated workflows and the scaffolder, then re-publish) and AHQ-199 (README/docs).
+
+The parent brief adds **two instructions specific to this Sub-Task**, both carried into the plan
+below:
+
+1. **Decide path normalisation explicitly.** `WorkspaceImpl.isAhqPackage()` compares raw strings, so
+   a trailing slash or a symlinked invocation could make the dedup guard silently miss. AHQ-200
+   preserved that behaviour bit-for-bit while migrating the guard's source of truth from the env var
+   to the injected root, and deliberately left the decision here. → **Researched in §5.5; both cases
+   tested, one is real.**
+2. **Verify AHQ-200's AC 5 on this ticket's own add-feature run.** AHQ-200 renamed the add-feature
+   relay variable to `ahq-package-root`, but the rename was never exercised end-to-end (that
+   workflow process had started before the rename landed, so it relayed the old name all run).
+   → **Static half already verified in §5.7; the runtime half is a plan step.**
+
+Because AHQ-201 owns the next `(re)publish`, the fix from this ticket reaches the npm registry as
+part of AHQ-201 — this ticket itself does not need to publish. *(Reading of the brief's Sub-Task
+list; worth a one-line confirmation from the human.)*
+
+---
+
+## 3. Reproduction — Confirmed, Four Ways
+
+All four were run on 2026-08-16 on this machine (macOS, Node v24.15.0, `agentic-hq` working tree at
+`feature/ahq-195-publish-to-npm`, commit `b959e2f`). Fixtures live in `temp/AHQ-205/` (gitignored).
+
+### 3.1 The real scenario — prebuilt package run from the repo clone root ✅ reproduced
+
+This is the exact structural equivalent of the reported npm-install case: the prebuilt artifact in
+`release/` *is* the installed package (`--ahq-package-root=<repo>/release`), and the cwd is the repo
+clone, whose local workspace ships `add-feature`.
+
+```bash
+cd /Users/stevepersonal/dev/agentic-hq/agentic-hq
+node release/bin/agentic-hq-prebuilt.cjs list
+```
+
+Produces the **line-for-line stack trace from the Jira**, through the compiled `release/dist/…`
+files: `WorkflowRegistryImpl.register` → `PluginImpl.registerWorkflowsWith` →
+`WorkspaceImpl.registerWorkflowsWith` → `CurrentUserWorkspaceImpl.registerWorkflowsWith` →
+`WorkflowSearchResultsImpl.registerWorkflowsWith` → `createProgram`.
+
+### 3.2 Minimal synthetic repro — dev wrapper, colliding local workflow ✅ reproduced
+
+No build or install needed. A local workspace containing one workflow whose `shortId` is
+`add-feature`, under a plugin named something else entirely:
+
+```
+temp/AHQ-205/repro-workspace/.agentic-hq/plugins/my-local-plugin/skills/add-feature/ahq-workflow.json
+  { "pluginId": "my-local-plugin", "skillId": "add-feature", "shortId": "add-feature", … }
+```
+
+```bash
+cd temp/AHQ-205/repro-workspace
+node /path/to/agentic-hq/bin/agentic-hq.cjs list
+```
+
+Same error, same chain (through `src/…` rather than `dist/…`). **Every** entry point crashes —
+verified individually: `list`, `add-feature --help`, `--help`, `math`, and bare `agentic-hq`, all
+exit code **1**.
+
+This matters for the fix: the collision needs **only a matching `shortId`**. The plugin names do not
+have to match, so this is not a "don't clone the repo" problem — it is any user whose project
+defines a workflow called `add-feature` or `math`.
+
+### 3.3 Undiscovered variant — two plugins in **one** workspace ✅ reproduced
+
+Not mentioned in the Jira. Two plugins in the *same* workspace, each with `shortId: "dup"`:
+
+```
+Error: cannot add command 'dup' as already have command 'dup'
+```
+
+The cross-workspace dedup guard (`isAhqPackage()`) is irrelevant here — this crashes even in a
+single workspace, and it crashes inside the **AHQ package itself** if two shipped plugins ever
+collide. Any fix scoped only to "local vs package" leaves this crash in place.
+
+### 3.4 Undiscovered variant — a workflow named `list` ✅ reproduced
+
+Also not in the Jira. A workflow whose `shortId` is `list` collides with the CLI's own built-in
+subcommand (`agentic-hq-program.ts:41`):
+
+```
+Error: cannot add command 'list' as already have command 'list'
+```
+
+This is the nastiest of the four, because `list` is the very command a confused user would run to
+find out what is going on.
+
+**Checked and clear:** `help` is **not** reserved. A workflow with `shortId: "help"` registers
+cleanly and appears in `--help` output — Commander's implicit help is not a registered command, so
+it does not collide. `list` is the only reserved name today (verified, not assumed).
+
+---
+
+## 4. Root Cause
+
+Program construction registers workflows from both workspaces into one flat Commander namespace,
+with nothing checking for a name already taken:
+
+| Step | File | What happens |
+| --- | --- | --- |
+| 1 | `src/cli/agentic-hq-program.ts:40-45` | The built-in `list` subcommand is registered first. |
+| 2 | `src/cli/agentic-hq-program.ts:48` | `searchResults.registerWorkflowsWith(new WorkflowRegistryImpl(program, builder))`. |
+| 3 | `src/workflow-discovery/workflow-listing/workflow-search-results-impl.ts:44-47` | AHQ package registers **first**, then the current user workspace. |
+| 4 | `src/workflow-discovery/workspace/current-user-workspace-impl.ts:44-49` | Skips itself **only** when `isAhqPackage()` — i.e. only when cwd *is* the package root. |
+| 5 | `src/workflow-discovery/workspace/workspace-impl.ts:54-58` → `plugin/plugin-impl.ts:42-46` | Each plugin registers each discovered workflow, unconditionally. |
+| 6 | `src/cli/workflow-registry-impl.ts:35-36` | `this.program.command(shortName)` — **Commander throws** on a duplicate name. |
+
+The existing `isAhqPackage()` guard is a *same-directory* guard, not a *same-name* guard. It was
+only ever designed to stop the AHQ package's own plugins being registered twice when you run the CLI
+from inside the package. It cannot help when the two roots genuinely differ — which is precisely the
+npm-installed case, and is now the **normal** case rather than the exception.
+
+**Failure mode:** unrecoverable, uncaught, at construction time. That is consistent with this repo's
+documented catastrophic-failure convention (throw uncaught, full stack trace, no logging system) —
+but this is not a catastrophic failure. It is ordinary, user-caused, entirely foreseeable input, and
+it should never have been allowed to reach that convention.
+
+---
+
+## 5. Research Findings
+
+### 5.1 The collision key is `shortId` alone
+
+`WorkflowRegistryImpl.register` uses `workflow.getShortName()` as the Commander command name.
+`shortId` comes straight from each `ahq-workflow.json`. Current shipped short names:
+
+| shortId | Plugin / skill |
+| --- | --- |
+| `create-workflow` | `agentic-hq-core-plugin/skills/create-workflow` |
+| `add-feature` | `agentic-hq-demos-plugin/skills/add-feature` |
+| `add-feature-detailed-example` | `agentic-hq-demos-plugin/skills/add-feature-detailed-example` |
+| `full-jira` | `agentic-hq-demos-plugin/skills/full-jira-tdd-story-workflow` |
+| `math` | `agentic-hq-demos-plugin/skills/math-workflow` |
+| `quick-jira` | `agentic-hq-demos-plugin/skills/quick-jira-workflow` |
+| `reversal` | `agentic-hq-demos-plugin/skills/string-reversal` |
+
+Only **`add-feature`** and **`math`** currently ship in the published artifact (the other five are in
+`EXCLUDED_UNMIGRATED_SKILLS` in `scripts/build-release.cjs` until AHQ-201) — so those two, plus the
+built-in `list`, are the live minefield for npm users today. After AHQ-201 all seven become live.
+
+### 5.2 ⚠️ Claude Code silently de-duplicates same-named plugins — **first `--plugin-dir` wins**
+
+This is the most consequential finding, and it constrains the fix. Empirically probed on 2026-08-16
+with two directories both containing a plugin manifest named `dupe-probe-plugin`, each exposing a
+skill `probe-skill` with a distinguishable description:
+
+```bash
+claude --plugin-dir=…/a/dupe-probe-plugin --plugin-dir=…/b/dupe-probe-plugin --print …
+#  → "one probe-skill entry: dupe-probe-plugin:probe-skill — 'Probe skill copy a'"
+
+claude --plugin-dir=…/b/dupe-probe-plugin --plugin-dir=…/a/dupe-probe-plugin --print …
+#  → "one probe-skill entry: dupe-probe-plugin:probe-skill — 'Probe skill copy b'"
+```
+
+So Claude Code accepts the duplicate without error, exposes exactly **one** copy, and the **first
+flag wins**. And `ClaudeCommandBuilder.getClaudeCliPluginDirArgs()`
+(`src/tools/marshalled-io-tools/claude-code/claude-command-builder.ts:118-131`) adds the **AHQ
+package's** plugin dirs first, the user's second.
+
+**Consequence:** the collision has two sub-cases which behave differently below the CLI layer.
+
+- **Different plugin names** (e.g. `my-local-plugin:add-feature` vs
+  `agentic-hq-demos-plugin:add-feature`). The two workflows produce *different*
+  `/pluginId:skillId` commands, so whichever one the CLI registers is genuinely the one that runs.
+  A "local wins" policy is honest here.
+- **Same plugin name** — which is exactly the reported repo-clone case, where both roots contain
+  `agentic-hq-demos-plugin`. Both workflows produce the *identical* command
+  `/agentic-hq-demos-plugin:add-feature`, and Claude resolves it to the **AHQ package's** copy
+  because that `--plugin-dir` came first. A "local wins" policy implemented only in the Commander
+  registry would therefore **announce local and silently run the package's copy**.
+
+Any precedence policy must therefore be applied in **both** places — the workflow registry *and* the
+`--plugin-dir` ordering — or it is a lie. This is a genuine second defect hiding behind the first,
+and it is invisible today only because the crash happens first.
+
+### 5.3 Discovery is cwd-only, never ancestor-walking
+
+`CurrentUserWorkspaceImpl.createDelegate()` uses `process.cwd()` and nothing else. Verified: running
+the prebuilt wrapper from `<repo>/src` lists normally, because `src/` has no `.agentic-hq/plugins/`.
+Only a directory that *itself* contains `.agentic-hq/plugins/` participates. This bounds the blast
+radius and means no fix needs to consider parent directories.
+
+### 5.4 The listing has the same problem, one layer up
+
+`ListingFormatter` renders the AHQ package block and the local workspace block independently
+(`listing-formatter.ts:55-95`). With registration fixed but the formatter untouched, `agentic-hq
+list` would print two identical-looking `agentic-hq add-feature` entries with no hint that only one
+of them is reachable. The listing is where a user goes to understand the situation, so it has to
+show the outcome, not just the inventory.
+
+### 5.5 Path normalisation — one of the two flagged cases is real
+
+`WorkspaceImpl.isAhqPackage()` (`workspace-impl.ts:76-78`) is raw string equality. Both flagged
+cases were tested:
+
+- **Symlinked invocation — not a defect.** Running via a symlink to the repo root
+  (`cd temp/AHQ-205/repo-symlink && node bin/agentic-hq.cjs list`) works correctly. Both
+  `process.cwd()` and CJS `__dirname` resolve to physical paths on this platform, so the two sides
+  of the comparison agree. No normalisation needed for this.
+- **Trailing slash — a real miss.** Passing the option by hand with a trailing separator
+  (`--ahq-package-root=/Users/…/agentic-hq/`) makes `isAhqPackage()` return `false` while standing
+  in the package root, so the package's own plugins register twice and the CLI crashes
+  (`cannot add command 'create-workflow' …`). Both shipped bin wrappers build the value with
+  `path.join(__dirname, '..')`, which never yields a trailing slash — so this is **not** reachable
+  through normal use, only through a hand-written invocation or a future third entry point.
+
+Verdict for the explicit decision the brief asked for: normalise, but treat it as **defence in
+depth, not the fix**. Normalising the comparison (e.g. `path.resolve` on both sides) is a two-line
+change that removes a whole class of "silently miss" bugs, and once the name-collision policy exists
+a missed guard degrades into "duplicate name handled by policy" instead of a crash.
+
+### 5.6 The crash is at construction, so nothing can catch it usefully
+
+`app.run()` (`src/cli/app.ts:25-28`) builds the program and parses in one expression. The throw
+happens inside `createProgram`, so Commander never sees argv — which is why even `--help` dies. Any
+fix must prevent the duplicate registration rather than handle a failure after it.
+
+### 5.7 AHQ-200's `ahq-package-root` rename — static verification done
+
+Verified in the working tree today: the add-feature CLI broadcasts the new name
+(`.../skills/add-feature/ts-workflow/src/add-feature-cli.ts:55` →
+`` `…ahq-package-root=${runtime.getAhqPackageRoot().getPath()}` ``), the SKILL.md relays it
+(`SKILL.md:12,22`), and **all four** command parsers (`commands/add-feature/01-researcher.md`,
+`02-planner.md`, `03-implementer.md`, `04-reviewer.md`) read `ahq-package-root` — with no
+`agentic-hq-workspace-root-dir` remaining in any of them. The remaining half of the AHQ-200 check is
+purely runtime: confirm Command 01's actual `command-input.json` carries `ahq-package-root=…`.
+
+---
+
+## 6. The Design Decision (needs the human)
+
+The Jira lists three candidates. Here is each one assessed against everything found above.
+
+| Option | What it does | Assessment |
+| --- | --- | --- |
+| **A. Local overrides package** | The local workspace's workflow wins; the package's copy is shadowed, with a notice. | Matches the mental model ("my project's stuff wins in my project") and matches how Claude Code's own plugin loading behaves. **But** per §5.2 it is only honest if `--plugin-dir` ordering is flipped to match; otherwise it announces local and runs the package's copy. Says nothing about §3.3 or §3.4. |
+| **B. Qualified registration** | Both stay runnable under collide-free names (e.g. `my-local-plugin:add-feature`). | Nothing is lost and nothing is ambiguous, but it needs a naming scheme, changes the listing, and — because Claude itself collapses same-named plugins (§5.2) — the *qualified* form still cannot reach the shadowed copy when the plugin names also match. Solves less than it appears to. |
+| **C. Graceful, actionable error** | Name the colliding workflow and both source workspaces, then exit cleanly. | Minimum bar and strictly better than a stack trace, but the CLI stays **unusable** from that directory — `list`, which is exactly what the user needs, still does not run. |
+
+**Recommendation: A, hardened — a deterministic precedence policy applied consistently at every
+layer, plus a visible notice, and never a crash.** Concretely:
+
+1. **One name, one winner, chosen by an explicit precedence rule.** Local workspace beats AHQ
+   package. Within a single workspace, first-discovered wins (plugin directory order). The built-in
+   `list` always beats any workflow — it is the user's only way to see what happened.
+2. **The winner is the same everywhere.** The `--plugin-dir` flag order (§5.2) is derived from the
+   same policy, so the workflow the CLI advertises is the workflow Claude actually runs.
+3. **Shadowing is announced, never silent.** A short notice on **stderr** at startup (stderr so it
+   cannot corrupt `list`'s stdout output or any piped use), plus a marker on the shadowed entry in
+   `agentic-hq list` so the listing explains itself.
+4. **Startup never throws for this.** A name collision is ordinary user input, not a catastrophic
+   failure, so it must not use the uncaught-throw convention.
+
+This is strictly a superset of option C's value (the user gets a clear, actionable message naming
+both sources) while keeping the CLI usable, and it covers all four reproduced variants rather than
+only the reported one.
+
+**Questions for the human before implementation starts** — see §10.
+
+---
+
+## 7. Plan Of Action
+
+TDD throughout: **RED → GREEN → REFACTOR → VERIFY**, one cycle per numbered step. No test is edited
+between its first (failing) run and its post-implementation run.
+
+### Step 0 — Confirm the policy (blocking)
+
+Get §10 answered. Everything below assumes the recommended policy in §6; a different answer changes
+Steps 2–5 but not Steps 1, 6, or 7.
+
+### Step 1 — Failing test that reproduces the reported crash
+
+A unit test over `createProgram` (or `WorkflowSearchResultsImpl`) with two stub workspaces both
+offering `add-feature`. Asserts the program is constructed **and** exposes exactly one `add-feature`
+subcommand. Currently throws `cannot add command 'add-feature'…` — a valid RED.
+Home: `tests/unit/cli/agentic-hq-program.unit.test.ts` (extend) — the existing stub-based
+`createStubSearchResults` helper there is already the right shape.
+
+### Step 2 — Collision-aware registration (the core fix)
+
+Give the registry the knowledge that names are unique. Candidate shape (Planner's call): a
+`WorkflowRegistry` decorator or a value object owning the taken-name set, so `WorkflowRegistryImpl`
+keeps its single responsibility ("turn a workflow into a Commander subcommand") and the *policy*
+lives in one named place. Seed the taken-name set with the reserved `list` (§3.4) so the built-in
+always wins. Registration order already gives local-last, so achieving *local wins* means either
+reversing the two calls in `workflow-search-results-impl.ts:44-47` or making the policy explicit
+about precedence rather than relying on call order — prefer the explicit version.
+
+Covers §3.2, §3.3 and §3.4 with one mechanism.
+
+### Step 3 — Make the winner real at the Claude layer (§5.2)
+
+Failing test first: assert the `--plugin-dir` flags emitted by `ClaudeCommandBuilder` put the
+winning workspace's plugin dir ahead of the losing one for a colliding plugin name. Then implement.
+Without this step the fix is cosmetic for the flagship repo-clone case.
+
+### Step 4 — Announce the shadowing
+
+Notice on stderr naming the workflow, the winner's root and the shadowed one's root. Test asserts
+the message names both roots (not its exact wording).
+
+### Step 5 — Listing shows the outcome (§5.4)
+
+Mark the shadowed entry in `agentic-hq list` so the listing explains itself. Test in
+`tests/unit/cli/listing/listing-formatter.unit.test.ts`. Per the repo's convention on test intent,
+assert the behavioural property (the shadowed entry is distinguishable and names its state), not the
+literal glyph.
+
+### Step 6 — Path normalisation decision, implemented (§5.5)
+
+Normalise both sides of `WorkspaceImpl.isAhqPackage()`. Failing test first: a workspace whose
+`rootDir` matches the package root except for a trailing separator must report `isAhqPackage() ===
+true`. Record in the code comment that the symlink case was tested and needs nothing, so a future
+reader does not re-investigate it.
+
+### Step 7 — Regression proof at the real level
+
+An integration/e2e test that runs the CLI from a fixture workspace containing a colliding workflow
+and asserts a clean exit with a usable listing. `tests/e2e/demo/cross-workspace-list-workflows.e2e.test.ts`
+is the closest template. **Note the known suite-contention issue** flagged in the AHQ-195 brief
+(`publish-guards` + `build-determinism` both stage into `release/`) — do not add a third test that
+races on `release/`.
+
+### Step 8 — Verify AHQ-200's AC 5 at runtime (carried instruction)
+
+During this ticket's own add-feature run, open Command 01's `command-input.json` and confirm it
+reads `ahq-package-root=…`. Record the result in the implementation summary. If AHQ-205 is not run
+through add-feature, carry the check forward to whichever ticket is.
+
+### Step 9 — Validate and document
+
+`pnpm validate` (typecheck + lint + format + unit) plus the relevant integration/e2e tests. Add the
+collision policy to `docs/dev/how-agentic-hq-works.md` — no doc currently mentions collisions at all
+(verified by grep across `docs/dev`, `docs/user-docs` and `src`), so this is new content, not an
+edit.
+
+---
+
+## 8. Test Plan Summary
+
+| # | Level | What it pins down | Variant covered |
+| --- | --- | --- | --- |
+| 1 | unit | Two workspaces, same `shortId` → program builds, one subcommand | §3.1 / §3.2 |
+| 2 | unit | Two plugins, one workspace, same `shortId` → no throw | §3.3 |
+| 3 | unit | Workflow named `list` → built-in `list` survives and wins | §3.4 |
+| 4 | unit | Precedence: the local workflow is the one wired to the command | §6 rule 1 |
+| 5 | unit | `--plugin-dir` order matches the precedence decision | §5.2 |
+| 6 | unit | Shadowing notice names both roots | §6 rule 3 |
+| 7 | unit | Listing marks the shadowed entry | §5.4 |
+| 8 | unit | `isAhqPackage()` ignores a trailing separator | §5.5 |
+| 9 | e2e | CLI runs cleanly from a colliding workspace, exit 0 | whole bug |
+
+---
+
+## 9. Out Of Scope
+
+- **Publishing.** AHQ-201 owns the next `(re)publish`; this fix rides along with it.
+- **Migrating the five unmigrated workflows.** AHQ-201.
+- **Splitting the `Workspace` interface.** Already filed as
+  [AHQ-206](https://agentic-hq.atlassian.net/browse/AHQ-206) — resist the pull to do it here, even
+  though `WorkspaceImpl`'s third constructor parameter exists solely for `isAhqPackage()`, which
+  Step 6 touches.
+- **The two "Needs a Jira" items** from the AHQ-195 brief (integration-suite contention on
+  `release/`; CI running unit tests only). Step 7 must avoid making the first one worse, but neither
+  is fixed here.
+
+---
+
+## 10. Open Questions For The Human
+
+1. **Precedence direction — confirm "local overrides package"?** The alternative (package wins) is
+   defensible for shipped flagship workflows, but it means a user cannot override `add-feature` in
+   their own project, which seems worse.
+2. **Intra-workspace collisions (§3.3) — first-wins with a notice, or a hard clean error?**
+   First-wins keeps the CLI usable; a clean error is louder about what is genuinely an authoring
+   mistake. Recommendation: first-wins + notice, because a workflow authored in *someone else's*
+   plugin can cause it.
+3. **Confirm the `--plugin-dir` reordering (§5.2, Step 3) is in scope here.** It is a second defect
+   found during this research, not part of the filed bug — but leaving it out makes the headline fix
+   untruthful in exactly the reported scenario. Recommendation: in scope, same ticket.
+4. **Confirm this ticket does not publish** — the fix reaches npm via AHQ-201's re-publish.
+
+---
+
+## Appendix — Reproduction Fixtures
+
+Left in place under `temp/AHQ-205/` (gitignored) for the implementation stages:
+
+| Path | Purpose |
+| --- | --- |
+| `repro-workspace/` | Local workspace with a colliding `add-feature` (§3.2) |
+| `variant-b/` | Two plugins, one workspace, both `shortId: dup` (§3.3) |
+| `variant-c/` | Workflow with `shortId: list` (§3.4) |
+| `variant-d/` | Workflow with `shortId: help` — the negative control, does **not** collide |
+| `repo-symlink` | Symlink to the repo root — the symlink case that proved clean (§5.5) |
+| `dupe-plugins/a`, `dupe-plugins/b` | Same-named plugin copies for the Claude `--plugin-dir` probe (§5.2) |

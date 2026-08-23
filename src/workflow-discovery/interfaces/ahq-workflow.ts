@@ -1,3 +1,5 @@
+import type { BuildMode } from '../../interfaces/build-mode.js';
+
 import type { ExampleCommand } from './example-command.js';
 import type { FullClaudeSkillCommand } from './full-claude-skill-command.js';
 import type { WorkflowDescription } from './workflow-description.js';
@@ -26,4 +28,7 @@ export interface AhqWorkflow {
   getFullClaudeSkillCommand(): FullClaudeSkillCommand;
   /** Return the example CLI invocation command (e.g. `agentic-hq math -- --input-number=11`). */
   getExampleCommand(): ExampleCommand;
+  /** The mode this workflow launches with (AHQ-208) — location is identity: the
+   *  workspace it was discovered under decides it. */
+  getBuildMode(): BuildMode;
 }

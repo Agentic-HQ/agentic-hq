@@ -8,11 +8,14 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import type { CLICommand } from '../../../../src/interfaces/cli-command.js';
 import type { CLIWrapper } from '../../../../src/interfaces/cli-wrapper.js';
 import type { IOMarshallerSessionFactory } from '../../../../src/interfaces/io-marshaller-session-factory.js';
 import type { IOMarshallerSession } from '../../../../src/interfaces/io-marshaller-session.js';
 import { CompositionRoot } from '../../../../src/kernel/composition-root.js';
+import { DefaultAhqPackageRoot } from '../../../../src/runtime-params/default-ahq-package-root.js';
+import { DefaultAhqRuntimeParams } from '../../../../src/runtime-params/default-ahq-runtime-params.js';
 import { ClaudeCommandBuilder } from '../../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { DefaultClaudeCodeTool } from '../../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
@@ -39,7 +42,8 @@ function fakeWorkspace(root: string, isAhq: boolean): Workspace {
     getRoot: () => root,
     getTempDir: () => `${root}/.agentic-hq/temp`,
     getDotAgenticHqDir: () => `${root}/.agentic-hq`,
-    isAhqWorkspace: () => isAhq,
+    isAhqPackage: () => isAhq,
+    getBuildMode: () => BuildMode.BUILD_FIRST,
   };
 }
 
@@ -60,14 +64,19 @@ describe('DefaultClaudeCodeTool', () => {
     const myCliWrapper: CLIWrapper = {
       run: vi.fn().mockResolvedValue(undefined),
     };
-    const myAhqWorkspace = fakeWorkspace('/my-ahq-root', true);
+    const myAhqPackage = fakeWorkspace('/my-ahq-root', true);
     const myCurrentUserWorkspace = fakeWorkspace('/my-cwd-root', false);
+    const myRuntimeParams = new DefaultAhqRuntimeParams(
+      BuildMode.PREBUILT,
+      new DefaultAhqPackageRoot('/my-ahq-package-root')
+    );
 
     const myRoot = {
       getIOMarshallerSessionFactory: vi.fn(() => mySessionFactory),
       getCLIWrapper: vi.fn(() => myCliWrapper),
-      getAhqWorkspace: vi.fn(() => myAhqWorkspace),
+      getAhqPackage: vi.fn(() => myAhqPackage),
       getCurrentUserWorkspace: vi.fn(() => myCurrentUserWorkspace),
+      getAhqRuntimeParams: vi.fn(() => myRuntimeParams),
     } as unknown as CompositionRoot;
 
     const tool = new DefaultClaudeCodeTool(myRoot);
@@ -78,8 +87,14 @@ describe('DefaultClaudeCodeTool', () => {
     expect(mySession.readOutput).toHaveBeenCalledTimes(1);
     expect(result).toBe('mock-output');
 
+    // The builder is wired with the runtime params drawn from the
+    // CompositionRoot (AHQ-197) so every Claude launch carries the relay
     expect(ClaudeCommandBuilder).toHaveBeenCalledTimes(1);
-    expect(ClaudeCommandBuilder).toHaveBeenCalledWith(myAhqWorkspace, myCurrentUserWorkspace);
+    expect(ClaudeCommandBuilder).toHaveBeenCalledWith(
+      myAhqPackage,
+      myCurrentUserWorkspace,
+      myRuntimeParams
+    );
 
     expect(myCliWrapper.run).toHaveBeenCalledTimes(1);
     const [builtCliCommand, runCwd] = vi.mocked(myCliWrapper.run).mock.calls[0]! as [

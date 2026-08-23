@@ -17,7 +17,7 @@
 
 import { describe, it } from 'vitest';
 
-import { DefaultClaudeCodeTool } from '../../../src/tools/marshalled-io-tools/claude-code/default-claude-code-tool.js';
+import { RepoCheckoutClaudeCodeTool } from '../../helpers/repo-checkout-claude-code-tool.js';
 
 /**
  * Timeout in milliseconds for Claude to self-terminate via skill.
@@ -38,7 +38,7 @@ describe('MarshalledCLITool self-termination via skill', () => {
     'should return control to test when Claude executes self-termination skill command',
     async () => {
       // Arrange
-      const tool = new DefaultClaudeCodeTool();
+      const tool = new RepoCheckoutClaudeCodeTool();
 
       // Act - Run the self-terminating skill command and wait for it to complete
       const commandInput = 'Unused command input string';

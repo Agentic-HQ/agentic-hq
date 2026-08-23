@@ -8,4 +8,4 @@
 
 import { app } from './app.js';
 
-app.run();
+app.run(process.argv);

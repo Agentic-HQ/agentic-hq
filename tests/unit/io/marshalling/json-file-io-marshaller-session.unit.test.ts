@@ -9,6 +9,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { JsonFileIOMarshallerSessionFactory } from '../../../../src/io/marshalling/json-file-io-marshaller-session-factory.js';
 import { JsonFileIOMarshallerSession } from '../../../../src/io/marshalling/json-file-io-marshaller-session.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
@@ -22,7 +23,8 @@ const mockWorkspace: Workspace = {
   getRoot: () => '/mock/project',
   getTempDir: () => TEST_TEMP_DIR,
   getDotAgenticHqDir: () => '/mock/project/.agentic-hq',
-  isAhqWorkspace: () => false,
+  isAhqPackage: () => false,
+  getBuildMode: () => BuildMode.BUILD_FIRST,
 };
 
 describe('JsonFileIOMarshallerSession', () => {

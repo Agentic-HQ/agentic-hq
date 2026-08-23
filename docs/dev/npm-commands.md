@@ -36,6 +36,25 @@ pnpm typecheck
 
 ---
 
+## Builds
+
+The two builds are explained in
+[how-agentic-hq-works.md](how-agentic-hq-works.md#builds-framework-build-1-and-workflow-build-2);
+you rarely run either by hand — the `agentic-hq-dev` binary runs the Framework
+Build (1) automatically before every run, and the shared runner runs the
+Workflow Build (2) per workflow when `build-mode` is `build-first`.
+
+```bash
+# Framework Build (1): incremental tsc of src/ into <repo>/dist (JS + .d.ts + maps)
+pnpm build:framework
+
+# Release build (publish-only): Framework Build (1) + a Workflow Build (2) per
+# shipped migrated workflow + stage the release/ tree
+pnpm build
+```
+
+---
+
 ## Linting (ESLint)
 
 ```bash
@@ -70,15 +89,15 @@ Programs that demonstrate Agentic HQ capabilities. Good starting points for unde
 
 ```bash
 # String reversal demo via the agentic-hq CLI (uses built-in default string)
-# NOTE: usually better to just run `agentic-hq reversal` directly — it's
-# shorter and exercises the installed CLI the same way a user would.
+# NOTE: usually better to just run `agentic-hq-dev reversal` directly — it's
+# shorter and exercises the linked CLI the same way a user would.
 # This pnpm script is mainly useful when working inside this repo without
 # the CLI on PATH.
 pnpm demo:agentic-hq-cli:string-reversal
 
 # Override the default string:
 pnpm demo:agentic-hq-cli:string-reversal -- --string-to-reverse="hello there"
-# (equivalent: agentic-hq reversal -- --string-to-reverse="hello there")
+# (equivalent: agentic-hq-dev reversal -- --string-to-reverse="hello there")
 
 # Run a plugin's workflow directly (bypasses the agentic-hq CLI):
 pnpm demo:plugin-direct:string-reversal

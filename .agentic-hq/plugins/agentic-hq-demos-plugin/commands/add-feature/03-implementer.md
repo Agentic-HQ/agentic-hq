@@ -31,27 +31,27 @@ and output files)
 Read the file: {command-input-output-files-directory}/command-input.json
 
 Extract the `command-input-string` value. It will be a plain English string like:
-`The variables used in this workflow are: agentic-hq-workspace-root-dir=/path/to/agentic-hq and ticket-id=PROJ-123`
+`The variables used in this workflow are: ahq-package-root=/path/to/agentic-hq and ticket-id=PROJ-123`
 
 Parse out the two variables:
-- `agentic-hq-workspace-root-dir`
+- `ahq-package-root`
 - `ticket-id`
 
 ## Step 0b: Establish Variables
 
 Establish the variables this workflow uses. Every path is derived from the inputs and
-roots — the chain is self-contained (built from `agentic-hq-workspace-root-dir`, `project-root`, and
+roots — the chain is self-contained (built from `ahq-package-root`, `project-root`, and
 `ticket-id`):
 
 ```
 # Inputs & roots
 command-input-output-files-directory = $0
-agentic-hq-workspace-root-dir = (parsed from input)
+ahq-package-root = (parsed from input)
 ticket-id                     = (parsed from input)
 project-root                  = (your primary working directory)
 
-# Skill & bundled-docs dirs (derived from the workspace root)
-demos-plugin-dir       = {agentic-hq-workspace-root-dir}/.agentic-hq/plugins/agentic-hq-demos-plugin
+# Skill & bundled-docs dirs (derived from the ahq package root)
+demos-plugin-dir       = {ahq-package-root}/.agentic-hq/plugins/agentic-hq-demos-plugin
 current-workflow-id    = add-feature
 skills-dir             = {demos-plugin-dir}/skills/{current-workflow-id}
 workflow-help-docs-dir = {skills-dir}/docs/workflow-help-docs
@@ -73,7 +73,7 @@ review-summary-file         = {workflow-files-dir}/04-review-summary.md
 
 ## Step 1: Validate Input
 
-- `agentic-hq-workspace-root-dir` — required
+- `ahq-package-root` — required
 - `ticket-id` — required
 
 If any required variable is empty, STOP and flag it as an error for the user to investigate or
@@ -144,13 +144,16 @@ Write `{implementation-summary-file}`. Keep it **compact** and factual. Use thes
 - **`## Approval Gate Changes`** — **only add this section if the Step 5 Approval Gate discussion leads
   to code changes**: what was discussed, what you changed, and why. Omit it entirely if the human
   approves with no changes.
+- **`## Human Approval Confirmation`** — leave this to be filled in once the human approves at the
+  Approval Gate (Step 5); add a short placeholder line such as `_Awaiting human approval._`.
 
 > **Must Not Do:**
 > - **Broaden scope beyond the approved plan without explicit Human approval.** Implement only what the plan covers.
 > - **Deviate from the plan without stopping and getting human consent** to modify it (recorded as an
 >   UPDATE in `02-implementation-plan.md` and under `## Approved Deviations From The Plan`).
 > - **Weaken, delete, or skip failing tests to force a pass.**
-> - **End the command without explicit Human Approval at the Approval Gate** (Step 5).
+> - **End the command without explicit Human Approval at the Approval Gate** (Step 5), recorded in
+>   `## Human Approval Confirmation`.
 
 ## Step 5: Human Check-In — The Approval Gate
 
@@ -173,7 +176,9 @@ Then ask, using the `AskUserQuestion` tool:
   changes.
 
 Handle the answer:
-- **"Implementation Approved"** → continue to Step 6.
+- **"Implementation Approved"** → record it in the summary's **`## Human Approval Confirmation`**
+  section — a short note of **what** was approved and **that** the human approved it (quote any
+  conditions they attach) — then continue to Step 6.
 - **"Implementation Not Approved - Discuss Further"** → ask them very **briefly** what they want to discuss, then:
   - **Answer any questions** about what you did and why.
   - If they request changes **within the approved plan's scope**, make them and re-run the relevant
@@ -206,3 +211,10 @@ Write to: {command-input-output-files-directory}/command-output.json
 Run the self-termination skill immediately:
 
 /agentic-hq-core-plugin:self-termination
+
+## Important Notes
+
+- **Human questions (at any point in this command):** if the human asks a question, answer it, then
+  **STOP and ask whether they would like you to continue** with the command. Do **not** carry on to
+  the next step (or the next action of the current step) off the back of answering a question — a
+  question is a pause, not a green light.

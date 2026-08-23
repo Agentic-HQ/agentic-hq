@@ -4,13 +4,13 @@
  *
  * A short, generic, customizable four-stage loop for adding one small feature to an
  * existing codebase:
- *   01 — Researcher    (turns the request into a feature brief; decides if it's a good size)
+ *   01 — Researcher    (turns the request into an approved feature brief; decides if it's a good size)
  *   02 — Planner       (turns the brief into an approved implementation plan)
  *   03 — Implementer   (implements the approved plan with tests)
  *   04 — Reviewer      (concise evidence-backed review + a path to customize the workflow)
  *
- * Broadcast + stage-outcome gate. The CLI builds the variables string itself (workspace
- * root + the mandatory ticket-id) and passes the SAME string to all four commands; the
+ * Broadcast + stage-outcome gate. The CLI builds the variables string itself (the AHQ
+ * package root + the mandatory ticket-id) and passes the SAME string to all four commands; the
  * outputs of commands 02-04 are ignored. Command 01's (the Researcher's) trimmed output
  * is the stage outcome:
  *   - CONTINUE_WORKFLOW — run agents 02, 03, 04 in order.
@@ -18,14 +18,18 @@
  *   - anything else — a broken-contract failure: throw (uncaught) so the full stack trace
  *     is printed for a bug report.
  *
+ * The framework's required --build-mode / --ahq-package-root options
+ * (forwarded by the shared workflow runner) are consumed by
+ * DefaultWorkflowRuntime — this file contains only add-feature code.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-157
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-197
  */
 
 import { Command } from 'commander';
 
-import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
+import { DefaultWorkflowRuntime } from 'agentic-hq/tools/claude-code';
 
-const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME = 'AGENTIC_HQ_WORKSPACE_ROOT';
 const CONTINUE_WORKFLOW_OUTCOME = 'CONTINUE_WORKFLOW';
 const TERMINATE_WORKFLOW_OUTCOME = 'TERMINATE_WORKFLOW';
 
@@ -33,6 +37,9 @@ const COMMAND_01_RESEARCHER = '/agentic-hq-demos-plugin:add-feature:01-researche
 const COMMAND_02_PLANNER = '/agentic-hq-demos-plugin:add-feature:02-planner';
 const COMMAND_03_IMPLEMENTER = '/agentic-hq-demos-plugin:add-feature:03-implementer';
 const COMMAND_04_REVIEWER = '/agentic-hq-demos-plugin:add-feature:04-reviewer';
+
+const runtime = new DefaultWorkflowRuntime(process.argv);
+const tool = runtime.getClaudeCodeTool();
 
 const program = new Command();
 
@@ -43,22 +50,9 @@ program
   )
   .requiredOption('--ticket-id <id>', 'Mandatory ticket id (make one up if you have no issue tracker)')
   .action(async (options: { ticketId: string }) => {
-    const agenticHqWorkspaceRoot = process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME];
-    if (!agenticHqWorkspaceRoot) {
-      // Catastrophic precondition failure — throw (uncaught, see program.parse() below) so the
-      // full stack trace is printed. The message states the cause so it heads the trace.
-      throw new Error(
-        `Cannot run the add-feature workflow: the ${AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME} ` +
-          `environment variable is not set (it must point to the Agentic HQ workspace root). ` +
-          `The workflow cannot continue.`
-      );
-    }
-
-    const tool = new DefaultClaudeCodeTool();
-
     // The TS program builds the full broadcast string itself and passes the SAME string to all four commands.
     const allVariables =
-      `The variables used in this workflow are: agentic-hq-workspace-root-dir=${agenticHqWorkspaceRoot}` +
+      `The variables used in this workflow are: ahq-package-root=${runtime.getAhqPackageRoot().getPath()}` +
       ` and ticket-id=${options.ticketId}`;
 
     // The Researcher's trimmed output is the stage-outcome gate (exactly one of three outcomes).
@@ -91,4 +85,4 @@ program
 // FULL STACK TRACE and exit non-zero. With no logging system, that stack trace is the bug report
 // the user sends us, so suppressing it into a tidy one-line message would actively hurt.
 // DO NOT add a boundary catch here. (Happy paths — TERMINATE / CONTINUE — simply resolve, exit 0.)
-program.parse();
+program.parse(runtime.getWorkflowArgs());

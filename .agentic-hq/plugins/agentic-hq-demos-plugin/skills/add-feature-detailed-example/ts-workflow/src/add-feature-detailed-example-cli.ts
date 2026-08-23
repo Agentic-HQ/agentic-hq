@@ -15,21 +15,24 @@
  *   06 — Refactoring Executor  (executes the approved refactors)
  *   07 — Validator             (final double-check that the feature is Done)
  *
- * Re-inject / broadcast pattern (same as create-workflow-cli.ts): the CLI reads
- * AGENTIC_HQ_WORKSPACE_ROOT, parses the passthrough params, and builds Command 01's
- * input string. Command 01 returns the combined variables string (now guaranteed to
+ * Re-inject / broadcast pattern (same as create-workflow-cli.ts): the CLI parses the
+ * passthrough params and builds Command 01's input string (which carries the AHQ
+ * package root). Command 01 returns the combined variables string (now guaranteed to
  * carry ticket-id). That same string is captured as `allVariables` and re-injected
  * into Commands 02-07, whose own outputs are ignored.
  *
+ * The framework's required --build-mode / --ahq-package-root options
+ * (forwarded by the shared workflow runner) are consumed by
+ * DefaultWorkflowRuntime — this file contains only
+ * add-feature-detailed-example code.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-143
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-209
  */
 
 import { Command } from 'commander';
 
-import { DefaultClaudeCodeTool } from 'agentic-hq/tools/claude-code';
-
-const AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME = 'AGENTIC_HQ_WORKSPACE_ROOT';
-const ERROR_EXIT_CODE_VALUE = 1;
+import { DefaultWorkflowRuntime } from 'agentic-hq/tools/claude-code';
 
 const DEFAULT_VERBOSITY = 'low';
 const DEFAULT_SUGGEST_LARGE_REFACTOR = 'false';
@@ -48,6 +51,9 @@ const COMMAND_06_REFACTORING_EXECUTOR =
   '/agentic-hq-demos-plugin:add-feature-detailed-example:06-refactoring-executor';
 const COMMAND_07_VALIDATOR =
   '/agentic-hq-demos-plugin:add-feature-detailed-example:07-validator';
+
+const runtime = new DefaultWorkflowRuntime(process.argv);
+const tool = runtime.getClaudeCodeTool();
 
 const program = new Command();
 
@@ -69,20 +75,10 @@ program
       suggestLargeRefactor: string;
       ticketId?: string;
     }) => {
-      const agenticHqWorkspaceRoot = process.env[AGENTIC_HQ_WORKSPACE_ROOT_ENV_VARIABLE_NAME];
-      if (!agenticHqWorkspaceRoot) {
-        console.error(
-          'Error: AGENTIC_HQ_WORKSPACE_ROOT environment variable is not set.'
-        );
-        process.exit(ERROR_EXIT_CODE_VALUE);
-      }
-
-      const tool = new DefaultClaudeCodeTool();
-
-      // Build Command 01's input string from the env var + parsed passthrough params.
+      // Build Command 01's input string from the AHQ package root + parsed passthrough params.
       // ticket-id is appended ONLY when supplied — Command 01 generates/obtains it otherwise.
       let command01Input =
-        `The variables used in this workflow are: agentic-hq-workspace-root-dir=${agenticHqWorkspaceRoot}` +
+        `The variables used in this workflow are: ahq-package-root=${runtime.getAhqPackageRoot().getPath()}` +
         ` and verbosity=${options.verbosity}` +
         ` and suggest-large-refactor=${options.suggestLargeRefactor}`;
       if (options.ticketId) {
@@ -102,4 +98,4 @@ program
     }
   );
 
-program.parse();
+program.parse(runtime.getWorkflowArgs());
