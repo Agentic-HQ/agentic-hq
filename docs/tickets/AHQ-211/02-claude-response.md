@@ -16,13 +16,16 @@ This is research + a work list, **not** an implementation plan (planning happens
   disciplined (`path.join` throughout, no `HOME`/`TMPDIR` reads, `pathToFileURL` used correctly).
 - Most of the work is **mechanical** and falls into ~6 repeating categories (postinstall, `.cmd`-shim spawns, `/tmp`
   in tests, symlink→junction, quoting of path-bearing args, CRLF/`.gitattributes`).
-- Exactly **two items are design-level**: (1) every workflow currently executes through `bash -c`
-  (`src/workflow/workflow-command/default-workflow-command.ts:26`), and (2) the self-termination mechanism is
-  bash + `$PPID` + `kill -INT` (`kill-current-cli-process.sh`), which has no direct Windows equivalent.
+- Exactly **one item was design-level**: every workflow executes through `bash -c`
+  (`src/workflow/workflow-command/default-workflow-command.ts:26`). **Decided** (plan D1, incorporating AHQ-210):
+  delete the command string outright — SKILL.md returns only `skill-base-dir` and the engine builds the argv
+  itself, so no shell is involved on any platform. The other candidate — self-termination — is
+  **solved**: a single cross-platform Node script keyed on the officially documented `CLAUDE_PID` env
+  var, validated live on Windows, macOS and Linux; lands production-clean in plan Phase 5 (see §3D).
 - The "just require Git Bash" shortcut buys less than it appears (see [§7](#7-native-vs-git-bash-vs-wsl)) — it would
   rescue item (1) only, with new fragility, and none of the Node-level fixes go away. WSL rescues everything but is
   effectively "not Windows support". Recommendation: native is tractable; keep Git Bash/WSL as fallback options for
-  the two design-level items only.
+  the one remaining design-level item only.
 
 ---
 
@@ -61,6 +64,7 @@ reason, independently of the repo-dev path.
 | node-pty ConPTY smoke test (`pty.spawn('cmd.exe', …)`) | **Works** — spawn, output capture, exit code all correct. One caveat: the conpty connection keeps the Node event loop alive after child exit, so the shutdown path must call `kill()`/dispose explicitly |
 | Spawning `claude` and `claude.exe` from Node (`--version` only) | **Both work** — the winget install is a native `.exe`, resolvable from PATH |
 | `.sh` line endings in this checkout | **CRLF** (e.g. the self-termination kill script) — `core.autocrlf=true` (Git for Windows default) converted them; there is no `.gitattributes` preventing it. This breaks the scripts even under Git Bash/WSL (`bad interpreter: /bin/bash\r`) |
+| Self-termination experiments (2 days, full trail in `supporting-files/`) | **Final: a single Node script keyed on the officially documented `CLAUDE_PID` env var kills the live session on Windows, macOS and Linux in <1 s** — validated at skill level on Windows. Ditched en route: `$PPID` (=`1` under Git Bash), parent-chain walks (racy), MSYS `kill` (fails), soft `taskkill` (silent no-op), `GenerateConsoleCtrlEvent` broadcasts (fakes pass, real `claude.exe` ignores them), per-OS `.ps1`/`.sh` `taskkill` pair (worked, superseded) |
 
 The 5 unit-test failures, all Windows-portability and nothing else:
 
@@ -121,13 +125,38 @@ session resolves it to `C:\tmp\…` so `startsWith('/tmp/…')` fails.
   drive-letter case (`C:\` vs `c:\`) or 8.3 short names can make the same dir compare unequal → AHQ package registered
   twice, every workflow shown DISABLED.
 
-### D. Self-termination / process control (design-level)
-- `.agentic-hq/plugins/agentic-hq-core-plugin/skills/self-termination/scripts/kill-current-cli-process.sh` — bash,
-  `$PPID`, `/proc`, `ps`/`awk`, `kill -INT`, invoked shebang-style from `SKILL.md`. Its own header already says it
-  doesn't work on Windows. There is no Windows way to deliver SIGINT to an arbitrary PID (`taskkill` terminates;
-  console Ctrl+C events are per-console-group), so this needs a designed Windows mechanism, not a translation.
-- The integration fixture and test bake in the POSIX contract: `spawn('bash', ['-c', '… $PPID'])`
-  (`fake-claude-cli.triggers-kill-script.fixture.ts:124`), exit code 130 assertions, and extensionless `.bin/tsx` spawn.
+### D. Self-termination / process control (SOLVED — validated live on Windows, macOS and Linux; lands in plan Phase 5)
+
+How it works (validated 2026-08-24 with a temporary live test copy, since reverted — plan Phase 5 re-lands it
+production-clean, replacing the *nix-only bash script): the self-termination skill runs a single
+cross-platform Node script, `skills/self-termination/scripts/kill-current-cli-process-node.cjs`. It reads the target
+PID from **`CLAUDE_PID`** — an officially documented env var (code.claude.com/docs/en/env-vars): Claude Code
+≥ v2.1.214 stamps its own PID into every Bash/PowerShell tool and hook subprocess, re-stamped correctly across
+resumes and nested sessions — sanity-probes it, then calls `process.kill(pid, 'SIGINT')` on POSIX (byte-identical to
+the old `kill -INT`; claude exits 130) or `'SIGTERM'` on win32 (Node maps it to `TerminateProcess`; exit code 1).
+The command line is argument-free and identical in every shell, and needs no Git Bash. Claude exiting completes the
+claude task the workflow engine is blocked awaiting — control returns to the engine, which reads the marshalled
+output and continues with the next workflow step.
+
+Validated live: the **actual skill invocation** (`/agentic-hq-core-plugin:self-termination`) killed a real Windows
+session end-to-end; the script alone killed real sessions on macOS and Linux (evidence: the Confluence draft page
+and `supporting-files/02-self-termination-real-claude-test-results.md`). Measured Windows kill latency ~0.6 s from
+script start to the user's prompt returning.
+
+Alternatives investigated and ditched (full research trail in `supporting-files/01-…` and `02-…`):
+
+- `$PPID` from Git Bash — returns `1` for native parents (MSYS PID namespace).
+- Walking the Win32 parent chain for a `claude.exe` ancestor — races on dangling PIDs left by short-lived Git Bash
+  shim processes; dead-ended in every logged run.
+- MSYS `kill -INT <winpid>` — fails outright; `taskkill` without `/F` — reports SUCCESS and does nothing.
+- Graceful console broadcasts (`GenerateConsoleCtrlEvent` Ctrl+C/Ctrl+Break via PowerShell P/Invoke) — passed every
+  fake-claude experiment and a Perplexity double-check, but the real `claude.exe` ignores them.
+- Targeted `taskkill /PID $CLAUDE_PID /F` via per-OS `.ps1`/`.sh` (and cmd/batch variants) — worked (multiple live
+  kills), but superseded: cmd is never one of Claude's tool shells (PowerShell always; Bash only with Git for
+  Windows), and the single Node script removes the per-OS pair entirely.
+
+Remaining test-suite work (plan Phase 5): port the process-control fixture/test off `bash`/`$PPID`/exit-130-only
+(`fake-claude-cli.triggers-kill-script.fixture.ts:124`), then delete the dead `kill-current-cli-process.sh`.
 
 ### E. Shell scripts, exec bits, line endings
 - Nine `.sh` files total: the self-termination script (shipped, hot path), four dev git-scripts under
@@ -193,24 +222,26 @@ Sizes: S = mechanical/localized, M = several files or a contract touch, L = desi
 5. (S) Replace `$PWD` in the `demo:plugin-direct:*` scripts.
 
 **Workflow runtime**
-6. (L) **Replace `bash -c` as the workflow launcher** (`default-workflow-command.ts:26`) — the main design decision.
-   Options, roughly in order of attractiveness: (a) build the command as executable+args and spawn directly with no
-   shell at all (also eliminates the shell-quoting bug class on macOS/Linux); (b) a per-platform shell abstraction
-   (cmd/PowerShell on win32) with per-shell escaping replacing the POSIX-only `shellEscape`; (c) require Git Bash on
-   Windows and keep `bash -c` (see §7 caveats).
+6. (M) **Replace `bash -c` as the workflow launcher** (`default-workflow-command.ts:26`) — **DECIDED** (plan D1,
+   incorporating AHQ-210): delete the command string entirely. SKILL.md shrinks to returning only `skill-base-dir`
+   (the one fact Claude contributes); the engine constructs `process.execPath` + `run-workflow.cjs` + args natively
+   and spawns shell-free on every platform. Also deletes the POSIX-only `shellEscape` and most of item 8, and
+   eliminates the shell-quoting bug class on macOS/Linux too.
 7. (M) Resolve the `claude` executable to an absolute, PATHEXT-aware path before `pty.spawn` (winget = `.exe` works
    bare; npm-installed = `.cmd` shim doesn't).
-8. (M) Quote/delimit the space-joined path-bearing arguments (`claude-command-builder.ts:93,106,143`) — spaces in
-   Windows paths corrupt them today; the receiving skills' split-on-space contract is affected.
+8. (S) Quote the path-bearing arguments (`claude-command-builder.ts:93,106,143`) — spaces in Windows paths corrupt
+   them today. Shrinks under the item-6 decision: only the io-directory still crosses the skill hop (quote it, plus
+   the `--allowedTools` paths); the skills' split-on-space contract disappears with the command string.
 9. (S–M) PTY/signal tuning: skip `SIGTERM` registration on win32, explicit `kill()`/dispose on shutdown (conpty
    keep-alive), review `handleFlowControl`/`name` options, case-insensitive workspace-root comparison on win32
    (`workspace-impl.ts:94`).
 
 **Self-termination**
-10. (L) Design a Windows self-termination mechanism. The current bash/`$PPID`/`kill -INT` contract cannot be ported
-    literally (no SIGINT-to-arbitrary-PID on Windows). Likely shape: the skill invokes a cross-platform Node script;
-    the Windows branch uses taskkill / ConPTY-aware termination, and the "exit code 130" contract gets a per-platform
-    definition. Affects the skill, the kill script, the fixture, and the integration test.
+10. (S — solved, see §3D) Self-termination becomes a single cross-platform Node script keyed on
+    `CLAUDE_PID` (validated live on all three OSes via a temporary test copy, since reverted). Plan Phase 5 lands
+    it production-clean: recreate script + SKILL.md, port the process-control fixture/integration test off
+    `bash`/`$PPID` (exit-code expectation per-platform: 130 POSIX / 1 Windows), then delete the dead
+    `kill-current-cli-process.sh`.
 
 **Tests**
 11. (S–M) `/tmp` → `os.tmpdir()`/`mkdtempSync` across the e2e helper, the two unit-test files, and the
@@ -251,7 +282,8 @@ Asked mid-investigation: if native is a nightmare, how much simpler would it be 
 
 **Native (recommended): moderate, not a nightmare.** The evidence is the strongest argument: typecheck clean, 97% of
 unit tests already pass, ConPTY works, `claude.exe` spawns, and the codebase's path discipline is already good. The
-work list above is long but ~80% of it is mechanical and pattern-repetitive; only items 6 and 10 need real design.
+work list above is long but ~80% of it is mechanical and pattern-repetitive; the two design-level items are settled
+(6 decided via the plan's D1/AHQ-210 no-command-string design; 10 solved and validated — §3D).
 Several of the fixes (no-shell spawning, quoted path args, Node postinstall) also remove latent bug classes on
 macOS/Linux.
 
@@ -260,7 +292,7 @@ change how Node's `child_process`/node-pty resolve executables, how `cmd.exe` ru
 `script-shell` is reconfigured per-user), or what `/tmp` means to a Node process. Concretely it would rescue only:
 item 6 (keep `bash -c`, resolving Git's `bash.exe` explicitly — never bare `bash`, which on WSL-equipped machines
 resolves to the System32 WSL launcher) and parts of item 16 (the `.sh` scripts). It does **not** rescue items 1–5,
-7–9, 10 (MSYS `kill -INT` can't deliver SIGINT to a native node.exe — it just terminates), 11–15. And it adds a real
+7–9, 11–15 (all Node-level), and item 10 is already solved without it. And it adds a real
 new hazard: MSYS path conversion mangling `C:\…` arguments inside `bash -c` strings. Verdict: a reasonable *fallback
 for item 6 only* if the no-shell redesign proves harder than expected — not a strategy that shrinks the project much.
 
@@ -272,5 +304,5 @@ documented escape hatch (and it becomes *more* attractive after item 13 fixes th
 currently breaks WSL usage of the repo too).
 
 **Suggested sequencing thought for the planning step** (not a plan): items 1, 2, 11, 13 are small and unblock
-install + dev CLI + a green unit suite on Windows; item 14 locks that in; items 6 and 10 are the two focused design
-pieces; everything else can trail behind them.
+install + dev CLI + a green unit suite on Windows; item 14 locks that in; item 6 is the one remaining focused design
+piece (item 10 is solved and validated); everything else can trail behind them.
