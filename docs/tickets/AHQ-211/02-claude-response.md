@@ -155,8 +155,9 @@ Alternatives investigated and ditched (full research trail in `supporting-files/
   kills), but superseded: cmd is never one of Claude's tool shells (PowerShell always; Bash only with Git for
   Windows), and the single Node script removes the per-OS pair entirely.
 
-Remaining test-suite work (plan Phase 5): port the process-control fixture/test off `bash`/`$PPID`/exit-130-only
-(`fake-claude-cli.triggers-kill-script.fixture.ts:124`), then delete the dead `kill-current-cli-process.sh`.
+Landing work (plan Phase 5): recreate the script + SKILL.md change production-clean, port the process-control
+fixture/test off `bash`/`$PPID`/exit-130-only (`fake-claude-cli.triggers-kill-script.fixture.ts:124`), then delete
+the replaced `kill-current-cli-process.sh`.
 
 ### E. Shell scripts, exec bits, line endings
 - Nine `.sh` files total: the self-termination script (shipped, hot path), four dev git-scripts under
@@ -240,7 +241,7 @@ Sizes: S = mechanical/localized, M = several files or a contract touch, L = desi
 10. (S — solved, see §3D) Self-termination becomes a single cross-platform Node script keyed on
     `CLAUDE_PID` (validated live on all three OSes via a temporary test copy, since reverted). Plan Phase 5 lands
     it production-clean: recreate script + SKILL.md, port the process-control fixture/integration test off
-    `bash`/`$PPID` (exit-code expectation per-platform: 130 POSIX / 1 Windows), then delete the dead
+    `bash`/`$PPID` (exit-code expectation per-platform: 130 POSIX / 1 Windows), then delete the replaced
     `kill-current-cli-process.sh`.
 
 **Tests**

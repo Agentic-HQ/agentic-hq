@@ -2,8 +2,10 @@
 
 Builds on the research in [02-claude-response.md](02-claude-response.md). Numbers like "(item N)" refer to that
 report's work list. Strategy: **native Windows** (PowerShell + nvm-windows, no WSL), per the Jira's first-choice
-option, with Git Bash/WSL held as fallbacks for individual items only. This plan **incorporates
-[AHQ-210](https://agentic-hq.atlassian.net/browse/AHQ-210)** (SKILL.md simplification) as design decision D1 — it
+option. Normal-user prerequisites on Windows are the same as Mac/Linux: **Node and Claude Code only** — Git is NOT
+required (Git + `gh` are dev-only prerequisites, in `docs/dev/setting-up-agentic-hq-for-development.md`), and no
+shell of any kind — bash, cmd or otherwise — remains in the workflow launch chain. Incorporates
+[AHQ-210](https://agentic-hq.atlassian.net/browse/AHQ-210) (SKILL.md simplification) as design decision D1 — it
 removes the shell dependency that was the hardest Windows problem, and simplifies every platform as a side effect.
 
 ## Goals (acceptance criteria, from the Jira)
@@ -19,27 +21,34 @@ On a native Windows 11 machine (winget Claude Code, nvm-windows Node 24, PowerSh
 
 ## Key design decisions
 
-**D1 — Delete the workflow command string entirely (incorporates AHQ-210).** Post-AHQ-201, every workflow SKILL.md
-is byte-identical boilerplate: the engine hands the skill the io-directory, build-mode and package-root, and the
-skill echoes them straight back inside a shell command string, which `DefaultWorkflowCommand` then runs via
-`bash -c` (`default-workflow-command.ts:26`). The **only** fact Claude actually contributes is `skill-base-dir` —
-where the skill is installed (what makes marketplace-installed plugins discoverable). So SKILL.md shrinks to
-writing just the skill-base-dir path as the marshalled output value (`{"command-output-string": "{skill-base-dir}"}`
-— the key is the universal marshalling contract shared by every command step, so it stays unchanged; only the
-workflow-launch *value* changes from a command line to a path), and the engine constructs the launch command itself, natively
-as an argv array — `process.execPath` + `scripts/run-workflow.cjs` + flags (deriving `skill-id` via
-`path.basename(skillBaseDir)`) + passthrough args — spawned directly on the PTY. No command string ever exists, so
-this deletes in one move: the `bash -c` shell dependency (the Windows blocker), the POSIX-only `shellEscape`
+**D1 — Delete the workflow command string entirely (incorporates AHQ-210).** Today the engine hands the workflow
+skill the io-directory, build-mode and package-root, and the byte-identical SKILL.md boilerplate echoes them back
+inside a shell command string, which `DefaultWorkflowCommand` runs via `bash -c`
+(`default-workflow-command.ts:26`). The only fact Claude actually contributes is `skill-base-dir` — where the
+skill is installed (what makes marketplace-installed plugins discoverable). Change: SKILL.md writes
+`{"skill-base-dir": "{skill-base-dir}"}` — a semantically named key for the launch handshake, deliberately NOT
+command steps' `command-output-string` (that contract is untouched; the marshaller gains `readSkillOutput()` for
+the launch handshake, and the existing `readOutput()` is renamed `readCommandOutput()` for symmetry — both read
+the shared `command-output.json` transport file), and the engine builds the launch
+command natively as an argv array — `process.execPath` + `scripts/run-workflow.cjs` + flags (`skill-id` =
+`path.basename(skillBaseDir)`) + passthrough args — spawned directly on the PTY. No command string ever exists,
+which deletes: the `bash -c` dependency (the Windows blocker), the POSIX-only `shellEscape`
 (`claude-workflow-command-builder.ts:46-49`), all command-string quoting/parsing, and the bare-`node`-on-PATH
-assumption. The Claude hop itself is unchanged (skill discovery + self-termination still work as today). Deliberate
-contract narrowing: every workflow launches via `run-workflow.cjs`; a custom launcher would be a framework feature,
-not SKILL.md content — post-AHQ-201 that flexibility was already unused.
+assumption. The Claude hop itself is unchanged (skill discovery + self-termination as today). Deliberate contract
+narrowing: every workflow launches via `run-workflow.cjs`; a custom launcher would be a framework feature, not
+SKILL.md content. Format decision: the value is the **bare path** — no `skill-base-dir:` prefix or other
+delimited mini-format (delimiters like `:`/`,` occur inside Windows paths; invented string grammars are the bug
+class this ticket deletes). The engine sanity-checks the returned value instead (path exists + contains
+`ts-workflow/` — stronger than any prefix, clear error naming the skill). If the hop ever needs more values, add
+more named JSON keys beside `skill-base-dir` — never a mini-format inside a string. Evolution rule:
+`skill-base-dir` stays required with frozen meaning; all future keys are optional with engine defaults — so older
+workflows (only the one key) and newer engines coexist with no version negotiation.
 
 **D2 — Self-termination: SOLVED — design validated live on Windows, macOS and Linux (2026-08-24); Phase 5 lands
 it.** The skill runs a single cross-platform Node script, `scripts/kill-current-cli-process-node.cjs`: PID
 from **`CLAUDE_PID`** — officially documented (code.claude.com/docs/en/env-vars; Claude Code ≥ v2.1.214 stamps its
 own PID into every Bash/PowerShell tool and hook subprocess) — existence-probed, then `process.kill(pid, 'SIGINT')`
-on POSIX (byte-identical to the old `kill -INT`; exit 130) or `'SIGTERM'` → `TerminateProcess` on win32 (exit 1).
+on POSIX (identical to the old `kill -INT`; exit 130) or `'SIGTERM'` → `TerminateProcess` on win32 (exit 1).
 Argument-free, shell-agnostic, no PID discovery, no Git Bash dependency. Validated end-to-end: the real skill
 invocation killed a live Windows session; the script killed live macOS and Linux sessions. Alternatives tried and
 ditched (trail in `supporting-files/`): `$PPID` (=`1` under Git Bash), Win32 parent-chain walking (racy),
@@ -98,12 +107,10 @@ for every code change; run the failing state first; for each changed file, name 
 *(items 2-partial, 11, 13; report §2, §3F; fixes all 5 current unit failures)*
 
 1. `.gitattributes`: `* text=auto`, `*.sh text eol=lf`, plus explicit `eol=lf` for any other exec-bit-carrying
-   scripts. Run `git add --renormalize .` once as a safety check — the repo's stored content should already be LF
-   (the CRLF seen on this machine is checkout-time `autocrlf=true` conversion), so expect a no-op. No migration
-   concern: there are no existing user checkouts (per Steve, 2026-08-23) — this only has to land before future
-   clones. The one CRLF-contaminated working tree is this dev machine's; give it a one-off refresh after the
-   commit (`git rm -r --cached . && git reset --hard`, or re-clone). Required for every support route — a CRLF
-   `.sh` fails with "bad interpreter" under Git Bash and WSL, not just native Windows.
+   scripts. Run `git add --renormalize .` once as a check — stored content is already LF (the CRLF on this machine
+   is checkout-time `autocrlf=true` conversion), so expect a no-op; then refresh this machine's working tree
+   (`git rm -r --cached . && git reset --hard`, or re-clone). No other checkouts exist to migrate. Required for
+   every support route — a CRLF `.sh` fails with "bad interpreter" under Git Bash and WSL too.
 2. `/tmp` → portable temp in unit tests: `run-cli-and-log-output.unit.test.ts` (also replace the
    `echo '…'; pwd` POSIX shell string with a `process.execPath`-based command so `execSync` has nothing
    shell-specific), `json-file-io-marshaller-session.unit.test.ts` (`os.tmpdir()` + `mkdtempSync`, copying the
@@ -144,28 +151,54 @@ diff a Windows-built `release/` tree against a Linux-built one (should now match
 1. **D1 (AHQ-210) contract change**, one commit, both sides together:
    - SKILL.md boilerplate (every workflow skill + the create-workflow scaffolder template that stamps new ones)
      shrinks to: set `skill-base-dir` and `command-input-output-files-directory = $0`, write
-     `{"command-output-string": "{skill-base-dir}"}`, then self-terminate. The `$1`/`$2` inputs, the command-string
+     `{"skill-base-dir": "{skill-base-dir}"}`, then self-terminate. The `$1`/`$2` inputs, the command-string
      template, and the "INFO FOR YOU ONLY" relay instructions all go away. Update create-workflow's checks doc
      (`03-run-checks-on-workflow.md`) to the new contract.
-   - Engine side: the marshaller is untouched (`command-output-string` stays the universal key — every command
-     step inside workflows uses it too); `ClaudeWorkflowCommandBuilder` treats the returned string as the
-     skill-base-dir path, derives `skill-id`
-     (`path.basename`) and builds the argv array (`process.execPath`, `run-workflow.cjs`, `--ahq-package-root`,
+   - Engine side: command steps' `command-output-string` contract is untouched; the marshaller gains
+     `readSkillOutput()` (returns the typed handshake, currently `{ skillBaseDir }`, fail-fast if the key is
+     missing) and the existing `readOutput()` is renamed `readCommandOutput()` (mechanical, TS-checked; both still
+     read `command-output.json`). Which read runs is decided statically by the caller, via two typed exits on
+     `MarshalledCLITool` sharing one private orchestration:
+
+     ```typescript
+     async execute(command: string, input: string): Promise<string> {
+       const session = await this.runSession(command, input);
+       return session.readCommandOutput();          // command steps — unchanged behaviour
+     }
+
+     async executeSkillLaunch(skillPath: string): Promise<SkillOutput> {   // { skillBaseDir: string }
+       const session = await this.runSession(skillPath, UNUSED_INPUT_STRING);
+       return session.readSkillOutput();            // workflow-launch hop only
+     }
+
+     private async runSession(command: string, input: string): Promise<IOMarshallerSession> {
+       const session = this.sessionFactory.create();
+       session.write(input);
+       await this.runMarshalledIOCLICommand(command, session);
+       return session;
+     }
+     ```
+
+     `ClaudeWorkflowCommandBuilder` — the only code that runs a workflow SKILL.md — is the sole
+     `executeSkillLaunch()` caller (`const { skillBaseDir } = await tool.executeSkillLaunch(skillPath)`); every
+     command-step caller keeps `execute()`. Wrong method = wrong return type = compile error, plus the runtime
+     fail-fast. (Refactor option, only if it earns it: promote `executeSkillLaunch` to a separate
+     `WorkflowLaunchTool` minted by the ToolFactory.) The builder then validates the path (exists +
+     contains `ts-workflow/`, else fail fast naming the skill), derives `skill-id`
+     (`path.basename`), and builds the argv array (`process.execPath`, `run-workflow.cjs`, `--ahq-package-root`,
      `--build-mode`, `--workflow-dir`, `--workflow-js`, then passthrough args); `DefaultWorkflowCommand` takes
      `executable + args[]` and spawns via the PTY — `bash` gone, `shellEscape` deleted. Update
      `default-workflow-command.unit.test.ts` / `claude-workflow-command-builder.unit.test.ts` (currently assert
      `'bash'`) and the fake-claude fixtures to the new output JSON.
    - **D5** rides along in the same commit: only the quoted io-directory crosses the hop; quote the
      `--allowedTools` paths.
-2. **Claude executable resolution**: small resolver (which-style PATH walk, PATHEXT-aware on win32) producing an
-   absolute path before `pty.spawn`. winget/native installs resolve to a real `claude.exe` — spawned directly. If
-   the walk finds only npm's `claude.cmd` shim, do NOT run it via cmd.exe — apply D4: locate
-   `node_modules/@anthropic-ai/claude-code/` beside the shim, read its package.json `bin` entry, and spawn
-   `process.execPath` + that JS entry directly (clear error if the package can't be found: "install via
-   winget/native installer"). Result: no shell — bash, cmd or otherwise — anywhere in the launch chain. **The
-   `.cmd` branch is legacy-only**: npm installation of Claude Code is deprecated since v2.1.15 (the CLI nags npm
-   installs to migrate via `claude install`) — put a comment above this code stating it exists only for **old**
-   npm installs and can be deleted once no-one uses npm-installed claude (evidence:
+2. **Claude executable resolution**: which-style PATH walk, PATHEXT-aware on win32, producing an absolute path
+   before `pty.spawn`. winget/native installs resolve to a real `claude.exe` — spawn directly. If only npm's
+   `claude.cmd` shim is found, don't run it via cmd.exe — apply D4: locate `node_modules/@anthropic-ai/claude-code/`
+   beside the shim, read its package.json `bin` entry, and spawn `process.execPath` + that JS entry directly (clear
+   error if the package can't be found: "install via winget/native installer"). **Legacy-only branch**: npm
+   installation of Claude Code is deprecated since v2.1.15 — put a comment above this code stating it exists only
+   for **old** npm installs and can be deleted once no-one uses npm-installed claude (evidence:
    https://github.com/anthropics/claude-code/releases/tag/v2.1.15 and
    https://vibecodemoonlighter.com/posts/claude-code-npm-to-native-installer).
 3. PTY/platform tuning (`pty-cli-wrapper.ts`): register SIGTERM handler only when `process.platform !== 'win32'`;
@@ -176,23 +209,20 @@ diff a Windows-built `release/` tree against a Linux-built one (should now match
 **Exit:** `pnpm validate` green both OSes; **Steve runs** `pnpm demo:agentic-hq-cli:string-reversal` (spawns real
 Claude — ~20 s) on Windows and on a POSIX machine. This is the "it actually works" gate for route 1.
 
-### Phase 5 — Self-termination cross-platform (S — design VALIDATED live on all 3 OSes, see D2; this phase lands it)
+### Phase 5 — Self-termination cross-platform (S — design validated live on all 3 OSes, see D2)
 
-The mechanism was proven by putting a test copy of the script + SKILL.md change live temporarily: it killed real
-Claude Code sessions on Windows, macOS and Linux, including via the actual skill invocation on Windows (evidence:
-`supporting-files/02`). The test copy — full of test-harness comments and file logging — was then reverted; this
-phase re-lands it production-clean in one TDD commit:
+Land the validated design production-clean in one TDD commit (evidence, including the actual skill invocation
+killing a live Windows session: `supporting-files/02`):
 
 1. Port `tests/integration/process-control/` to the new mechanism FIRST (the red): the fake-claude fixture stops
    spawning `bash -c "… $PPID"` and instead runs the skill script via `node` with `CLAUDE_PID=<its own pid>` set in
    the child's env (mimicking Claude Code); the exit-code assertion becomes per-platform (130 POSIX / 1 Windows);
    the `.bin/tsx` spawn is fixed per D4; widen the 30 s timeout for Windows spawn speed.
-2. Recreate `skills/self-termination/scripts/kill-current-cli-process-node.cjs` from the validated reference logic
-   below (the green) — production comments only: no test-harness header, no log-file side effect (console output
-   suffices).
+2. Create `skills/self-termination/scripts/kill-current-cli-process-node.cjs` from the validated reference logic
+   below (the green) — production comments only, no log-file side effect (console output suffices).
 3. SKILL.md: point `kill-current-process-script-path` at the `.cjs` and invoke it as
-   `node "{kill-current-process-script-path}"` — explicit `node`, deterministic on every platform (the old form,
-   `{path} $PPID`, was shebang-reliant and POSIX-only).
+   `node "{kill-current-process-script-path}"` (explicit `node` — deterministic on every platform; no shebang
+   reliance).
 4. Delete the now-dead `kill-current-cli-process.sh` after a Grep-for-references pass (the fixture and older docs
    reference it), and remove it from the `executableFiles` machinery if listed.
 5. Clean up the `temp/AHQ-211/` experiment scripts (gitignored).
@@ -224,10 +254,15 @@ live kills on all three).
 2. CI: add `windows-latest` job — `corepack enable`, `pnpm install`, `pnpm validate`, plus the non-Claude
    integration tests (`build-determinism`, `publish-guards`, `bin-wrapper`, `kill-script`). Un-ignore `scripts/**`
    in `eslint.config.mjs:36` and fix fallout.
-3. Docs: README OS-support + Windows prerequisites section (winget Claude + auto-update warning, nvm-windows,
-   execution-policy guidance per report §6); CONTRIBUTING; troubleshooting entries (junction/Developer Mode,
-   Defender slowness, `npm.cmd` workaround); publish-checklist note that releases may be built on either OS once
-   Phase 3 lands (or POSIX-only until then).
+3. Docs: README OS-support + Windows Quick Start (prerequisites: Node + Claude Code only — winget Claude +
+   auto-update warning, nvm-windows, execution-policy guidance per report §6; state explicitly that Git is NOT
+   required for normal use — Git + `gh` stay dev-only in `docs/dev/setting-up-agentic-hq-for-development.md`);
+   CONTRIBUTING; troubleshooting entries (junction/Developer Mode, Defender slowness, `npm.cmd` workaround);
+   publish-checklist note that releases may be built on either OS once Phase 3 lands (or POSIX-only until then).
+4. **Git-free validation**: on a Windows environment with no Git installed (e.g. Windows Sandbox or a clean VM),
+   install Claude Code + Node only and run `agentic-hq list` + the string-reversal demo. This proves the
+   normal-user story AND Claude's PowerShell-tool mode (without Git Bash, Claude has no Bash tool) — currently
+   untested end-to-end, since this dev machine has Git Bash.
 
 **Exit:** CI green on ubuntu + windows; docs reviewed by Steve; DRAFT Confluence page can be finalized from the
 README section.
@@ -249,18 +284,14 @@ README section.
   atomic commit (Phase 4.1) with the string-reversal demo as the immediate end-to-end gate.
 - **ConPTY behavioural differences** (interactive keystroke translation, resize, flow control) only surface in real
   interactive runs: mitigate via Steve-run demo gates at Phases 4–6, on real hardware, before publish.
-- **Claude Code's own Bash tool on Windows** executes skills' ```bash blocks (e.g. `node run-workflow.cjs …` inside
-  the workflow's Claude session) under Git Bash — keep paths in SKILL.md templates double-quoted (backslashes
-  survive bash double quotes); verified grammar in Phase 4.2. If a skill needs a genuinely POSIX command, that's a
-  skill bug to fix, not a framework one.
-- **Git for Windows is NOT installed or bundled by Claude Code** (verified 2026-08-23: the winget package is a lone
-  `claude.exe`; docs call Git for Windows "optional but recommended", and without it Claude Code falls back to a
-  PowerShell tool instead of the Bash tool). On this machine Claude's Bash tool is
-  `C:\Program Files\Git\usr\bin\bash.exe` from the separate `winget install Git.Git`. Decision: make **Git for
-  Windows an explicit, documented Agentic HQ prerequisite on Windows** (Phase 6 docs; it's already in Steve's
-  install guide, and workflows need `git`/`gh` anyway) rather than supporting Claude's PowerShell-tool mode, which
-  would need `.cmd`/`.ps1` twins of every remaining `.sh` (self-termination no longer counts — its Node script is
-  shell-agnostic). Document `CLAUDE_CODE_GIT_BASH_PATH` (settings.json `env`) for non-standard Git locations.
+- **Skills must not assume Claude's Bash tool exists.** Claude Code treats Git for Windows as optional (neither
+  installs nor bundles it); with it, Claude runs ```bash blocks under Git Bash — without it, Claude has only a
+  PowerShell tool. Since Git is not a user prerequisite, shipped skill/command docs must work in both modes:
+  prefer shell-neutral instructions (`node …`, MCP tools, Claude's Write tool), keep paths double-quoted
+  (backslashes survive bash double quotes). Audit shipped docs in Phase 6; the Git-free validation (Phase 6.4) is
+  the proof. A workflow that genuinely needs `git`/`gh`/POSIX commands (e.g. the TDD demos) declares that as its
+  own requirement — not a framework prerequisite. Document `CLAUDE_CODE_GIT_BASH_PATH` (settings.json `env`) in
+  troubleshooting for non-standard Git locations.
 - **Publishing from Windows** produces no exec bits in the tarball: keep "publish from POSIX" in the checklist until
   a Windows-publish story is wanted (Phase 3 checkpoint decides).
 - **Node 22 vs 24 on Windows**: CI matrix uses the same Node versions as the ubuntu job to keep the support claim
@@ -270,6 +301,6 @@ README section.
 
 Phases 1–2 are small and immediately unblock daily Windows dev. Phase 3 is mechanical but touches the release
 contract (checkpoint). Phase 4 is the largest single piece (the D1/AHQ-210 contract change + the claude resolver).
-Phase 5 is small (the design is validated; it re-lands the script + SKILL.md alongside the ported tests). Phase 6 is breadth, not depth.
-Delivery shape (decided 2026-08-25): **one branch (`feature/ahq-211-add-windows-support`), one PR**, with phases as
+Phase 5 is small (the design is validated; it lands the script + SKILL.md alongside the ported tests). Phase 6 is
+breadth, not depth. Delivery shape: **one branch (`feature/ahq-211-add-windows-support`), one PR**, with phases as
 commit boundaries — each phase's commits keep both OSes green, in the order above (no phase depends on a later one).
