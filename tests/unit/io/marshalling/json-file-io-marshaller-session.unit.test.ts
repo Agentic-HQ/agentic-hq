@@ -5,16 +5,24 @@
  * writes command-input.json, and reads command-output.json.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
 import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { JsonFileIOMarshallerSessionFactory } from '../../../../src/io/marshalling/json-file-io-marshaller-session-factory.js';
 import { JsonFileIOMarshallerSession } from '../../../../src/io/marshalling/json-file-io-marshaller-session.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 
-const TEST_TEMP_DIR = '/tmp/test-io-marshaller';
+// A real, freshly-created directory under the OS temp dir (the mkdtemp
+// pattern from tests/unit/workflow-discovery/test-fixtures/tmpdir-fixture.ts)
+// — a hardcoded '/tmp' path is meaningless on Windows (AHQ-211)
+const TEST_TEMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ahq-io-marshaller-test-'));
+
+afterAll(() => {
+  fs.rmSync(TEST_TEMP_DIR, { recursive: true, force: true });
+});
 
 const mockWorkspace: Workspace = {
   getDisplayName: () => 'Mock',

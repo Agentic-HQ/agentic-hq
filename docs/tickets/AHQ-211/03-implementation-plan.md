@@ -353,8 +353,12 @@ evidence), so each phase commit carries its own log entry.
       Exit: `pnpm install` + `pnpm typecheck` succeed on Windows; Linux CI green.
       *(Done 2026-08-26 — see 04-implementation-details.md. NB: ci.yml triggers only on push/PR to main, so
       "Linux CI green" per phase needs a draft PR for this branch — Steve's call when to open it.)*
-- [ ] **Phase 2** — `.gitattributes` + unit-test/fixture portability → commit.
+- [x] **Phase 2** — `.gitattributes` + unit-test/fixture portability → commit.
       Exit: `pnpm validate` fully green on both OSes (190/190).
+      *(Done 2026-08-26 — see 04-implementation-details.md. Suite is 204 tests since Phase 1, all green
+      on Windows. Deviation: `.gitattributes` line 1 is `* text=auto eol=lf`, not `* text=auto` — under
+      autocrlf=true `text=auto` alone still checks out CRLF and format:check could never pass.
+      format:check goes green at the 🧑‍💻 refresh below.)*
 - [ ] 🧑‍💻 One-off working-tree refresh on this machine after the `.gitattributes` commit
       (`git rm -r --cached . && git reset --hard` — Steve runs or explicitly approves).
 - [ ] 💾 Compact — Phases 1–2 detail no longer needed in context.

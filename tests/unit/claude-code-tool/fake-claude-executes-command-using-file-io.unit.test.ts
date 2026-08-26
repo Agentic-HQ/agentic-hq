@@ -21,8 +21,11 @@ import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marsha
 import { AhqPackageImpl } from '../../../src/workflow-discovery/workspace/ahq-package-impl.js';
 import { CurrentUserWorkspaceImpl } from '../../../src/workflow-discovery/workspace/current-user-workspace-impl.js';
 
-// TypeScript executor for running .ts fixtures directly
-const TSX_EXECUTABLE = 'tsx';
+// TypeScript executor for running .ts fixtures directly: the running node
+// binary plus tsx's JS entry point — node-pty cannot spawn a bare `tsx` on
+// Windows (no PATH/PATHEXT shim resolution — CreateProcess error 2) (AHQ-211)
+const TSX_EXECUTABLE = process.execPath;
+const TSX_CLI_PATH = path.join(process.cwd(), 'node_modules', 'tsx', 'dist', 'cli.mjs');
 
 // Path to fake CLI fixture (relative to project root)
 const FAKE_CLI_PATH = path.join(
@@ -41,6 +44,7 @@ describe('MarshalledCLITool.execute(command, commandInput)', () => {
       new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
       new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace, ahqRuntimeParams, TSX_EXECUTABLE, [
+        TSX_CLI_PATH,
         FAKE_CLI_PATH,
       ]),
       currentUserWorkspace

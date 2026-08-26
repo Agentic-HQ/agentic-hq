@@ -72,3 +72,75 @@ not just installs (tests were run via `node node_modules/vitest/vitest.mjs …` 
 - `pnpm lint:check` → exit 0. `pnpm format:check` fails repo-wide (165 files) on this machine — pre-existing
   CRLF-checkout drift, the exact thing Phase 2's `.gitattributes` + working-tree refresh fixes; the four
   new/edited Phase 1 files pass a targeted `npx prettier --check`.
+
+## Phase 2 — Green `pnpm validate` on Windows (2026-08-26)
+
+**Baseline (red):** 199/204 unit tests on Windows — the 5 failures were 2× PTY
+`Cannot create process, error code: 2` (bare `tsx` spawn) and 3× hardcoded-`/tmp` assumptions. The dev
+bin wrapper failed on Windows spawning `node_modules/.bin/tsc` (bin-wrapper integration test exit 1),
+and `pnpm format:check` failed on 165 files (CRLF checkout drift under `core.autocrlf=true`).
+
+**What was done (TDD — each red confirmed for the right reason before its fix):**
+
+1. `.gitattributes` (new) — `* text=auto eol=lf`, plus explicit `eol=lf` pins for every
+   exec-bit-carrying script (`*.sh`, `bin/agentic-hq.cjs`,
+   `src/scripts/git-scripts/branching/03-squash-merge-branch/perform-squash-merge-on-branch.ts` — the
+   complete 100755 list from `git ls-files -s`). The plan's `git add --renormalize .` check ran once:
+   confirmed no-op (`git status --porcelain` empty bar the untracked `.gitattributes`; `git ls-files
+   --eol` had already shown 0 `i/crlf` entries — the index was 100% LF).
+2. Portable temp in unit tests:
+   - `tests/e2e/helpers/cli-test-helper-functions.ts` — `LOG_FILE_DIRECTORY` `'/tmp'` → `os.tmpdir()`.
+   - `tests/unit/e2e-helpers/run-cli-and-log-output.unit.test.ts` — log-path expectation from
+     `os.tmpdir()`; both commands rebuilt as `"<process.execPath>" -e "…"` strings (nothing
+     shell-specific — identical meaning under cmd.exe and /bin/sh); the cwd test passes
+     `fs.realpathSync(os.tmpdir())` (macOS tmpdir is a symlink) and asserts the child's reported cwd.
+   - `tests/unit/io/marshalling/json-file-io-marshaller-session.unit.test.ts` —
+     `'/tmp/test-io-marshaller'` → module-level `mkdtempSync(path.join(os.tmpdir(), …))` (the
+     tmpdir-fixture pattern) with `afterAll` cleanup.
+3. Unit PTY fixtures (`claude-code-tool-with-injected-io-marshaller.unit.test.ts`,
+   `fake-claude-executes-command-using-file-io.unit.test.ts`) — executable `'tsx'` →
+   `process.execPath` with `node_modules/tsx/dist/cli.mjs` prepended to the extra args (node-pty does
+   no PATH/PATHEXT shim resolution on Windows — CreateProcess error 2). This was the first real ConPTY
+   round-trip on Windows: PTY spawn → fake CLI → file I/O → reversed string read back.
+4. `bin/agentic-hq.cjs` — tsc spawn `node_modules/.bin/tsc` → `process.execPath` +
+   `node_modules/typescript/bin/tsc` (D4); catch comment updated (a missing typescript install now
+   surfaces as node's "Cannot find module" with status 1 and propagates like a compile failure).
+
+**Files touched:** `.gitattributes` (new), `tests/e2e/helpers/cli-test-helper-functions.ts`,
+`tests/unit/e2e-helpers/run-cli-and-log-output.unit.test.ts`,
+`tests/unit/io/marshalling/json-file-io-marshaller-session.unit.test.ts`,
+`tests/unit/claude-code-tool/claude-code-tool-with-injected-io-marshaller.unit.test.ts`,
+`tests/unit/claude-code-tool/fake-claude-executes-command-using-file-io.unit.test.ts`,
+`bin/agentic-hq.cjs`.
+
+**Decisions / deviations:**
+
+- **Plan deviation (flagged to Steve in-session):** the plan wrote `.gitattributes` line 1 as
+  `* text=auto`; implemented as `* text=auto eol=lf`. Under `core.autocrlf=true`, `text=auto` alone
+  still checks text files out as CRLF, so even after the working-tree refresh `pnpm format:check`
+  (prettier `endOfLine: "lf"`) would keep failing and the phase exit gate would be unreachable.
+  `eol=lf` forces LF working trees on every machine regardless of local autocrlf. Verified safe:
+  index already 100% LF; no tracked `.bat`/`.cmd`/`.ps1` that would want CRLF.
+- The five e2e files hardcoding `/tmp/e2e-….log` banner constants were left alone: every use is
+  cosmetic (timeout-banner text, no assertions or file I/O), e2e can't run on this machine, and e2e
+  helper portability is Phase 6 — the constants get aligned with the helper there.
+- In-place-edited files kept their CRLF checkout endings, so they were converted to LF (node
+  one-liner) + prettier-formatted, making the targeted format check meaningful pre-refresh. Git
+  stores LF either way under the new attributes.
+- Suite count: the plan's exit criterion says 190/190 — written before Phase 1 added 14 tests; the
+  actual full suite is 204.
+
+**Test evidence (per changed file, on this Windows machine):**
+
+- Each fix red-then-green via `pnpm exec vitest run --config vitest.unit.config.ts <file>`: run-cli
+  1-failed → 2/2; marshaller 2-failed (`:59`, `:133`) → 9/9; both PTY tests failed (error code 2) →
+  2/2. All four files re-run green after the EOL/prettier pass (13/13).
+- `bin/agentic-hq.cjs`: `pnpm test:integration:bin-wrapper` red (exit 1) → green (1/1, including a
+  cold Framework Build into dist/); re-run green after prettier reformat. `node bin/agentic-hq.cjs
+  list` renders the full workflow listing — the `agentic-hq-dev list` exit-gate check.
+- Gates: `pnpm typecheck` ✓, `pnpm lint:check` ✓, `pnpm test` **204/204** ✓ — the first fully green
+  unit suite on Windows. `pnpm format:check`: all six touched code files pass a targeted check;
+  repo-wide 159 files remain CRLF-flagged, expected until the 🧑‍💻 working-tree refresh straight after
+  this phase's commit — that refresh is what completes `pnpm validate` fully green on Windows.
+- `.gitattributes` itself was exercised by the renormalize no-op check above; its checkout effect
+  lands at the refresh.
