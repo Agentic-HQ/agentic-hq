@@ -359,8 +359,10 @@ evidence), so each phase commit carries its own log entry.
       on Windows. Deviation: `.gitattributes` line 1 is `* text=auto eol=lf`, not `* text=auto` — under
       autocrlf=true `text=auto` alone still checks out CRLF and format:check could never pass.
       format:check goes green at the 🧑‍💻 refresh below.)*
-- [ ] 🧑‍💻 One-off working-tree refresh on this machine after the `.gitattributes` commit
+- [x] 🧑‍💻 One-off working-tree refresh on this machine after the `.gitattributes` commit
       (`git rm -r --cached . && git reset --hard` — Steve runs or explicitly approves).
+      *(Done 2026-08-26, run by Steve. Working tree now all-LF; `pnpm validate` fully green on Windows
+      afterwards — typecheck ✓ lint ✓ format ✓ 204/204 ✓.)*
 - [ ] 💾 Compact — Phases 1–2 detail no longer needed in context.
 - [ ] **Phase 3** — build pipeline: junction (D3), pnpm/tsc spawns (D4), build-release portability → commit.
 - [ ] 🧑‍💻 **Phase 3 checkpoint**: diff a Windows-built `release/` tree against a Linux-built one.
