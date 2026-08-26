@@ -96,7 +96,9 @@ for every code change; run the failing state first; for each changed file, name 
 2. Same replacement in the **generated release manifest** (`build-release.cjs:243`) + ensure `scripts/postinstall.cjs`
    is staged into the release tree. (This is what fixes the npm/npx routes at the next publish.)
 3. Rewrite both `prepack` guards (`package.json:20`, `build-release.cjs:230`) as `node scripts/prepack-guard.cjs`
-   (avoids `node -e` quoting under cmd entirely).
+   (avoids `node -e` quoting under cmd entirely). The guard also refuses to pack on
+   `process.platform === 'win32'` — fail fast instead of shipping an exec-bit-less tarball (see "Publishing:
+   from Mac now, from CI soon").
 4. Tests: a unit test for the postinstall script's platform behaviour (mock `process.platform`); the existing
    `test:integration:publish-guards` covers prepack once Phase 3's spawn fix lands — until then verify manually.
 
@@ -152,8 +154,18 @@ diff a Windows-built `release/` tree against a Linux-built one (should now match
    - SKILL.md boilerplate (every workflow skill + the create-workflow scaffolder template that stamps new ones)
      shrinks to: set `skill-base-dir` and `command-input-output-files-directory = $0`, write
      `{"skill-base-dir": "{skill-base-dir}"}`, then self-terminate. The `$1`/`$2` inputs, the command-string
-     template, and the "INFO FOR YOU ONLY" relay instructions all go away. Update create-workflow's checks doc
-     (`03-run-checks-on-workflow.md`) to the new contract.
+     template, and the old verbatim-relay instructions all go away — but each SKILL.md RETAINS an
+     "INFO FOR YOU ONLY (Don't tell user)" section explaining what the skill does and why, rewritten for the new
+     contract along these lines:
+
+     > INFO FOR YOU ONLY (Don't tell user): This skill exists so the Agentic HQ engine can discover where this
+     > workflow skill is installed. You report `{skill-base-dir}` — the one fact only you know — and the engine
+     > itself constructs and runs the command for this workflow's linked TypeScript program (in
+     > `{skill-base-dir}/ts-workflow/`). This is what will make workflows in marketplace-installed plugins
+     > discoverable and runnable: wherever a plugin gets installed, you tell the engine where it landed.
+     > (Marketplace-installed plugin support is not yet completed/tested.)
+
+     Update create-workflow's checks doc (`03-run-checks-on-workflow.md`) to the new contract.
    - Engine side: command steps' `command-output-string` contract is untouched; the marshaller gains
      `readSkillOutput()` (returns the typed handshake, currently `{ skillBaseDir }`, fail-fast if the key is
      missing) and the existing `readOutput()` is renamed `readCommandOutput()` (mechanical, TS-checked; both still
@@ -258,7 +270,8 @@ live kills on all three).
    auto-update warning, nvm-windows, execution-policy guidance per report §6; state explicitly that Git is NOT
    required for normal use — Git + `gh` stay dev-only in `docs/dev/setting-up-agentic-hq-for-development.md`);
    CONTRIBUTING; troubleshooting entries (junction/Developer Mode, Defender slowness, `npm.cmd` workaround);
-   publish-checklist note that releases may be built on either OS once Phase 3 lands (or POSIX-only until then).
+   publish-checklist: publish from Mac until CI publishing lands — never from Windows (the prepack guard
+   enforces this).
 4. **Git-free validation**: on a Windows environment with no Git installed (e.g. Windows Sandbox or a clean VM),
    install Claude Code + Node only and run `agentic-hq list` + the string-reversal demo. This proves the
    normal-user story AND Claude's PowerShell-tool mode (without Git Bash, Claude has no Bash tool) — currently
@@ -292,10 +305,22 @@ README section.
   the proof. A workflow that genuinely needs `git`/`gh`/POSIX commands (e.g. the TDD demos) declares that as its
   own requirement — not a framework prerequisite. Document `CLAUDE_CODE_GIT_BASH_PATH` (settings.json `env`) in
   troubleshooting for non-standard Git locations.
-- **Publishing from Windows** produces no exec bits in the tarball: keep "publish from POSIX" in the checklist until
-  a Windows-publish story is wanted (Phase 3 checkpoint decides).
+- **Publishing from Windows** produces no exec bits in the tarball: never supported — publish from Mac now, from
+  CI soon (see "Publishing: from Mac now, from CI soon" below).
 - **Node 22 vs 24 on Windows**: CI matrix uses the same Node versions as the ubuntu job to keep the support claim
   honest.
+
+## Publishing: from Mac now, from CI soon — never from Windows
+
+Publishing packs the release tree into the npm tarball, which records each file's exec bit. NTFS has no exec
+bits, so a tarball packed on Windows ships without them and Mac/Linux consumers get non-executable files. (The
+reverse direction — Mac-packed, Windows-installed — is safe: bits present, NTFS harmlessly ignores them.)
+
+The plan: keep publishing from the Mac for now, then move the whole release process into CI (a GitHub Actions
+ubuntu job packing and publishing on tag/release — the standard practice; releases shouldn't come from anyone's
+laptop). Once that lands, the publishing machine's OS is fixed and this question disappears. Windows publishing
+is never supported; the Phase 1 prepack guard enforces it by refusing to pack on
+`process.platform === 'win32'` — fail fast instead of shipping a broken tarball.
 
 ## Estimate of shape (not a schedule)
 
@@ -304,3 +329,48 @@ contract (checkpoint). Phase 4 is the largest single piece (the D1/AHQ-210 contr
 Phase 5 is small (the design is validated; it lands the script + SKILL.md alongside the ported tests). Phase 6 is
 breadth, not depth. Delivery shape: **one branch (`feature/ahq-211-add-windows-support`), one PR**, with phases as
 commit boundaries — each phase's commits keep both OSes green, in the order above (no phase depends on a later one).
+
+## Approval
+
+**APPROVED by Steve, 2026-08-26** — plan is final; execution may begin. Any material deviation discovered during
+implementation gets raised back to Steve, not silently absorbed.
+
+## To Do List (tick off as we go)
+
+💾 = good context-compaction point (start the next chunk fresh from this plan file).
+🧑‍💻 = manual step for Steve (real Claude / real hardware — the AI cannot run these).
+**Rule: always commit (`/git:02`) BEFORE every 💾 — never compact with uncommitted work in the tree.**
+**The agent drives**: the executing agent guides Steve through this list step by step — it announces each next
+step, hands Steve the exact commands/instructions for 🧑‍💻 gates, and prompts him for `/git:02` and 💾 at the
+right moments. Steve should never have to work out what comes next.
+**Implementation log**: at the end of every phase — BEFORE that phase's commit/💾 — the agent appends that
+phase's section to `04-implementation-details.md` (what was done, files touched, decisions/deviations, test
+evidence), so each phase commit carries its own log entry.
+
+- [ ] 💾 **Commit this plan (`/git:02`), then compact before starting** — this plan file is the handoff; the
+      executing session re-reads it (and report sections it cites) rather than relying on conversation history.
+- [ ] **Phase 1** — postinstall/prepack as Node scripts (incl. win32 pack refusal) → commit.
+      Exit: `pnpm install` + `pnpm typecheck` succeed on Windows; Linux CI green.
+- [ ] **Phase 2** — `.gitattributes` + unit-test/fixture portability → commit.
+      Exit: `pnpm validate` fully green on both OSes (190/190).
+- [ ] 🧑‍💻 One-off working-tree refresh on this machine after the `.gitattributes` commit
+      (`git rm -r --cached . && git reset --hard` — Steve runs or explicitly approves).
+- [ ] 💾 Compact — Phases 1–2 detail no longer needed in context.
+- [ ] **Phase 3** — build pipeline: junction (D3), pnpm/tsc spawns (D4), build-release portability → commit.
+- [ ] 🧑‍💻 **Phase 3 checkpoint**: diff a Windows-built `release/` tree against a Linux-built one.
+- [ ] 💾 Compact — recommended before the largest phase.
+- [ ] **Phase 4** — D1/AHQ-210 contract change + D5 (one atomic commit), claude resolver, PTY tuning,
+      workspace-root normalization → commits.
+- [ ] 🧑‍💻 **Phase 4 gate**: `pnpm demo:agentic-hq-cli:string-reversal` on Windows AND a POSIX machine
+      (spawns real Claude, ~20 s each).
+- [ ] **Phase 5** — self-termination: ported tests first (red), script + SKILL.md (green), delete old `.sh`,
+      clean `temp/AHQ-211/` → commit.
+- [ ] 🧑‍💻 **Phase 5 gate**: real-claude self-termination run once per OS (kills that session — expected).
+- [ ] 💾 Compact — before the breadth work.
+- [ ] **Phase 6** — e2e helper portability, `windows-latest` CI job, README/CONTRIBUTING/troubleshooting docs →
+      commits.
+- [ ] 🧑‍💻 **Phase 6 gates**: e2e runs per OS; **Git-free validation** (Windows Sandbox / clean VM with only
+      Claude + Node: `agentic-hq list` + string-reversal); docs review.
+- [ ] **Phase 7** — raise follow-up tickets (git-scripts port, mcp-installer script, marketplace-installed
+      workflow validation, WSL smoke test).
+- [ ] PR review → squash-merge to main (`/git:03`); next publish (from Mac) delivers the npm/npx routes.
