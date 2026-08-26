@@ -136,10 +136,17 @@ fs.copyFileSync(
   path.join(releaseDir, 'bin', 'agentic-hq-prebuilt.cjs')
 );
 
-// The workflow runner + the Workflow Build it delegates to — the rest of
-// scripts/ is dev-machine tooling that must not ship
+// The workflow runner + the Workflow Build it delegates to, plus the two
+// lifecycle scripts the generated manifest invokes (postinstall + prepack
+// guard, AHQ-211) — the rest of scripts/ is dev-machine tooling that must
+// not ship
 fs.mkdirSync(path.join(releaseDir, 'scripts'));
-for (const script of ['run-workflow.cjs', 'build-workflow.cjs']) {
+for (const script of [
+  'run-workflow.cjs',
+  'build-workflow.cjs',
+  'postinstall.cjs',
+  'prepack-guard.cjs',
+]) {
   fs.copyFileSync(path.join(__dirname, script), path.join(releaseDir, 'scripts', script));
 }
 
@@ -221,27 +228,21 @@ const releaseManifest = {
     },
   },
   scripts: {
-    // Wrong-packer guard (AHQ-198): only pnpm applies
-    // publishConfig.executableFiles, so an npm-packed tarball would ship the
-    // plugin .sh files non-executable (exit 126 at runtime — AHQ-196).
+    // Release-mode guard (AHQ-198, AHQ-211): refuses win32 packing (NTFS has
+    // no exec bits) and any packer but pnpm (only pnpm applies
+    // publishConfig.executableFiles — an npm-packed tarball would ship the
+    // plugin .sh files non-executable, exit 126 at runtime — AHQ-196).
     // prepack runs on pack/publish only, never on install — and a tarball
     // publish runs no lifecycle scripts at all, so uploading the pnpm-packed
-    // tarball with npm stays unaffected.
-    prepack:
-      "node -e \"const ua=process.env.npm_config_user_agent||''; " +
-      "if(!ua.startsWith('pnpm/')){console.error('ERROR: agentic-hq must be packed/published " +
-      'with pnpm — npm silently drops publishConfig.executableFiles, so shipped plugin scripts ' +
-      'would lose their execute bits. Use: pnpm pack / pnpm publish from release/.\');process.exit(1)}"',
-    // node-pty exec-bit repair only (both pnpm and npm extract spawn-helper
-    // without its execute bit on macOS — https://github.com/pnpm/pnpm/issues/7366
-    // and AHQ-198's npx crash). Two paths because installers lay node-pty out
-    // differently: nested inside this package (npm -g), or hoisted to a
-    // sibling (npx / project-local installs, where cwd is
-    // <root>/node_modules/agentic-hq). Shipped plugin .sh files need no chmod
-    // here: their exec bits are recorded in the tarball via
-    // publishConfig.executableFiles below.
-    postinstall:
-      'chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper ../node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true',
+    // tarball with npm stays unaffected. See scripts/prepack-guard.cjs.
+    prepack: 'node scripts/prepack-guard.cjs release',
+    // node-pty spawn-helper exec-bit repair only, as a Node script so
+    // installs work on Windows too (AHQ-211). darwin-only no-op elsewhere;
+    // see scripts/postinstall.cjs (staged above) for the full story
+    // (AHQ-198). Shipped plugin .sh files need no chmod here: their exec
+    // bits are recorded in the tarball via publishConfig.executableFiles
+    // below.
+    postinstall: 'node scripts/postinstall.cjs',
   },
   dependencies: rootManifest.dependencies,
   // engines.node only — engines.pnpm is a contributor constraint; installs of

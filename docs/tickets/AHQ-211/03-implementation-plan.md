@@ -347,10 +347,12 @@ right moments. Steve should never have to work out what comes next.
 phase's section to `04-implementation-details.md` (what was done, files touched, decisions/deviations, test
 evidence), so each phase commit carries its own log entry.
 
-- [ ] 💾 **Commit this plan (`/git:02`), then compact before starting** — this plan file is the handoff; the
+- [x] 💾 **Commit this plan (`/git:02`), then compact before starting** — this plan file is the handoff; the
       executing session re-reads it (and report sections it cites) rather than relying on conversation history.
-- [ ] **Phase 1** — postinstall/prepack as Node scripts (incl. win32 pack refusal) → commit.
+- [x] **Phase 1** — postinstall/prepack as Node scripts (incl. win32 pack refusal) → commit.
       Exit: `pnpm install` + `pnpm typecheck` succeed on Windows; Linux CI green.
+      *(Done 2026-08-26 — see 04-implementation-details.md. NB: ci.yml triggers only on push/PR to main, so
+      "Linux CI green" per phase needs a draft PR for this branch — Steve's call when to open it.)*
 - [ ] **Phase 2** — `.gitattributes` + unit-test/fixture portability → commit.
       Exit: `pnpm validate` fully green on both OSes (190/190).
 - [ ] 🧑‍💻 One-off working-tree refresh on this machine after the `.gitattributes` commit
