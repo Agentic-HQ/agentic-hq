@@ -266,7 +266,8 @@ differences. The single diff was a Windows-only file: an untracked self-terminat
 (`node-kill-result-v2.log`, from the 2026-08-24 D2 validation spikes) sitting in the skill's `scripts/`
 dir, swept into staging because `build-release.cjs` cpSyncs plugins from the working tree and `*.log` is
 gitignored (so invisible to git but present on disk). Resolved: stray log deleted, rebuilt, checkpoint
-hash file regenerated — now 339 lines, matching the Mac exactly. The general hazard (staging sweeps
-untracked working-tree files, on every OS) is recorded as a Phase 7 follow-up in the plan. Side
+hash file regenerated — now 339 lines, matching the Mac exactly. Root cause closed at source (Steve's
+call, no staging-filter follow-up): the log came from a one-off D2 TEST copy of the self-termination
+script, and the plan's Phase 5 item 2 now hard-requires the production script to write no files. Side
 observation while investigating: `git status --ignored` (not plain `git status`) recurses into ignored
 node_modules and follows the framework junction into recursive-path warnings — noise, not corruption.

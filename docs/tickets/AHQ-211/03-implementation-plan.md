@@ -231,7 +231,11 @@ killing a live Windows session: `supporting-files/02`):
    the child's env (mimicking Claude Code); the exit-code assertion becomes per-platform (130 POSIX / 1 Windows);
    the `.bin/tsx` spawn is fixed per D4; widen the 30 s timeout for Windows spawn speed.
 2. Create `skills/self-termination/scripts/kill-current-cli-process-node.cjs` from the validated reference logic
-   below (the green) — production comments only, no log-file side effect (console output suffices).
+   below (the green) — production comments only, **writes NO files, ever** (console output suffices, like the
+   `.sh` it replaces). Hard requirement, proven by incident: a D2 TEST copy of this script, temporarily placed
+   in this very scripts dir, appended a `__dirname`-relative log that later shipped in the Windows-built
+   release tree (caught by the Phase 3 checkpoint — the only diff in an otherwise byte-identical cross-OS
+   build).
 3. SKILL.md: point `kill-current-process-script-path` at the `.cjs` and invoke it as
    `node "{kill-current-process-script-path}"` (explicit `node` — deterministic on every platform; no shebang
    reliance).
@@ -306,10 +310,6 @@ README section.
 - `scripts/mcp-scripts/install-or-update-sooperset-mcp-atlassian.sh` — PowerShell twin or Node port.
 - `steve-test-plugin` shebang-less scripts; utilities-plugin Jira-extractor `/tmp`+`jq` instructions.
 - WSL smoke-test + short doc section (nearly free after the `.gitattributes` fix).
-- Release staging sweeps untracked working-tree files (found by the Phase 3 checkpoint: an untracked
-  debug `.log` in a skill's `scripts/` dir shipped in the Windows-built tree; same hazard on every OS —
-  `build-release.cjs` cpSyncs plugins from the working tree). Decide: filter `*.log`/untracked files in
-  `shouldStagePluginPath`, or respect `.gitignore` during staging. (Steve may pull this forward.)
 - Marketplace-installed workflow validation: D1 deliberately preserves the capability (the skill hop still reports
   where an installed skill lives), but running a workflow from a marketplace-installed plugin has never been tested
   on any platform — needs its own ticket.
@@ -396,9 +396,10 @@ evidence), so each phase commit carries its own log entry.
       phase-3-checkpoint-windows-release-hashes.txt.)*
 - [x] 🧑‍💻 **Phase 3 checkpoint**: diff a Windows-built `release/` tree against a Linux-built one.
       *(Done 2026-08-27 via Steve's Mac (POSIX stand-in): 339/340 files byte-identical, zero content
-      mismatches. The one extra Windows file was an untracked self-termination debug log swept into
-      staging by cpSync — deleted, rebuilt, checkpoint hash file regenerated (339 lines, exact match).
-      Exposed follow-up captured in Phase 7: staging sweeps untracked working-tree files.)*
+      mismatches. The one extra Windows file was an untracked debug log left by a D2 TEST copy of the
+      self-termination script once placed in the skill's scripts dir — deleted, rebuilt, checkpoint hash
+      file regenerated (339 lines, exact match). Root cause closed at source: Phase 5 item 2 now hard-
+      requires the production script to write no files, ever. No staging-filter follow-up — Steve's call.)*
 - [ ] 💾 Compact — recommended before the largest phase.
 - [ ] **Phase 4** — D1/AHQ-210 contract change + D5 (one atomic commit), claude resolver, PTY tuning,
       workspace-root normalization → commits.
