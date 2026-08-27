@@ -82,16 +82,25 @@ export class WorkspaceImpl implements Workspace {
   }
 
   /**
-   * Return true iff rootDir equals the injected AhqPackageRoot.
+   * Return true iff rootDir and the injected AhqPackageRoot name the same directory.
    *
-   * This is a plain string comparison with no path normalisation, and that is a considered
-   * choice rather than an oversight (see AHQ-205): a symlinked invocation still compares equal,
-   * because both `process.cwd()` and the bin wrappers' `__dirname` resolve to the physical path;
-   * and the only input that would make two spellings of the same directory compare unequal — a
-   * trailing separator on `--ahq-package-root` — cannot come from either shipped bin wrapper,
-   * since both build that value with `path.join`, which never yields one.
+   * Both sides are canonicalised before comparison (AHQ-211, revising AHQ-205's plain `===`):
+   * `path.resolve` collapses trailing separators, `.`/`..` segments and separator style, and on
+   * win32 the comparison also folds case, because the filesystem is case-insensitive there and
+   * the two values are spelled by different parties (e.g. `process.cwd()` vs an
+   * `--ahq-package-root` flag) that can disagree on drive-letter case. Symlinked invocations
+   * still compare equal for the AHQ-205 reason: both `process.cwd()` and the bin wrappers'
+   * `__dirname` resolve to the physical path before they ever reach us.
    */
   isAhqPackage(): boolean {
-    return this.rootDir === this.ahqPackageRoot.getPath();
+    return (
+      canonicaliseForComparison(this.rootDir) ===
+      canonicaliseForComparison(this.ahqPackageRoot.getPath())
+    );
   }
+}
+
+function canonicaliseForComparison(directoryPath: string): string {
+  const resolved = path.resolve(directoryPath);
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
 }

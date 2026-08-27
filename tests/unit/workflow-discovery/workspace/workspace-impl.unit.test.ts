@@ -202,4 +202,61 @@ describe('WorkspaceImpl', () => {
       expect(workspace.isAhqPackage()).toBe(false);
     }
   );
+
+  // AHQ-211 Phase 4: the two compared values are spelled by different parties
+  // (process.cwd(), a --ahq-package-root flag, a config file), so isAhqPackage
+  // normalises both sides — path.resolve on every platform, plus casefolding
+  // on win32 where the filesystem is case-insensitive.
+  tmpdirTest(
+    'should treat a trailing-separator spelling of the same root as the AHQ package',
+    ({ tmpdir }) => {
+      const workspace: Workspace = new WorkspaceImpl(
+        'Test Workspace',
+        tmpdir,
+        new DefaultAhqPackageRoot(tmpdir + path.sep),
+        TEST_BUILD_MODE
+      );
+      expect(workspace.isAhqPackage()).toBe(true);
+    }
+  );
+
+  tmpdirTest.runIf(process.platform === 'win32')(
+    'should treat a differently-cased spelling of the same root as the AHQ package on win32',
+    ({ tmpdir }) => {
+      const workspace: Workspace = new WorkspaceImpl(
+        'Test Workspace',
+        tmpdir,
+        new DefaultAhqPackageRoot(tmpdir.toUpperCase()),
+        TEST_BUILD_MODE
+      );
+      expect(workspace.isAhqPackage()).toBe(true);
+    }
+  );
+
+  tmpdirTest.runIf(process.platform === 'win32')(
+    'should treat a forward-slash spelling of the same root as the AHQ package on win32',
+    ({ tmpdir }) => {
+      const workspace: Workspace = new WorkspaceImpl(
+        'Test Workspace',
+        tmpdir,
+        new DefaultAhqPackageRoot(tmpdir.replaceAll('\\', '/')),
+        TEST_BUILD_MODE
+      );
+      expect(workspace.isAhqPackage()).toBe(true);
+    }
+  );
+
+  // Casefolding must NOT leak to POSIX, where /Foo and /foo are different dirs
+  tmpdirTest.skipIf(process.platform === 'win32')(
+    'should NOT treat a differently-cased path as the AHQ package on POSIX',
+    ({ tmpdir }) => {
+      const workspace: Workspace = new WorkspaceImpl(
+        'Test Workspace',
+        tmpdir,
+        new DefaultAhqPackageRoot(tmpdir.toUpperCase()),
+        TEST_BUILD_MODE
+      );
+      expect(workspace.isAhqPackage()).toBe(false);
+    }
+  );
 });

@@ -82,7 +82,12 @@ describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
     const tool = new MarshalledCLITool(
       createMockSessionFactory(),
       mockWrapper,
-      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace),
+      // Resolver stubbed: unit tests must never run the real which-style
+      // PATH walk — it would demand a claude install on the test machine
+      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace, undefined, [], () => ({
+        executable: path.join('C:', 'resolved', 'claude.exe'),
+        argsPrefix: [],
+      })),
       currentUserWorkspace
     );
 

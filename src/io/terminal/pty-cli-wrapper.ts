@@ -58,11 +58,15 @@ export class PtyCLIWrapper implements CLIWrapper {
     const rows = process.stdout.rows || DEFAULT_TERMINAL_ROWS;
 
     const ptyProcess: IPty = spawnPty(cliCommand.executable, cliCommand.args, {
+      // Sets TERM for the child on POSIX; ConPTY ignores it on Windows
+      // (harmless — reviewed for AHQ-211 Phase 4)
       name: PTY_TERMINAL_TYPE,
       cols,
       rows,
       cwd: currentWorkingDirectory,
       env: process.env as Record<string, string>,
+      // XON/XOFF pause handling in node-pty's JS write path —
+      // platform-neutral, works the same under ConPTY (reviewed for AHQ-211)
       handleFlowControl: true,
     });
 
@@ -112,10 +116,10 @@ export class PtyCLIWrapper implements CLIWrapper {
   /**
    * Wait for the PTY process to exit, then restore terminal state.
    *
-   * Registers SIGINT/SIGTERM handlers so external signals (e.g. `kill`,
-   * kill-current-cli-process.sh) trigger graceful cleanup. On normal exit
-   * the handlers are removed and terminal state (raw mode, resize listener)
-   * is restored.
+   * Registers signal handlers so external signals (e.g. `kill`, the
+   * self-termination kill script) trigger graceful cleanup. On normal exit
+   * the handlers are removed, terminal state (raw mode, resize listener) is
+   * restored, and the pty itself is killed/disposed.
    */
   private waitForPtyExitAndCleanup(ptyProcess: IPty): Promise<void> {
     // Restore terminal state: disable raw mode, stop resize forwarding
@@ -128,20 +132,33 @@ export class PtyCLIWrapper implements CLIWrapper {
     };
 
     // Graceful cleanup on external signals (rarely triggered by the user
-    // since raw mode forwards Ctrl-C to the spawned process, not here)
+    // since raw mode forwards Ctrl-C to the spawned process, not here).
+    // SIGTERM is POSIX-only: Windows never delivers SIGTERM to a JS handler
+    // — process.kill(pid, 'SIGTERM') terminates the process unconditionally
+    // there (which the AHQ-211 self-termination design relies on), so a
+    // listener would be dead code (AHQ-211 Phase 4).
     const signalCleanup = () => {
       cleanup();
       ptyProcess.kill();
       process.exit(EXIT_CODE_SUCCESS);
     };
-    process.once('SIGINT', signalCleanup);
-    process.once('SIGTERM', signalCleanup);
+    const cleanupSignals: NodeJS.Signals[] =
+      process.platform === 'win32' ? ['SIGINT'] : ['SIGINT', 'SIGTERM'];
+    for (const signal of cleanupSignals) {
+      process.once(signal, signalCleanup);
+    }
 
     return new Promise<void>((resolve) => {
       ptyProcess.onExit(() => {
         cleanup();
-        process.removeListener('SIGINT', signalCleanup);
-        process.removeListener('SIGTERM', signalCleanup);
+        for (const signal of cleanupSignals) {
+          process.removeListener(signal, signalCleanup);
+        }
+        // Kill/dispose the pty explicitly: on Windows the ConPTY agent
+        // connection otherwise keeps this Node process alive after the child
+        // has already exited (observed on Windows 11, AHQ-211 Phase 4). Safe
+        // on POSIX too — node-pty's kill() swallows ESRCH on dead pids.
+        ptyProcess.kill();
         resolve();
       });
     });

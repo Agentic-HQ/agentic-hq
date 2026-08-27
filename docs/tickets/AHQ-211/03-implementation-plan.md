@@ -313,6 +313,11 @@ README section.
 - Marketplace-installed workflow validation: D1 deliberately preserves the capability (the skill hop still reports
   where an installed skill lives), but running a workflow from a marketplace-installed plugin has never been tested
   on any platform — needs its own ticket.
+- `--allowedTools`/`--plugin-dir` values containing spaces (from Phase 4's D5 narrowing): the CLI docs are silent
+  on quote-stripping inside these flags and the PTY spawn passes raw argv, so embedded quotes were NOT shipped —
+  they would plausibly break the permission allowlist / plugin loading on every platform. The docs-blessed
+  space-safe form (one rule per argv element) carries a positional-swallowing risk that needs a real-Claude probe
+  before adopting. Until then, paths with spaces in those flags remain a pre-existing, unchanged limitation.
 
 ## Risks & mitigations
 
@@ -400,9 +405,16 @@ evidence), so each phase commit carries its own log entry.
       self-termination script once placed in the skill's scripts dir — deleted, rebuilt, checkpoint hash
       file regenerated (339 lines, exact match). Root cause closed at source: Phase 5 item 2 now hard-
       requires the production script to write no files, ever. No staging-filter follow-up — Steve's call.)*
-- [ ] 💾 Compact — recommended before the largest phase.
-- [ ] **Phase 4** — D1/AHQ-210 contract change + D5 (one atomic commit), claude resolver, PTY tuning,
+- [x] 💾 Compact — recommended before the largest phase. *(Done — plus a second mid-Phase-4 compact.)*
+- [x] **Phase 4** — D1/AHQ-210 contract change + D5 (one atomic commit), claude resolver, PTY tuning,
       workspace-root normalization → commits.
+      *(Done 2026-08-27 in two commits — part 1: D1+D5 skill-hop handshake, shell fully removed from the TS
+      launch chain (98a9a95); part 2: claude executable resolver (D4 — PATHEXT-aware which-walk, legacy
+      npm-shim branch, lazy/injected at build() time), PTY tuning (SIGTERM handler POSIX-only, explicit
+      pty kill on exit for the ConPTY keep-alive), isAhqPackage root normalization (resolve + win32
+      casefold). D5 narrowed on evidence: only the io-dir is quoted; allowedTools/plugin-dir quoting
+      deliberately skipped → real-Claude probe raised as a Phase 7 follow-up bullet. Windows `pnpm
+      validate` + build/runner/bin integration green; the both-OS validate + demo ride the gate below.)*
 - [ ] 🧑‍💻 **Phase 4 gate**: `pnpm demo:agentic-hq-cli:string-reversal` on Windows AND a POSIX machine
       (spawns real Claude, ~20 s each).
 - [ ] **Phase 5** — self-termination: ported tests first (red), script + SKILL.md (green), delete old `.sh`,
@@ -414,5 +426,5 @@ evidence), so each phase commit carries its own log entry.
 - [ ] 🧑‍💻 **Phase 6 gates**: e2e runs per OS; **Git-free validation** (Windows Sandbox / clean VM with only
       Claude + Node: `agentic-hq list` + string-reversal); docs review.
 - [ ] **Phase 7** — raise follow-up tickets (git-scripts port, mcp-installer script, marketplace-installed
-      workflow validation, WSL smoke test).
+      workflow validation, WSL smoke test, allowedTools/plugin-dir space-path real-Claude probe).
 - [ ] PR review → squash-merge to main (`/git:03`); next publish (from Mac) delivers the npm/npx routes.

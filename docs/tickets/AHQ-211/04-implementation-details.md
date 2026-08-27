@@ -359,3 +359,83 @@ constructors, bash removal):**
   skips**, including the runner's real build-first path (pnpm install + junction + tsc).
 - Not executable here: the 8 SKILL.md copies and the .md/doc files are prose consumed by real Claude —
   their executable check is Phase 4's 🧑‍💻 string-reversal demo gate on both OSes.
+
+---
+
+## Phase 4 — Workflow runtime native on Windows (part 2: claude resolver, PTY tuning, root normalization)
+
+**Scope of this part:** plan items 2–4. Committed separately from part 1 (which landed as 98a9a95).
+
+**What was done (TDD — each item red first, for the intended reason):**
+
+1. **Claude executable resolution (item 2, D4).** New
+   `src/tools/marshalled-io-tools/claude-code/claude-executable-resolver.ts`: `resolveClaudeLaunch()`
+   does a which-style PATH walk producing `ClaudeLaunch { executable, argsPrefix }` with an ABSOLUTE
+   executable path. On win32 the walk is PATHEXT-aware (PATHEXT order honoured; built-in default
+   `.COM;.EXE;.BAT;.CMD` when the env has none; extensions lowercased so candidates match real file
+   names on case-sensitive CI filesystems too; quoted/empty PATH entries handled). On POSIX the bare
+   name must carry the execute bit (which(1) semantics). Classification: `.exe`/`.com` (winget/native
+   installs) → spawn directly, empty prefix. `.cmd`/`.bat` → the **LEGACY-ONLY npm-shim branch**
+   (deprecation comment + both evidence links in the code): locate
+   `node_modules/@anthropic-ai/claude-code/` beside the shim, read package.json `bin` (object and
+   plain-string forms), return `process.execPath` + the absolute JS entry as `argsPrefix` — pty.spawn
+   cannot run cmd.exe batch shims. Fail-fast errors carrying winget/native-installer guidance for every
+   dead end: nothing on PATH, un-spawnable find (e.g. only a `.ps1`), shim without the package beside
+   it, package without a claude `bin` entry, `bin` entry naming a missing file.
+2. **Wiring: resolution is lazy and injected.** `ClaudeCommandBuilder`'s ctor is now `(ahqPackage,
+   workspace, executable?, extraArgs = [], resolveLaunch = resolveClaudeLaunch)`. `executable`
+   undefined (the production default — `DefaultClaudeCodeTool` is unchanged) means "resolve claude when
+   `build()` runs"; naming an executable (the fake-claude fixture seam) bypasses resolution entirely.
+   Resolution runs per `build()` call, never at construction, so listing/discovery paths and unit tests
+   on machines with no claude install never walk PATH — pinned by a "not invoked at construction" test,
+   and every builder unit test injects a stub resolver. The resolver's `argsPrefix` lands before all
+   other args (before `extraArgs`, plugin flags, allowedTools, positional).
+3. **PTY tuning (item 3).** `pty-cli-wrapper.ts`: the SIGTERM cleanup handler is registered on POSIX
+   only — Windows never delivers SIGTERM to a JS handler (`process.kill(pid, 'SIGTERM')` terminates
+   unconditionally there, which the Phase 5 self-termination design relies on), so the listener was
+   dead code. On normal exit the pty is now explicitly `kill()`ed: on Windows the ConPTY agent
+   connection otherwise keeps the Node process alive after the child has exited (observed on this
+   machine); safe on POSIX since node-pty's kill() swallows ESRCH. `name`/`handleFlowControl` reviewed
+   per plan and KEPT, each now documented in place (`name` sets TERM on POSIX, ignored by ConPTY;
+   `handleFlowControl` is JS-side XON/XOFF, platform-neutral). New
+   `tests/unit/io/terminal/pty-cli-wrapper.unit.test.ts` (node-pty mocked): kill-on-exit, SIGINT
+   handler add/remove, win32 no-SIGTERM, POSIX SIGTERM add/remove.
+4. **Workspace-root normalization (item 4).** `workspace-impl.ts` `isAhqPackage()` compares
+   `path.resolve`d paths, casefolded on win32 (NTFS is case-insensitive and the two values are spelled
+   by different parties — cwd vs flag — that can disagree on drive-letter case, trailing separators,
+   slash style). AHQ-205's plain-`===` comment replaced with the new rationale; POSIX is pinned by test
+   NOT to casefold (`/Foo` ≠ `/foo` there).
+
+**Decisions / deviations:** none against the plan's item 2–4 spec. One placement judgment call: the
+resolver is builder-owned and injected rather than living in the PTY wrapper — the wrapper stays
+claude-agnostic (its SRP) and "assemble the executable" was already the builder's job.
+
+**Test evidence (per changed file, on this Windows machine; all unit runs via
+`pnpm vitest run --config vitest.unit.config.ts`):**
+
+- Resolver: new test file red at import (module absent) → **14 green + 1 POSIX-only skip** (the
+  exec-bit test needs a host where the bit exists). Tests build their own PATH from tmpdirs and inject
+  env + platform — no dependence on a real claude install, win32 branch testable on POSIX CI and vice
+  versa.
+- Builder: 3 red (injected resolver ignored — executable stayed the `'claude'` literal) → green across
+  the rewritten suite (stub resolver everywhere, new resolution describe block).
+- PTY wrapper: 2 red (no kill-on-exit; SIGTERM registered on win32) → 3 green + 1 POSIX-only skip.
+  The two real-PTY fake-claude unit suites re-run green with kill-on-exit active — the actual-ConPTY
+  regression check for the disposal change.
+- Workspace: 3 red (trailing-separator, different-case and forward-slash spellings all compared
+  unequal under plain `===`) → green + 1 POSIX-only skip (the no-casefold pin).
+- Gates: `pnpm validate` fully green — typecheck ✓, lint ✓, format ✓ (scope check listed exactly the 3
+  in-progress files; prettier-fixed only those), **239 unit tests passed + 3 POSIX-only skips** (242
+  defined; was 216 — +26 new: 15 resolver, 4 PTY, 4 workspace, 3 builder-resolution).
+- Integration (build/runner/bin, no Claude spawns): **17 passed + 2 POSIX-only skips** — identical to
+  the part 1 baseline, so no regression in the ported surface.
+- **Process mistake, logged honestly:** before the subset run above I ran the FULL integration config
+  by accident, which also executed the real-Claude, Jira and POSIX-kill-script files that are e2e/
+  Phase-5/credentials-gated and are supposed to be Steve-approved before running (memory rule). Result
+  18 passed / 3 failed / 2 skipped, ~8 min. The 3 failures are all in those extra files (the safe
+  subset re-ran 17/17 green). Silver lining, with a which-test caveat: session-dir forensics show two
+  real-Claude sessions completed the full file-I/O round trip (`command-output.json` written) during
+  that run, and the one extra test that PASSED is consistent with
+  `claude-executes-command-using-file-io.integration.test.ts` — whose tool is pure production wiring —
+  meaning real Claude launched through the new resolver → absolute-path pty.spawn chain on Windows and
+  returned the reversed string. The 🧑‍💻 demo gate remains the deliberate proof.
