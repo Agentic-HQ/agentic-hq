@@ -33,7 +33,7 @@
     "format:fix": "prettier . --write",
     "// demo:agentic-hq-cli": "Uses 'node bin/agentic-hq.cjs' (the agentic-hq-dev wrapper file) directly — self-contained, no global PATH dependency (same as the e2e test)",
     "// DEMO: STRING REVERSAL": "Two ways to run the string reversal demo (override the built-in default with -- --string-to-reverse='your string')",
-    "demo:agentic-hq-cli:string-reversal": "node bin/agentic-hq.cjs --workflow-command-supplier=/agentic-hq-demos-plugin:string-reversal",
+    "demo:agentic-hq-cli:string-reversal": "node bin/agentic-hq.cjs reversal",
     "// demo:plugin-direct": "Runs the workflow program directly via the shared runner (Framework Build (1) + build-first Workflow Build (2)), bypassing the agentic-hq CLI. The directory options are relative on purpose — cmd.exe has no $PWD; the runner resolves them against the working directory (AHQ-211).",
     "demo:plugin-direct:string-reversal": "pnpm build:framework && node scripts/run-workflow.cjs --build-mode=build-first --ahq-package-root=. --workflow-dir=.agentic-hq/plugins/agentic-hq-demos-plugin/skills/string-reversal/ts-workflow --workflow-js=dist/string-reversal-cli.js",
     "demo:plugin-direct:math-workflow": "pnpm build:framework && node scripts/run-workflow.cjs --build-mode=build-first --ahq-package-root=. --workflow-dir=.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow --workflow-js=dist/math-workflow-cli.js",

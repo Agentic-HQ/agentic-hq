@@ -218,8 +218,17 @@ diff a Windows-built `release/` tree against a Linux-built one (should now match
    `handleFlowControl`/`name` options on win32.
 4. `workspace-impl.ts:94`: normalize roots (`path.resolve` + casefold on win32) before equality.
 
-**Exit:** `pnpm validate` green both OSes; **Steve runs** `pnpm demo:agentic-hq-cli:string-reversal` (spawns real
-Claude — ~20 s) on Windows and on a POSIX machine. This is the "it actually works" gate for route 1.
+**Exit (RESEQUENCED 2026-08-27):** `pnpm validate` green both OSes; **Steve runs**
+`pnpm demo:agentic-hq-cli:string-reversal` (spawns real Claude) on Windows and on a POSIX machine — the
+"it actually works" gate for route 1. The demo half is **deferred into the Phase 5 gate**: every spawned session
+ends by self-terminating, and on Windows the old `.sh` kill script cannot work (under Git Bash `$PPID` sees
+MSYS's fake process tree — the CLI parent shows as PID 1), so the demo can only complete cleanly once Phase 5's
+node kill script lands. The 2026-08-27 Windows attempt proved everything up to that link end-to-end — resolver →
+absolute `claude.exe` → PTY → D1 handshake → engine-built argv → runner → workflow executed and printed the
+reversed string, exit 0 — with two extra findings: (a) the demo script itself had rotted since AHQ-106 (it still
+passed the removed `--workflow-command-supplier` flag) — fixed to `node bin/agentic-hq.cjs reversal`; (b)
+node-pty prints a harmless-but-ugly ConPTY `AttachConsole failed` stderr trace when the AHQ-211 kill-on-exit
+pokes an already-exited pty → added as a Phase 5 item.
 
 ### Phase 5 — Self-termination cross-platform (S — design validated live on all 3 OSes, see D2)
 
@@ -242,6 +251,11 @@ killing a live Windows session: `supporting-files/02`):
 4. Delete the now-dead `kill-current-cli-process.sh` after a Grep-for-references pass (the fixture and older docs
    reference it), and remove it from the `executableFiles` machinery if listed.
 5. Clean up the `temp/AHQ-211/` experiment scripts (gitignored).
+6. Quiet the node-pty ConPTY `AttachConsole failed` stderr noise: the AHQ-211 kill-on-exit in
+   `pty-cli-wrapper.ts` kills a pty whose child has already exited, and node-pty's
+   `conpty_console_list_agent` helper then crashes noisily (observed at the end of the otherwise-clean
+   2026-08-27 Windows demo attempt; exit code unaffected). Find a disposal that keeps the ConPTY
+   keep-alive fix without the noise.
 
 Validated reference logic (exactly this ran live on Windows, macOS and Linux, 2026-08-24):
 
@@ -259,7 +273,8 @@ process.kill(pid, signal);
 
 **Exit:** `test:integration:kill-script` (fake Claude — fast) passes on Windows and Linux CI;
 `test:integration:real-claude-self-termination*` run by **Steve** once per OS (informally already proven by the
-live kills on all three).
+live kills on all three); **plus the deferred Phase 4 gate: `pnpm demo:agentic-hq-cli:string-reversal` on
+Windows AND a POSIX machine, and `pnpm validate` green on both.**
 
 ### Phase 6 — Test-suite portability, CI, docs (M)
 
@@ -415,11 +430,18 @@ evidence), so each phase commit carries its own log entry.
       casefold). D5 narrowed on evidence: only the io-dir is quoted; allowedTools/plugin-dir quoting
       deliberately skipped → real-Claude probe raised as a Phase 7 follow-up bullet. Windows `pnpm
       validate` + build/runner/bin integration green; the both-OS validate + demo ride the gate below.)*
-- [ ] 🧑‍💻 **Phase 4 gate**: `pnpm demo:agentic-hq-cli:string-reversal` on Windows AND a POSIX machine
-      (spawns real Claude, ~20 s each).
+- [x] 🧑‍💻 **Phase 4 gate** — RESEQUENCED into the Phase 5 gate (2026-08-27): the demo's spawned sessions end
+      in self-termination, which on Windows needs Phase 5's node kill script — the old `.sh` sees $PPID = 1
+      under Git Bash. The Windows attempt proved the whole Phase 4 chain end-to-end regardless (resolver →
+      absolute claude.exe → PTY → handshake → engine argv → runner → reversed string printed, exit 0), and
+      caught two things: the demo script had used the AHQ-106-removed `--workflow-command-supplier` flag
+      since then (fixed to `node bin/agentic-hq.cjs reversal`), and the kill-on-exit ConPTY stderr noise
+      (now Phase 5 item 6).
 - [ ] **Phase 5** — self-termination: ported tests first (red), script + SKILL.md (green), delete old `.sh`,
-      clean `temp/AHQ-211/` → commit.
-- [ ] 🧑‍💻 **Phase 5 gate**: real-claude self-termination run once per OS (kills that session — expected).
+      clean `temp/AHQ-211/`, quiet the ConPTY kill-on-exit noise → commit.
+- [ ] 🧑‍💻 **Phase 5 gate**: real-claude self-termination run once per OS (kills that session — expected),
+      PLUS the deferred Phase 4 demo gate — `pnpm demo:agentic-hq-cli:string-reversal` on Windows AND a
+      POSIX machine (spawns real Claude, ~20 s each) — and `pnpm validate` green on both OSes.
 - [ ] 💾 Compact — before the breadth work.
 - [ ] **Phase 6** — e2e helper portability, `windows-latest` CI job, README/CONTRIBUTING/troubleshooting docs →
       commits.
