@@ -6,7 +6,7 @@
  * command: reading command-input.json, reversing the string, and writing the result to command-output.json.
  * This is TEST SCAFFOLDING - it replaces real Claude in unit tests.
  *
- * USAGE: tsx fake-claude-cli.reverses-a-string-using-files.fixture.ts [--plugin-dir=...] "<command> <tempDir>"
+ * USAGE: tsx fake-claude-cli.reverses-a-string-using-files.fixture.ts [--plugin-dir=...] '<command> "<tempDir>"'
  *
  * Uses Commander for argument parsing, just like the real Claude CLI handles flags
  * (e.g. --plugin-dir) separately from the positional prompt/command argument.
@@ -57,8 +57,13 @@ if (!combinedPromptString) {
   process.exit(1);
 }
 
-// Parse the combined string like real Claude does
-const [, commandInputOutputFilesDirectory] = combinedPromptString.split(' ');
+// Parse the combined string like real Claude does: everything after the first
+// space is the io-directory, double-quoted since AHQ-211 D5 (Windows paths can
+// contain spaces, so a plain space-split would truncate it) — strip the quotes
+const firstSpaceIndex = combinedPromptString.indexOf(' ');
+const rawDirectoryArgument =
+  firstSpaceIndex === -1 ? '' : combinedPromptString.slice(firstSpaceIndex + 1);
+const commandInputOutputFilesDirectory = rawDirectoryArgument.replace(/^"|"$/g, '');
 
 console.log(`Fake Claude CLI (fake-claude-cli.reverses-a-string-using-files.fixture.ts)`);
 console.log(`  Received combined prompt string: "${combinedPromptString}"`);

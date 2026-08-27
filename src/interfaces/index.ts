@@ -15,6 +15,7 @@ export type { IOMarshallerSession } from './io-marshaller-session.js';
 export type { CLIWrapper } from './cli-wrapper.js';
 export type { CLICommand } from './cli-command.js';
 export type { MarshalledIOCLICommandBuilder } from './marshalled-io-cli-command-builder.js';
+export type { SkillOutput } from './skill-output.js';
 export type { Tool } from './tool.js';
 export type { WorkflowCommandBuilder } from './workflow-command-builder.js';
 export type { WorkflowCommand } from './workflow-command.js';

@@ -1,5 +1,5 @@
 ---
-description: Returns the command that runs this workflow's TypeScript program via the shared agentic-hq workflow runner
+description: Reports where this workflow skill is installed so the Agentic HQ engine can build and run this workflow's TypeScript program
 disable-model-invocation: true
 ---
 
@@ -7,11 +7,7 @@ disable-model-invocation: true
 
 Set:
 skill-base-dir = the skill base directory you were provided with when you ran this skill.
-skill-id = the final path segment of {skill-base-dir} (this skill's directory name, which is its skill id)
-workflow-program-name = {skill-id}-cli
 command-input-output-files-directory = $0
-build-mode = $1
-ahq-package-root = $2
 
 List the variable names and values for the user, and explain where they came from.
 
@@ -21,16 +17,16 @@ Write to: {command-input-output-files-directory}/command-output.json
 
 ```json
 {
-  "command-output-string": "node \"{ahq-package-root}/scripts/run-workflow.cjs\" --ahq-package-root=\"{ahq-package-root}\" --build-mode={build-mode} --workflow-dir=\"{skill-base-dir}/ts-workflow\" --workflow-js=dist/{workflow-program-name}.js"
+  "skill-base-dir": "{skill-base-dir}"
 }
 ```
 
-INFO FOR YOU ONLY (Don't tell user): The command above invokes the shared workflow runner with the values you were handed — you relay `build-mode` and `ahq-package-root` VERBATIM without interpreting or acting on them; `skill-base-dir` names this workflow's own `ts-workflow/` directory, and `skill-id` (its final path segment) names this workflow's TypeScript program by convention: `src/{skill-id}-cli.ts`, compiled to `dist/{skill-id}-cli.js`. The runner is the only code that acts on `build-mode`: `build-first` runs the Workflow Build for THIS workflow (pnpm install → symlink node_modules/agentic-hq → tsc into ts-workflow/dist/) and then runs it; `prebuilt` just runs the already-built dist/. The runner never builds the agentic-hq framework itself. Everything runs under plain node — no environment variables.
+INFO FOR YOU ONLY (Don't tell user): This skill exists so the Agentic HQ engine can discover where this workflow skill is installed. You report `{skill-base-dir}` — the one fact only you know — and the engine itself constructs and runs the command for this workflow's linked TypeScript program (in `{skill-base-dir}/ts-workflow/`). This is what will make workflows in marketplace-installed plugins discoverable and runnable: wherever a plugin gets installed, you tell the engine where it landed. (Marketplace-installed plugin support is not yet completed/tested.)
 
 Tell the user:
 - What file you have written the output to
 - The contents of the file
-- What the file contents will be used to do: construct the command used to run the TypeScript program that runs the full workflow.
+- What the file contents will be used to do: tell the Agentic HQ engine where this workflow skill is installed, so the engine can construct and run the command for this workflow's TypeScript program.
 
 ## Self-Terminate
 

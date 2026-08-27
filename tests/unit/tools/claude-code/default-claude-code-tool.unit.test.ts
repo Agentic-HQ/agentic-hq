@@ -51,7 +51,8 @@ function fakeSession(): IOMarshallerSession {
   return {
     getMarshallingId: vi.fn().mockReturnValue('mock-marshalling-id'),
     write: vi.fn(),
-    readOutput: vi.fn().mockReturnValue('mock-output'),
+    readCommandOutput: vi.fn().mockReturnValue('mock-output'),
+    readSkillOutput: vi.fn().mockReturnValue({ skillBaseDir: '/mock/skills/my-workflow' }),
   };
 }
 
@@ -84,17 +85,13 @@ describe('DefaultClaudeCodeTool', () => {
 
     expect(mySessionFactory.create).toHaveBeenCalledTimes(1);
     expect(mySession.write).toHaveBeenCalledWith('my-input');
-    expect(mySession.readOutput).toHaveBeenCalledTimes(1);
+    expect(mySession.readCommandOutput).toHaveBeenCalledTimes(1);
     expect(result).toBe('mock-output');
 
-    // The builder is wired with the runtime params drawn from the
-    // CompositionRoot (AHQ-197) so every Claude launch carries the relay
+    // The builder is wired with the two workspaces only — the AHQ-197 relay
+    // of runtime params across the skill hop was deleted by AHQ-210/AHQ-211 D1
     expect(ClaudeCommandBuilder).toHaveBeenCalledTimes(1);
-    expect(ClaudeCommandBuilder).toHaveBeenCalledWith(
-      myAhqPackage,
-      myCurrentUserWorkspace,
-      myRuntimeParams
-    );
+    expect(ClaudeCommandBuilder).toHaveBeenCalledWith(myAhqPackage, myCurrentUserWorkspace);
 
     expect(myCliWrapper.run).toHaveBeenCalledTimes(1);
     const [builtCliCommand, runCwd] = vi.mocked(myCliWrapper.run).mock.calls[0]! as [

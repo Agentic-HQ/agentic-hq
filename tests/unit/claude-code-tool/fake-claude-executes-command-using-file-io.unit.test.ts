@@ -43,7 +43,7 @@ describe('MarshalledCLITool.execute(command, commandInput)', () => {
     const tool = new MarshalledCLITool(
       new JsonFileIOMarshallerSessionFactory(currentUserWorkspace),
       new PtyCLIWrapper(),
-      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace, ahqRuntimeParams, TSX_EXECUTABLE, [
+      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace, TSX_EXECUTABLE, [
         TSX_CLI_PATH,
         FAKE_CLI_PATH,
       ]),

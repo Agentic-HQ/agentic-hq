@@ -3,7 +3,8 @@
  *
  * Verifies that DefaultWorkflowCommand:
  * 1. Implements the WorkflowCommand interface
- * 2. Creates a CLICommand internally with 'bash -c <commandString>'
+ * 2. Spawns the executable + args directly as a CLICommand — no shell of any
+ *    kind wraps the launch (`bash -c` was deleted by AHQ-210/AHQ-211 D1)
  * 3. Executes via CLIWrapper with the correct working directory
  */
 import { describe, expect, it, vi } from 'vitest';
@@ -23,7 +24,8 @@ describe('DefaultWorkflowCommand', () => {
   it('should implement the WorkflowCommand interface', () => {
     const mockWrapper = createMockCliWrapper();
     const command: WorkflowCommand = new DefaultWorkflowCommand(
-      'tsx run-workflow.ts',
+      process.execPath,
+      ['run-workflow.cjs', '--build-mode=prebuilt'],
       mockWrapper,
       '/mock/project-root'
     );
@@ -31,10 +33,11 @@ describe('DefaultWorkflowCommand', () => {
     expect(typeof command.execute).toBe('function');
   });
 
-  it('should execute via CLIWrapper with bash -c and the command string', async () => {
+  it('should execute the executable and args directly via CLIWrapper (no shell)', async () => {
     const mockWrapper = createMockCliWrapper();
     const command = new DefaultWorkflowCommand(
-      'tsx run-workflow.ts',
+      process.execPath,
+      ['run-workflow.cjs', '--build-mode=prebuilt'],
       mockWrapper,
       '/mock/project-root'
     );
@@ -44,21 +47,25 @@ describe('DefaultWorkflowCommand', () => {
     expect(mockWrapper.run).toHaveBeenCalledTimes(1);
     const call = vi.mocked(mockWrapper.run).mock.calls[0]!;
     const cliCommand = call[0] as CLICommand;
-    expect(cliCommand.executable).toBe('bash');
-    expect(cliCommand.args).toEqual(['-c', 'tsx run-workflow.ts']);
+    expect(cliCommand.executable).toBe(process.execPath);
+    expect(cliCommand.args).toEqual(['run-workflow.cjs', '--build-mode=prebuilt']);
     expect(call[1]).toBe('/mock/project-root');
   });
 
-  it('should pass the command string exactly as provided (no modification)', async () => {
+  it('should pass args exactly as provided — spaces need no quoting in an argv array', async () => {
     const mockWrapper = createMockCliWrapper();
-    const commandStr = "tsx run-workflow.ts '--arg1=value' '--name=hello world'";
-    const command = new DefaultWorkflowCommand(commandStr, mockWrapper, '/other/dir');
+    const args = [
+      'run-workflow.cjs',
+      '--workflow-dir=C:\\path with spaces\\ts-workflow',
+      '--name=hello world',
+    ];
+    const command = new DefaultWorkflowCommand(process.execPath, args, mockWrapper, '/other/dir');
 
     await command.execute();
 
     const call = vi.mocked(mockWrapper.run).mock.calls[0]!;
     const cliCommand = call[0] as CLICommand;
-    expect(cliCommand.args).toEqual(['-c', commandStr]);
+    expect(cliCommand.args).toEqual(args);
     expect(call[1]).toBe('/other/dir');
   });
 });

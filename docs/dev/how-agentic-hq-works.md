@@ -35,7 +35,7 @@ flowchart TB
     end
 
     subgraph Resolve["Skill resolution (one Claude call)"]
-        Skill["SKILL.md returns the shared runner command:<br/>run-workflow.cjs --build-mode --ahq-package-root<br/>--workflow-dir --workflow-js"]
+        Skill["SKILL.md reports skill-base-dir;<br/>engine builds the runner argv natively:<br/>run-workflow.cjs --build-mode --ahq-package-root<br/>--workflow-dir --workflow-js"]
     end
 
     subgraph Runner["Shared workflow runner (scripts/run-workflow.cjs)"]
@@ -107,7 +107,7 @@ math-workflow:
 └── skills/
     └── math-workflow/
         ├── ahq-workflow.json    ← workflow metadata (shortId, description, ...)
-        ├── SKILL.md             ← entry point that returns the shared-runner command
+        ├── SKILL.md             ← entry point that reports the skill's install dir (AHQ-210)
         └── ts-workflow/         ← the workflow's TS sub-project (standard file set, see "Builds" below)
             ├── src/math-workflow-cli.ts   ← chains the three commands
             ├── package.json     ← commander + dev typescript/@types/node; NO agentic-hq dependency
@@ -256,32 +256,38 @@ it discovered the workflow under** — where it lives *is* its mode:
 | your local workspace (`<cwd>/.agentic-hq/plugins/…`) | `build-first` — a workspace holds source |
 | the AHQ package (`<ahq-package-root>/.agentic-hq/plugins/…`) | the binary's mode: `build-first` under `agentic-hq-dev`, `prebuilt` under the npm-installed `agentic-hq` |
 
-It is relayed verbatim across the Claude/skill hop (`$1`), forwarded to the
-workflow program, and acted on by exactly one piece of code — the shared
-runner. No literal mode appears in any `SKILL.md`; no environment variables are
-involved. (In code: `Workspace.getBuildMode()`, carried on each discovered
-`AhqWorkflow`, modelled by the `BuildMode` value object.)
+It never crosses the Claude/skill hop (AHQ-210 deleted that relay): the
+engine puts it directly on the shared runner's command line, the runner
+forwards it to the workflow program, and it is acted on by exactly one piece
+of code — the shared runner. No literal mode appears in any `SKILL.md`; no
+environment variables are involved. (In code: `Workspace.getBuildMode()`,
+carried on each discovered `AhqWorkflow`, modelled by the `BuildMode` value
+object.)
 
 ### The shared workflow runner (`scripts/run-workflow.cjs`)
 
-Every workflow's `SKILL.md` is **byte-identical**: it takes `skill-id` from the
-final path segment of the `skill-base-dir` Claude Code hands every skill (the
-skill directory name, which is the `skillId` in `ahq-workflow.json`), names the
-program by the standard convention `workflow-program-name = {skill-id}-cli`
-(`src/<skill-id>-cli.ts`, compiled to `dist/<skill-id>-cli.js`), and returns the
-same command:
+Every workflow's `SKILL.md` is **byte-identical**: it reports back exactly one
+fact — the `skill-base-dir` Claude Code hands every skill, i.e. where the
+skill is installed (its directory name is the `skillId` in
+`ahq-workflow.json`). The engine does the rest natively (AHQ-210): it
+sanity-checks the reported directory (exists + contains `ts-workflow/`),
+derives `skill-id` from its final path segment, names the program by the
+standard convention `src/<skill-id>-cli.ts` → `dist/<skill-id>-cli.js`, and
+spawns the shared runner directly as an argv array — no command string ever
+exists and no shell is involved on any platform:
 
 ```
-node "{ahq-package-root}/scripts/run-workflow.cjs" --ahq-package-root="{ahq-package-root}" --build-mode={build-mode} \
-     --workflow-dir="{skill-base-dir}/ts-workflow" --workflow-js=dist/{workflow-program-name}.js
+<node> <ahq-package-root>/scripts/run-workflow.cjs --ahq-package-root=<root> --build-mode=<mode> \
+       --workflow-dir=<skill-base-dir>/ts-workflow --workflow-js=dist/<skill-id>-cli.js
 ```
 
-`--ahq-package-root` and `--build-mode` are the two chain variables, relayed
-verbatim and forwarded on to the workflow program; `--workflow-dir` (from the
-skill's own directory) and `--workflow-js` (relative to it) are runner-local.
-All four are required, with loud errors and no defaults. `build-first` → run
-the Workflow Build on `--workflow-dir`, then run; `prebuilt` → run. The runner
-never builds the framework and never executes from the staged release tree.
+`--ahq-package-root` and `--build-mode` come straight from the engine's own
+runtime params and are forwarded on to the workflow program; `--workflow-dir`
+(from the reported skill dir) and `--workflow-js` (relative to it) are
+runner-local. All four are required, with loud errors and no defaults.
+`build-first` → run the Workflow Build on `--workflow-dir`, then run;
+`prebuilt` → run. The runner never builds the framework and never executes
+from the staged release tree.
 
 ### How the compiled workflow finds the framework
 
@@ -405,18 +411,21 @@ End-to-end trace of `agentic-hq-dev math -- --input-number=11` from the clone:
    `builder.build("/agentic-hq-demos-plugin:math-workflow", BuildMode.BUILD_FIRST, ["--input-number=11"])`
    — `build-first` because math-workflow was discovered under the AHQ package
    and this binary's mode is `build-first`.
-2. **Skill resolution (two-call pattern)** — The builder calls
-   `tool.execute("/agentic-hq-demos-plugin:math-workflow", ...)`, a Claude
-   session whose command line ends `<io-dir> build-first <repo>`. Claude reads
+2. **Skill resolution (launch handshake)** — The builder calls
+   `tool.executeSkillLaunch("/agentic-hq-demos-plugin:math-workflow")`, a
+   Claude session whose command line ends with the double-quoted io-directory
+   (the only value that crosses the hop). Claude reads
    [`SKILL.md`](../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/SKILL.md),
-   which relays those two values verbatim into a `command-output.json` holding
-   the **shared runner command**:
-   `node "<repo>/scripts/run-workflow.cjs" --ahq-package-root="<repo>" --build-mode=build-first --workflow-dir="<skill>/ts-workflow" --workflow-js=dist/math-workflow-cli.js`.
-3. **Run the TS workflow** — That command is executed via the same PTY
-   wrapper, with the original `--input-number=11` appended. The runner sees
-   `build-first`, runs the Workflow Build (2) in `<skill>/ts-workflow/`
-   (install → link `node_modules/agentic-hq → <repo>` → `tsc` →
-   `dist/math-workflow-cli.js`), then runs
+   which writes a `command-output.json` holding the one fact only that hop
+   knows: `{"skill-base-dir": "<skill>"}` (AHQ-210).
+3. **Run the TS workflow** — The engine sanity-checks `<skill>`, derives
+   `skill-id` from its directory name, and spawns the shared runner directly
+   as an argv array via the same PTY wrapper, with the original
+   `--input-number=11` appended:
+   `node <repo>/scripts/run-workflow.cjs --ahq-package-root=<repo> --build-mode=build-first --workflow-dir=<skill>/ts-workflow --workflow-js=dist/math-workflow-cli.js --input-number=11`.
+   The runner sees `build-first`, runs the Workflow Build (2) in
+   `<skill>/ts-workflow/` (install → link `node_modules/agentic-hq → <repo>` →
+   `tsc` → `dist/math-workflow-cli.js`), then runs
    `node dist/math-workflow-cli.js --build-mode=build-first --ahq-package-root=<repo> --input-number=11`.
 4. **Three chained Claude calls** — Inside
    [`math-workflow-cli.ts`](../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-cli.ts),
@@ -443,8 +452,8 @@ End-to-end trace of `agentic-hq-dev math -- --input-number=11` from the clone:
    which reads the input, does the math, and writes
    `command-output.json`; the wrapper reads that file and returns the value
    as a string. Each of those Claude sessions is launched with the same
-   `<io-dir> build-first <repo>` relay on its command line (commands ignore
-   it; they read `command-input.json`).
+   double-quoted `"<io-dir>"` on its command line — the only value any hop
+   receives (AHQ-210/AHQ-211).
 
 5. **Result** — `Output number: 5`.
 

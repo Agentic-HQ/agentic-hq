@@ -49,7 +49,8 @@ can also be distributed via Claude Code Plugin Marketplaces.
 ### Skill
 
 The entry-point launcher file (`SKILL.md`) for a workflow. Calling a skill
-returns the shell command that runs the workflow's TypeScript program.
+reports where the skill is installed (`skill-base-dir`); the Agentic HQ engine
+then constructs and runs the workflow's TypeScript program itself (AHQ-210).
 
 > Note: in current Claude Code terminology, "skill" has replaced "command" in
 > some places. AHQ docs often use "skill" for the `SKILL.md` entry-point and
@@ -99,8 +100,9 @@ workspace are the same directory — see *The two roots* in
 
 The path of the [AHQ package](#ahq-package) — one of the system's two roots.
 Flows visibly as the `--ahq-package-root=` option from the bin wrapper, through
-the CLI and `AhqRuntimeParams`, and verbatim across the Claude/skill hop to the
-shared runner. It is **required, with no default**, so a missing value fails
+the CLI and `AhqRuntimeParams`, straight onto the shared runner's command line
+(it never crosses the Claude/skill hop — AHQ-210 deleted that relay). It is
+**required, with no default**, so a missing value fails
 loudly instead of silently resolving to the wrong directory. Modelled by the
 `AhqPackageRoot` value object.
 
@@ -233,16 +235,19 @@ root it discovered the workflow under — a [local workspace](#local-workspace)
 workflow is always `build-first` (a workspace holds source); a workflow bundled
 in the [AHQ package](#ahq-package) inherits the binary's mode (`build-first`
 under `agentic-hq-dev`, `prebuilt` under the npm-installed `agentic-hq`).
-Relayed verbatim across the Claude/skill hop (as `$1`) and forwarded to the
-workflow program; only the shared runner acts on it. Modelled by the
+Passed by the engine directly on the shared runner's command line (it never
+crosses the Claude/skill hop — AHQ-210 deleted that relay) and forwarded to
+the workflow program; only the shared runner acts on it. Modelled by the
 `BuildMode` value object.
 
 ### Shared workflow runner (`scripts/run-workflow.cjs`)
 
-The one script every workflow's `SKILL.md` returns a call to, with four
-options: `--build-mode`, `--ahq-package-root` (the two chain variables, relayed
-verbatim), `--workflow-dir` (the workflow's `ts-workflow/`, from the skill's own
-directory) and `--workflow-js` (the compiled entry file, relative to it). The
+The one script every workflow launches through. The engine spawns it natively
+(AHQ-210: the `SKILL.md` reports only where the skill is installed) with four
+options: `--build-mode`, `--ahq-package-root` (the two chain variables, from
+the engine's own runtime params), `--workflow-dir` (the workflow's
+`ts-workflow/`, from the reported skill directory) and `--workflow-js` (the
+compiled entry file, relative to it). The
 terminus of the explicit parameter chain and the only code that acts on
 `build-mode`. It never builds the framework and never executes from the
 [staged release tree](#staged-release-tree-release).

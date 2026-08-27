@@ -271,3 +271,91 @@ call, no staging-filter follow-up): the log came from a one-off D2 TEST copy of 
 script, and the plan's Phase 5 item 2 now hard-requires the production script to write no files. Side
 observation while investigating: `git status --ignored` (not plain `git status`) recurses into ignored
 node_modules and follows the framework junction into recursive-path warnings — noise, not corruption.
+
+---
+
+## Phase 4 — Workflow runtime native on Windows (part 1: D1 + D5, one atomic commit)
+
+**Scope of this part:** plan item 1 only — the AHQ-210 skill-hop contract change (D1) with the D5 input
+shrink/quoting riding along, both sides (engine + every SKILL.md) together in one commit. Items 2–4 (claude
+resolver, PTY tuning, workspace-root normalization) follow as part 2.
+
+**Baseline:** the 7 files touched by the red phase all green first (28/28 across those suites) —
+confirming the "run before changing" rule; full unit suite was 216 after, 209 before (+7 net new tests).
+
+**What was done (TDD — 40 tests red first, each for the intended reason: missing methods, changed
+constructors, bash removal):**
+
+1. **New launch handshake type + session reads.** `src/interfaces/skill-output.ts` (new): `SkillOutput
+   { skillBaseDir }` with the plan's evolution rule in its header. `IOMarshallerSession.readOutput()` →
+   `readCommandOutput()`, plus `readSkillOutput(): SkillOutput`;
+   `JsonFileIOMarshallerSession` implements both over the one `command-output.json` transport (private
+   `readOutputFile()`), fail-fast when `skill-base-dir` is missing/empty/not a string (the "a command-step
+   output landed where a handshake was expected" case is an explicit test).
+2. **Two typed exits on the tool.** `Tool` gains `executeSkillLaunch(skillCommand): Promise<SkillOutput>`;
+   `MarshalledCLITool.execute()` keeps command-step behaviour, `executeSkillLaunch()` reads the handshake,
+   both share the private `runSession()` exactly as the plan sketch specified. `UNUSED_INPUT_STRING` moved
+   here from the workflow builder (the launch skill takes no input).
+3. **Engine builds the launch argv natively.** `ClaudeWorkflowCommandBuilder` now: mints the tool per
+   build-mode (AHQ-208 unchanged) → `executeSkillLaunch(skillCommand)` → sanity-checks the reported dir
+   (exists + contains `ts-workflow/`, loud error naming the skill) → derives `skill-id` via
+   `path.basename` → argv `[<repo>/scripts/run-workflow.cjs, --ahq-package-root=…, --build-mode=…,
+   --workflow-dir=…, --workflow-js=dist/<skill-id>-cli.js, ...passthroughArgs]` spawned as
+   `process.execPath` + args. `shellEscape` deleted; passthrough args ride raw (argv arrays need no
+   quoting). Builder now takes the `AhqPackageRoot` (wired in `CompositionRoot`).
+4. **`DefaultWorkflowCommand`: `bash -c` deleted** — constructor is `(executable, args[], wrapper, cwd)`,
+   spawned directly on the PTY. No shell of any kind remains in the TS launch chain (grep-verified).
+5. **D5 in `ClaudeCommandBuilder`:** the positional arg is now `` `${aiToolCommand} "${marshallingId}"` ``
+   — the io-directory is the ONLY value crossing the hop, double-quoted (spaces test included). The
+   AHQ-197 relay (`… ${buildMode} ${pkgRoot}`) is deleted, and with it the builder's whole
+   `ahqRuntimeParams` constructor param (TS-checked ripple through `DefaultClaudeCodeTool` and 4 test
+   files). The unit fake-claude fixture now parses the quoted io-dir (everything after the first space,
+   quotes stripped) like real Claude would.
+6. **SKILL.md boilerplate rewritten** to the plan's template: set `skill-base-dir` + `$0`, write
+   `{"skill-base-dir": "{skill-base-dir}"}`, rewritten INFO-FOR-YOU-ONLY section (plan's verbatim text),
+   self-terminate. Distributed **byte-identically to all 8 copies** (7 live workflow skills + the e2e
+   fixture copy) — SHA-256 verified identical. steve-test-plugin skills are not workflow skills (no
+   ts-workflow contract) — untouched.
+7. **Scaffolder + docs to the new contract:** create-workflow `02-confirm-spec-approved-and-build.md`
+   (4 spots) and `03-run-checks-on-workflow.md` (check 4 is now "byte-identical to the bundled template" +
+   the filename-convention check); `docs/dev/how-agentic-hq-works.md` (mermaid Resolve box, plugin-layout
+   tree line, build-mode paragraph, "The shared workflow runner" section, worked-example steps 2–3, math
+   per-step relay note); `docs/glossary.md` (Skill, AHQ package root, build-mode, shared workflow runner
+   entries).
+8. **`DefaultClaudeCodeToolFactory` test re-anchored:** the AHQ-208 per-workflow mode is no longer
+   observable via builder-constructor runtime params (relay deleted), so the test now asserts it via the
+   AHQ-package workspace the factory wires in (`getBuildMode()`/`getRoot()`).
+
+**Decisions / deviations (flagged):**
+
+- **D5 narrowed on evidence — the plan's "quote `Read(${dir})`/`--plugin-dir=${dir}`" is NOT implemented.**
+  A claude-code-guide docs check found the CLI reference SILENT on quote-stripping inside those values,
+  and our PTY spawn passes argv with no shell — embedded literal quotes would reach Claude's permission
+  matcher / plugin loader verbatim and plausibly break BOTH on every platform (an allowlist that never
+  matches = permission prompts mid-workflow). The io-dir quoting IS implemented (its consumer is the AI
+  prompt parser, which handles quotes naturally — and it's the value that actually gets re-split today).
+  Paths-with-spaces in `--allowedTools`/`--plugin-dir` remain a pre-existing, unchanged limitation; the
+  docs-blessed space-safe form (one rule per argv element) has a positional-swallowing risk that needs a
+  real-Claude probe → proposed as a Phase 7 follow-up ticket.
+- ToolFactory.createTool(buildMode) kept per plan, but noted for the refactor list: with the relay gone,
+  the mode's only remaining effect inside a minted tool is the AHQ-package workspace's `getBuildMode()`
+  (which nothing in the command path reads). Candidate for later simplification, not touched now.
+- `agentic-hq-program` / `workflow-registry` untouched — `builder.build()` signature is unchanged, so the
+  CLI dispatch layer never noticed the contract change (the point of the seam).
+
+**Test evidence (per changed file, on this Windows machine):**
+
+- Red: `pnpm vitest run --config vitest.unit.config.ts` over the 9 touched suites — **40 failed**, all for
+  the intended reasons (`readOutput is not a function`, `ahqRuntimeParams.getBuildMode is not a function`,
+  bash assertions, missing `executeSkillLaunch`). (First red run used no `--config`; that run's
+  `workflow-registry-impl` "`it` is not defined" was my harness error — the unit config has
+  `globals: true` — re-run correctly before concluding anything.)
+- Green: `pnpm validate` fully green — typecheck ✓, lint ✓, format ✓ (3 in-scope files prettier-fixed
+  after a scope check listed only them), **216/216** unit tests. Every changed src file is executed by the
+  named suites above; the session/tool/builder/command files additionally run through the two PTY-spawning
+  fake-claude unit tests (real quoted-io-dir round trip through a real PTY + fixture).
+- Integration (no Claude spawns): `vitest run --config vitest.integration.config.ts
+  tests/integration/build/ tests/integration/runner/ tests/integration/bin/` — **17 passed, 2 POSIX-only
+  skips**, including the runner's real build-first path (pnpm install + junction + tsc).
+- Not executable here: the 8 SKILL.md copies and the .md/doc files are prose consumed by real Claude —
+  their executable check is Phase 4's 🧑‍💻 string-reversal demo gate on both OSes.

@@ -14,8 +14,6 @@ import { BuildMode } from '../../../src/interfaces/build-mode.js';
 import type { CLICommand } from '../../../src/interfaces/cli-command.js';
 import type { CLIWrapper } from '../../../src/interfaces/cli-wrapper.js';
 import type { IOMarshallerSessionFactory } from '../../../src/interfaces/io-marshaller-session-factory.js';
-import { DefaultAhqPackageRoot } from '../../../src/runtime-params/default-ahq-package-root.js';
-import { DefaultAhqRuntimeParams } from '../../../src/runtime-params/default-ahq-runtime-params.js';
 import { ClaudeCommandBuilder } from '../../../src/tools/marshalled-io-tools/claude-code/claude-command-builder.js';
 import { MarshalledCLITool } from '../../../src/tools/marshalled-io-tools/marshalled-cli-tool.js';
 import type { Workspace } from '../../../src/workflow-discovery/interfaces/workspace.js';
@@ -39,7 +37,8 @@ function createMockSessionFactory(): IOMarshallerSessionFactory {
     create: vi.fn().mockReturnValue({
       getMarshallingId: vi.fn().mockReturnValue('/tmp/mock-io-dir'),
       write: vi.fn(),
-      readOutput: vi.fn().mockReturnValue('mock output'),
+      readCommandOutput: vi.fn().mockReturnValue('mock output'),
+      readSkillOutput: vi.fn().mockReturnValue({ skillBaseDir: '/mock/skills/my-workflow' }),
     }),
   };
 }
@@ -83,11 +82,7 @@ describe('MarshalledCLITool with ClaudeCommandBuilder config', () => {
     const tool = new MarshalledCLITool(
       createMockSessionFactory(),
       mockWrapper,
-      new ClaudeCommandBuilder(
-        ahqPackage,
-        currentUserWorkspace,
-        new DefaultAhqRuntimeParams(BuildMode.BUILD_FIRST, new DefaultAhqPackageRoot(process.cwd()))
-      ),
+      new ClaudeCommandBuilder(ahqPackage, currentUserWorkspace),
       currentUserWorkspace
     );
 
