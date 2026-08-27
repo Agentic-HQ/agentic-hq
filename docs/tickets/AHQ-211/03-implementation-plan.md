@@ -306,6 +306,10 @@ README section.
 - `scripts/mcp-scripts/install-or-update-sooperset-mcp-atlassian.sh` — PowerShell twin or Node port.
 - `steve-test-plugin` shebang-less scripts; utilities-plugin Jira-extractor `/tmp`+`jq` instructions.
 - WSL smoke-test + short doc section (nearly free after the `.gitattributes` fix).
+- Release staging sweeps untracked working-tree files (found by the Phase 3 checkpoint: an untracked
+  debug `.log` in a skill's `scripts/` dir shipped in the Windows-built tree; same hazard on every OS —
+  `build-release.cjs` cpSyncs plugins from the working tree). Decide: filter `*.log`/untracked files in
+  `shouldStagePluginPath`, or respect `.gitignore` during staging. (Steve may pull this forward.)
 - Marketplace-installed workflow validation: D1 deliberately preserves the capability (the skill hop still reports
   where an installed skill lives), but running a workflow from a marketplace-installed plugin has never been tested
   on any platform — needs its own ticket.
@@ -390,7 +394,11 @@ evidence), so each phase commit carries its own log entry.
       `path.resolve` in the runner (options stay required); `npm_execpath` used only when it is pnpm's;
       unplanned hashTree POSIX-key fix. Checkpoint artifact committed:
       phase-3-checkpoint-windows-release-hashes.txt.)*
-- [ ] 🧑‍💻 **Phase 3 checkpoint**: diff a Windows-built `release/` tree against a Linux-built one.
+- [x] 🧑‍💻 **Phase 3 checkpoint**: diff a Windows-built `release/` tree against a Linux-built one.
+      *(Done 2026-08-27 via Steve's Mac (POSIX stand-in): 339/340 files byte-identical, zero content
+      mismatches. The one extra Windows file was an untracked self-termination debug log swept into
+      staging by cpSync — deleted, rebuilt, checkpoint hash file regenerated (339 lines, exact match).
+      Exposed follow-up captured in Phase 7: staging sweeps untracked working-tree files.)*
 - [ ] 💾 Compact — recommended before the largest phase.
 - [ ] **Phase 4** — D1/AHQ-210 contract change + D5 (one atomic commit), claude resolver, PTY tuning,
       workspace-root normalization → commits.

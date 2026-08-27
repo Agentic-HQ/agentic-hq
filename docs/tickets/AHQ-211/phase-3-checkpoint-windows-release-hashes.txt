@@ -14,7 +14,6 @@ f5e83238bf849ef7572e4761d4c3603bfaa3741235db0553a61e69ed2089d499  .agentic-hq/pl
 e42bb965762b5af42effa108010057fc2180755c4c4ada1063fbd027e91be489  .agentic-hq/plugins/agentic-hq-core-plugin/skills/create-workflow/ts-workflow/tsconfig.json
 df6937516b0381cefb654b11dfe3d51ff63fd6511e57d3fcd75941853a58f92b  .agentic-hq/plugins/agentic-hq-core-plugin/skills/self-termination/SKILL.md
 5bb57e918983e3f56131d0e3822a649f4ba44f3710e643bdf2c7a558ec11638f  .agentic-hq/plugins/agentic-hq-core-plugin/skills/self-termination/scripts/kill-current-cli-process.sh
-b4d2b6a9ef77bc599354f114e951b4b9a1c53732d2b483ad1cb037b73a384663  .agentic-hq/plugins/agentic-hq-core-plugin/skills/self-termination/scripts/node-kill-result-v2.log
 34873244bae7968c228e54d1803c5d7db3a9282609d29dd223a79828082d9819  .agentic-hq/plugins/agentic-hq-demos-plugin/.claude-plugin/plugin.json
 6d301ee18ab9af7ca4639774487a9ab5ec4a50c86db89519aea0101bb5657f85  .agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature-detailed-example/01-ticket-creator.md
 1fb950b5372441d26961aab7df16f16d4b475a7833b51f48a8e35ff5d1358cc7  .agentic-hq/plugins/agentic-hq-demos-plugin/commands/add-feature-detailed-example/02-interrogator.md

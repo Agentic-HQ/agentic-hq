@@ -255,6 +255,18 @@ one doc this phase made factually wrong; the full dev-docs accuracy pass is a na
 - Gates: `pnpm build` ✓; `pnpm validate` fully green — typecheck ✓, lint ✓, format ✓ ("All matched files
   use Prettier code style!"), **209/209** unit tests (204 + the 5 new staging tests). Linux CI still
   pending a draft PR (ci.yml triggers only on main push/PR — parked with Steve since Phase 1).
-- Checkpoint artifact: `phase-3-checkpoint-windows-release-hashes.txt` — 340 SHA-256 content hashes of the
+- Checkpoint artifact: `phase-3-checkpoint-windows-release-hashes.txt` — SHA-256 content hashes of the
   Windows-built `release/`, sorted, POSIX paths, for the 🧑‍💻 cross-OS diff (content hashes ignore exec
   bits, so "match modulo exec bits" falls out naturally).
+
+**🧑‍💻 Checkpoint result (2026-08-27, run by Claude on Steve's Mac as the POSIX side — see
+`temp/AHQ-211/temp-mac-instructions.md` for its full report):** 339/340 files **byte-identical**, zero
+content mismatches — no CRLF drift, no tsc drift, no source-map path leaks, no manifest-ordering
+differences. The single diff was a Windows-only file: an untracked self-termination debug log
+(`node-kill-result-v2.log`, from the 2026-08-24 D2 validation spikes) sitting in the skill's `scripts/`
+dir, swept into staging because `build-release.cjs` cpSyncs plugins from the working tree and `*.log` is
+gitignored (so invisible to git but present on disk). Resolved: stray log deleted, rebuilt, checkpoint
+hash file regenerated — now 339 lines, matching the Mac exactly. The general hazard (staging sweeps
+untracked working-tree files, on every OS) is recorded as a Phase 7 follow-up in the plan. Side
+observation while investigating: `git status --ignored` (not plain `git status`) recurses into ignored
+node_modules and follows the framework junction into recursive-path warnings — noise, not corruption.
