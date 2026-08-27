@@ -269,9 +269,28 @@ live kills on all three).
 3. Docs: README OS-support + Windows Quick Start (prerequisites: Node + Claude Code only — winget Claude +
    auto-update warning, nvm-windows, execution-policy guidance per report §6; state explicitly that Git is NOT
    required for normal use — Git + `gh` stay dev-only in `docs/dev/setting-up-agentic-hq-for-development.md`);
-   CONTRIBUTING; troubleshooting entries (junction/Developer Mode, Defender slowness, `npm.cmd` workaround);
+   CONTRIBUTING; troubleshooting entries (junction/Developer Mode, Defender slowness, `npm.cmd` workaround;
+   from the Phase 3 junction review — see supporting-files/03-perplexity…symbolic-links.md: workspace must be
+   on a local NTFS volume, junctions fail on UNC/network paths and FAT32/exFAT; OneDrive/Dropbox-synced
+   folders can throw transient EPERM/EBUSY around junctions);
    publish-checklist: publish from Mac until CI publishing lands — never from Windows (the prepack guard
    enforces this).
+   **Dev-docs accuracy pass** — check every `docs/dev/` doc against the 04-implementation-details log for
+   Phases 1–5 (the Windows work changed structure, not just behaviour), specifically:
+   - `how-agentic-hq-works.md`: framework link is a symlink ONLY on POSIX — junction on Windows, realpath
+     freshness check (~7 "symlink" mentions, incl. the Workflow Build diagrams at ~:42/:226/:415); Phase 4's
+     D1 rewrites the skill-hop contract this doc centres on (`SKILL.md` runner-command template + `$1`
+     verbatim relay at ~:38/:110/:256-273 → the `skill-base-dir` handshake with the engine building the
+     argv, no shell); D4 spawn pattern (`node <tool JS entry>`, no `.bin` shims); Phase 5 self-termination
+     mechanism if it appears by then.
+   - `ci-configuration.md`: currently describes the single ubuntu job end-to-end — add the `windows-latest`
+     job from item 2 (what runs there and why, the setup-step table, hardening, "Reproducing CI Locally" on
+     Windows/PowerShell).
+   - `setting-up-agentic-hq-for-development.md`: add the Windows contributor path (nvm-windows,
+     corepack/pnpm, PowerShell execution policy, repo on a local NTFS volume, no WSL needed; note Git + `gh`
+     ARE required for dev — the opposite of the end-user story) alongside the existing POSIX path.
+   - `npm-commands.md` + `publish-checklist.md`: verify-only sweep (demo scripts now use relative dirs
+     resolved by the runner; both prepack guards are Node scripts since Phase 1) — expected already accurate.
 4. **Git-free validation**: on a Windows environment with no Git installed (e.g. Windows Sandbox or a clean VM),
    install Claude Code + Node only and run `agentic-hq list` + the string-reversal demo. This proves the
    normal-user story AND Claude's PowerShell-tool mode (without Git Bash, Claude has no Bash tool) — currently
@@ -363,8 +382,14 @@ evidence), so each phase commit carries its own log entry.
       (`git rm -r --cached . && git reset --hard` — Steve runs or explicitly approves).
       *(Done 2026-08-26, run by Steve. Working tree now all-LF; `pnpm validate` fully green on Windows
       afterwards — typecheck ✓ lint ✓ format ✓ 204/204 ✓.)*
-- [ ] 💾 Compact — Phases 1–2 detail no longer needed in context.
-- [ ] **Phase 3** — build pipeline: junction (D3), pnpm/tsc spawns (D4), build-release portability → commit.
+- [x] 💾 Compact — Phases 1–2 detail no longer needed in context. *(Done 2026-08-26.)*
+- [x] **Phase 3** — build pipeline: junction (D3), pnpm/tsc spawns (D4), build-release portability → commit.
+      *(Done 2026-08-26 — see 04-implementation-details.md. `pnpm build` completes on Windows;
+      build-determinism 1/1 + publish-guards green on Windows (2 POSIX-only tests skip there);
+      `pnpm validate` fully green, 209/209. Deviations flagged: demo scripts fixed via relative dirs +
+      `path.resolve` in the runner (options stay required); `npm_execpath` used only when it is pnpm's;
+      unplanned hashTree POSIX-key fix. Checkpoint artifact committed:
+      phase-3-checkpoint-windows-release-hashes.txt.)*
 - [ ] 🧑‍💻 **Phase 3 checkpoint**: diff a Windows-built `release/` tree against a Linux-built one.
 - [ ] 💾 Compact — recommended before the largest phase.
 - [ ] **Phase 4** — D1/AHQ-210 contract change + D5 (one atomic commit), claude resolver, PTY tuning,

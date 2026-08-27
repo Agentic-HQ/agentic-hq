@@ -24,7 +24,10 @@
  *   node run-workflow.cjs --build-mode=<build-first|prebuilt> --ahq-package-root=<dir> --workflow-dir=<dir> --workflow-js=<path relative to --workflow-dir> [workflow args...]
  *
  * All four options are required — missing or invalid options are loud errors
- * (fail fast, no defaults); an absolute --workflow-js is rejected. The
+ * (fail fast, no defaults); an absolute --workflow-js is rejected. The two
+ * directory options may be given relative to the working directory (cmd.exe
+ * has no $PWD for a script to interpolate an absolute path with — AHQ-211);
+ * they are resolved here, so everything downstream sees absolute paths. The
  * workflow program runs with --enable-source-maps and receives `--build-mode`
  * and `--ahq-package-root` plus every remaining arg.
  */
@@ -94,6 +97,19 @@ function validateOptions({ buildMode, ahqPackageRoot, workflowDir, workflowJs })
   }
 }
 
+// Resolve the two directory options against the working directory, so the
+// Workflow Build, the framework link and the workflow program's own argv all
+// see absolute paths whatever the caller passed (AHQ-211). Runs after
+// validateOptions — a missing option must stay a loud error, not a resolve
+// crash.
+function resolveDirectoryOptions(options) {
+  return {
+    ...options,
+    ahqPackageRoot: path.resolve(options.ahqPackageRoot),
+    workflowDir: path.resolve(options.workflowDir),
+  };
+}
+
 // build-first: run the Workflow Build (2) for THIS workflow before executing
 // it — the runner never builds the framework.
 function buildWorkflowIfRequired({ buildMode, ahqPackageRoot, workflowDir }) {
@@ -133,5 +149,6 @@ function runWorkflowProgram({
 
 const options = parseCommandLine(process.argv.slice(2));
 validateOptions(options);
-buildWorkflowIfRequired(options);
-runWorkflowProgram(options);
+const resolvedOptions = resolveDirectoryOptions(options);
+buildWorkflowIfRequired(resolvedOptions);
+runWorkflowProgram(resolvedOptions);

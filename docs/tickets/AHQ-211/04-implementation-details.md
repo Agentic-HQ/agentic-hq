@@ -144,3 +144,117 @@ and `pnpm format:check` failed on 165 files (CRLF checkout drift under `core.aut
   this phase's commit — that refresh is what completes `pnpm validate` fully green on Windows.
 - `.gitattributes` itself was exercised by the renormalize no-op check above; its checkout effect
   lands at the refresh.
+
+## Phase 3 — Build pipeline & scripts on Windows (2026-08-26)
+
+**Baseline (red):** `pnpm build` failed on Windows at the first spawn (`build-release.cjs` →
+`node_modules/.bin/tsc` ENOENT), so the whole build pipeline was unrunnable; fixing each spawn revealed the
+next red in pipeline order (pnpm ENOENT with the *wrong* "pnpm not found — see pnpm.io/installation"
+diagnosis, then symlink EPERM — dir symlinks confirmed EPERM on this machine, no Developer Mode — then the
+workflow-dir `.bin/tsc` ENOENT). `test:integration:publish-guards` failed 3/3 (npm/pnpm spawns never started:
+output `undefined\nundefined`); `test:integration:build-determinism` was blocked behind the build. Two silent
+wrong-content bugs confirmed live in the first successful Windows-built tree: both `EXCLUDED_DRAFT_COMMAND_DIRS`
+shipped, and `publishConfig.executableFiles` came out backslashed.
+
+**What was done (TDD — each red confirmed for the right reason before its fix):**
+
+1. `build-workflow.cjs` `installDependencies` per D4: when `npm_execpath` is set AND is pnpm's JS entry
+   (basename contains `pnpm` — covers corepack's `pnpm.mjs` and npm-global `pnpm.cjs`), spawn
+   `node <npm_execpath> install` (no shell, no shim, and the same pnpm version that launched the build);
+   otherwise `pnpm` off PATH with `shell: true` on win32 only. Misleading-diagnosis fix: "pnpm missing" is
+   now only reported when it is TRUE — ENOENT on the shell-less POSIX branch, cmd.exe's command-not-found
+   status 9009 on the Windows shell branch; everything else propagates untouched.
+2. `build-workflow.cjs` `linkFramework` per D3: `symlinkSync(..., 'junction')` on win32 (`'dir'` elsewhere);
+   freshness check replaced with realpath equality (`linkResolvesTo`) — junctions readlink as `\\?\C:\...`
+   NT paths that never byte-match, and a dangling link reports stale so it gets recreated. New
+   `tests/integration/build/framework-link.integration.test.ts` (5 tests, red as EPERM first): fresh link
+   loads `agentic-hq/tools/claude-code` through a real junction, correct link left alone (inode+birthtime),
+   wrong-target/dangling links repaired, squatting real dir replaced. The two readlink-equality assertions
+   (runner integration test :238-area, new-workspace e2e :157-area) became realpath comparisons (both sides
+   wrapped, so macOS tmpdir symlinks stay safe).
+3. tsc spawns per D4 in `build-workflow.cjs` (workflow's own `node_modules/typescript/bin/tsc`) and
+   `build-release.cjs` (repo's).
+4. `build-release.cjs` portability: new `toPosixRelativePath` + the staging filter extracted as exported
+   `shouldStagePluginPath` — draft-dir and stripped-file comparisons now POSIX-normalized (the silent
+   wrong-content fix); `listStagedShellScripts(stagedReleaseDir)` parameterized and emitting forward
+   slashes. New `tests/unit/scripts/build-release-staging.unit.test.ts` (5 tests; the draft-dir and
+   forward-slash cases were the Windows reds). Exec-bit note: there was no chmod logic to keep
+   platform-gated — `publishConfig.executableFiles` is the whole mechanism, unchanged.
+5. Demo scripts: `"$PWD"` dropped — the four `demo:plugin-direct:*` scripts now pass
+   `--ahq-package-root=.` and a relative `--workflow-dir`, and `run-workflow.cjs` resolves the two
+   directory options via `path.resolve` after validation (new runner integration test proves the workflow
+   program receives absolute paths).
+6. `publish-guards.integration.test.ts` spawns per D4's shell branch: npm/pnpm through a shell on win32 as
+   one quoted command line (also what the "plain maintainer terminal" the helper simulates does; avoids
+   DEP0190). Platform split: the npm-wrong-packer test and pnpm positive control are POSIX-only
+   (`it.runIf`) because on Windows the release guard refuses the PLATFORM before ever checking the packer;
+   a new win32-only test asserts both npm and pnpm are refused with the exec-bit message.
+7. Unplanned fix surfaced by the build-determinism gate: `tests/helpers/file-tree-helper-functions.ts`
+   `hashTree` keys were native-separator (`dist\src\cli\main.js` on Windows) — now POSIX, making path
+   expectations single-sourced and a Windows-built hash map directly comparable with a Mac/Linux one.
+
+**Files touched:** `scripts/build-workflow.cjs`, `scripts/build-release.cjs`, `scripts/run-workflow.cjs`,
+`package.json` (4 demo scripts + comment), `tests/integration/build/framework-link.integration.test.ts`
+(new), `tests/unit/scripts/build-release-staging.unit.test.ts` (new),
+`tests/integration/build/publish-guards.integration.test.ts`,
+`tests/integration/runner/run-workflow-validates-and-executes.integration.test.ts`,
+`tests/helpers/file-tree-helper-functions.ts`,
+`tests/e2e/demo/string-reversal-workflow-in-new-workspace-lists-and-executes.e2e.test.ts`,
+`docs/tickets/AHQ-211/phase-3-checkpoint-windows-release-hashes.txt` (new checkpoint artifact),
+`docs/dev/how-agentic-hq-works.md` (framework-link wording: "symlink" → platform-aware link/junction — the
+one doc this phase made factually wrong; the full dev-docs accuracy pass is a named Phase 6 item).
+
+**Decisions / deviations:**
+
+- **Demo-script mechanism (minor deviation, flagged):** the plan offered cwd-defaulting in the runner or a
+  new `run-demo.cjs`; implemented a third, smaller option — all four runner options stay REQUIRED (the
+  fail-fast contract and its loud-error tests untouched), but the two directory options may be relative and
+  are `path.resolve`d against the working directory.
+- **D4 pnpm guard tightened:** the plan said use `npm_execpath` "when set"; implemented as "when set and
+  it is pnpm's" — under npm/yarn launches it would be npm's/yarn's JS entry, and this install must be pnpm
+  (the workflow `.npmrc` speaks pnpm dialect).
+- Both build scripts refactored to the Phase-1 script pattern (exported helpers + `require.main` CLI
+  entry) so the new tests exercise the REAL functions; spawned callers unaffected.
+- The e2e file's assertion change could not execute on Windows (e2e spawns real Claude) — verified via
+  typecheck/lint/format only; it runs at the Phase 6 e2e gates. Likewise the demo scripts themselves spawn
+  Claude — the mechanism is covered by the runner test; end-to-end is Phase 4's 🧑‍💻 gate.
+- Refactor list: `isWindows()`/command-not-found constants now exist in two shipped standalone scripts
+  (acceptable — they ship as self-contained files; a shared module would have to be staged too);
+  `tmpdirTest` is now imported from `tests/integration/` as well — strengthens the Phase 1 note to move it
+  out of `tests/unit/workflow-discovery/`.
+- **External review of the junction design (Perplexity, 2026-08-27 — see
+  `supporting-files/03-perplexity-question-and-answer-about-symbolic-links.md`): verdict KEEP.** Junction
+  on win32 is the ecosystem standard (pnpm's `symlink-dir` defaults to it; npm/Yarn/Nx likewise); our
+  lstat→unlink-link/rm-dir deletion idiom and realpath freshness check match the recommended pattern, and
+  our dangling-link handling exceeds it. `symlink-dir`'s atomic replace and parent-mkdir extras are
+  deliberately not needed here (sequential build step; pnpm install guarantees the parent — fail-fast).
+  Empirical safety proof: the runner test's cleanup `rmSync`s a tree containing a junction to the REAL
+  repo root without traversing it. **Phase 6 docs follow-ups from the review:** junctions need a local
+  NTFS volume (fail on UNC/network paths, FAT32/exFAT), and OneDrive/Dropbox-synced folders can throw
+  transient EPERM/EBUSY around junctions — both go in the troubleshooting docs.
+
+**Test evidence (per changed file, on this Windows machine):**
+
+- `build-workflow.cjs` + `build-release.cjs`: `pnpm build` red at each pipeline stage in turn, then
+  **completes on Windows** (the phase headline); executed again ×2 by
+  `pnpm test:integration:build-determinism` → **byte-identical trees, 1/1 green** (after the hashTree fix
+  below); staged tree inspected — draft dirs absent, `executableFiles` forward-slashed.
+- `linkFramework`: `pnpm exec vitest run --config vitest.integration.config.ts
+  tests/integration/build/framework-link.integration.test.ts` — 5 red (EPERM) → 5/5 green.
+- `build-release` staging helpers: `pnpm exec vitest run --config vitest.unit.config.ts
+  tests/unit/scripts/build-release-staging.unit.test.ts` — 2 red (draft dir staged; backslashed list) →
+  5/5 green.
+- `run-workflow.cjs` + its test: runner integration file — new relative-path test red
+  (`--ahq-package-root=.` forwarded raw) → **7/7 green** including the build-first happy path (real pnpm
+  install + junction + tsc on Windows).
+- `publish-guards.integration.test.ts`: `pnpm test:integration:publish-guards` — 3/3 red (spawns never
+  started) → green on Windows (root-guard + win32 both-packers-refused pass; 2 POSIX-only tests skip, they
+  run in Linux CI).
+- `file-tree-helper-functions.ts`: build-determinism red (expected `dist/src/cli/main.js` missing from 340
+  backslashed keys) → green after POSIX-normalizing; helper re-executed by the green determinism run.
+- Gates: `pnpm build` ✓; `pnpm validate` fully green — typecheck ✓, lint ✓, format ✓ ("All matched files
+  use Prettier code style!"), **209/209** unit tests (204 + the 5 new staging tests). Linux CI still
+  pending a draft PR (ci.yml triggers only on main push/PR — parked with Steve since Phase 1).
+- Checkpoint artifact: `phase-3-checkpoint-windows-release-hashes.txt` — 340 SHA-256 content hashes of the
+  Windows-built `release/`, sorted, POSIX paths, for the 🧑‍💻 cross-OS diff (content hashes ignore exec
+  bits, so "match modulo exec bits" falls out naturally).

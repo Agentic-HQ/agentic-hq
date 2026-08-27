@@ -39,7 +39,7 @@ flowchart TB
     end
 
     subgraph Runner["Shared workflow runner (scripts/run-workflow.cjs)"]
-        Build2["build-first → Workflow Build (2):<br/>pnpm install → symlink node_modules/agentic-hq → tsc<br/>(prebuilt → skipped)"]
+        Build2["build-first → Workflow Build (2):<br/>pnpm install → link node_modules/agentic-hq → tsc<br/>(prebuilt → skipped)"]
         Run["node ts-workflow/dist/math-workflow-cli.js<br/>--build-mode --ahq-package-root --input-number=11"]
     end
 
@@ -114,7 +114,7 @@ math-workflow:
             ├── tsconfig.json    ← emits src → dist
             ├── .npmrc, pnpm-workspace.yaml, pnpm-lock.yaml, .gitignore
             ├── dist/            ← Workflow Build (2) output (generated, gitignored)
-            └── node_modules/    ← incl. the agentic-hq symlink (generated, gitignored)
+            └── node_modules/    ← incl. the agentic-hq link (generated, gitignored)
 ```
 
 Two files are worth reading directly to see the shape of a plugin:
@@ -223,11 +223,14 @@ wherever it lives — `scripts/build-workflow.cjs --workflow-dir=<…/ts-workflo
 
 1. `pnpm install` in the workflow dir (`typescript`, `@types/node`,
    `commander` — frozen lockfile; a no-op after the first run);
-2. ensure `node_modules/agentic-hq → <ahq-package-root>` — a symlink made from
-   the explicit parameter, never from an env var or a depth-relative `link:`
-   (always after the install, which would otherwise prune it);
+2. ensure `node_modules/agentic-hq → <ahq-package-root>` — a directory link
+   made from the explicit parameter, never from an env var or a depth-relative
+   `link:` (always after the install, which would otherwise prune it). On
+   POSIX it is a plain dir symlink; on Windows an NTFS **junction**, which
+   needs no privileges — dir symlinks are EPERM there without Developer
+   Mode/admin (AHQ-211);
 3. `tsc -p tsconfig.json` → `dist/<name>-cli.js`, type-checked against the
-   framework through that symlink. A type error stops here, loudly.
+   framework through that link. A type error stops here, loudly.
 
 Everything it writes stays inside the workflow's `ts-workflow/`; nothing is
 ever written into the AHQ package. It is run by the shared runner when
@@ -283,10 +286,10 @@ never builds the framework and never executes from the staged release tree.
 ### How the compiled workflow finds the framework
 
 The compiled workflow JS says `import … from 'agentic-hq/tools/claude-code'`.
-After a Workflow Build, `node_modules/agentic-hq` is the symlink to the AHQ
-package root, whose `package.json` `exports` points at `dist/…/index.js`
-(Node follows the symlink to the real path, so the framework's own
-dependencies load from the package's `node_modules`). In a prebuilt npm
+After a Workflow Build, `node_modules/agentic-hq` is the link (symlink, or
+junction on Windows) to the AHQ package root, whose `package.json` `exports`
+points at `dist/…/index.js` (Node resolves the link to the real path, so the
+framework's own dependencies load from the package's `node_modules`). In a prebuilt npm
 install, where a bundled workflow's `ts-workflow/` ships with no `node_modules`
 and no `package.json`, the import resolves by **Node package self-reference**
 against the package's own manifest — which is why the release strips the
@@ -296,8 +299,8 @@ per-workflow install files.
 
 | | Workflow **bundled** in the AHQ package | Workflow in **your workspace** |
 | --- | --- | --- |
-| **npm-installed** `agentic-hq` | `prebuilt`: nothing built; runs the shipped `ts-workflow/dist/` | `build-first`: Workflow Build (2) in your workflow dir; symlink → the install |
-| **cloned** `agentic-hq-dev` | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in the repo's own skill dir | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in your workflow dir; symlink → the clone |
+| **npm-installed** `agentic-hq` | `prebuilt`: nothing built; runs the shipped `ts-workflow/dist/` | `build-first`: Workflow Build (2) in your workflow dir; link → the install |
+| **cloned** `agentic-hq-dev` | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in the repo's own skill dir | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in your workflow dir; link → the clone |
 
 Each combination is worked through hop by hop — directories, the values of all
 four runner options, what is built where, and how the framework is resolved —
@@ -412,7 +415,7 @@ End-to-end trace of `agentic-hq-dev math -- --input-number=11` from the clone:
 3. **Run the TS workflow** — That command is executed via the same PTY
    wrapper, with the original `--input-number=11` appended. The runner sees
    `build-first`, runs the Workflow Build (2) in `<skill>/ts-workflow/`
-   (install → symlink `node_modules/agentic-hq → <repo>` → `tsc` →
+   (install → link `node_modules/agentic-hq → <repo>` → `tsc` →
    `dist/math-workflow-cli.js`), then runs
    `node dist/math-workflow-cli.js --build-mode=build-first --ahq-package-root=<repo> --input-number=11`.
 4. **Three chained Claude calls** — Inside

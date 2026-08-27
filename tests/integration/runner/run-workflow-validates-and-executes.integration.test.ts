@@ -78,8 +78,11 @@ const STANDARD_WORKFLOW_PNPM_WORKSPACE_YAML = `packages:
 `;
 
 /** Run the runner with the given args; returns status, stdout and stderr. */
-function runRunner(args: string[]): { status: number | null; stdout: string; stderr: string } {
-  const result = spawnSync(process.execPath, [runnerPath, ...args], { encoding: 'utf-8' });
+function runRunner(
+  args: string[],
+  cwd?: string
+): { status: number | null; stdout: string; stderr: string } {
+  const result = spawnSync(process.execPath, [runnerPath, ...args], { encoding: 'utf-8', cwd });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -217,6 +220,29 @@ describe('run-workflow.cjs validates and executes (AHQ-197, AHQ-208)', () => {
   );
 
   it(
+    'should resolve relative --ahq-package-root and --workflow-dir against the working directory',
+    () => {
+      // The npm demo scripts pass these two options relative — cmd.exe has no
+      // $PWD to interpolate an absolute path with (AHQ-211). The runner must
+      // hand ABSOLUTE paths on to the workflow program.
+      const { status, stdout } = runRunner(
+        [
+          '--build-mode=prebuilt',
+          '--ahq-package-root=.',
+          '--workflow-dir=prebuilt-workflow',
+          `--workflow-js=${ECHO_ARGV_WORKFLOW_JS}`,
+        ],
+        testRunDir
+      );
+
+      expect(status).toBe(0);
+      const forwardedArgs = JSON.parse(stdout.trim()) as string[];
+      expect(forwardedArgs).toEqual(['--build-mode=prebuilt', `--ahq-package-root=${testRunDir}`]);
+    },
+    TEST_TIMEOUT_MS
+  );
+
+  it(
     'should run the Workflow Build (2) then execute in build-first mode, never creating release/',
     () => {
       const repoReleaseDir = path.join(repoRoot, 'release');
@@ -236,7 +262,9 @@ describe('run-workflow.cjs validates and executes (AHQ-197, AHQ-208)', () => {
       expect(fs.existsSync(path.join(buildFirstWorkflowDir, ECHO_ARGV_WORKFLOW_JS))).toBe(true);
       const frameworkLink = path.join(buildFirstWorkflowDir, 'node_modules', 'agentic-hq');
       expect(fs.lstatSync(frameworkLink).isSymbolicLink()).toBe(true);
-      expect(fs.readlinkSync(frameworkLink)).toBe(repoRoot);
+      // realpath, not readlink: on Windows the link is a junction, which
+      // readlinks as an NT path (`\\?\C:\...`) — AHQ-211 D3
+      expect(fs.realpathSync(frameworkLink)).toBe(fs.realpathSync(repoRoot));
 
       // The freshly compiled program ran and received the forwarded params
       const stdoutLines = stdout.trim().split('\n');

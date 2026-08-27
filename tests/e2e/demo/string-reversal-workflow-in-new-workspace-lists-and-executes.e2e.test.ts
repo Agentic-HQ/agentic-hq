@@ -155,7 +155,9 @@ describe('User Workspace Workflow Discovery and Execution against a tarball-inst
       ).toBe(true);
       const frameworkLink = path.join(workspaceTsWorkflowDir, 'node_modules', 'agentic-hq');
       expect(fs.lstatSync(frameworkLink).isSymbolicLink()).toBe(true);
-      expect(fs.readlinkSync(frameworkLink)).toBe(installedPackageRoot);
+      // realpath, not readlink: on Windows the link is a junction, which
+      // readlinks as an NT path (`\\?\C:\...`) — AHQ-211 D3
+      expect(fs.realpathSync(frameworkLink)).toBe(fs.realpathSync(installedPackageRoot));
 
       // Assert — the installed package stayed READ-ONLY throughout
       expect(hashTree(installedPackageRoot)).toEqual(installedPackageHashes);
