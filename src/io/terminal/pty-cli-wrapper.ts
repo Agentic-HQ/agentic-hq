@@ -13,12 +13,44 @@
  * whatever cliCommand it's given in the provided working directory.
  *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-56 (extracted during REFACTOR phase)
+ *
+ * REFACTOR LATER: During AHQ=211 work Steve noticed this PtyCLIWrapper class is not very readable
+ * and contains a bunch of private interfaces, and WindowsPtyAgentInternals which contains a bunch
+ * of options that I don't understand and find it hard to work out what they are for.  This should be
+ * refactored later to follow the patterns of this project where **every** element has its own interface
+ * e.g. UseConPtyOption and concrete type e.g. DefaultUseConPtyOption which self documents what it
+ * is in it's header.  These should all be in their own directory (interfaces under src/interfaces/pty)
+ * so they don't clutter up the main system source directories.  Behaviour should be "pushed" onto
+ * whatever concrete classes are created, where appropriate, so the current class doesn't become
+ * a big dumping ground for pty related behaviour.  Once this is done, hopefully this class
+ * will be much easier to understand and the
+ * disposeExitedPty method (which seems to exist purely to work around a bug on Windows?)
+ * will be easier for me to understand as it will fit within a type/class
+ * structure.  Not doing now as too time consuming, and this project / class hasn't yet "earnt"
+ * this level of refactoring work and improvement (and this class is fairly well self contained
+ * and so doesn't make the whole project hard to understand).  If AHQ becomes popular and used
+ * a lot this kind of refactor can be done then.
  */
 
 import { spawn as spawnPty, type IPty } from 'node-pty';
 
 import type { CLICommand } from '../../interfaces/cli-command.js';
 import type { CLIWrapper } from '../../interfaces/cli-wrapper.js';
+
+/**
+ * The node-pty WindowsPtyAgent internals that disposeExitedPty() reaches
+ * into. Private API — acceptable only because node-pty is pinned to an
+ * exact version (see package.json) and upgraded manually after review.
+ */
+interface WindowsPtyAgentInternals {
+  _useConpty: boolean;
+  _useConptyDll: boolean;
+  _inSocket: { readable: boolean };
+  _outSocket: { readable: boolean };
+  _ptyNative: { kill: (pty: number, useConptyDll: boolean) => void };
+  _pty: number;
+  _conoutSocketWorker: { dispose: () => void };
+}
 
 // PTY terminal configuration
 const PTY_TERMINAL_TYPE = 'xterm-256color';
@@ -154,13 +186,46 @@ export class PtyCLIWrapper implements CLIWrapper {
         for (const signal of cleanupSignals) {
           process.removeListener(signal, signalCleanup);
         }
-        // Kill/dispose the pty explicitly: on Windows the ConPTY agent
-        // connection otherwise keeps this Node process alive after the child
-        // has already exited (observed on Windows 11, AHQ-211 Phase 4). Safe
-        // on POSIX too — node-pty's kill() swallows ESRCH on dead pids.
-        ptyProcess.kill();
+        this.disposeExitedPty(ptyProcess);
         resolve();
       });
     });
+  }
+
+  /**
+   * Dispose a pty whose child has ALREADY exited. Required because on
+   * Windows the ConPTY agent connection otherwise keeps this Node process
+   * alive after the child has exited (observed on Windows 11, AHQ-211
+   * Phase 4).
+   *
+   * On win32 + ConPTY this must not go through node-pty's kill(): kill()
+   * forks a conpty_console_list_agent helper to sweep console processes
+   * that outlive a LIVE pty (Microsoft/vscode#26807) — but the console died
+   * with the child, so AttachConsole fails and the helper crashes with a
+   * noisy stderr trace (observed at the end of the otherwise-clean
+   * 2026-08-27 Windows demo run; exit code unaffected). No such survivors
+   * can exist here, so perform kill()'s remaining cleanup directly — mark
+   * the sockets unreadable, release the native ConPTY handle, dispose the
+   * conout worker thread (the parts that end the keep-alive) — and skip the
+   * fork. Reaching into node-pty internals is acceptable only because
+   * node-pty is exact-pinned (see package.json) and upgraded manually.
+   */
+  private disposeExitedPty(ptyProcess: IPty): void {
+    const agent = (ptyProcess as unknown as { _agent?: WindowsPtyAgentInternals })._agent;
+    if (
+      process.platform === 'win32' &&
+      agent !== undefined &&
+      agent._useConpty &&
+      !agent._useConptyDll
+    ) {
+      agent._inSocket.readable = false;
+      agent._outSocket.readable = false;
+      agent._ptyNative.kill(agent._pty, agent._useConptyDll);
+      agent._conoutSocketWorker.dispose();
+      return;
+    }
+    // POSIX (kill() swallows ESRCH on dead pids), the legacy winpty backend
+    // and the conpty.dll backend are all quiet through plain kill().
+    ptyProcess.kill();
   }
 }

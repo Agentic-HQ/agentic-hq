@@ -3,10 +3,22 @@
  * Fake Claude CLI Fixture for Integration Testing
  *
  * This fixture mimics Claude Code's behavior for testing the kill script.
- * It calls the kill script with $PPID, which should terminate this process.
- * If the kill script works, this process dies immediately after calling it.
+ * It runs the kill script the way Claude Code (>= v2.1.214) would: as a
+ * `node` child process with CLAUDE_PID stamped into the child's environment
+ * (Claude Code sets CLAUDE_PID to its own PID for every process it spawns —
+ * here we stamp our own PID the same way).
+ *
+ * If the kill script works, this process dies immediately after spawning it.
  * If the kill script fails, this process continues and enters an infinite loop
- * waiting for user input (just like Claude does when waiting for next command).
+ * waiting for user input (just like Claude does when waiting for next command),
+ * and the integration test times out.
+ *
+ * HOW DEATH ARRIVES (per platform):
+ * - POSIX: the kill script sends SIGINT; the handler below exits 130
+ *   (128 + signal number 2), mimicking Claude Code's Ctrl+C behavior.
+ * - Windows: the kill script's process.kill(pid, 'SIGTERM') is an
+ *   unconditional TerminateProcess — no handler runs, the process just dies
+ *   with exit code 1.
  *
  * ============================================================================
  * TO RUN MANUALLY (from project root):
@@ -15,15 +27,14 @@
  *   pnpm exec tsx tests/integration/process-control/fixtures/fake-claude-cli.triggers-kill-script.fixture.ts
  *
  * EXPECTED BEHAVIOR:
- *   - If kill script works: Process dies immediately after "Calling kill-current-cli-process.sh..."
+ *   - If kill script works: Process dies immediately after "Running kill-current-cli-process-node.cjs..."
  *   - If kill script fails: You'll see "If you see this then the kill script didn't work"
  *     and the process will hang waiting for input (Ctrl+C to exit)
- *
- * NOTE: During RED phase TDD, the kill script is disabled, so the fixture will NOT be killed.
  * ============================================================================
  *
  * Used by: tests/integration/process-control/kill-script-terminates-cli-process.integration.test.ts
- * See: https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/10092545/AHQ-21+-+Create+Integration+Test+for+Unix+CLI+Process+Kill+Script
+ * See: https://agentic-hq.atlassian.net/browse/AHQ-211 (CLAUDE_PID port; original
+ * bash/$PPID mechanism: https://agentic-hq.atlassian.net/browse/AHQ-21)
  */
 
 import { spawn } from 'node:child_process';
@@ -40,6 +51,8 @@ const SIGINT_EXIT_CODE = 130;
 /**
  * Handle SIGINT (Ctrl+C / kill -INT) by exiting immediately.
  * This mimics how Claude Code CLI responds to SIGINT - it terminates.
+ * POSIX-only in practice: on Windows the kill script's SIGTERM is an
+ * unconditional TerminateProcess, so no handler ever runs there.
  *
  * WHY THIS IS NEEDED:
  * Node.js processes signals asynchronously via the event loop. When the kill
@@ -73,10 +86,14 @@ const KILL_SCRIPT_PATH = path.join(
   'skills',
   'self-termination',
   'scripts',
-  'kill-current-cli-process.sh'
+  'kill-current-cli-process-node.cjs'
 );
 
-// Validate script exists before attempting to call it
+// Validate script exists before attempting to call it.
+// DELIBERATELY BEFORE the startup message: on Windows the expected
+// "killed" exit code (1, TerminateProcess) is indistinguishable from an
+// error exit, so the test tells them apart by the startup message — an
+// early error exit must not print it.
 if (!existsSync(KILL_SCRIPT_PATH)) {
   console.error(`${timestamp()} - ERROR: Kill script not found at ${KILL_SCRIPT_PATH}`);
   console.error(`${timestamp()} - Current working directory: ${process.cwd()}`);
@@ -88,12 +105,13 @@ console.log(`${timestamp()} - Hi I'm fake-claude-cli.triggers-kill-script.fixtur
 
 // Step 2: Print message before calling kill script
 console.log(
-  `${timestamp()} - Calling kill-current-cli-process.sh which should kill me immediately...`
+  `${timestamp()} - Running kill-current-cli-process-node.cjs which should kill me immediately...`
 );
 
-// Step 3: Call the kill script with $PPID
-// Using bash -c to ensure $PPID is expanded by the shell to the parent process ID
-// This matches how Claude Code would invoke the script
+// Step 3: Run the kill script as `node <script>` with CLAUDE_PID stamped
+// into the child's environment — exactly how Claude Code (>= v2.1.214)
+// spawns it via the Self Termination skill. The script reads CLAUDE_PID
+// and signals that process (us).
 //
 // ============================================================================
 // CRITICAL: WHY WE USE spawn() NOT spawnSync()
@@ -102,16 +120,16 @@ console.log(
 // loop. This caused the test to fail even though the kill script worked correctly:
 //
 // With spawnSync (BROKEN):
-//   1. spawnSync() starts bash child process
-//   2. Kill script runs, sends SIGINT to this process (the parent)
+//   1. spawnSync() starts the kill-script child process
+//   2. Kill script runs, sends SIGINT to this process (via CLAUDE_PID)
 //   3. SIGINT is QUEUED because event loop is blocked by spawnSync
-//   4. spawnSync() returns after bash exits
+//   4. spawnSync() returns after the child exits
 //   5. Code continues to "If you see this..." line
 //   6. Event loop resumes, SIGINT handler finally runs
 //   7. Process exits - but too late, failure message already printed!
 //
 // With spawn (CORRECT):
-//   1. spawn() starts bash child process (non-blocking)
+//   1. spawn() starts the kill-script child process (non-blocking)
 //   2. Event loop continues running
 //   3. Kill script runs, sends SIGINT to this process
 //   4. SIGINT is processed IMMEDIATELY by event loop
@@ -120,15 +138,18 @@ console.log(
 //
 // The real Claude Code CLI doesn't block on child processes, so it receives
 // and processes SIGINT immediately. Our fixture must do the same.
+// (On Windows the ordering question doesn't arise — TerminateProcess kills
+// us regardless of what the event loop is doing.)
 // ============================================================================
-const child = spawn('bash', ['-c', `${KILL_SCRIPT_PATH} $PPID`], {
+const child = spawn(process.execPath, [KILL_SCRIPT_PATH], {
   stdio: 'inherit', // Pass through all output so test can see kill script's messages
+  env: { ...process.env, CLAUDE_PID: String(process.pid) },
 });
 
 // ==============================================================================
 // SIGNAL DELIVERY GRACE PERIOD (cosmetic only)
 // ==============================================================================
-// A race condition in this test was fixed by asserting on exit code (130)
+// A race condition in this test was fixed by asserting on exit code
 // instead of output — exit code is deterministic regardless of callback order.
 // This 1-second timeout just prevents a confusing "didn't work" message on
 // stdout; if it fires (extreme load >1s), the test still passes.
@@ -149,9 +170,9 @@ const SIGNAL_DELIVERY_GRACE_PERIOD_MS = 1000;
 child.on('close', (code) => {
   setTimeout(() => {
     // Step 4: If we get here, the kill script genuinely didn't work —
-    // SIGINT never arrived even after the grace period.
+    // no signal ever arrived even after the grace period.
     console.log(
-      `${timestamp()} - Finished calling kill-current-cli-process.sh If you see this then the kill script didn't work :-(`
+      `${timestamp()} - Finished running kill-current-cli-process-node.cjs If you see this then the kill script didn't work :-(`
     );
     console.log(`${timestamp()} - Kill script exit code: ${code}`);
 

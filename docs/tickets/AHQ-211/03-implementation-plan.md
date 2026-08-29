@@ -437,8 +437,13 @@ evidence), so each phase commit carries its own log entry.
       caught two things: the demo script had used the AHQ-106-removed `--workflow-command-supplier` flag
       since then (fixed to `node bin/agentic-hq.cjs reversal`), and the kill-on-exit ConPTY stderr noise
       (now Phase 5 item 6).
-- [ ] **Phase 5** — self-termination: ported tests first (red), script + SKILL.md (green), delete old `.sh`,
+- [x] **Phase 5** — self-termination: ported tests first (red), script + SKILL.md (green), delete old `.sh`,
       clean `temp/AHQ-211/`, quiet the ConPTY kill-on-exit noise → commit.
+      *(Done 2026-08-28, all 6 items TDD. Kill-script integration test green on Windows (fixture killed
+      via CLAUDE_PID + SIGTERM, exit 1); ConPTY noise fixed by disposing agent internals instead of
+      kill()'s console-list fork on an exited pty. Deleting the `.sh` left ZERO shell scripts in the
+      shipped tree → `executableFiles` enumerates to [] — machinery/guards kept, noted as a Phase 7
+      simplification candidate. Validate 241+3; integration build/runner/bin/process-control 18+2.)*
 - [ ] 🧑‍💻 **Phase 5 gate**: real-claude self-termination run once per OS (kills that session — expected),
       PLUS the deferred Phase 4 demo gate — `pnpm demo:agentic-hq-cli:string-reversal` on Windows AND a
       POSIX machine (spawns real Claude, ~20 s each) — and `pnpm validate` green on both OSes.

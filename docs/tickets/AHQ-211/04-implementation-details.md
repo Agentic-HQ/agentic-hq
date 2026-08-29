@@ -439,3 +439,87 @@ claude-agnostic (its SRP) and "assemble the executable" was already the builder'
   `claude-executes-command-using-file-io.integration.test.ts` — whose tool is pure production wiring —
   meaning real Claude launched through the new resolver → absolute-path pty.spawn chain on Windows and
   returned the reversed string. The 🧑‍💻 demo gate remains the deliberate proof.
+
+---
+
+## Phase 5 — Self-termination cross-platform (CLAUDE_PID node kill script)
+
+**Scope:** plan items 1–6, in one TDD pass (design pre-validated live on all 3 OSes 2026-08-24, D2).
+
+**What was done (each red first, for the intended reason):**
+
+1. **Ported the process-control integration test + fixture (item 1).** Baseline run first (run-before-
+   modify): the OLD test fails on Windows at spawn time — node-pty error 193 (ERROR_BAD_EXE_FORMAT), the
+   extensionless `node_modules/.bin/tsx` shell-script shim isn't a Windows executable — the exact D4
+   problem. Port: the fixture now runs the kill script as `node <script.cjs>` with `CLAUDE_PID` stamped
+   into the child env from its own pid (mimicking Claude Code >= v2.1.214, which stamps its PID into
+   every process it spawns); the test spawns the fixture as `node node_modules/tsx/dist/cli.mjs
+   <fixture>` per D4; expected exit code is per-platform (130 POSIX via the fixture's SIGINT handler /
+   1 win32 via TerminateProcess); internal timeout widened 30 s → 60 s. The fixture's script-exists
+   check stays deliberately BEFORE its startup message: on Windows the "killed" exit code (1) equals a
+   generic error exit, so the test's startup-message assertion is what distinguishes a kill from an
+   early crash — documented in both files. RED: `pnpm test:integration:kill-script` failed with
+   "ERROR: Kill script not found at …kill-current-cli-process-node.cjs" — and the red itself proved the
+   D4 spawn fix (tsx ran under ConPTY; no more 193).
+2. **`kill-current-cli-process-node.cjs` (item 2, the green).** Created in the skill's scripts dir from
+   the plan's validated reference logic: CLAUDE_PID validation (missing/non-integer/<=1 → error naming
+   the >= v2.1.214 requirement), signal-0 existence probe, then SIGINT on POSIX / SIGTERM
+   (TerminateProcess) on win32. Console output only — the "writes NO files, ever" hard requirement is
+   stated in the header with the Phase 3 shipped-stray-log incident as the reason. Test green in ~1.7 s
+   (Windows: SIGTERM → exit 1 observed in the pty output).
+3. **SKILL.md (item 3).** `kill-current-process-script-path` → the `.cjs`; invocation is now
+   `node "{kill-current-process-script-path}"` (explicit node, quoted, no argument — CLAUDE_PID comes
+   from the environment).
+4. **Deleted `kill-current-cli-process.sh` (item 4)** after a Grep sweep — every remaining reference is
+   a historical ticket/jira doc. Notable: that was the LAST `.sh` in the shipped plugin tree (the two
+   survivors live in the unshipped steve-test-plugin), so the generated manifest's
+   `publishConfig.executableFiles` now enumerates to an empty list. Nothing to unlist — the list is
+   built dynamically from the staged tree each build — and the machinery + wrong-packer prepack guard
+   are deliberately kept (future shell scripts, and the guard's pnpm-only rationale is cheap
+   insurance). Flagged as a possible Phase 7 simplification candidate.
+5. **`temp/AHQ-211/` deleted (item 5)** — 14 gitignored experiment scripts/logs (including the aborted
+   temp-mac-instructions draft, parked at Steve's "don't worry about it").
+6. **ConPTY `AttachConsole failed` noise quieted (item 6).** Root cause read straight out of the pinned
+   node-pty 1.1.0 source: `WindowsPtyAgent.kill()` on the ConPTY path ALWAYS forks a
+   `conpty_console_list_agent` helper to sweep console processes that outlive a live pty
+   (Microsoft/vscode#26807) — on an already-exited child the console is gone, AttachConsole fails, and
+   the helper crashes to our stderr. New `disposeExitedPty()` in `pty-cli-wrapper.ts`: on win32 +
+   ConPTY (+ not the conpty.dll backend) it performs kill()'s remaining cleanup directly on the agent
+   internals — sockets unreadable, native handle released, conout worker disposed (the parts that end
+   the Phase 4 keep-alive) — skipping the fork; POSIX, winpty and conpty.dll shapes fall back to plain
+   `kill()`. Internals access is justified in place by the exact-version pin (supply-chain rule,
+   AHQ-170). The live-signal cleanup path (`signalCleanup`) keeps plain `kill()` — its pty is alive, so
+   the console sweep works there.
+
+**Decisions / deviations:** none against the plan's spec. Same-session field evidence for the gate's
+rationale: a `pnpm demo:agentic-hq-cli:string-reversal` Steve launched before these changes landed sat
+hung for ~50 min (spawned session couldn't self-terminate via the old `.sh`) — killed off; post-Phase-5
+demo runs are exactly what the 🧑‍💻 gate re-tests.
+
+**Test evidence (per changed file, on this Windows machine):**
+
+- Kill-script integration (`pnpm vitest run --config vitest.integration.config.ts
+  tests/integration/process-control/kill-script-terminates-cli-process.integration.test.ts` — runs both
+  the test AND the fixture): baseline fail (error 193) → red for the right reason (script missing) →
+  **1 passed** (~1.7 s).
+- PTY wrapper unit (`…vitest.unit.config.ts tests/unit/io/terminal/pty-cli-wrapper.unit.test.ts`):
+  1 red (exit disposal still went through `kill()`) → **5 passed + 1 POSIX-only skip**. Two new win32
+  tests: quiet ConPTY disposal, and a winpty-backend plain-kill() fallback pin (the pin was green
+  pre-change — logged as a pin, not a red).
+- The `.cjs` script itself is executed by the kill-script integration test above (its "Terminating CLI
+  process …" line appears in the pty output). SKILL.md's prose + the script under REAL Claude is the
+  🧑‍💻 Phase 5 gate (plus the deferred demo gate), per plan.
+- Gates: `pnpm validate` fully green — typecheck ✓, lint ✓, format ✓, **241 unit tests passed + 3
+  POSIX-only skips** (244 defined; was 242 — +2 new PTY tests). Integration
+  build/runner/bin/process-control: **7 files, 18 passed + 2 POSIX-only skips** — the 17+2 part-2
+  baseline plus the newly-green kill-script test; the runner files spawn real ptys through the wrapper,
+  so this is the actual-ConPTY regression check for the disposal change.
+
+**Refactor list (Steve, post-Phase-5 review):** `PtyCLIWrapper` has grown hard to read — the private
+`WindowsPtyAgentInternals` interface in particular is a bag of options that don't self-document. When it
+earns the work, refactor to the project pattern of one interface + self-documenting concrete type per
+element (interfaces under `src/interfaces/pty`), pushing behaviour onto those concrete classes so the
+wrapper stops accreting pty behaviour and `disposeExitedPty` (a Windows keep-alive/noise workaround)
+sits inside a type structure. Deliberately DEFERRED: the class is self-contained and doesn't obscure the
+wider project; revisit if AHQ gets heavy use. Recorded as a REFACTOR LATER comment at the top of
+`src/io/terminal/pty-cli-wrapper.ts`.
