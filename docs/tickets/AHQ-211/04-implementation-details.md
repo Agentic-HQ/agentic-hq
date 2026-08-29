@@ -699,3 +699,88 @@ GONE (`npm config get registry` clean). Normal root `pnpm install`: exit 0. `pnp
 1 passed, 25.3 s — the release build ran `pnpm install` in all 7 shipped workflow dirs TWICE under
 the new config with identical output hashes. `test:integration:publish-guards`: 2 passed + 2
 POSIX-only skips.
+
+### Item 3: Docs pass (DONE 2026-08-29, Windows session — pending Steve's review, the item's gate)
+
+**User-facing.** `README.md`: OS section now lists native Windows (tested on Windows 11,
+PowerShell, no WSL/Git Bash) with WSL moved to "untested"; VMware workaround route deleted;
+"Windows only: nothing extra" prerequisites block (prebuilt node-pty, Git not required, Anthropic's
+standard Claude install — per Steve's mid-session switch AWAY from recommending winget, the docs
+name no specific installer and the planned "winget auto-update warning" was DROPPED: no substance
+for it exists in the ticket docs and the recommendation changed anyway; revisit after Steve's
+native-installer test if needed); new "Windows notes" subsection (execution policy per report §6 —
+RemoteSigned or `.cmd` suffix; nvm-windows global-wipe; local-NTFS/OneDrive junction constraints —
+explicitly NO Developer Mode needed; Defender slowness); the `/tmp` example got a PowerShell twin.
+`troubleshooting.md`: "Windows unsupported" entry REPLACED by `npm.ps1 cannot be loaded` and
+nvm-windows-wipe (user variant) entries; new Tool-section Windows entries (junction
+`EPERM`/`EBUSY` on UNC/FAT32/exFAT/OneDrive; Defender; `CLAUDE_CODE_GIT_BASH_PATH` for
+missing/non-standard Git Bash); Contributor section — npm-link warnings entry rewritten (the
+`frozen-lockfile` warning died with 2b's `.npmrc` deletion; allow-scripts warning now
+Linux+Windows), nvm-windows wipe dev variant, Windows shim-location parentheticals
+(`<prefix>` directly, no `bin\`), `Get-Command` alternative to `which`. `CONTRIBUTING.md`:
+platform paragraph + FAQ updated (three OSes, WSL untested); "Platform expansion" bullet →
+"Platform hardening"; CI section describes both jobs.
+
+**Dev docs.** `setting-up-agentic-hq-for-development.md`: Windows-only prerequisites block (no
+toolchain; Git+`gh` required — opposite of end-user story; local NTFS; execution-policy pointer);
+nvm-windows in step 2 with redo-corepack/npm-link-after-switch note; the Mac session's "`pnpm
+install` is not one-off" note added after step 5 (wording adapted: cites `pnpm-workspace.yaml`
+`frozenLockfile`, not the deleted `.npmrc`); step-6 warnings note rewritten (one warning, both
+OSes). `ci-configuration.md`: two checks named; new "The Windows Job" section (same-steps
+rationale, the four integration-suite steps table, one-step-per-suite pwsh reason, 45-min
+timeout); stale `.npmrc` row fixed; Reproducing-CI-Locally gets the PowerShell story + the four
+suite commands. `ci.yml` ubuntu comment: "two documented warnings" → one (2b killed the other).
+`publish-checklist.md`: publish-from-Mac-only added as the FIRST "why" bullet + a §1 precondition;
+**§3's `executableFiles` check INVERTED** — it demanded a non-empty `.sh` list, which would have
+FAILED the next publish (Phase 5 emptied the list); now requires exactly `[]`; both stale
+`.npmrc`-warning mentions removed. `glossary.md`: standard file set corrected (no `.npmrc`).
+`npm-commands.md`: verify-only sweep — accurate, no changes (all documented demo scripts exist).
+
+**`how-agentic-hq-works.md` accuracy pass:** far better than the plan feared — the D1
+skill-base-dir handshake, argv-array/no-shell spawning, and junction-on-Windows language were
+already in place (maintained during Phases 3–5; ~7 anticipated stale "symlink" mentions did not
+exist). The one real gap: how a spawned session ENDS — added a "How each session ends:
+self-termination" block to the PTY section (CLAUDE_PID ≥2.1.214, SIGINT/SIGTERM per platform,
+wrapper observes exit, `.sh`→`.cjs` history explaining the empty executableFiles), verified
+against the Phase 5 log before writing.
+
+**Shipped-docs shell-neutrality audit:** clean except the known utilities-plugin Jira extractor
+(`jq`/`/tmp`/`wc` — stays on the Phase 7 list); other grep hits were TS snippets or
+release-excluded draft dirs; `pnpm typecheck` in a ```bash fence is shell-neutral. One hardening:
+create-workflow `03-run-checks-on-workflow.md`'s build command got double-quoted path args (the
+risk note's spaces-safe rule) + a keep-the-quotes note.
+
+**Steve-decided follow-ups during item 3 review (2026-08-29):**
+
+1. **CI-vs-client-Windows question researched** (web + GitHub docs): NO x64 client-Windows hosted
+   image exists — x64 runners are Windows Server only (`windows-latest` = Server 2025 since
+   2025-09); the only client image is `windows-11-arm` (real Windows 11 Desktop, arm64, GA, free on
+   public repos — this repo IS public). Perplexity's "simulate Restricted in CI" option analysed
+   and rejected: process-scoped it evaporates at step boundaries (each `run:` is a fresh shell);
+   in-step it can't test the documented fix (Process scope OUTRANKS CurrentUser); persisted at
+   CurrentUser it blocks the runner's own generated step `.ps1`s — harness failure, not signal.
+   **Decision: keep CI as-is** (no windows-11-arm job, no simulation, keep it simple); pristine
+   client-defaults coverage belongs to item 4's Windows Sandbox validation.
+2. **Single recommended Windows path: PowerShell** + the one-time
+   `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`, with `.cmd` suffixes demoted from
+   equal-alternative to fallback — README Windows notes, troubleshooting entry and dev setup doc
+   all reworded to lead with the policy command.
+   **Attribution corrected (Steve-caught):** the §6 report's claim that this is "the setting npm's
+   own docs recommend" is UNSUPPORTED — web research (2026-08-29) finds no docs.npmjs.com page
+   recommending it; the advice is community guides (Medium/DEV/MS Q&A), and the nvm-windows founder's
+   stance is NOT to advise changing Windows security settings. Docs now say: the fix most Windows dev
+   guides use, framed explicitly as a security setting that is the user's call (RemoteSigned = local
+   scripts run, downloaded must be signed), `.cmd` fallback for those who'd rather not.
+3. **CI run-log note added**: the windows `npm link` step now echoes into the run OUTPUT that
+   `npm` resolves to `npm.ps1` and only works because Windows Server defaults to RemoteSigned —
+   on client Windows it fails until the user runs the recommended one-time step. (Verified the
+   resolution claim locally: this machine's PowerShell runs `npm.ps1` — its warning banner shows
+   the shim's `& node.exe …npm…` invocation.) ci-configuration.md documents the note and both
+   declined alternatives.
+4. **Installer recommendation switch**: away from winget to Anthropic's native install route —
+   docs kept installer-neutral; Steve tests the native installer separately after this commit
+   (deliberately post-commit: the reinstall could interrupt the running session).
+5. **PowerShell is the ONLY documented shell** — all "or Command Prompt" support claims removed
+   from README/CONTRIBUTING/troubleshooting/ci-configuration (less variation to support); the
+   `.cmd`-suffix fallback is explicitly framed as "still in PowerShell". Command Prompt very
+   likely works but is deliberately undocumented and unsupported.

@@ -377,6 +377,20 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
      `supporting-files/files-created-by-mac-claude-while-testing/mac-gate-5-results-and-phase-6-doc-suggestion.md`.
    - `npm-commands.md` + `publish-checklist.md`: verify-only sweep (demo scripts now use relative dirs
      resolved by the runner; both prepack guards are Node scripts since Phase 1) — expected already accurate.
+   **DONE 2026-08-29 (Windows session) — pending Steve's docs review (the item's gate).** All four
+   parts landed: README (Windows supported + Windows-notes subsection; installer-neutral wording after
+   Steve's mid-session switch away from recommending winget — the planned "winget auto-update warning"
+   was DROPPED, no substance existed for it and the recommendation changed; PowerShell twin for the
+   `/tmp` example), troubleshooting (6 new/rewritten Windows entries incl. both nvm-windows-wipe
+   variants and `CLAUDE_CODE_GIT_BASH_PATH`), CONTRIBUTING, dev docs (setup doc Windows path + the Mac
+   session's "`pnpm install` is not one-off" note; ci-configuration Windows-job section incl.
+   why-no-Set-ExecutionPolicy — windows-latest is Windows Server = RemoteSigned default;
+   publish-checklist publish-from-Mac rule + an INVERTED-stale `executableFiles` §3 check that would
+   have failed the next publish; glossary file-set fix). `how-agentic-hq-works.md` was already
+   accurate from Phases 3–5 upkeep except session-end — added the Phase 5 self-termination block.
+   Shipped-docs shell-neutrality audit clean except the Phase-7-deferred utilities Jira extractor;
+   quoted the create-workflow check command's path args. Evidence in 04-implementation-details.md
+   Phase 6 Item 3.
 4. **Git-free validation**: on a Windows environment with no Git installed (e.g. Windows Sandbox or a clean VM),
    install Claude Code + Node only and run `agentic-hq list` + the string-reversal demo. This proves the
    normal-user story AND Claude's PowerShell-tool mode (without Git Bash, Claude has no Bash tool) — currently

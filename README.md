@@ -17,12 +17,10 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 Supported and tested:
 - **macOS** - requires macOS 13.5 or newer (AHQ was developed and tested on 15.7.5).
 - **Linux** - tested on Ubuntu 24.04 LTS
+- **Windows** - native Windows, tested on Windows 11. Runs from PowerShell — no WSL and no Git Bash required. See [Windows notes](#windows-notes) below.
 
-Unsupported:
-- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to do one of the following:
-   - Install free VMware and set up Ubuntu 24.04 LTS.  This is fully tested and works. A guide will be available [here](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMware#Required-Dev-Tools) once Confluence is publicly available (should be less than 1 week after going public)
-   - Try on Windows Subsystem for Linux. Untested, but if the paths work the same as Linux it's likely to work.  Please let us know how this went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7)
-   - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING.md](CONTRIBUTING.md)
+Untested:
+- **WSL** (Windows Subsystem for Linux) — native Windows is now supported, so you probably don't need WSL; if you try it anyway, please let us know how it went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7).
 
 ### Prerequisites
 
@@ -35,12 +33,20 @@ Linux only:
 
 ### Installation
 
-1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it is version 22 or 24 (the only supported lines — other versions, including 23 and 25+, are unsupported). After installation confirm success by running:
+1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm (on Windows, a version manager such as [nvm-windows](https://github.com/coreybutler/nvm-windows) works well — that's what AHQ is tested with). If you already have Node.js, please confirm it is version 22 or 24 (the only supported lines — other versions, including 23 and 25+, are unsupported). After installation confirm success by running:
    ```bash
    node -v
    ```
 
-2. **Install Agentic HQ:**
+2. **Windows only — if PowerShell blocks `npm` (`npm.ps1 cannot be loaded`), run the following once to allow PowerShell scripts:**
+
+   ```powershell
+   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+   ```
+
+   Without this, PowerShell blocks the `npm` command itself. See [Windows notes](#windows-notes) for what it changes and for an alternative if you can't or don't want to change this security setting (e.g. on a locked-down machine).
+
+3. **Install Agentic HQ:**
 
    ```bash
    npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
@@ -58,13 +64,14 @@ Linux only:
 
    (Prefer to try first without installing? `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list` runs it directly without installing it. `npx` needs the same flag, for the same reason.)
 
-3. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
+4. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
    ```bash
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
-Or if you want to run it without installing it:
+   Or if you want to run it without installing it:
+
    ```bash
    npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
@@ -143,9 +150,16 @@ agentic-hq <short-name> -- [passthrough args]
 ### Example
 
 ```bash
-# Create a temporary workspace and run the string reversal demo from it
+# Create a temporary workspace and run the string reversal demo from it (macOS/Linux)
 mkdir /tmp/my-temp-workspace
 cd /tmp/my-temp-workspace
+agentic-hq reversal -- --string-to-reverse="this is working well"
+```
+
+```powershell
+# The same on Windows (PowerShell)
+mkdir $env:TEMP\my-temp-workspace
+cd $env:TEMP\my-temp-workspace
 agentic-hq reversal -- --string-to-reverse="this is working well"
 ```
 
@@ -189,6 +203,13 @@ Here's the rest of what Agentic HQ ships with:
   ```
 
 For the full catalogue — every shipped workflow, what it does, and links to its source — see [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md).
+
+### Windows notes
+
+Everything in this README works natively on Windows from PowerShell — the supported shell.
+
+To note:
+- **Why the `Set-ExecutionPolicy` install step:** out of the box, PowerShell's `Restricted` policy blocks the `.ps1` shims npm and Node version managers put on your `PATH` (`npm.ps1 cannot be loaded`). `RemoteSigned` allows scripts created locally (like npm's shims) to run, while still requiring downloaded scripts to be signed. It is a Windows security setting, so it's your call — it's the fix most Windows dev guides use, but if you can't or don't want to relax the policy (e.g. a locked-down installation), the alternative is: still in PowerShell, append `.cmd` to the blocked command (`npm.cmd`, `npx.cmd`) — the `.cmd` variants are never blocked. Either way, this only affects what **you** type in a terminal; Agentic HQ's own subprocesses never go through PowerShell.
 
 ## Further Documentation
 

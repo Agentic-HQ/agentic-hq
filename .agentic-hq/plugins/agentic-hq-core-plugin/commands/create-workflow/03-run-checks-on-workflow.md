@@ -132,8 +132,10 @@ This step fills in the **"Workflow Build (2) passes"** row that Step 2 added to 
 Run the same build the shared workflow runner performs before every `build-first` run — one command that does the `pnpm install`, creates the `node_modules/agentic-hq` framework symlink, and compiles `src/` into `dist/`:
 
 ```bash
-node {ahq-package-root}/scripts/build-workflow.cjs --workflow-dir={ts-workflow-dir} --ahq-package-root={ahq-package-root}
+node "{ahq-package-root}/scripts/build-workflow.cjs" "--workflow-dir={ts-workflow-dir}" "--ahq-package-root={ahq-package-root}"
 ```
+
+(Keep the double quotes — they make the command safe for paths containing spaces, in both POSIX shells and PowerShell.)
 
 Because this is the exact build every later run of the workflow performs, a PASS here means the workflow will build identically at run time. The TypeScript version comes from the workflow's own `devDependencies` (the standard file set pins `typescript` there), so the compile matches what the workflow will use everywhere.
 

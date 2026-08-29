@@ -193,7 +193,22 @@ by using [`node-pty`](https://github.com/microsoft/node-pty) to spawn the CLI
 inside a **pseudo-terminal** (PTY) — a virtual terminal device that looks
 like a real one to any program asking. Claude's `isatty()` check returns
 *yes*, the CLI streams its full output as normal, and AHQ captures it from
-the other end of the PTY.
+the other end of the PTY. (node-pty ships prebuilt binaries for macOS and
+Windows — where the PTY is ConPTY — and compiles from source on Linux.)
+
+**How each session ends: self-termination** (AHQ-211 Phase 5). An
+interactive Claude session doesn't exit when its work is done — it sits
+waiting for the next prompt. So every AHQ command's instructions end by
+telling Claude to run the core plugin's `self-termination` skill:
+`node "<…/skills/self-termination/scripts/kill-current-cli-process-node.cjs>"`.
+Claude Code (≥ v2.1.214) stamps its own PID into every process it spawns as
+the `CLAUDE_PID` environment variable; the script validates it and kills
+that process — SIGINT on POSIX, SIGTERM on Windows. The session terminates
+itself from the inside, the PTY child exits, and the wrapper simply observes
+the exit — no signal injection or platform-specific teardown on the AHQ
+side. Being a Node script, it behaves identically on all three OSes (it
+replaced an earlier `.sh` version — which was also the last shipped shell
+script, which is why nothing in the published package needs execute bits).
 
 ---
 

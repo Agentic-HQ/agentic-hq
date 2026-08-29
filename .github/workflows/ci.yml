@@ -76,8 +76,8 @@ jobs:
         run: pnpm install
 
       # Contributor setup step 6: install the CLI onto PATH. The exact path where Linux
-      # issues surfaced before (AHQ-169, AHQ-172). On Linux it prints two
-      # documented, harmless warnings — they do not fail the step.
+      # issues surfaced before (AHQ-169, AHQ-172). It prints one documented,
+      # harmless allow-scripts warning — it does not fail the step.
       - name: Install CLI onto PATH (npm link)
         run: npm link
 
@@ -95,6 +95,9 @@ jobs:
   # Windows support (AHQ-211): the same contributor steps on windows-latest,
   # plus the non-Claude integration suites guarding the Windows-changed
   # surfaces. See the header comment for why each suite is its own step.
+  # No Set-ExecutionPolicy step: the .ps1-shim blocking that bites users is
+  # client Windows' Restricted default — windows-latest is Windows Server,
+  # which defaults to RemoteSigned, so npm/pnpm shims run as-is.
   validate-windows:
     runs-on: windows-latest
     # More generous than the ubuntu job's 15: the Windows runner is slower on
@@ -122,8 +125,13 @@ jobs:
       # The exact surface AHQ-211 exists for: on win32 `npm link` writes .cmd
       # shims rather than a symlinked executable, and `agentic-hq-dev list`
       # resolves the shim + runs the Framework Build (1) + CLI startup.
+      # The echo below is deliberately in the run OUTPUT, not just here: log
+      # readers should know this step is quietly relying on the runner's
+      # server-default execution policy.
       - name: Install CLI onto PATH (npm link)
-        run: npm link
+        run: |
+          echo "NOTE: under PowerShell, 'npm' here resolves to its npm.ps1 shim. That works on this runner only because windows-latest is Windows SERVER (default policy RemoteSigned). On a real Windows 10/11 client machine (default Restricted) this same command FAILS until the user runs the one-time step our README recommends: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
+          npm link
 
       - name: Smoke test CLI (no Claude required)
         run: agentic-hq-dev list

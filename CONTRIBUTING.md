@@ -25,7 +25,7 @@ AI-assisted contributions are welcome, but the human submitting the PR is expect
 
 Agentic HQ is **pre-1.0** (currently v0.2.0). Expect rough edges, evolving APIs, and the occasional rename.
 
-It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5) and **Linux** (tested on Ubuntu 24.04 LTS). Windows is unsupported — the tested route for Windows users is free VMware + Ubuntu 24.04 LTS; WSL is untested but may work. Platform-expansion contributions (native Windows / WSL) are explicitly invited — see "Ways to contribute" below.
+It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5), **Linux** (tested on Ubuntu 24.04 LTS) and **native Windows** (tested on Windows 11 — PowerShell, no WSL needed). WSL itself is untested. Contributing works from all three OSes — the contributor setup doc covers both the POSIX and Windows paths (note Git and `gh` ARE required for development, unlike normal use).
 
 It is **maintained by one person** right now, so please calibrate expectations:
 
@@ -44,7 +44,7 @@ Ways you can contribute (ordered by how likely they are to get merged/considered
 - **Behaviour-preserving refactors** that genuinely improve readability or remove duplication.
 - **Fix bugs** with a regression test that fails before your fix and passes after.
 - **Propose features** — open an issue first to scope it out before writing code (see "Proposing changes").
-- **Platform expansion** — native Windows support and WSL fixes. Particularly valuable; coordinate via an issue first to avoid duplicate work.
+- **Platform hardening** — Windows/macOS/Linux edge cases and WSL validation. Particularly valuable; coordinate via an issue first to avoid duplicate work.
 - **Share what you built with AHQ** — pop into the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7) and tell us. Real-world use shapes the roadmap.
 
 ## Reporting issues
@@ -95,9 +95,9 @@ If `pnpm validate` fails on `format:check`, please run `pnpm format:check` to co
 
 ## Continuous Integration (CI)
 
-Every PR targeting `main` (and every push to `main`) automatically runs the CI workflow on a fresh Ubuntu VM via GitHub Actions. It follows the same steps a new contributor follows in [`docs/dev/setting-up-agentic-hq-for-development.md`](./docs/dev/setting-up-agentic-hq-for-development.md) — pinned pnpm via Corepack, frozen `pnpm install`, `npm link`, an `agentic-hq-dev list` smoke test, and `pnpm validate` — everything except the Claude-dependent steps.
+Every PR targeting `main` (and every push to `main`) automatically runs the CI workflow on fresh Ubuntu **and Windows** VMs via GitHub Actions. Both jobs follow the same steps a new contributor follows in [`docs/dev/setting-up-agentic-hq-for-development.md`](./docs/dev/setting-up-agentic-hq-for-development.md) — pinned pnpm via Corepack, frozen `pnpm install`, `npm link`, an `agentic-hq-dev list` smoke test, and `pnpm validate` — everything except the Claude-dependent steps; the Windows job additionally runs the non-Claude integration suites guarding the Windows-support surfaces.
 
-**A green "CI / validate" check is required before a PR is merged.** If CI fails, open the failing step's log from the PR's Checks tab (click the `validate` job in the left sidebar, then expand the red step), fix, and push again — CI re-runs automatically on every push to the PR branch.
+**Green CI checks are required before a PR is merged.** If CI fails, open the failing step's log from the PR's Checks tab (click the failing job — `validate` or `validate-windows` — in the left sidebar, then expand the red step), fix, and push again — CI re-runs automatically on every push to the PR branch.
 
 Full details — exactly what CI runs and why, what's deliberately absent, the security posture, and how to view run logs — are in [`docs/dev/ci-configuration.md`](./docs/dev/ci-configuration.md).
 
@@ -155,4 +155,4 @@ In the first phase of this project contributors will be asked to raise bugs on G
 
 **Why must I disclose AI use?** Because the project's *subject matter* is AI-assisted development. We owe contributors and users honesty about how the code was built — and we want to see real-world patterns of AI-assisted contribution.
 
-**Which platforms are tested?** macOS (15.7.5) - that's where the maintainer develops. Installs and runs on Linux (Ubuntu 24.04 LTS). Windows is unsupported; the tested route for Windows users is VMware + Ubuntu 24.04 LTS, and WSL/Windows contributions and bug reports are explicitly welcome (see "Ways to contribute").
+**Which platforms are tested?** macOS (15.7.5) — that's where the maintainer develops — plus Linux (Ubuntu 24.04 LTS) and native Windows (Windows 11). CI runs on Ubuntu and Windows on every PR. WSL is untested; WSL validation and platform edge-case reports are explicitly welcome (see "Ways to contribute").
