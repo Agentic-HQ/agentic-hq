@@ -282,6 +282,17 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
    for win32 (`<prefix>\agentic-hq.cmd`, `<prefix>\node_modules\…`); platform-conditional assertions (exec bits,
    `darwin-*` vs `win32-*` prebuilds, `tar` usage via bsdtar-safe flags); timeout headroom. (Full e2e runs stay a
    **Steve-triggered** validation — they spawn real Claude.)
+   **DONE 2026-08-29, with one plan change (Steve-approved via side conversation):** the two tarball-packing
+   e2e suites (`prebuilt-tarball…`, `user-workspace…`) are **skipped on win32 by policy** instead of ported —
+   their setup packs the release tree, which the prepack guard refuses on Windows (publish-from-Mac), so
+   porting them was Windows-packaging work we'll never use. The win32 `npm -g --prefix` layout branch and
+   win32 prebuild assertions were therefore NOT shipped (layout verified empirically and recorded in
+   04-implementation-details.md); the tarball-install helper instead fails fast on win32. Everything else in
+   this item landed: `os.tmpdir()` everywhere (the old `/tmp` literals silently created `C:\tmp` on Windows),
+   `.cmd`-aware PATH preconditions, `tar` flags verified already bsdtar-safe (no change needed), timeout
+   headroom (600→900 s on build/pack/install paths), plus two Phase-5-staleness fixes to the tarball test's
+   `executableFiles`/shipped-`.sh` assertions that would fail on the next MAC run. Details + verification
+   evidence in the Phase 6 section of 04-implementation-details.md.
    **Validation slimmed (Steve, 2026-08-29 — token budget):** the porting work is verified with unit tests
    and non-Claude checks only; Steve runs JUST `test:e2e:agentic-hq-cli-string-reversal` on Windows this
    phase (~2 short spawned sessions, same cost as the demo, and it exercises the edited helper paths). The
@@ -475,7 +486,11 @@ evidence), so each phase commit carries its own log entry.
       wrapper passes its env through to every spawned Claude; scoped to that shell, auto-reverts on close).
       Doubles as a staleness check — these tests haven't been run in months on ANY OS, so this is also
       "do they still pass at all", not just "do they pass on Windows". Jira e2e creates real test issues —
-      expected. Not a merge blocker: PR/merge can proceed on the slimmed Phase 6 gate.
+      expected. Note (2026-08-29): the two tarball-packing suites will show as SKIPPED on Windows by policy
+      (their setup packs the release tree, refused on win32 — see Phase 6 item 1); their staleness check
+      therefore needs a MAC `pnpm test:e2e` (or at least the prebuilt-tarball test, which Phase 6 already
+      fixed two known-stale assertions in) — fold that into the next Mac e2e/pre-publish run. Not a merge
+      blocker: PR/merge can proceed on the slimmed Phase 6 gate.
 - [ ] **Phase 7** — raise follow-up tickets (git-scripts port, mcp-installer script, marketplace-installed
       workflow validation, WSL smoke test, allowedTools/plugin-dir space-path real-Claude probe).
 - [ ] PR review → squash-merge to main (`/git:03`); next publish (from Mac) delivers the npm/npx routes.

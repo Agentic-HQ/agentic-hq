@@ -24,6 +24,18 @@ const RESET = '\x1b[0m';
 const SEPARATOR = '════════════════════════════════════════════════════════════';
 
 /**
+ * The log file path runCliAndLogOutput() will write for a given label.
+ *
+ * Exported so tests that mention the log file in their own output (e.g.
+ * timeout diagnostic banners) name the file the helper ACTUALLY writes —
+ * before AHQ-211 they hardcoded `/tmp/e2e-<label>.log`, which was wrong on
+ * Windows (no /tmp) and stale on macOS (os.tmpdir() is /var/folders/…).
+ */
+export function getLogFilePath(logFileLabel: string): string {
+  return path.join(LOG_FILE_DIRECTORY, `${LOG_FILE_PREFIX}${logFileLabel}${LOG_FILE_EXTENSION}`);
+}
+
+/**
  * Prints a bold red banner to stdout showing the log file path and tail -f command.
  *
  * Uses `process.stdout.write()` instead of `console.log()` because console.log
@@ -58,10 +70,7 @@ export function runCliAndLogOutput(
   timeoutMs?: number,
   workingDirectory?: string
 ): string {
-  const logFile = path.join(
-    LOG_FILE_DIRECTORY,
-    `${LOG_FILE_PREFIX}${logFileLabel}${LOG_FILE_EXTENSION}`
-  );
+  const logFile = getLogFilePath(logFileLabel);
   printBanner(logFile);
   const logFd = fs.openSync(logFile, 'w');
   try {

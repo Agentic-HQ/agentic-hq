@@ -545,3 +545,67 @@ wrapper stops accreting pty behaviour and `disposeExitedPty` (a Windows keep-ali
 sits inside a type structure. Deliberately DEFERRED: the class is self-contained and doesn't obscure the
 wider project; revisit if AHQ gets heavy use. Recorded as a REFACTOR LATER comment at the top of
 `src/io/terminal/pty-cli-wrapper.ts`.
+
+## Phase 6 — Test-suite portability, CI, docs
+
+### Item 1: e2e helper/test portability (DONE 2026-08-29, Windows session)
+
+**Plan change (Steve-approved via side conversation):** Steve asked whether porting publish-related
+tests to Windows was wasted work given publishing is Mac-now/CI-later, never Windows. Verified: both
+tarball e2e suites (`prebuilt-tarball-install-runs-math-workflow`, the user-workspace fixture test)
+run `pnpm pack` in their setup, and `prepack-guard.cjs` refuses release packing on win32 UNCONDITIONALLY
+(before even the pnpm-packer check) — so those suites can never run on Windows by design. Worse, the
+guard fires AFTER the helper's `pnpm build` step: without intervention the deferred Windows full-suite
+run would burn ~5–10 min building, then die with the refusal buried in a log file. Decision:
+`describe.skipIf(win32)` on both suites (via a `describeSkippedOnWindows` alias, commented as
+policy-not-gap), plus a fail-fast win32 throw at the top of `buildPackAndInstallTarball` so any future
+packing test without a skip errors instantly and clearly. The win32 `npm -g --prefix` layout branch I
+had drafted into the helper was reverted as dead code.
+
+**Recorded knowledge — win32 `npm install -g --prefix` layout (verified empirically with a dummy
+package, Windows 11 / npm via nvm-windows; NOT shipped as code):** package root lands at
+`<prefix>\node_modules\<pkg>` (no `lib/`), and the bin shims land DIRECTLY in the prefix —
+`<name>.cmd` (what cmd.exe/execSync resolves), `<name>.ps1`, and an extensionless sh script cmd.exe
+cannot run. POSIX layout (`<prefix>/lib/node_modules/<pkg>` + `<prefix>/bin/<name>`) stays the only
+one in code. If tarball tests ever need to run on Windows, this is the branch to add back.
+
+**Changes (9 files):**
+
+1. `tests/e2e/helpers/cli-test-helper-functions.ts` — extracted + exported `getLogFilePath(label)`;
+   `runCliAndLogOutput` now uses it. Tests' timeout banners previously duplicated the path as
+   `/tmp/e2e-<label>.log`, which was wrong on Windows AND stale on macOS (helper writes to
+   `os.tmpdir()` = `/var/folders/…` since the earlier AHQ-211 change).
+2. `tests/e2e/helpers/tarball-install-helper-functions.ts` — win32 fail-fast throw (see above);
+   per-step timeout 600→900 s (Defender headroom).
+3. 4 cross-workspace e2e tests + prebuilt-tarball + user-workspace + colliding-short-id integration
+   test — `TEMP_WORKSPACES_BASE` → `path.join(os.tmpdir(), 'agentic-hq-test-workspaces')`. The old
+   `/tmp/...` literal did NOT fail on Windows: `mkdirSync('/tmp/…')` resolves against the drive root,
+   so runs had been silently littering `C:\tmp` (found the dir on this machine from the Phase 4
+   accidental full-config run; deleted it after the fix landed).
+4. Same 4 cross-workspace tests — PATH precondition now also accepts `agentic-hq-dev.cmd` (npm link on
+   win32 writes shims, not a plain executable); `LOG_FILE_PATH` → `getLogFilePath(...)`; "auto-cleaned
+   from /tmp" trailing messages made platform-neutral.
+5. `prebuilt-tarball-install-runs-math-workflow.e2e.test.ts` — now consumes
+   `installedPackageRoot`/`installedBinPath` from the helper's return instead of duplicating the
+   POSIX layout locally; **two Phase-5 staleness fixes** (would fail on the next MAC run, found by
+   reading, not running): `publishConfig.executableFiles` is `[]` since Phase 5 deleted the last
+   shipped `.sh` (old assertion demanded non-empty), and the shipped-shell-scripts-must-be-executable
+   block likewise demanded ≥1 `.sh` — both flipped to assert NO `.sh` ships at all (tarball file list
+   AND installed tree), pinning the new "nothing needs exec bits" contract. Setup timeout 600→900 s.
+6. `string-reversal-workflow-in-new-workspace-lists-and-executes.e2e.test.ts` — setup/execution
+   timeouts 600→900 s.
+7. `tar` flags (`-tzf`, `-xOzf`): verified against Windows-native bsdtar 3.8.4 via cmd.exe — both work
+   as-is, NO change needed. (First probe accidentally hit Git Bash's GNU tar 1.35; re-probed against
+   `C:\WINDOWS\system32\tar.exe`, which is what execSync resolves.)
+8. NOT changed: `agentic-hq-cli-string-reversal.e2e.test.ts` (already portable — `node
+   bin/agentic-hq.cjs`, path.join throughout; this is the one Steve runs for the slimmed gate),
+   `e2e-test-sequencer.ts` (substring match, separator-safe), `hashTree` (already POSIX-normalised),
+   unit tests' opaque `/tmp/...` string arguments (data, no filesystem access).
+
+**Verification (per-file commands, no Claude spawned):** `pnpm typecheck` PASS; `pnpm vitest list
+--config vitest.e2e.config.ts` imports/collects every e2e module — the 5 non-packing suites list, the
+2 tarball suites are absent (skipIf active on win32), no import errors; colliding-short-id integration
+test executed: 1 passed, 1.24 s, workspace confirmed under `%TEMP%\agentic-hq-test-workspaces`;
+`pnpm validate` PASS (typecheck, lint, format, 241 passed + 3 skipped of 244). The e2e tests
+themselves stay Steve-triggered per the slimmed gate; the deferred Windows full-suite run and the next
+Mac e2e run are the executions that will prove them.

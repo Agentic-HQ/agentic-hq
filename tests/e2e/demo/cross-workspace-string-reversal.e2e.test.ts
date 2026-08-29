@@ -3,7 +3,7 @@
  *
  * Verifies that the agentic-hq CLI works from a SEPARATE workspace (not within the repo):
  * 1. Precondition: `agentic-hq-dev` is already on PATH (installed via README `npm link`)
- * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
+ * 2. Setup: Create a temp workspace at <os.tmpdir()>/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Run: agentic-hq-dev reversal -- --string-to-reverse="cross workspace test"
  * 4. Assert: Output contains the reversed string "tset ecapskrow ssorc"
  * 5. Assert: .agentic-hq/temp/command-input-output-files/ exists with expected output files
@@ -21,22 +21,24 @@
 
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
-import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
+import { getLogFilePath, runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
 const TEST_TIMEOUT_MS = 300_000; // 300s because Claude can be reeeeeeeally slow
 const LOG_FILE_LABEL = 'cross-workspace-string-reversal';
-const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
+const LOG_FILE_PATH = getLogFilePath(LOG_FILE_LABEL);
 
 // Test data constants
 const TEST_INPUT_STRING = 'cross workspace test';
 const EXPECTED_REVERSED_STRING = 'tset ecapskrow ssorc';
 
-// Paths
-const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
+// Paths — under os.tmpdir(), never a hardcoded /tmp: /tmp does not exist on
+// Windows, where the literal path silently created C:\tmp instead (AHQ-211)
+const TEMP_WORKSPACES_BASE = path.join(os.tmpdir(), 'agentic-hq-test-workspaces');
 const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
@@ -50,9 +52,13 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq-dev bin
       // putting it on PATH is the installer's job, not the test's, so we assert it rather
       // than running `npm link` here. A failure means the documented setup step wasn't
       // completed on this machine.
+      // On win32 npm link writes shims (`agentic-hq-dev.cmd` is the one
+      // cmd.exe/execSync resolves) rather than a plain executable (AHQ-211)
       const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
-      const agenticHqDevOnPath = pathDirs.some((dir) =>
-        fs.existsSync(path.join(dir, 'agentic-hq-dev'))
+      const agenticHqDevOnPath = pathDirs.some(
+        (dir) =>
+          fs.existsSync(path.join(dir, 'agentic-hq-dev')) ||
+          fs.existsSync(path.join(dir, 'agentic-hq-dev.cmd'))
       );
       expect(
         agenticHqDevOnPath,
@@ -128,10 +134,10 @@ describe('Cross-Workspace String Reversal via globally-linked agentic-hq-dev bin
       expect(fs.existsSync(path.join(firstIoDir, COMMAND_INPUT_FILENAME))).toBe(true);
       expect(fs.existsSync(path.join(firstIoDir, COMMAND_OUTPUT_FILENAME))).toBe(true);
 
-      // Log — temp workspace won't be cleaned (auto-cleaned by OS from /tmp)
+      // Log — temp workspace won't be cleaned (it lives under the OS temp dir)
       process.stdout.write(
         `\nTemp workspace created at: ${tempWorkspace}\n` +
-          'Not cleaning up — /tmp is auto-cleaned by the OS (on Mac: reboot or files older than 3 days).\n'
+          'Not cleaning up — it is under the OS temp dir and safe to delete any time.\n'
       );
     },
     TEST_TIMEOUT_MS
