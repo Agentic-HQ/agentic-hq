@@ -515,6 +515,15 @@ demo runs are exactly what the 🧑‍💻 gate re-tests.
   baseline plus the newly-green kill-script test; the runner files spawn real ptys through the wrapper,
   so this is the actual-ConPTY regression check for the disposal change.
 
+**🧑‍💻 Phase 5 gate — Mac (POSIX) side: PASS (2026-08-29).** All three checks green on Steve's Mac at
+`c73bf85`: `pnpm validate` (239 passed + 5 win32-only skips, of the same 244), the deferred Phase 4 demo
+gate (`pnpm demo:agentic-hq-cli:string-reversal` — reversed string returned, spawned session
+self-terminated via the node kill script, no hang), and the real-Claude self-termination run
+(`/agentic-hq-core-plugin:self-termination` on Claude Code v2.1.251 — session killed itself cleanly).
+Full evidence, plus a Mac-side suggestion for a Phase 6 docs sub-item ("`pnpm install` is not one-off"),
+in [`supporting-files/files-created-by-mac-claude-while-testing/mac-gate-5-results-and-phase-6-doc-suggestion.md`](./supporting-files/files-created-by-mac-claude-while-testing/mac-gate-5-results-and-phase-6-doc-suggestion.md).
+The Windows halves of the gate remain with the Windows session.
+
 **Refactor list (Steve, post-Phase-5 review):** `PtyCLIWrapper` has grown hard to read — the private
 `WindowsPtyAgentInternals` interface in particular is a bag of options that don't self-document. When it
 earns the work, refactor to the project pattern of one interface + self-documenting concrete type per
