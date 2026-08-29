@@ -308,6 +308,10 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
    - `setting-up-agentic-hq-for-development.md`: add the Windows contributor path (nvm-windows,
      corepack/pnpm, PowerShell execution policy, repo on a local NTFS volume, no WSL needed; note Git + `gh`
      ARE required for dev — the opposite of the end-user story) alongside the existing POSIX path.
+     ALSO (Steve-raised via the Mac Gate-5 session, 2026-08-29): a "`pnpm install` is not one-off" note
+     right after the install step — re-run after any pull/branch switch that changed `pnpm-lock.yaml`
+     (`.npmrc` already pins frozen-lockfile, so the plain command is safe). Suggested wording in
+     `supporting-files/files-created-by-mac-claude-while-testing/mac-gate-5-results-and-phase-6-doc-suggestion.md`.
    - `npm-commands.md` + `publish-checklist.md`: verify-only sweep (demo scripts now use relative dirs
      resolved by the runner; both prepack guards are Node scripts since Phase 1) — expected already accurate.
 4. **Git-free validation**: on a Windows environment with no Git installed (e.g. Windows Sandbox or a clean VM),
@@ -444,9 +448,15 @@ evidence), so each phase commit carries its own log entry.
       kill()'s console-list fork on an exited pty. Deleting the `.sh` left ZERO shell scripts in the
       shipped tree → `executableFiles` enumerates to [] — machinery/guards kept, noted as a Phase 7
       simplification candidate. Validate 241+3; integration build/runner/bin/process-control 18+2.)*
-- [ ] 🧑‍💻 **Phase 5 gate**: real-claude self-termination run once per OS (kills that session — expected),
+- [x] 🧑‍💻 **Phase 5 gate**: real-claude self-termination run once per OS (kills that session — expected),
       PLUS the deferred Phase 4 demo gate — `pnpm demo:agentic-hq-cli:string-reversal` on Windows AND a
       POSIX machine (spawns real Claude, ~20 s each) — and `pnpm validate` green on both OSes.
+      *(PASS on both OSes 2026-08-29. Mac: all three checks — evidence file linked from the gate note at
+      the end of the Phase 5 section in 04-implementation-details.md. Windows: demo PASS — BOTH spawned
+      real-Claude sessions self-terminated via the node kill script, reversed string returned, clean
+      exit, and NO ConPTY AttachConsole noise (item 6 verified in production) — AND
+      `test:integration:real-claude-self-termination-skill` PASS (1 passed, 24.2 s); Windows validate
+      241+3 (Phase 5 section).)*
 - [ ] 💾 Compact — before the breadth work.
 - [ ] **Phase 6** — e2e helper portability, `windows-latest` CI job, README/CONTRIBUTING/troubleshooting docs →
       commits.

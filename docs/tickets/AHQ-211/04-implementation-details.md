@@ -524,6 +524,19 @@ Full evidence, plus a Mac-side suggestion for a Phase 6 docs sub-item ("`pnpm in
 in [`supporting-files/files-created-by-mac-claude-while-testing/mac-gate-5-results-and-phase-6-doc-suggestion.md`](./supporting-files/files-created-by-mac-claude-while-testing/mac-gate-5-results-and-phase-6-doc-suggestion.md).
 The Windows halves of the gate remain with the Windows session.
 
+**🧑‍💻 Phase 5 gate — Windows side: PASS (2026-08-29) — gate CLOSED on both OSes.**
+`pnpm demo:agentic-hq-cli:string-reversal` run by Steve on the Windows machine (terminal transcript
+pasted into the session): resolver → absolute winget `claude.exe`, D1 handshake written, workflow built
+and run, and BOTH spawned real-Claude sessions (v2.1.240) self-terminated via
+`node "…/kill-current-cli-process-node.cjs"` — the wrapper printed
+`Reversed string: esrever ot gnirts tluafed eht si siht` and dropped cleanly back to the PowerShell
+prompt. Notably ABSENT vs the 2026-08-27 attempt: any `AttachConsole failed` stderr trace — item 6's
+quiet disposal verified under production ConPTY. Steve then also ran the formal check:
+`pnpm test:integration:real-claude-self-termination-skill` — **PASS on Windows** (1 passed, 24.2 s;
+real Claude wrote the output file, ran the node kill script, control returned to the test) — on top of
+the demo's two in-flight self-terminations. Windows `pnpm validate` 241+3 is recorded above. Together
+with the Mac half above, every Phase 5 gate check has passed.
+
 **Refactor list (Steve, post-Phase-5 review):** `PtyCLIWrapper` has grown hard to read — the private
 `WindowsPtyAgentInternals` interface in particular is a bag of options that don't self-document. When it
 earns the work, refactor to the project pattern of one interface + self-documenting concrete type per
