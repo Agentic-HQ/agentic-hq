@@ -16,8 +16,10 @@
  * re-enabled once system boundaries stabilise.
  */
 
+import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
+import globals from 'globals';
 // NOTE: @vitest/eslint-plugin replaces deprecated eslint-plugin-vitest
 // The old package had peer dependency conflicts with ESLint 9.x
 // See: https://github.com/vitest-dev/eslint-plugin-vitest (now points to @vitest/eslint-plugin)
@@ -33,7 +35,6 @@ export default [
       'coverage/**',
       '**/*.d.ts',
       '**/node_modules/**',
-      'scripts/**', // Scripts are not in tsconfig.json
       'docs/project-docs/project-spikes/**', // Spike projects have their own eslint configs
       '*.config.ts', // Config files in root (vitest.*.config.ts) - not in tsconfig.json
       '*.config.mjs', // Config files in root (eslint.config.mjs)
@@ -156,6 +157,20 @@ export default [
           alwaysTryTypes: true,
         },
       },
+    },
+  },
+
+  // Plain-JS CommonJS Node scripts (scripts/**, bin/**, the shipped
+  // kill-script) — deliberately outside tsconfig.json, so the TypeScript
+  // block above never matches them. Core-JS rules + Node globals (AHQ-211).
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: globals.node,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
     },
   },
 

@@ -609,3 +609,59 @@ test executed: 1 passed, 1.24 s, workspace confirmed under `%TEMP%\agentic-hq-te
 `pnpm validate` PASS (typecheck, lint, format, 241 passed + 3 skipped of 244). The e2e tests
 themselves stay Steve-triggered per the slimmed gate; the deferred Windows full-suite run and the next
 Mac e2e run are the executions that will prove them.
+
+### Item 2: `windows-latest` CI job + `scripts/**` lint un-ignore (DONE 2026-08-29, Windows session)
+
+**Lint un-ignore.** Removed the `'scripts/**'` line from `eslint.config.mjs` ignores. Deleting the line
+alone would have been a silent no-op — the flat config's only rule-bearing blocks match `**/*.ts`, so
+`.cjs` files were "linted" with zero rules. Added a `files: ['**/*.cjs']` block (core-JS
+`js.configs.recommended` rules, `sourceType: 'commonjs'`, `globals.node`) covering all 8 real `.cjs`
+files: the 5 `scripts/` build/publish scripts, both `bin/` wrappers, and the shipped kill-script. Two
+devDependencies added to make that possible — `@eslint/js@9.39.4` and `globals@14.0.0`, exact-pinned to
+the versions ALREADY in the lockfile as eslint's own transitive deps (zero new code enters the tree;
+`pnpm add` needed `--config.frozen-lockfile=false`, the v11 spelling — see the frozen-lockfile
+discovery below). **Fallout: none.** Verified the block is live rather than trusting the clean run:
+`--print-config` on `prepack-guard.cjs` shows 418 rules with `no-undef`/`no-unused-vars` at error, and
+a deliberately bad stdin canary (`--stdin-filename scripts/canary.cjs`) fails with both rules. The
+Phase 1–5 script rewrites simply left `scripts/**` lint-clean.
+
+**CI job.** Added `validate-windows` to `.github/workflows/ci.yml`: same contributor steps as the
+ubuntu job (checkout, setup-node from `.nvmrc` — the plan's risk note requires the SAME Node versions
+on both OSes; the ubuntu job has no matrix, so neither does this), corepack, `pnpm install`,
+`npm link`, `agentic-hq-dev list` smoke test, `pnpm validate`, then the four non-Claude integration
+suites. Design decisions: **one step per integration suite** — the runner's default pwsh shell only
+propagates the LAST command's exit code from a multi-line `run:` block, so a single combined step
+would mask mid-block failures; `timeout-minutes: 45` vs ubuntu's 15 (Defender + build-determinism's
+double release build); no compiler-toolchain step (node-pty ships win32 prebuilds). Header comment
+documents all of this plus the publish-from-Mac boundary (the job never packs a real release).
+NOTE: CI triggers only on push-to-main and PRs, so the job first RUNS when the AHQ-211 PR opens —
+local verification below is the gate until then.
+
+**Verification (all on this Windows machine, no Claude spawned):** YAML parses (js-yaml from the pnpm
+store: both jobs, all 11 windows steps in order); `pnpm validate` PASS (241 + 3 of 244);
+`test:integration:build-determinism` 1 passed 36.7 s; `test:integration:publish-guards` 2 passed +
+2 POSIX-only skips (the win32 pack-refusal test ran) 20.4 s; `test:integration:bin-wrapper` 1 passed;
+`test:integration:kill-script` 1 passed; `npm link` exit 0 then `agentic-hq-dev list` exit 0 with the
+full workflow listing — i.e. every step the CI job runs, run here. (The `agentic-hq-dev` shim was
+absent from the npm prefix beforehand. First assumption — "wiped by an nvm-windows version switch" —
+was WRONG, retracted when Steve queried it: `nvm list` shows exactly one Node ever installed here
+(24.19.0, since the 2026-08-23 setup; a switch would leave the old version still listed), and no
+record exists of `npm link` ever having run on this machine — nothing needed it until today, since
+the slimmed gate runs `node bin/agentic-hq.cjs` directly. The per-version-prefix wipe IS still a
+real nvm-windows gotcha — each version keeps its own globals, so switches silently drop
+`npm install -g`/`npm link` — it just isn't what happened here; item 3 documents the warning on its
+own merits. Also noted: machine runs 24.19.0 vs `.nvmrc`'s 24.15.0 — benign, same Node 24 LTS line,
+and CI installs the `.nvmrc` version exactly.)
+
+**Discovery during item 2 — the AHQ-152 frozen-lockfile guard is dead (fix = plan item 2b, own
+commit).** `pnpm add --no-frozen-lockfile` failing ("Unknown option") pulled the thread; Steve
+challenged the analysis with a Gemini answer, and the resolution is: pnpm 11 reads ONLY auth/registry
+settings from `.npmrc` (v11 migration guide — the AHQ-136 pnpm 10→11 upgrade of 2026-05-16 silently
+killed every `frozen-lockfile=true` in the repo, root + 8 workflow-dir copies), while the deprecation
+warning Steve remembered is npm's (`npm warn Unknown project config "frozen-lockfile"` — printed by
+every `npm link`, reproduced here). Gemini was right about the warning's source and the fix (move to
+`pnpm-workspace.yaml` camelCase), stale about `.npmrc` still being "fully supported". Proven
+empirically under the corepack-pinned 11.1.2 with repo-VERBATIM config files copied to a scratch dir:
+no-lockfile install SUCCEEDS today (guard dead); with `frozenLockfile: true` in `pnpm-workspace.yaml`
+it refuses with `ERR_PNPM_NO_LOCKFILE` (guard restored). CI was never exposed — pnpm forces
+frozen-lockfile on when `CI=true`. Full fix list in plan item 2b.

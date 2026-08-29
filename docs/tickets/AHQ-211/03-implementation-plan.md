@@ -302,10 +302,45 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
 2. CI: add `windows-latest` job — `corepack enable`, `pnpm install`, `pnpm validate`, plus the non-Claude
    integration tests (`build-determinism`, `publish-guards`, `bin-wrapper`, `kill-script`). Un-ignore `scripts/**`
    in `eslint.config.mjs:36` and fix fallout.
+   **DONE 2026-08-29 (Windows session).** `validate-windows` job added mirroring the ubuntu job's
+   contributor steps (same `.nvmrc` Node — no matrix on either job) + the four suites as separate
+   steps (pwsh only propagates the last exit code of a multi-line run block); un-ignore landed with a
+   new `**/*.cjs` config block (`@eslint/js` recommended + node globals — without a block the
+   un-ignore was a zero-rule no-op) covering all 8 `.cjs` files; fallout: none (verified live via
+   print-config + a failing canary, not just the clean run). Every CI step run locally on Windows:
+   validate 241+3, the four suites all pass, `npm link` + `agentic-hq-dev list` green. CI first
+   actually runs the job when the PR opens (triggers are push-to-main + PR only). Evidence in
+   04-implementation-details.md Phase 6 Item 2.
+   **2b. DISCOVERED during item 2 (2026-08-29, Steve-confirmed direction): restore the dead AHQ-152
+   frozen-lockfile guard.** The AHQ-136 pnpm 10→11 upgrade (2026-05-16) silently killed
+   `frozen-lockfile=true` in every `.npmrc`: pnpm 11 reads ONLY auth/registry settings from `.npmrc`
+   (v11 migration guide), all other settings moved to `pnpm-workspace.yaml` in camelCase. Proven
+   empirically under the corepack-pinned 11.1.2 with repo-verbatim config files: install with no
+   lockfile SUCCEEDS today (guard dead); with `frozenLockfile: true` in `pnpm-workspace.yaml` it
+   hard-refuses with `ERR_PNPM_NO_LOCKFILE` (guard restored). CI was never exposed (pnpm forces
+   frozen-lockfile on when `CI=true`). The npm warning Steve remembered (`npm warn Unknown project
+   config "frozen-lockfile"…`) is npm's, printed on every `npm link`, and disappears with the fix.
+   Fix (own commit, after the item 2 commit): add `frozenLockfile: true` to `pnpm-workspace.yaml` and
+   DELETE `.npmrc` (nothing else in it) — ×9: repo root + the 7 shipped ts-workflow dirs + the e2e
+   fixture ts-workflow (each already has its own `pnpm-workspace.yaml`; `build-release.cjs` only
+   strips `.npmrc` at staging — verify the strip tolerates absence). Touch up `build-workflow.cjs`
+   comments ("its own .npmrc makes it frozen") and the create-workflow scaffold's `.npmrc` in
+   `agentic-hq-core-plugin` (skill template + command doc) so NEW workflows get the workspace-yaml
+   form. Verify (non-Claude): rename `pnpm-lock.yaml` → `pnpm install` must refuse → restore; then
+   `pnpm validate` + `test:integration:build-determinism` + `test:integration:publish-guards`.
+   Dev-docs mentions of `.npmrc` fold into the item 3 docs pass.
 3. Docs: README OS-support + Windows Quick Start (prerequisites: Node + Claude Code only — winget Claude +
    auto-update warning, nvm-windows, execution-policy guidance per report §6; state explicitly that Git is NOT
    required for normal use — Git + `gh` stay dev-only in `docs/dev/setting-up-agentic-hq-for-development.md`);
    CONTRIBUTING; troubleshooting entries (junction/Developer Mode, Defender slowness, `npm.cmd` workaround;
+   **nvm-windows version switch silently wipes global installs** (Steve-raised 2026-08-29: each Node
+   version keeps its own globals under its own prefix, so switching Node drops `npm install -g agentic-hq`
+   for users AND `npm link` for devs — symptom `'agentic-hq-dev' is not recognized`; fix = re-run the
+   install/link after any version switch. NB nvm-windows never switches by itself — no auto-upgrade
+   exists; the item-2 missing-shim incident turned out to be a link that had never been run, NOT a wipe —
+   see 04 Item 2. The warning stands on nvm-windows's documented per-version-globals behaviour. Warn in
+   THREE places: the README Windows install/Quick Start section, the Windows troubleshooting entries, and
+   the dev-setup doc's Windows contributor path alongside the "`pnpm install` is not one-off" note);
    from the Phase 3 junction review — see supporting-files/03-perplexity…symbolic-links.md: workspace must be
    on a local NTFS volume, junctions fail on UNC/network paths and FAT32/exFAT; OneDrive/Dropbox-synced
    folders can throw transient EPERM/EBUSY around junctions);

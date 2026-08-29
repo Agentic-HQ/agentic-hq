@@ -77,6 +77,7 @@
   },
   "// @types/node": "Pinned to the LOWEST supported Node major (22), not the newest. @types/node's major should track the oldest Node LTS the project supports so typecheck reflects that runtime's API surface. See AHQ-145.",
   "devDependencies": {
+    "@eslint/js": "9.39.4",
     "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
@@ -85,6 +86,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.29.1",
+    "globals": "14.0.0",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
