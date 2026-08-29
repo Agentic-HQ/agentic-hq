@@ -40,16 +40,8 @@ macOS only:
 - macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries
   need it; the maintainer develops on 15.7.5).
 
-Windows only (native Windows — no WSL needed; tested on Windows 11):
+Windows only (tested on Windows 11):
 
-- No build toolchain is needed (`node-pty` ships prebuilt Windows binaries).
-- Note that **Git and `gh` ARE required for development** (they're in the
-  prerequisites above) — the opposite of the end-user story, where Git is
-  not needed at all.
-- Keep the clone on a **local NTFS volume** (not a network drive, FAT32/exFAT
-  stick, or OneDrive/Dropbox-synced folder) — workflow builds create
-  directory junctions, which need local NTFS. No Developer Mode or admin
-  rights are required.
 - PowerShell is the supported shell. Its default policy blocks the `.ps1`
   shims npm/corepack put on `PATH` (`…ps1 cannot be loaded`) — run
   `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` once (the

@@ -1,8 +1,8 @@
 # Contributing to Agentic HQ
 
-Author: Claude Code, with human assistance.  Based on a selection of existing Open Source project CONTRIBUTING.md files.
+Welcome, and thank you for your interest in contributing to the Agentic HQ project.
 
-Welcome, and thank you for your interest in Agentic HQ. This is a small, opinionated project built collaboratively with [Claude Code](https://www.anthropic.com/claude-code), and we're glad to have you here.
+This is a small, opinionated project built collaboratively with [Claude Code](https://www.anthropic.com/claude-code), and we're glad to have you here.
 
 **tl;dr.** Agentic HQ welcomes human and AI-assisted contributions. Create issues on GitHub. Include tests. Run `pnpm validate` before submission. CI must pass on your PR. Human oversight and understanding of AI generated submissions is required.
 
@@ -25,7 +25,7 @@ AI-assisted contributions are welcome, but the human submitting the PR is expect
 
 Agentic HQ is **pre-1.0** (currently v0.2.0). Expect rough edges, evolving APIs, and the occasional rename.
 
-It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5), **Linux** (tested on Ubuntu 24.04 LTS) and **native Windows** (tested on Windows 11 — PowerShell, no WSL needed). WSL itself is untested. Contributing works from all three OSes — the contributor setup doc covers both the POSIX and Windows paths (note Git and `gh` ARE required for development, unlike normal use).
+It runs on **macOS 13.5 or newer** (developed and tested on 15.7.5), **Linux** (tested on Ubuntu 24.04 LTS) and **native Windows** (tested on Windows 11 in PowerShell). Git and `gh` are required for development.
 
 It is **maintained by one person** right now, so please calibrate expectations:
 
@@ -49,7 +49,7 @@ Ways you can contribute (ordered by how likely they are to get merged/considered
 
 ## Reporting issues
 
-For **bugs**, use [GitHub Issues](https://github.com/Agentic-HQ/agentic-hq/issues/new/choose) with the bug-report template. The template asks for steps to reproduce, expected vs. actual behaviour, and your environment (OS and version — e.g. macOS or Ubuntu — plus Node / pnpm versions). Issues without reproduction steps are hard to action and may be closed with a request for more detail.
+For **bugs**, use [GitHub Issues](https://github.com/Agentic-HQ/agentic-hq/issues/new/choose) with the bug-report template. The template asks for steps to reproduce, expected vs. actual behaviour, and your environment (OS and version — plus Node / pnpm versions). Issues without reproduction steps are hard to action and may be closed with a request for more detail.
 
 For **feature ideas**, use the feature-request template. Describe the problem you're trying to solve before proposing a solution — it helps us discuss alternatives.
 
@@ -66,7 +66,10 @@ You do not need to ask for permission to work on an existing open issue. If you'
 
 ## Local development setup
 
-Agentic HQ has two kinds of user: **Normal Users**, who install the published `agentic-hq` package from npm and never clone this repo (their setup is the [`README.md`](./README.md) Quick Start), and **Contributors**, who clone this repo and run their working copy via the `agentic-hq-dev` command.
+Agentic HQ has two kinds of user:
+
+- **Normal Users** — install the published `agentic-hq` package from npm and never clone this repo (their setup is the [`README.md`](./README.md) Quick Start).
+- **Contributors** — clone this repo and run their working copy via the `agentic-hq-dev` command.
 
 The full Contributor setup — prerequisites, clone, Corepack/pnpm, `npm link`, validation, and a smoke test — is in [`docs/dev/setting-up-agentic-hq-for-development.md`](./docs/dev/setting-up-agentic-hq-for-development.md).
 
@@ -132,7 +135,7 @@ External contributors do not need to use the internal Agentic HQ `/agentic-hq-co
 This project was built collaboratively with Claude Code. Contributions where AI did some or all of the typing are welcome, on three conditions:
 
 1. **You (the human) understand the code.**
-2. **You disclose meaningful AI assistance** in the PR description. By "meaningful" we mean Claude/Copilot/Cursor/etc. shaped the design or wrote substantial code — not routine autocomplete or formatting suggestions. There's no penalty for disclosure; there is for hiding it.
+2. **You disclose meaningful AI assistance** in the PR description. By "meaningful" we mean Claude/Copilot/Cursor/etc. shaped the design or wrote substantial code — not routine autocomplete or formatting suggestions. There's no penalty for disclosure.
 3. **You've actually run and manually tested the code.** This catches the dominant failure mode of AI contributions, which is plausible-looking diffs that don't actually work.
 
 **If you built your contribution using an Agentic HQ workflow** — please mention it. We'd love to understand whether the project is being used on itself ("dogfooding").
@@ -147,7 +150,9 @@ Agentic HQ is licensed under the [MIT License](./LICENSE). By submitting a contr
 
 ## GitHub Issues Vs Jira
 
-Pre-launch this project was developed using Jira as the issue tracking system and there are still many outstanding Tasks/Features logged in Jira.  The Jira server is currently private but an application has been made to make it public as an Open Source project.  
+Pre-launch this project was developed using Jira as the issue tracking system and there are still many outstanding Tasks/Features logged in Jira.  The Jira project is now registered as an Open Source project with Atlassian, which means it can have unlimited free users and is publicly visible and accessible here:
+https://agentic-hq.atlassian.net/jira/software/c/projects/AHQ/list?jql=project%20%3D%20AHQ%20ORDER%20BY%20summary%20ASC%2C%20cf%5B10019%5D%20ASC&hideDone=true&groupBy=status
+You can view any of the Jiras read only without logging in and start creating, updating and commenting on Jiras by registering to be a Contributor on the project. Do this by filling in the contact form at https://agentichq.ai and telling me the email address you're registered with on Atlassian and I'll send you an invite to join the project as a Contributor.
 
 In the first phase of this project contributors will be asked to raise bugs on GitHub because AI can do that easily and automatically using the `gh` command line tool. As the project matures we will decide whether to continue using both GitHub and Jira, or to align on only one issue tracking system.
 

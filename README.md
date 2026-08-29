@@ -17,10 +17,7 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 Supported and tested:
 - **macOS** - requires macOS 13.5 or newer (AHQ was developed and tested on 15.7.5).
 - **Linux** - tested on Ubuntu 24.04 LTS
-- **Windows** - native Windows, tested on Windows 11. Runs from PowerShell — no WSL and no Git Bash required. See [Windows notes](#windows-notes) below.
-
-Untested:
-- **WSL** (Windows Subsystem for Linux) — native Windows is now supported, so you probably don't need WSL; if you try it anyway, please let us know how it went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7).
+- **Windows** - native Windows, tested on Windows 11. Runs from PowerShell. See [Windows notes](#windows-notes) below.
 
 ### Prerequisites
 
@@ -33,7 +30,14 @@ Linux only:
 
 ### Installation
 
-1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm (on Windows, a version manager such as [nvm-windows](https://github.com/coreybutler/nvm-windows) works well — that's what AHQ is tested with). If you already have Node.js, please confirm it is version 22 or 24 (the only supported lines — other versions, including 23 and 25+, are unsupported). After installation confirm success by running:
+1. **Install Node.js 24 LTS:**
+   - **macOS / Linux:** go to https://nodejs.org/en/download and follow the default path (installs nvm, then Node).
+   - **Windows:** install [nvm-windows](https://github.com/coreybutler/nvm-windows) (what AHQ is tested with): run `nvm-setup.exe` from its [latest release](https://github.com/coreybutler/nvm-windows/releases/latest), then in a new PowerShell window run `nvm install 24` followed by `nvm use 24`.
+
+   Already have Node.js? Check it is version 22 or 24 (21 and 23 not tested/supported). 
+   
+   Confirm node is installed and its version by running:
+
    ```bash
    node -v
    ```
@@ -206,10 +210,11 @@ For the full catalogue — every shipped workflow, what it does, and links to it
 
 ### Windows notes
 
-Everything in this README works natively on Windows from PowerShell — the supported shell.
+PowerShell is the supported/tested shell to run Agentic HQ in.
 
 To note:
-- **Why the `Set-ExecutionPolicy` install step:** out of the box, PowerShell's `Restricted` policy blocks the `.ps1` shims npm and Node version managers put on your `PATH` (`npm.ps1 cannot be loaded`). `RemoteSigned` allows scripts created locally (like npm's shims) to run, while still requiring downloaded scripts to be signed. It is a Windows security setting, so it's your call — it's the fix most Windows dev guides use, but if you can't or don't want to relax the policy (e.g. a locked-down installation), the alternative is: still in PowerShell, append `.cmd` to the blocked command (`npm.cmd`, `npx.cmd`) — the `.cmd` variants are never blocked. Either way, this only affects what **you** type in a terminal; Agentic HQ's own subprocesses never go through PowerShell.
+- **Why is the `Set-ExecutionPolicy` install step required?:** - Out of the box, PowerShell's `Restricted` policy blocks the `.ps1` shims npm and Node version managers put on your `PATH` (`npm.ps1 cannot be loaded`). `RemoteSigned` allows scripts created locally (like npm's shims) to run, while still requiring downloaded scripts to be signed. It is a Windows security setting, so it's your call — it's the fix most Windows dev guides use, but if you can't or don't want to relax the policy (e.g. a locked-down installation), the alternative is: still in PowerShell, append `.cmd` to the blocked command (`npm.cmd`, `npx.cmd`) — the `.cmd` variants are never blocked. NOTE: The Agentic HQ system doesn't use npm and so this is only relevant for the "npm install" command that has to be run to install Agentic HQ using the npm package manager.  If you have npm running on your system and working, you can just ignore all this :-)
+- **WSL** (Windows Subsystem for Linux) — native Windows is tested and supported. If you get AHQ working on WSL please tell us about it on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7).
 
 ## Further Documentation
 

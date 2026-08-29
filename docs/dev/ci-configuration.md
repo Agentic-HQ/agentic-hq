@@ -8,7 +8,7 @@ appears as two checks on commits and pull requests: **CI / validate**
 **When it runs:** on every push to `main`, and on every pull request targeting
 `main` (draft PRs included). Each push to an open PR's branch re-runs it
 automatically. A typical ubuntu run takes under a minute; the windows job
-takes several minutes (slower runner, plus it also runs integration suites —
+takes a couple of minutes (slower runner, plus it also runs integration suites —
 see below).
 
 **Why it exists:** contributors get a visible green check on their PRs, and
