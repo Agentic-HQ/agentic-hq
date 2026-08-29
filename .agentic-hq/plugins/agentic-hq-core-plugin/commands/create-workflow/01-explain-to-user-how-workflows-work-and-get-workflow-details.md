@@ -361,10 +361,10 @@ These values will be written to `{skills-dir}/ahq-workflow.json` in Command 02.
 > Copy everything that makes up the source workflow:
 > - every command `NN-*.md` file from the source commands dir,
 > - `SKILL.md`,
-> - the whole `ts-workflow/` **source and config** — `src/`, `package.json`, `tsconfig.json`, `pnpm-workspace.yaml`, **`.npmrc`**, **`.gitignore`**, **and `pnpm-lock.yaml`**,
+> - the whole `ts-workflow/` **source and config** — `src/`, `package.json`, `tsconfig.json`, `pnpm-workspace.yaml`, **`.gitignore`**, **and `pnpm-lock.yaml`**,
 > - any templates and the `docs/` directory.
 >
-> **Exclude `node_modules/` and `dist/`** — both are build products the Workflow Build (2) recreates: `node_modules/` holds a now-wrong `agentic-hq` symlink, and `dist/` holds compiled JS for the source workflow. Command 03's checks (and every later run) rebuild both via `node {ahq-package-root}/scripts/build-workflow.cjs`. **Keep `.npmrc` + `pnpm-lock.yaml`** so the copy preserves the frozen-lockfile supply-chain standard (AHQ-152) and installs reproducibly — the lockfile is portable (importer key `.`, no absolute paths or workflow names), so a frozen `pnpm install` still passes after the `name` rewrite below.
+> **Exclude `node_modules/` and `dist/`** — both are build products the Workflow Build (2) recreates: `node_modules/` holds a now-wrong `agentic-hq` symlink, and `dist/` holds compiled JS for the source workflow. Command 03's checks (and every later run) rebuild both via `node {ahq-package-root}/scripts/build-workflow.cjs`. **Keep `pnpm-workspace.yaml` + `pnpm-lock.yaml`** so the copy preserves the frozen-lockfile supply-chain standard (AHQ-152 — `frozenLockfile: true` lives in the workspace yaml, never in a `.npmrc`, which pnpm 11+ ignores; AHQ-211) and installs reproducibly — the lockfile is portable (importer key `.`, no absolute paths or workflow names), so a frozen `pnpm install` still passes after the `name` rewrite below.
 >
 > ### Rewire manifest (resolved target values)
 > - Rename the CLI file `{source-workflow-id}-cli.ts` → `{workflow-id}-cli.ts`.

@@ -6,8 +6,8 @@
  * in the agentic-hq package or in a user's workspace). Shipped in the release
  * (`scripts/build-workflow.cjs`) alongside the runner. Steps, in order:
  *
- *   1. pnpm install in the workflow dir (its own .npmrc makes it frozen;
- *      a no-op after the first run)
+ *   1. pnpm install in the workflow dir (its own pnpm-workspace.yaml sets
+ *      frozenLockfile — AHQ-152; a no-op after the first run)
  *   2. Ensure `<workflow-dir>/node_modules/agentic-hq` is a link to the AHQ
  *      package root (dir symlink; junction on Windows) — ALWAYS after the
  *      install, because pnpm prunes the foreign entry on every install
@@ -69,7 +69,8 @@ function isWindows() {
 // The JS entry of the package manager this process was launched from, when
 // that package manager is pnpm (pnpm run/exec export npm_execpath; a plain
 // `node build-workflow.cjs` has none, and under npm/yarn it is not pnpm's —
-// this workflow install must be pnpm's, its .npmrc speaks pnpm dialect).
+// this workflow install must be pnpm's: its pnpm-workspace.yaml settings
+// (frozenLockfile, minimumReleaseAge) are pnpm dialect npm cannot read).
 function pnpmJsEntryOfLaunchingPackageManager() {
   const npmExecpath = process.env.npm_execpath;
   if (npmExecpath && path.basename(npmExecpath).includes('pnpm')) {

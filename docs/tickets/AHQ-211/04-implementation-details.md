@@ -665,3 +665,37 @@ empirically under the corepack-pinned 11.1.2 with repo-VERBATIM config files cop
 no-lockfile install SUCCEEDS today (guard dead); with `frozenLockfile: true` in `pnpm-workspace.yaml`
 it refuses with `ERR_PNPM_NO_LOCKFILE` (guard restored). CI was never exposed — pnpm forces
 frozen-lockfile on when `CI=true`. Full fix list in plan item 2b.
+
+### Item 2b: restore the AHQ-152 frozen-lockfile guard (DONE 2026-08-29, Windows session)
+
+**Changes.** `frozenLockfile: true` added to all 9 `pnpm-workspace.yaml`s (repo root + 7 shipped
+ts-workflow dirs + the e2e fixture — the 8 workflow copies were byte-identical before and after, one
+canonical block applied by script), each with the comment Steve mandated: the setting MUST live in the
+pnpm-only workspace yaml, never `.npmrc`, because pnpm 11+ reads only auth/registry settings from
+`.npmrc` (a frozen-lockfile line there is silently dead) and npm — which shares `.npmrc` but has no
+such setting — printed an "Unknown project config" deprecation warning on every command. All 9
+`.npmrc`s deleted (root's contained nothing else). `.npmrc` KEPT in both strip lists
+(`build-release.cjs` `STRIPPED_TS_WORKFLOW_FILES`, the tarball e2e's mirror) with a legacy-defense
+comment — user workflows scaffolded before this change may still carry one; the strip is a path
+filter, so absence needs no handling. Comments updated in `build-workflow.cjs` ("its own
+pnpm-workspace.yaml sets frozenLockfile"; pnpm-dialect note now cites the workspace settings). Both
+create-workflow scaffold docs updated: 01's Copy manifest drops `.npmrc` (with a skip-legacy-copies
+note), 02's Step 1 reference list, plan item 5, Step 4-COPY, Step 4e (title + body — the
+workspace yaml is now copied VERBATIM from the math-workflow reference and carries all three
+settings; the no-lockfile-yet-on-first-scaffold explanation moved into its bullet) and the 5a
+files-written list.
+
+**Verification — refusals observed, not assumed.** The plan's rename-lockfile probe turned out to be
+a WEAK test: at the repo root it exited 0 ("Already up to date", 421 ms) — pnpm's up-to-date
+short-circuit skips the install before any lockfile logic runs when `node_modules` state matches
+`package.json`. Characterised in the scratch project: same setup minus the state match refuses with
+"Headless installation requires a pnpm-lock.yaml file" (the `tryFrozenInstall` path). The test that
+matters is the actual AHQ-152 threat — package.json/lockfile MISMATCH — and that now refuses
+everywhere: scratch (`globals` `14.0.0`→`^14.0.0`), repo root (same tweak, reverted clean via git),
+and the math-workflow ts-workflow dir (`commander` `^14.0.3`→`~14.0.3`, reverted clean) — all three
+`ERR_PNPM_OUTDATED_LOCKFILE` naming the exact mismatch. npm's "Unknown project config" warning:
+GONE (`npm config get registry` clean). Normal root `pnpm install`: exit 0. `pnpm validate`: PASS
+(241 + 3 of 244; prettier clean over all edited yaml/docs). `test:integration:build-determinism`:
+1 passed, 25.3 s — the release build ran `pnpm install` in all 7 shipped workflow dirs TWICE under
+the new config with identical output hashes. `test:integration:publish-guards`: 2 passed + 2
+POSIX-only skips.

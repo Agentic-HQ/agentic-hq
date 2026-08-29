@@ -60,7 +60,6 @@ const TS_WORKFLOW_DIR_NAME = 'ts-workflow';
 const STRIPPED_TS_WORKFLOW_FILES = [
   'package.json',
   'pnpm-lock.yaml',
-  '.npmrc',
   'pnpm-workspace.yaml',
   '.gitignore',
 ];

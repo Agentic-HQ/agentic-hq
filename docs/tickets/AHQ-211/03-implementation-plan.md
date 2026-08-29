@@ -329,6 +329,17 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
    form. Verify (non-Claude): rename `pnpm-lock.yaml` → `pnpm install` must refuse → restore; then
    `pnpm validate` + `test:integration:build-determinism` + `test:integration:publish-guards`.
    Dev-docs mentions of `.npmrc` fold into the item 3 docs pass.
+   **2b DONE 2026-08-29 (same session).** `frozenLockfile: true` + explanatory comment (Steve-mandated:
+   why THIS pnpm-only file and never `.npmrc`) in all 9 `pnpm-workspace.yaml`s; all 9 `.npmrc`s deleted;
+   `.npmrc` kept in both strip lists defensively (pre-fix user workflows); `build-workflow.cjs`/
+   `build-release.cjs` comments + both create-workflow scaffold docs updated (4e drops `.npmrc`,
+   workspace yaml now copied verbatim). Verified by REFUSAL, root AND math-workflow dir:
+   `ERR_PNPM_OUTDATED_LOCKFILE` on a spec mismatch (the actual AHQ-152 threat), reverted clean. NB the
+   planned rename-lockfile probe was a WEAK test — with node_modules intact pnpm's "Already up to date"
+   short-circuit exits 0 before any lockfile logic (scratch-characterised; a real install path refuses:
+   "Headless installation requires a pnpm-lock.yaml"). npm's Unknown-project-config warning: gone.
+   `pnpm validate` 241+3; build-determinism + publish-guards green under the new config. Evidence in
+   04-implementation-details.md Phase 6 Item 2b.
 3. Docs: README OS-support + Windows Quick Start (prerequisites: Node + Claude Code only — winget Claude +
    auto-update warning, nvm-windows, execution-policy guidance per report §6; state explicitly that Git is NOT
    required for normal use — Git + `gh` stay dev-only in `docs/dev/setting-up-agentic-hq-for-development.md`);

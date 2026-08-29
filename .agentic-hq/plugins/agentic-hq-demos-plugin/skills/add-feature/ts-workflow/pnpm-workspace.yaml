@@ -14,3 +14,13 @@ packages:
 # resolution (pnpm update / --no-frozen-lockfile); frozen installs are
 # unaffected.
 minimumReleaseAge: 10080
+
+# FROZEN LOCKFILE (AHQ-152): install exactly pnpm-lock.yaml — if package.json
+# and the lockfile disagree, fail instead of silently resolving newer
+# versions. (A freshly-scaffolded workflow has no lockfile yet — the first
+# install generates it; later installs are frozen against it.) This setting
+# MUST live in this pnpm-only file, NOT in a .npmrc: pnpm 11+ reads only
+# auth/registry settings from .npmrc (a frozen-lockfile line there is silently
+# dead), and npm — which shares .npmrc but has no such setting — prints an
+# "Unknown project config" deprecation warning on every command (AHQ-211).
+frozenLockfile: true

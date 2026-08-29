@@ -57,3 +57,19 @@ allowBuilds: { esbuild: false, node-pty: true, unrs-resolver: false }
 # of the existing lockfile are unaffected. Use minimumReleaseAgeExclude for an urgent
 # hotfix that must bypass the wait.
 minimumReleaseAge: 10080
+
+# FROZEN LOCKFILE (AHQ-152): require pnpm to install exactly pnpm-lock.yaml —
+# if package.json and the lockfile disagree, FAIL instead of silently
+# resolving newer versions. Keeps dependency changes deliberate and visible in
+# package.json / pnpm-lock.yaml diffs. Intentional changes use an explicit
+# command such as:
+#   pnpm add <package> --config.frozen-lockfile=false
+#   pnpm update --no-frozen-lockfile
+#   pnpm install --no-frozen-lockfile
+# This setting MUST live in this "pnpm-workspace.yaml" pnpm-only file,
+# NOT in .npmrc (where it sat
+# silently dead from the AHQ-136 pnpm 10→11 upgrade until AHQ-211 restored
+# it here): pnpm 11+ reads only auth/registry settings from .npmrc, and npm —
+# which shares .npmrc but has no such setting — printed an "Unknown project
+# config" deprecation warning on every command while it was there.
+frozenLockfile: true
