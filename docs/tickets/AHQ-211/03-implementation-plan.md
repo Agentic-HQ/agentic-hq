@@ -281,7 +281,13 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
 1. e2e helpers: `LOG_FILE_DIRECTORY`/`TEMP_WORKSPACES_BASE` → `os.tmpdir()`-based; `npm -g --prefix` layout branch
    for win32 (`<prefix>\agentic-hq.cmd`, `<prefix>\node_modules\…`); platform-conditional assertions (exec bits,
    `darwin-*` vs `win32-*` prebuilds, `tar` usage via bsdtar-safe flags); timeout headroom. (Full e2e runs stay a
-   **Steve-triggered** validation on each OS — they spawn real Claude.)
+   **Steve-triggered** validation — they spawn real Claude.)
+   **Validation slimmed (Steve, 2026-08-29 — token budget):** the porting work is verified with unit tests
+   and non-Claude checks only; Steve runs JUST `test:e2e:agentic-hq-cli-string-reversal` on Windows this
+   phase (~2 short spawned sessions, same cost as the demo, and it exercises the edited helper paths). The
+   Jira/math/prebuilt-tarball e2e tests spawn several real-Claude sessions each (and Jira creates real
+   issues) but add only platform-independent layers (MCP/HTTP) on top of the Windows-proven chain — moved
+   to the DEFERRED full-suite run in the checklist below.
 2. CI: add `windows-latest` job — `corepack enable`, `pnpm install`, `pnpm validate`, plus the non-Claude
    integration tests (`build-determinism`, `publish-guards`, `bin-wrapper`, `kill-script`). Un-ignore `scripts/**`
    in `eslint.config.mjs:36` and fix fallout.
@@ -460,8 +466,16 @@ evidence), so each phase commit carries its own log entry.
 - [ ] 💾 Compact — before the breadth work.
 - [ ] **Phase 6** — e2e helper portability, `windows-latest` CI job, README/CONTRIBUTING/troubleshooting docs →
       commits.
-- [ ] 🧑‍💻 **Phase 6 gates**: e2e runs per OS; **Git-free validation** (Windows Sandbox / clean VM with only
-      Claude + Node: `agentic-hq list` + string-reversal); docs review.
+- [ ] 🧑‍💻 **Phase 6 gates** (slimmed 2026-08-29 — token budget): `test:e2e:agentic-hq-cli-string-reversal`
+      on Windows only (full suite → deferred task below); **Git-free validation** (Windows Sandbox / clean
+      VM with only Claude + Node: `agentic-hq list` + string-reversal); docs review.
+- [ ] 🧑‍💻 **DEFERRED: full e2e suite on Windows** (`pnpm test:e2e`) — after Steve's usage reset (or before,
+      if there's spare capacity to soak up), and **with the spawned sessions temporarily on Sonnet** to cut
+      token burn: set `$env:ANTHROPIC_MODEL = 'sonnet'` in the PowerShell session running the tests (the
+      wrapper passes its env through to every spawned Claude; scoped to that shell, auto-reverts on close).
+      Doubles as a staleness check — these tests haven't been run in months on ANY OS, so this is also
+      "do they still pass at all", not just "do they pass on Windows". Jira e2e creates real test issues —
+      expected. Not a merge blocker: PR/merge can proceed on the slimmed Phase 6 gate.
 - [ ] **Phase 7** — raise follow-up tickets (git-scripts port, mcp-installer script, marketplace-installed
       workflow validation, WSL smoke test, allowedTools/plugin-dir space-path real-Claude probe).
 - [ ] PR review → squash-merge to main (`/git:03`); next publish (from Mac) delivers the npm/npx routes.
