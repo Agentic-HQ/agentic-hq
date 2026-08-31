@@ -150,9 +150,12 @@ tar -tzf agentic-hq-<version>.tgz | grep node_modules
 tar -tzf agentic-hq-<version>.tgz | grep '^package/scripts/'
 ```
 
-- **Expected:** exactly `package/scripts/build-workflow.cjs` and
-  `package/scripts/run-workflow.cjs` (the shared runner and the Workflow Build
-  it delegates to — nothing else from `scripts/` ships).
+- **Expected:** exactly these four (nothing else from `scripts/` ships):
+  `package/scripts/build-workflow.cjs` and `package/scripts/run-workflow.cjs`
+  (the shared runner and the Workflow Build it delegates to), plus
+  `package/scripts/postinstall.cjs` and `package/scripts/prepack-guard.cjs`
+  (invoked by the generated manifest's own lifecycle entries — AHQ-198/AHQ-211).
+  The tarball e2e pins the same four.
 
 ```
 tar -tzf agentic-hq-<version>.tgz | grep -E '\.tsbuildinfo|ts-workflow/(package\.json|pnpm-lock\.yaml|\.npmrc|pnpm-workspace\.yaml)'
