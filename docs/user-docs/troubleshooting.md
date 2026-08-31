@@ -194,6 +194,10 @@ This section is for anyone **running workflows** with the npm-installed `agentic
   `quick-jira` and `full-jira` workflows need it.
 - **Fix:** Run the install script as described in
   [setting-up-jira-mcp-server.md](workflow-descriptions/setting-up-jira-mcp-server.md).
+  Note the Jira/Confluence workflows and their MCP setup are currently
+  **macOS/Linux only** (the install script is bash) — on native Windows,
+  raise a [GitHub issue](https://github.com/Agentic-HQ/agentic-hq/issues)
+  if you need them.
 
 ### Windows: workflow build fails creating the framework link (`EPERM` / `EBUSY` / junction errors)
 

@@ -414,7 +414,13 @@ README section. (Item 4 exits post-publish — see the resequencing note above.)
   the git skills need Git Bash (minimal installs like MinGit omit it). No follow-up ticket.
 - `scripts/mcp-scripts/install-or-update-sooperset-mcp-atlassian.sh` — PowerShell twin or Node port.
 - `steve-test-plugin` shebang-less scripts; utilities-plugin Jira-extractor `/tmp`+`jq` instructions.
-- WSL smoke-test + short doc section (nearly free after the `.gitattributes` fix).
+  **NO TICKET for either of the above two bullets — decision 2026-08-31 (Steve):** the Jira/Confluence
+  workflows, the Sooperset MCP setup, and steve-test-plugin are documented as macOS/Linux-only for now
+  (Sooperset tested on Mac only; not often used). Docs updated same day; Windows support on demand via
+  GitHub issue.
+- WSL smoke-test + short doc section (nearly free after the `.gitattributes` fix). **NO TICKET — decision
+  2026-08-31 (Steve):** the README already documents WSL honestly ("untested — tell us on Discord"), and
+  native Windows support shrinks WSL's audience; bug/report-driven.
 - Marketplace-installed workflow validation: D1 deliberately preserves the capability (the skill hop still reports
   where an installed skill lives), but running a workflow from a marketplace-installed plugin has never been tested
   on any platform. **NO TICKET — decision 2026-08-31 (Steve):** the SKILL.md already documents exactly this
@@ -437,6 +443,35 @@ README section. (Item 4 exits post-publish — see the resequencing note above.)
   One-time precondition discovered: the e2e temp base `<os.tmpdir()>\agentic-hq-test-workspaces` must be
   trusted in Claude Code once per machine (nobody can answer the trust prompt under the PTY) — done on the
   Windows dev box 2026-08-31.
+  **NO TICKET for the remaining corner — decision 2026-08-31 (Steve):** bug-driven, not probe-driven. The
+  recommended install route (nvm-windows 1.2.x → `C:\nvm4w`) has a space-free install root regardless of
+  username, and the common spaced-username exposure (the user's own project paths) is the case the probe
+  PASSED. The uncovered combo (spaced install root: npx cache / MSI `%APPDATA%\npm` prefix under a spaced
+  profile, or an old `C:\Program Files\nodejs` symlink) is unlikely; predicted failure mode if it ever hits =
+  the `Read(<root>\.agentic-hq)` rule splits inside the space-separated `--allowedTools` → workflow hangs at
+  a permission prompt. This paragraph is the diagnosis; the new e2e is the harness; AHQ-102 (bundle resources
+  with skills, delete the Read rule) dissolves it entirely.
+
+### Publish from the Mac (post-merge) — Claude does the driving
+
+Run this on the Mac AFTER `/git:03` lands the squash-merge. Open a Claude Code session in the Mac repo
+clone and hand it this section — every step is Claude-runnable, with you approving as usual.
+
+1. 🤖 Sync: `git checkout main && git pull` — confirm HEAD is the AHQ-211 squash-merge commit and the
+   working tree is clean.
+2. 🤖 OPTIONAL (recommended) — the deferred Mac e2e staleness run (see the DEFERRED bullet in the To Do
+   list). Full version: `pnpm test:e2e` (slow; the quick-jira suite needs the Sooperset MCP and creates
+   real test issues — expected; run `export ANTHROPIC_MODEL=sonnet` first to cut token burn). Minimum
+   version if time/usage is short: `pnpm test:e2e:prebuilt-tarball-math-workflow` and
+   `pnpm test:e2e:user-workspace-workflows` — the two tarball-packing suites that CANNOT run on Windows
+   (skipped by policy) and haven't run anywhere in months (Phase 6 already fixed two known-stale
+   assertions in the first). A failure here is a staleness finding to judge, not automatically a publish
+   blocker.
+3. 🤖 Follow [`docs/dev/publish-checklist.md`](../../dev/publish-checklist.md) top to bottom — Claude
+   walks §1–§3 (preconditions incl. "you are on the Mac", build & pack, tarball-manifest inspection —
+   note §3 expects `executableFiles` to be exactly `[]`), you run §4 (`npm publish`), then Claude runs
+   §5's registry verification matrix — now proving the REAL registry package carries Windows support.
+4. Move to the Windows dev machine for the next section.
 
 ### Post-publish validation on the dev machine (Phase 6 item 4, resequenced 2026-08-30)
 
@@ -451,12 +486,23 @@ Windows-related is already covered by CI plus the Phase 5/6 gates. This also fol
 "switch Claude Code to Anthropic's native PowerShell installer" test. Run BOTH rounds after publish and
 BEFORE announcing Windows support.
 
+**Who does what:** 🤖 = drive it with Claude; 🧑 = you at the keyboard. The 🧑 steps are unavoidable —
+during the cleans Claude Code is literally uninstalled, and the follow-the-docs parts are 🧑 even after
+Claude comes back mid-round, because the thing under test is the docs' new-user experience: type the
+steps yourself, exactly as written.
+
 #### Round 1 — clean, then follow the README Quick Start as a brand-new user
 
 Goal: the published-package normal-user story on pristine defaults — **no Git** (Claude Code gets no Bash
 tool → PowerShell tool mode), **Restricted** execution policy, no Node, no caches.
 
-Clean (prefer RENAMING config dirs over deleting — keeps this reversible):
+0. 🤖 **Pre-wipe prep — do this WITH Claude before uninstalling it:** confirm the branch is merged and
+   the Mac publish is done; confirm nothing on this machine is unpushed (`git status` in the repo);
+   have Claude print this section's clean list and the README Quick Start URL somewhere you can see
+   them from a phone/second screen once Claude is gone.
+
+Clean 🧑 (Claude Code goes first, so the rest is you; prefer RENAMING config dirs over deleting —
+keeps this reversible):
 
 1. **Claude Code** — uninstall via Settings → Apps (or `winget uninstall` if it was winget-installed; if the
    native installer was ever used, also check `%USERPROFILE%\.local\bin\claude*`). Then rename
@@ -475,7 +521,9 @@ Clean (prefer RENAMING config dirs over deleting — keeps this reversible):
 6. Reboot; open a fresh PowerShell window; sanity-check `node`, `npm`, `git`, `claude` all report
    "not recognized".
 
-Validate — follow the README Quick Start **exactly as written, top to bottom**, as a new user would:
+Validate 🧑 — follow the README Quick Start **exactly as written, top to bottom**, as a new user would
+(Claude Code comes back at the prerequisites step, but keep typing the steps yourself — the docs UX is
+what's under test):
 prerequisites (Claude Code via the native PowerShell installer linked from the quickstart), step 1 Windows
 bullet (nvm-windows → `nvm install 24` → `nvm use 24`), step 2 **only if the symptom appears** — RECORD
 whether `npm.ps1 cannot be loaded` actually shows up before applying the fix (on true defaults it should;
@@ -483,26 +531,29 @@ this is the whole point of the symptom-conditioned wording), step 3 `npm install
 --allow-scripts=agentic-hq,node-pty agentic-hq` (the real registry package) + `agentic-hq list`, step 4 the
 string-reversal demo from a fresh folder (trust prompt → Yes).
 
-Record for each step: was the doc sufficient as written? Did anything undocumented bite (SmartScreen,
-Defender delays, nvm quirks, unexpected prompts)? Did the reversal output appear? File doc fixes for
-anything that did.
+Record 🤖 — Claude Code is installed again by now: open a session, dictate your observations for each
+step (was the doc sufficient as written? did anything undocumented bite — SmartScreen, Defender delays,
+nvm quirks, unexpected prompts? did the reversal output appear?) and have Claude write them up and
+draft doc fixes for anything that bit.
 
 #### Round 2 — clean again, then follow the Windows contributor setup
 
 Goal: prove `docs/dev/setting-up-agentic-hq-for-development.md`'s Windows path end-to-end. Bonus: finishing
 this round IS rebuilding the dev machine — the end state is a working dev setup again.
 
-1. Clean again per Round 1 steps 1–6, with two differences: skip the `.claude` renames (the backups from
+1. 🧑 Clean again per Round 1 steps 1–6, with two differences: skip the `.claude` renames (the backups from
    Round 1 already exist — just delete the fresh ones Round 1's run created), and note that Git/`gh` get
    REINSTALLED this round as part of the contributor prerequisites.
-2. Follow the contributor setup doc **top to bottom** as a new Windows contributor: prerequisites (including
-   Git + `gh` — the opposite of Round 1), a FRESH clone to a new path (don't reuse the old working copy —
-   it still exists untouched as a safety net), `corepack enable`, `pnpm install`, `npm link`,
-   `agentic-hq-dev list`, `pnpm validate`, and the step-8 smoke workflow if desired.
-3. Record doc gaps the same way as Round 1.
-4. Wrap-up: restore `%USERPROFILE%\.claude.backup` / `.claude.json.backup` if the old sessions/memory are
-   wanted (or keep the fresh config and delete the backups once nothing is missed); retire the old working
-   copy whenever convenient.
+2. 🧑 Follow the contributor setup doc **top to bottom** as a new Windows contributor: prerequisites
+   (including Git + `gh` — the opposite of Round 1), a FRESH clone to a new path (don't reuse the old
+   working copy — it still exists untouched as a safety net), `corepack enable`, `pnpm install`,
+   `npm link`, `agentic-hq-dev list`, `pnpm validate`, and the step-8 smoke workflow if desired.
+3. 🤖 Record doc gaps the same way as Round 1 — a Claude session in the fresh clone writes up the
+   observations and drafts any doc fixes (which also smoke-tests Claude Code + Git Bash in the rebuilt
+   dev setup).
+4. 🤖 Wrap-up — Claude can script the reversible parts, you approve: restore `%USERPROFILE%\.claude.backup`
+   / `.claude.json.backup` if the old sessions/memory are wanted (or keep the fresh config and delete the
+   backups once nothing is missed); retire the old working copy whenever convenient.
 
 ## Risks & mitigations
 
@@ -645,14 +696,22 @@ evidence), so each phase commit carries its own log entry.
       therefore needs a MAC `pnpm test:e2e` (or at least the prebuilt-tarball test, which Phase 6 already
       fixed two known-stale assertions in) — fold that into the next Mac e2e/pre-publish run. Not a merge
       blocker: PR/merge can proceed on the slimmed Phase 6 gate.
-- [ ] **Phase 7** — raise follow-up tickets. Final slate (2026-08-31): allowedTools/plugin-dir space-path
-      real-Claude probe (NARROWED 2026-08-31 — user-workspace case PASSED on Windows via the new
-      `test:e2e:user-workspace-path-with-spaces` e2e; remaining = AHQ install root with spaces → `Read` rule
-      inside the space-separated `--allowedTools`, plus one Mac run); POSIX-isms cleanup (mcp-installer script + Jira-extractor `/tmp`/`jq` +
-      steve-test-plugin scripts); WSL smoke test; executableFiles machinery remove-or-bless. Dropped from
-      the slate: git-scripts port (downgraded — doc line DONE, see Phase 7 section) and marketplace-installed
-      workflow validation (no ticket — SKILL.md caveat stands, revisit on demand).
-- [ ] PR review → squash-merge to main (`/git:03`); next publish (from Mac) delivers the npm/npx routes.
+- [x] **Phase 7** — CLOSED WITH ZERO TICKETS (2026-08-31, all Steve-decided). Every candidate was either
+      resolved in-branch, documented as a platform limitation, or made bug-driven: WSL smoke test (no
+      ticket — README already says "untested, tell us", audience shrunk by native support);
+      executableFiles remove-or-bless (no ticket — the docs pass already blessed it: publish checklist
+      asserts exactly `[]`, how-agentic-hq-works records the `.sh`→`.cjs` history);
+      git-scripts port (downgraded — doc line DONE, see Phase 7 section);
+      marketplace-installed workflow validation (no ticket — SKILL.md caveat stands, revisit on demand);
+      space-path probe (user-workspace case PASSED via the new e2e; the spaced-install-root corner is
+      bug-driven — see the D5 bullet's NO TICKET decision); POSIX-isms cleanup (NO TICKET — decision
+      2026-08-31: Jira/Confluence workflows + the Sooperset MCP setup are documented as macOS/Linux-only
+      for now — README catalogue bullet + Windows notes, overview-of-workflows both Jira entries,
+      setting-up-jira-mcp-server top note, troubleshooting Jira entry — and steve-test-plugin marked
+      macOS/Linux-only in the catalogue; fix on demand via GitHub issue).
+- [ ] PR review → squash-merge to main (`/git:03`); then publish from the Mac — follow the
+      "Publish from the Mac (post-merge)" section above (Claude-driven; optional e2e staleness run folded
+      in as its step 2) — delivering the npm/npx routes.
 - [ ] 🧑‍💻 **POST-PUBLISH: item 4 validation on the dev machine** (resequenced 2026-08-30) — Round 1:
       wipe (Claude/Node/nvm/Git/gh, policy to default) then README Quick Start as a brand-new user against
       the real registry package (proves no-Git PowerShell-tool mode + Restricted-policy story); Round 2:

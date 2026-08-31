@@ -192,7 +192,7 @@ Here's the rest of what Agentic HQ ships with:
 
   See its [developer help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/docs/developer-help-docs/developer-help-doc.md) for how it's built and how to adapt it.
 
-- **Jira-driven workflows — `quick-jira` and `full-jira`.** TDD-by-Jira workflows (one fully unattended, one human-in-the-loop) that read a ticket, drive a RED → GREEN → REFACTOR cycle per test type, and update the ticket. These were Agentic HQ's original flagship. They need a one-time MCP-server setup — see their entries in [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md), which link to the [Jira MCP setup guide](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md).
+- **Jira-driven workflows — `quick-jira` and `full-jira`** (currently macOS/Linux only). TDD-by-Jira workflows (one fully unattended, one human-in-the-loop) that read a ticket, drive a RED → GREEN → REFACTOR cycle per test type, and update the ticket. These were Agentic HQ's original flagship. They need a one-time MCP-server setup — see their entries in [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md), which link to the [Jira MCP setup guide](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md).
 
 - **Build a workflow from scratch.** Run `agentic-hq create-workflow` with no `--using` to design a brand-new workflow collaboratively from a blank slate (rather than copying an existing one).
 
@@ -214,6 +214,7 @@ PowerShell is the supported/tested shell to run Agentic HQ in.
 
 To note:
 - **Why is the `Set-ExecutionPolicy` install step required?:** - Out of the box, PowerShell's `Restricted` policy blocks the `.ps1` shims npm and Node version managers put on your `PATH` (`npm.ps1 cannot be loaded`). `RemoteSigned` allows scripts created locally (like npm's shims) to run, while still requiring downloaded scripts to be signed. It is a Windows security setting, so it's your call — it's the fix most Windows dev guides use, but if you can't or don't want to relax the policy (e.g. a locked-down installation), the alternative is: still in PowerShell, append `.cmd` to the blocked command (`npm.cmd`, `npx.cmd`) — the `.cmd` variants are never blocked. NOTE: The Agentic HQ system doesn't use npm and so this is only relevant for the "npm install" command that has to be run to install Agentic HQ using the npm package manager.  If you have npm running on your system and working, you can just ignore all this :-)
+- **Jira/Confluence workflows** (`quick-jira`, `full-jira`) and their [Sooperset MCP setup](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md) are currently **macOS/Linux only** — the setup script is bash. Raise a [GitHub issue](https://github.com/Agentic-HQ/agentic-hq/issues) if you need them on Windows.
 - **WSL** (Windows Subsystem for Linux) — native Windows is tested and supported. If you get AHQ working on WSL please tell us about it on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7).
 
 ## Further Documentation
