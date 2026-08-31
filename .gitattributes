@@ -1,0 +1,14 @@
+# Line-ending policy (AHQ-211): all text files are LF — in the repo AND in
+# every working tree. eol=lf (not just text=auto) so checkouts stay LF even
+# under core.autocrlf=true on Windows: prettier enforces endOfLine "lf", and
+# a CRLF .sh fails with "bad interpreter" under Git Bash and WSL. Binary
+# files are auto-detected and left untouched.
+* text=auto eol=lf
+
+# Exec-bit-carrying scripts, pinned explicitly: a CRLF checkout of these is
+# not formatting drift but an execution failure ("bad interpreter" — the
+# kernel reads the shebang line up to \r). Redundant with the * rule today;
+# kept so loosening that rule can never silently break these.
+*.sh text eol=lf
+bin/agentic-hq.cjs text eol=lf
+src/scripts/git-scripts/branching/03-squash-merge-branch/perform-squash-merge-on-branch.ts text eol=lf

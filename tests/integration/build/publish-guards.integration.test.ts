@@ -22,6 +22,12 @@
  * the blessed flow (pnpm pack from release/) still works — the UA guard must
  * never false-positive on pnpm.
  *
+ * On Windows the release guard also refuses pnpm BY DESIGN (AHQ-211: NTFS
+ * has no exec bits, so a Windows-packed tarball would ship the plugin
+ * scripts non-executable — publish from Mac now, CI later). So the positive
+ * control runs on POSIX only, and a win32-only counterpart asserts that
+ * refusal instead.
+ *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-198
  */
 
@@ -52,12 +58,25 @@ function runPackCommand(
   const plainTerminalEnv = Object.fromEntries(
     Object.entries(process.env).filter(([key]) => !key.toLowerCase().startsWith('npm_'))
   );
-  const result = spawnSync(command, args, {
+  // On Windows npm and pnpm are .cmd/.ps1 shims CreateProcess cannot start
+  // (Node >=20.12 refuses shell-less .cmd spawns outright — EINVAL,
+  // CVE-2024-27980), so resolve them through a shell there — which is also
+  // exactly what the plain terminal this function simulates does. Passed as
+  // one quoted command line: a shell spawn concatenates an args array
+  // verbatim anyway (Node deprecated that as DEP0190). (AHQ-211 D4)
+  const spawnOptions = {
     cwd,
     encoding: 'utf-8',
     timeout: PACK_TIMEOUT_MS,
     env: plainTerminalEnv,
-  });
+  } as const;
+  const result =
+    process.platform === 'win32'
+      ? spawnSync([command, ...args.map((arg) => `"${arg}"`)].join(' '), {
+          ...spawnOptions,
+          shell: true,
+        })
+      : spawnSync(command, args, spawnOptions);
   return { status: result.status, output: `${result.stdout}\n${result.stderr}` };
 }
 
@@ -103,7 +122,9 @@ describe('Publish guards (AHQ-198)', () => {
     PACK_TIMEOUT_MS
   );
 
-  it(
+  // POSIX-only: on Windows the release guard refuses the PLATFORM before it
+  // ever looks at the packer — covered by the win32 test below
+  it.runIf(process.platform !== 'win32')(
     'should fail npm pack inside release/, naming pnpm and the exec-bit reason',
     () => {
       const destination = createTempPackDestination();
@@ -122,7 +143,7 @@ describe('Publish guards (AHQ-198)', () => {
     PACK_TIMEOUT_MS
   );
 
-  it(
+  it.runIf(process.platform !== 'win32')(
     'should still pack successfully with pnpm inside release/ (positive control)',
     () => {
       const destination = createTempPackDestination();
@@ -135,6 +156,27 @@ describe('Publish guards (AHQ-198)', () => {
 
       expect(status, `pnpm pack failed:\n${output}`).toBe(0);
       expect(listTarballs(destination)).toHaveLength(1);
+    },
+    PACK_TIMEOUT_MS
+  );
+
+  it.runIf(process.platform === 'win32')(
+    'should refuse every packer inside release/ on Windows, naming the exec-bit reason',
+    () => {
+      for (const packer of ['npm', 'pnpm']) {
+        const destination = createTempPackDestination();
+
+        const { status, output } = runPackCommand(
+          packer,
+          ['pack', '--pack-destination', destination],
+          releaseDir
+        );
+
+        expect(status, packer).not.toBe(0);
+        expect(output, packer).toContain('never pack/publish agentic-hq from Windows');
+        expect(output, packer).toContain('NTFS has no exec bits');
+        expect(listTarballs(destination), packer).toEqual([]);
+      }
     },
     PACK_TIMEOUT_MS
   );

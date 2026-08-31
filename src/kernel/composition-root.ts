@@ -51,14 +51,16 @@ export class CompositionRoot {
     return new JsonFileIOMarshallerSessionFactory(this.getCurrentUserWorkspace());
   }
 
-  /** Create a WorkflowCommandBuilder wired to this system's tool factory, CLI wrapper, and
-   *  workspace. The factory (not a single tool) is what lets each launched workflow carry its
-   *  OWN build mode across the skill hop (AHQ-208). */
+  /** Create a WorkflowCommandBuilder wired to this system's tool factory, CLI wrapper,
+   *  workspace and package root. The factory (not a single tool) is what lets each launched
+   *  workflow be resolved with its OWN build mode (AHQ-208); the package root is what lets the
+   *  builder construct the shared-runner launch argv natively (AHQ-210/AHQ-211 D1). */
   getWorkflowCommandBuilder(): WorkflowCommandBuilder {
     return new ClaudeWorkflowCommandBuilder(
       new DefaultClaudeCodeToolFactory(this.ahqRuntimeParams.getAhqPackageRoot()),
       this.getCLIWrapper(),
-      this.getCurrentUserWorkspace()
+      this.getCurrentUserWorkspace(),
+      this.ahqRuntimeParams.getAhqPackageRoot()
     );
   }
 }

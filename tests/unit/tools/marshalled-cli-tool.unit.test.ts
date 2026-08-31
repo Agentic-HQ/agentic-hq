@@ -5,7 +5,9 @@
  * 1. Creates a marshalling session
  * 2. Writes input via session
  * 3. Builds and runs CLI command via wrapper
- * 4. Reads output via session
+ * 4. Reads output via session — as a command step's output string
+ *    (execute → readCommandOutput) or as the workflow-launch handshake
+ *    (executeSkillLaunch → readSkillOutput, AHQ-210/AHQ-211 D1)
  */
 import { describe, expect, it, vi } from 'vitest';
 
@@ -34,7 +36,8 @@ function createMockSession(): IOMarshallerSession {
   return {
     getMarshallingId: vi.fn().mockReturnValue('/tmp/mock-session-dir'),
     write: vi.fn(),
-    readOutput: vi.fn().mockReturnValue('mock output'),
+    readCommandOutput: vi.fn().mockReturnValue('mock output'),
+    readSkillOutput: vi.fn().mockReturnValue({ skillBaseDir: '/mock/skills/my-workflow' }),
   };
 }
 
@@ -141,7 +144,7 @@ describe('MarshalledCLITool', () => {
     expect(call[1]).toBe(mockWorkspace.getRoot());
   });
 
-  it('should call session.readOutput() and return the result', async () => {
+  it('should call session.readCommandOutput() and return the result', async () => {
     const mockSession = createMockSession();
     const mockFactory = createMockSessionFactory(mockSession);
 
@@ -154,8 +157,32 @@ describe('MarshalledCLITool', () => {
 
     const result = await tool.execute('test-command', 'input');
 
-    expect(mockSession.readOutput).toHaveBeenCalledTimes(1);
+    expect(mockSession.readCommandOutput).toHaveBeenCalledTimes(1);
+    expect(mockSession.readSkillOutput).not.toHaveBeenCalled();
     expect(result).toBe('mock output');
+  });
+
+  describe('executeSkillLaunch', () => {
+    it('should run the same session pipeline and return the typed skill handshake', async () => {
+      const mockSession = createMockSession();
+      const mockFactory = createMockSessionFactory(mockSession);
+      const mockBuilder = createMockCommandBuilder();
+      const mockWrapper = createMockCliWrapper();
+
+      const tool = new MarshalledCLITool(mockFactory, mockWrapper, mockBuilder, mockWorkspace);
+
+      const result = await tool.executeSkillLaunch('/plugin:my-workflow');
+
+      expect(mockFactory.create).toHaveBeenCalledTimes(1);
+      expect(mockBuilder.build).toHaveBeenCalledWith(
+        '/plugin:my-workflow',
+        '/tmp/mock-session-dir'
+      );
+      expect(mockWrapper.run).toHaveBeenCalledTimes(1);
+      expect(mockSession.readSkillOutput).toHaveBeenCalledTimes(1);
+      expect(mockSession.readCommandOutput).not.toHaveBeenCalled();
+      expect(result).toEqual({ skillBaseDir: '/mock/skills/my-workflow' });
+    });
   });
 
   it('should NOT call logDebug() — that is the wrapper responsibility', async () => {

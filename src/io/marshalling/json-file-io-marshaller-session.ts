@@ -3,10 +3,13 @@
  * command I/O as JSON files in a temp directory.
  *
  * SRP Does: For one execution session, generate a GUID, create a temp
- * directory, write command-input.json, read command-output.json.
+ * directory, write command-input.json, read command-output.json — either
+ * as a command step's output string or as the workflow-launch handshake
+ * (AHQ-210/AHQ-211 D1; both reads share the one transport file).
  *
  * SRP Knows About: File-system I/O, JSON serialization, temp directory
- * layout, the command-input/output file naming convention.
+ * layout, the command-input/output file naming convention, and the two
+ * output shapes (command-output-string vs skill-base-dir).
  *
  * SRP Knows Nothing About: What tool produces the output, how the CLI
  * process is spawned, or where the user's project lives.
@@ -16,12 +19,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { IOMarshallerSession } from '../../interfaces/io-marshaller-session.js';
+import type { SkillOutput } from '../../interfaces/skill-output.js';
 
 const COMMAND_IO_DIRECTORY_NAME = 'command-input-output-files';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
 const COMMAND_INPUT_STRING_KEY = 'command-input-string';
 const COMMAND_OUTPUT_STRING_KEY = 'command-output-string';
+const SKILL_BASE_DIR_KEY = 'skill-base-dir';
 const IO_FILES_PREFIX = 'io-files-';
 const JSON_INDENT_SPACES = 2;
 const TIMESTAMP_FORMAT_LENGTH = 19; // Length of "2026-01-31_15-13-21"
@@ -70,15 +75,35 @@ export class JsonFileIOMarshallerSession implements IOMarshallerSession {
     );
   }
 
-  /** Read command-output.json written by the CLI tool. Throws if the file doesn't exist yet. */
-  readOutput(): string {
+  /** Read a command step's output string from command-output.json. Throws if the file doesn't exist yet. */
+  readCommandOutput(): string {
+    const outputJson = this.readOutputFile() as { [COMMAND_OUTPUT_STRING_KEY]: string };
+    return outputJson[COMMAND_OUTPUT_STRING_KEY];
+  }
+
+  /**
+   * Read the workflow-launch handshake from command-output.json (AHQ-210).
+   * Fails fast when the file isn't a launch handshake — e.g. a command-step
+   * output landed where the engine expected a skill launch.
+   */
+  readSkillOutput(): SkillOutput {
+    const outputJson = this.readOutputFile() as { [SKILL_BASE_DIR_KEY]?: unknown };
+    const skillBaseDir = outputJson[SKILL_BASE_DIR_KEY];
+    if (typeof skillBaseDir !== 'string' || skillBaseDir.length === 0) {
+      throw new Error(
+        `Skill launch handshake is missing the required '${SKILL_BASE_DIR_KEY}' string in: ` +
+          path.join(this.uniqueSessionDirectoryPath, COMMAND_OUTPUT_FILENAME)
+      );
+    }
+    return { skillBaseDir };
+  }
+
+  /** Read and parse the shared command-output.json transport file. */
+  private readOutputFile(): unknown {
     const outputPath = path.join(this.uniqueSessionDirectoryPath, COMMAND_OUTPUT_FILENAME);
     if (!fs.existsSync(outputPath)) {
       throw new Error(`Output file not found: ${outputPath}`);
     }
-    const outputJson = JSON.parse(fs.readFileSync(outputPath, 'utf-8')) as {
-      [COMMAND_OUTPUT_STRING_KEY]: string;
-    };
-    return outputJson[COMMAND_OUTPUT_STRING_KEY];
+    return JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
   }
 }

@@ -6,15 +6,23 @@ command, what you should see, and what to do in each case.
 
 **Why the process is shaped like this:**
 
+- **Publish from the Mac only — never from Windows** (AHQ-211). NTFS has no exec
+  bits, so a Windows-packed tarball would ship files non-executable for Mac/Linux
+  consumers; the release manifest's `prepack` guard refuses to pack on win32
+  outright. This rule dissolves once publishing moves into CI (an ubuntu job
+  packing and publishing on release — the plan of record).
 - The **staged `release/` tree is the only publishable artifact**. The repo root is
   permanently `private: true` and carries an always-fail `prepack` script, so packing or
   publishing the root fails loudly (guarded by
   `tests/integration/build/publish-guards.integration.test.ts`).
 - **Packing must be `pnpm pack`, run from inside `release/`.** Only pnpm applies
-  `publishConfig.executableFiles`, which is what records the shipped plugin `.sh`
-  files' execute bits in the tarball — an npm-packed tarball would ship them
-  non-executable (exit 126 at runtime). The generated release manifest carries a
-  user-agent-checking `prepack` that fails any non-pnpm pack.
+  `publishConfig.executableFiles`, the mechanism that records execute bits in the
+  tarball. Since AHQ-211 Phase 5 nothing shipped needs exec bits (the list is
+  empty — that's also what makes Windows installs work), but the pnpm-only rule
+  stays: the guards and the determinism test are built around pnpm's packer, and
+  any future executable file would silently ship broken under npm's. The generated
+  release manifest carries a user-agent-checking `prepack` that fails any non-pnpm
+  pack.
 - **The upload itself uses `npm publish` on the already-packed tarball.** A tarball
   publish is an upload only — it runs no lifecycle scripts and does not re-pack — so
   the pnpm-only rule is not violated and the wrong-packer guard correctly stays
@@ -26,6 +34,9 @@ command, what you should see, and what to do in each case.
 ---
 
 ## 1. Preconditions
+
+**You are on the Mac.** Publishing from Windows is never supported (see the first
+"Why" bullet above — the prepack guard will refuse anyway, but don't get that far).
 
 **1a. pnpm version matches the pin.**
 
@@ -106,8 +117,9 @@ Check every one of these:
 - every `exports` runtime target is compiled `./dist/….js`; a `types` condition
   may point at a shipped `./dist/….d.ts` — **no `.ts` source target anywhere**
   (the only allowed `.ts` suffix is `.d.ts`);
-- `publishConfig.executableFiles` is **non-empty** and lists only
-  `.agentic-hq/plugins/**/*.sh` paths;
+- `publishConfig.executableFiles` is exactly `[]` — since AHQ-211 Phase 5
+  nothing shipped needs exec bits, and the tarball e2e pins this (a non-empty
+  list means a shell script crept back into the shipped plugins — investigate);
 - **no** `devDependencies`, **no** `packageManager`, **no** `engines.pnpm` —
   `engines` contains `node` only.
 
@@ -171,9 +183,7 @@ browser ceremony and exits immediately with `EOTP`, publishing nothing):
 npm publish ./agentic-hq-<version>.tgz
 ```
 
-- **Expected:** possibly a cosmetic `Unknown project config "frozen-lockfile"` warning
-  (a known annoyance from the repo `.npmrc` when npm runs inside the repo — ignore
-  it); `npm notice` lines describing the tarball; then the **browser passkey
+- **Expected:** `npm notice` lines describing the tarball; then the **browser passkey
   hand-off** — npm auto-opens (or prints) a URL like `https://www.npmjs.com/login/<id>`;
   complete the passkey ceremony there and the terminal continues by itself — ending
   in `+ agentic-hq@<version>`.
@@ -205,8 +215,8 @@ npm view agentic-hq versions dist-tags
 
 Verify the published package from the real registry — four combos: {`npx`,
 prefix-scoped global install} × {Node 24, Node 22}. Run each from a **fresh temp
-directory outside the repo** (inside the repo, the repo `.npmrc` makes npm print the
-cosmetic warning from §4).
+directory outside the repo**, so nothing repo-local (config, links, workspaces)
+can leak into what is meant to be a clean-consumer check.
 
 **Expected in every combo:** the workflow list shows **all seven** shipped workflows
 (since AHQ-209: `add-feature`, `add-feature-detailed-example`, `create-workflow`,

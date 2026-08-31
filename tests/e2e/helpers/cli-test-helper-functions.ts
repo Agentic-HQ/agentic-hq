@@ -9,9 +9,12 @@
 
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
-const LOG_FILE_DIRECTORY = '/tmp';
+// The OS temp dir, not a hardcoded /tmp: /tmp does not exist on Windows, and
+// even on macOS it is a symlink os.tmpdir() sidesteps (AHQ-211)
+const LOG_FILE_DIRECTORY = os.tmpdir();
 const LOG_FILE_PREFIX = 'e2e-';
 const LOG_FILE_EXTENSION = '.log';
 const LOG_FILE_ENCODING = 'utf-8' as const;
@@ -19,6 +22,18 @@ const LOG_FILE_ENCODING = 'utf-8' as const;
 const BOLD_RED = '\x1b[1;31m';
 const RESET = '\x1b[0m';
 const SEPARATOR = '════════════════════════════════════════════════════════════';
+
+/**
+ * The log file path runCliAndLogOutput() will write for a given label.
+ *
+ * Exported so tests that mention the log file in their own output (e.g.
+ * timeout diagnostic banners) name the file the helper ACTUALLY writes —
+ * before AHQ-211 they hardcoded `/tmp/e2e-<label>.log`, which was wrong on
+ * Windows (no /tmp) and stale on macOS (os.tmpdir() is /var/folders/…).
+ */
+export function getLogFilePath(logFileLabel: string): string {
+  return path.join(LOG_FILE_DIRECTORY, `${LOG_FILE_PREFIX}${logFileLabel}${LOG_FILE_EXTENSION}`);
+}
 
 /**
  * Prints a bold red banner to stdout showing the log file path and tail -f command.
@@ -37,12 +52,13 @@ function printBanner(logFile: string): void {
 /**
  * Runs a CLI command, redirecting stdout and stderr to a log file.
  *
- * Creates a log file at `/tmp/e2e-{logFileLabel}.log`, prints a bold red banner
- * showing the log file path and tail -f command, executes the command with output
- * redirected to that file, and returns the log file contents.
+ * Creates a log file at `<os.tmpdir()>/e2e-{logFileLabel}.log`, prints a bold
+ * red banner showing the log file path and tail -f command, executes the
+ * command with output redirected to that file, and returns the log file
+ * contents.
  *
  * @param command - The shell command to execute
- * @param logFileLabel - Label used to name the log file (e.g. 'unit-test' → `/tmp/e2e-unit-test.log`)
+ * @param logFileLabel - Label used to name the log file (e.g. 'unit-test' → `<os.tmpdir()>/e2e-unit-test.log`)
  * @param timeoutMs - Optional timeout in milliseconds for the command
  * @param workingDirectory - Optional working directory for command execution (defaults to process.cwd())
  * @returns The contents of the log file after command execution
@@ -54,10 +70,7 @@ export function runCliAndLogOutput(
   timeoutMs?: number,
   workingDirectory?: string
 ): string {
-  const logFile = path.join(
-    LOG_FILE_DIRECTORY,
-    `${LOG_FILE_PREFIX}${logFileLabel}${LOG_FILE_EXTENSION}`
-  );
+  const logFile = getLogFilePath(logFileLabel);
   printBanner(logFile);
   const logFd = fs.openSync(logFile, 'w');
   try {

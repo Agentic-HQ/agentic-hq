@@ -17,12 +17,7 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 Supported and tested:
 - **macOS** - requires macOS 13.5 or newer (AHQ was developed and tested on 15.7.5).
 - **Linux** - tested on Ubuntu 24.04 LTS
-
-Unsupported:
-- **Windows** - untested and likely to break on Windows due to path syntax.  Windows users are encouraged to do one of the following:
-   - Install free VMware and set up Ubuntu 24.04 LTS.  This is fully tested and works. A guide will be available [here](https://agentic-hq.atlassian.net/wiki/spaces/ahq/pages/94470146/Installing+Agentic+HQ+On+Ubuntu+In+VMware#Required-Dev-Tools) once Confluence is publicly available (should be less than 1 week after going public)
-   - Try on Windows Subsystem for Linux. Untested, but if the paths work the same as Linux it's likely to work.  Please let us know how this went on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7)
-   - Ask Claude to help you get it working on Windows and then submit a PR :-) - see [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Windows** - native Windows, tested on Windows 11. Runs from PowerShell. See [Windows notes](#windows-notes) below.
 
 ### Prerequisites
 
@@ -35,12 +30,27 @@ Linux only:
 
 ### Installation
 
-1. **Install Node.js 24 LTS.** - go to https://nodejs.org/en/download and follow the default path to install nvm. If you already have Node.js, please confirm it is version 22 or 24 (the only supported lines — other versions, including 23 and 25+, are unsupported). After installation confirm success by running:
+1. **Install Node.js 24 LTS:**
+   - **macOS / Linux:** go to https://nodejs.org/en/download and follow the default path (installs nvm, then Node).
+   - **Windows:** install [nvm-windows](https://github.com/coreybutler/nvm-windows) (what AHQ is tested with): run `nvm-setup.exe` from its [latest release](https://github.com/coreybutler/nvm-windows/releases/latest), then in a new PowerShell window run `nvm install 24` followed by `nvm use 24`.
+
+   Already have Node.js? Check it is version 22 or 24 (21 and 23 not tested/supported). 
+   
+   Confirm node is installed and its version by running:
+
    ```bash
    node -v
    ```
 
-2. **Install Agentic HQ:**
+2. **Windows only — if PowerShell blocks `npm` (`npm.ps1 cannot be loaded`), run the following once to allow PowerShell scripts:**
+
+   ```powershell
+   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+   ```
+
+   Without this, PowerShell blocks the `npm` command itself. See [Windows notes](#windows-notes) for what it changes and for an alternative if you can't or don't want to change this security setting (e.g. on a locked-down machine).
+
+3. **Install Agentic HQ:**
 
    ```bash
    npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
@@ -58,13 +68,14 @@ Linux only:
 
    (Prefer to try first without installing? `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list` runs it directly without installing it. `npx` needs the same flag, for the same reason.)
 
-3. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
+4. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
    ```bash
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
 
-Or if you want to run it without installing it:
+   Or if you want to run it without installing it:
+
    ```bash
    npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
@@ -143,9 +154,16 @@ agentic-hq <short-name> -- [passthrough args]
 ### Example
 
 ```bash
-# Create a temporary workspace and run the string reversal demo from it
+# Create a temporary workspace and run the string reversal demo from it (macOS/Linux)
 mkdir /tmp/my-temp-workspace
 cd /tmp/my-temp-workspace
+agentic-hq reversal -- --string-to-reverse="this is working well"
+```
+
+```powershell
+# The same on Windows (PowerShell)
+mkdir $env:TEMP\my-temp-workspace
+cd $env:TEMP\my-temp-workspace
 agentic-hq reversal -- --string-to-reverse="this is working well"
 ```
 
@@ -174,7 +192,7 @@ Here's the rest of what Agentic HQ ships with:
 
   See its [developer help doc](.agentic-hq/plugins/agentic-hq-demos-plugin/skills/add-feature-detailed-example/docs/developer-help-docs/developer-help-doc.md) for how it's built and how to adapt it.
 
-- **Jira-driven workflows — `quick-jira` and `full-jira`.** TDD-by-Jira workflows (one fully unattended, one human-in-the-loop) that read a ticket, drive a RED → GREEN → REFACTOR cycle per test type, and update the ticket. These were Agentic HQ's original flagship. They need a one-time MCP-server setup — see their entries in [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md), which link to the [Jira MCP setup guide](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md).
+- **Jira-driven workflows — `quick-jira` and `full-jira`** (currently macOS/Linux only). TDD-by-Jira workflows (one fully unattended, one human-in-the-loop) that read a ticket, drive a RED → GREEN → REFACTOR cycle per test type, and update the ticket. These were Agentic HQ's original flagship. They need a one-time MCP-server setup — see their entries in [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md), which link to the [Jira MCP setup guide](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md).
 
 - **Build a workflow from scratch.** Run `agentic-hq create-workflow` with no `--using` to design a brand-new workflow collaboratively from a blank slate (rather than copying an existing one).
 
@@ -189,6 +207,15 @@ Here's the rest of what Agentic HQ ships with:
   ```
 
 For the full catalogue — every shipped workflow, what it does, and links to its source — see [overview-of-workflows.md](docs/user-docs/workflow-descriptions/overview-of-workflows.md).
+
+### Windows notes
+
+PowerShell is the supported/tested shell to run Agentic HQ in.
+
+To note:
+- **Why is the `Set-ExecutionPolicy` install step required?:** - Out of the box, PowerShell's `Restricted` policy blocks the `.ps1` shims npm and Node version managers put on your `PATH` (`npm.ps1 cannot be loaded`). `RemoteSigned` allows scripts created locally (like npm's shims) to run, while still requiring downloaded scripts to be signed. It is a Windows security setting, so it's your call — it's the fix most Windows dev guides use, but if you can't or don't want to relax the policy (e.g. a locked-down installation), the alternative is: still in PowerShell, append `.cmd` to the blocked command (`npm.cmd`, `npx.cmd`) — the `.cmd` variants are never blocked. NOTE: The Agentic HQ system doesn't use npm and so this is only relevant for the "npm install" command that has to be run to install Agentic HQ using the npm package manager.  If you have npm running on your system and working, you can just ignore all this :-)
+- **Jira/Confluence workflows** (`quick-jira`, `full-jira`) and their [Sooperset MCP setup](docs/user-docs/workflow-descriptions/setting-up-jira-mcp-server.md) are currently **macOS/Linux only** — the setup script is bash. Raise a [GitHub issue](https://github.com/Agentic-HQ/agentic-hq/issues) if you need them on Windows.
+- **WSL** (Windows Subsystem for Linux) — native Windows is tested and supported. If you get AHQ working on WSL please tell us about it on the [Agentic HQ Discord Server](https://discord.gg/fnR7SJt2d7).
 
 ## Further Documentation
 

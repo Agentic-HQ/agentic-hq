@@ -24,6 +24,16 @@
 # is deliberately no apt-get step — on a provisioned image it would either
 # no-op or silently upgrade the toolchain mid-run, which conflicts with the
 # project's pinning philosophy (AHQ-152).
+#
+# validate-windows (AHQ-211): the same contributor steps on windows-latest —
+# same Node version (.nvmrc), same commands — plus the non-Claude integration
+# suites that guard the surfaces Windows support actually changed (release
+# build determinism, publish guards incl. the win32 pack refusal, the bin
+# wrapper, and cross-platform self-termination). Each integration suite is its
+# own step: the pwsh shell only propagates the LAST command's exit code from a
+# multi-line run block, so one step per suite is what makes failures fail.
+# Publishing stays Mac/CI-ubuntu only — the Windows job never packs a real
+# release (scripts/prepack-guard.cjs refuses on win32 by design).
 # =============================================================================
 
 name: CI
@@ -66,8 +76,8 @@ jobs:
         run: pnpm install
 
       # Contributor setup step 6: install the CLI onto PATH. The exact path where Linux
-      # issues surfaced before (AHQ-169, AHQ-172). On Linux it prints two
-      # documented, harmless warnings — they do not fail the step.
+      # issues surfaced before (AHQ-169, AHQ-172). It prints one documented,
+      # harmless allow-scripts warning — it does not fail the step.
       - name: Install CLI onto PATH (npm link)
         run: npm link
 
@@ -81,3 +91,62 @@ jobs:
       # Contributor setup step 7: the hard gate — typecheck + lint + format + unit tests.
       - name: Validate (typecheck + lint + format + unit tests)
         run: pnpm validate
+
+  # Windows support (AHQ-211): the same contributor steps on windows-latest,
+  # plus the non-Claude integration suites guarding the Windows-changed
+  # surfaces. See the header comment for why each suite is its own step.
+  # No Set-ExecutionPolicy step: the .ps1-shim blocking that bites users is
+  # client Windows' Restricted default — windows-latest is Windows Server,
+  # which defaults to RemoteSigned, so npm/pnpm shims run as-is.
+  validate-windows:
+    runs-on: windows-latest
+    # More generous than the ubuntu job's 15: the Windows runner is slower on
+    # file-heavy work (Defender real-time scanning), and build-determinism
+    # alone runs the release build twice.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same single source of truth as the ubuntu job — the risk note in the
+      # AHQ-211 plan requires the SAME Node versions on both OSes to keep the
+      # support claim honest.
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable Corepack (installs pinned pnpm)
+        run: corepack enable
+
+      # node-pty ships win32 prebuilds (conpty/winpty), so no compiler
+      # toolchain step is needed here either.
+      - name: Install dependencies
+        run: pnpm install
+
+      # The exact surface AHQ-211 exists for: on win32 `npm link` writes .cmd
+      # shims rather than a symlinked executable, and `agentic-hq-dev list`
+      # resolves the shim + runs the Framework Build (1) + CLI startup.
+      # The echo below is deliberately in the run OUTPUT, not just here: log
+      # readers should know this step is quietly relying on the runner's
+      # server-default execution policy.
+      - name: Install CLI onto PATH (npm link)
+        run: |
+          echo "NOTE: under PowerShell, 'npm' here resolves to its npm.ps1 shim. That works on this runner only because windows-latest is Windows SERVER (default policy RemoteSigned). On a real Windows 10/11 client machine (default Restricted) this same command FAILS until the user runs the one-time step our README recommends: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
+          npm link
+
+      - name: Smoke test CLI (no Claude required)
+        run: agentic-hq-dev list
+
+      - name: Validate (typecheck + lint + format + unit tests)
+        run: pnpm validate
+
+      - name: Integration — release build determinism
+        run: pnpm test:integration:build-determinism
+
+      - name: Integration — publish guards (incl. win32 pack refusal)
+        run: pnpm test:integration:publish-guards
+
+      - name: Integration — bin wrapper supplies package root
+        run: pnpm test:integration:bin-wrapper
+
+      - name: Integration — kill script terminates CLI process
+        run: pnpm test:integration:kill-script

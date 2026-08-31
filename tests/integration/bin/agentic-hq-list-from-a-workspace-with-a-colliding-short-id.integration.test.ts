@@ -23,6 +23,7 @@
 
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -32,7 +33,9 @@ const TEST_TIMEOUT_MS = 60_000; // plain node + tsx subprocess, no Claude
 const repoRoot = process.cwd();
 const devBinPath = path.join(repoRoot, 'bin', 'agentic-hq.cjs');
 
-const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
+// Under os.tmpdir(), never a hardcoded /tmp: /tmp does not exist on Windows,
+// where the literal path silently created C:\tmp instead (AHQ-211)
+const TEMP_WORKSPACES_BASE = path.join(os.tmpdir(), 'agentic-hq-test-workspaces');
 const COLLIDING_SHORT_ID = 'add-feature'; // shipped by the repo's own agentic-hq-demos-plugin
 const LOCAL_PLUGIN_NAME = 'local-plugin';
 

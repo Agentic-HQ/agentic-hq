@@ -170,7 +170,7 @@ Run:
 agentic-hq quick-jira -- --jira-id=TEST-123
 ```
 
-A Jira-driven TDD workflow that runs without human interaction, so it can be used in an automated e2e test. Requires the Sooperset Atlassian MCP server — see [Setting Up the Sooperset Atlassian MCP Server (Jira + Confluence)](setting-up-jira-mcp-server.md).
+A Jira-driven TDD workflow that runs without human interaction, so it can be used in an automated e2e test. Requires the Sooperset Atlassian MCP server — see [Setting Up the Sooperset Atlassian MCP Server (Jira + Confluence)](setting-up-jira-mcp-server.md). **Currently macOS/Linux only** (the MCP setup is not yet supported on native Windows).
 
 **Runs fully unattended** — none of the commands stop to ask the human for input. That is what makes it suitable as the e2e test driver: the e2e test would hang if the workflow ever paused for human approval. Use [`full-jira-tdd-story-workflow`](#full-jira-tdd-story-workflow--full-tdd-story-workflow-driven-by-a-jira-ticket) instead when you want human-in-the-loop pauses (plan reviews, refactor approval, validation-level choice).
 
@@ -207,7 +207,7 @@ Run:
 agentic-hq full-jira -- --jira-id=TEST-123
 ```
 
-The fuller TDD-by-Jira workflow. Use this to execute a complete TDD story for a Jira ticket using Agentic HQ. Requires the Sooperset Atlassian MCP server — see [Setting Up the Sooperset Atlassian MCP Server (Jira + Confluence)](setting-up-jira-mcp-server.md).
+The fuller TDD-by-Jira workflow. Use this to execute a complete TDD story for a Jira ticket using Agentic HQ. Requires the Sooperset Atlassian MCP server — see [Setting Up the Sooperset Atlassian MCP Server (Jira + Confluence)](setting-up-jira-mcp-server.md). **Currently macOS/Linux only** (the MCP setup is not yet supported on native Windows).
 
 **Very interactive — human-in-the-loop at multiple stages.** If you want a fully unattended Jira workflow, use [`quick-jira-workflow`](#quick-jira-workflow--reads-a-jira-ticket-and-completes-it-via-tdd) instead.
 
@@ -238,7 +238,7 @@ Source files:
 These plugins ship with Agentic HQ but currently expose only utility skills/commands rather than top-level workflows. They will not appear under any plugin heading in `agentic-hq list`'s workflow output, but their skills are invoked from inside other workflows or directly via Claude Code:
 
 - **`agentic-hq-utilities-plugin`** — utility skills used by other workflows (e.g. the Jira verbatim content extractor).
-- **`steve-test-plugin`** — internal smoke-test skills used while developing Agentic HQ itself.
+- **`steve-test-plugin`** — internal smoke-test skills used while developing Agentic HQ itself (macOS/Linux only).
 
 ---
 

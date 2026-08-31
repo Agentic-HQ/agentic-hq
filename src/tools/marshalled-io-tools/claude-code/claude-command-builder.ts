@@ -4,25 +4,28 @@
  * SRP Does: Assemble the executable, plugin directory flags, allowed
  * tools flags, and arguments for a Claude Code CLI invocation.
  *
- * SRP Knows About: Claude Code's CLI interface — its executable name,
- * --plugin-dir flags, --allowedTools flag, the AI Tool Command (e.g. "/run-jira-workflow")
- * and argument ordering.
+ * SRP Knows About: Claude Code's CLI interface — its --plugin-dir flags,
+ * --allowedTools flag, the AI Tool Command (e.g. "/run-jira-workflow") and
+ * argument ordering — and that the claude executable itself is found by the
+ * injected resolver at build() time (AHQ-211 D4).
  *
- * SRP Knows Nothing About: I/O marshalling, process spawning, or where
- * the user's project lives (i.e. where the "claude" command will be
- * run from).
+ * SRP Knows Nothing About: How the resolver locates claude, I/O
+ * marshalling, process spawning, or where the user's project lives (i.e.
+ * where the "claude" command will be run from).
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { AhqRuntimeParams } from '../../../interfaces/ahq-runtime-params.js';
 import type { CLICommand } from '../../../interfaces/cli-command.js';
 import type { MarshalledIOCLICommandBuilder } from '../../../interfaces/marshalled-io-cli-command-builder.js';
 import { DefaultCLICommand } from '../../../io/terminal/default-cli-command.js';
 import type { Workspace } from '../../../workflow-discovery/interfaces/workspace.js';
 
-// Default CLI executable
-const DEFAULT_CLAUDE_EXECUTABLE = 'claude';
+import {
+  resolveClaudeLaunch,
+  type ClaudeLaunch,
+  type ResolveClaudeLaunchFn,
+} from './claude-executable-resolver.js';
 
 const PLUGINS_SUBDIR = 'plugins';
 
@@ -57,28 +60,42 @@ const DEFAULT_ALLOWED_TOOLS = [
 export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
   private readonly ahqPackage: Workspace;
   private readonly currentUserWorkspace: Workspace;
-  private readonly ahqRuntimeParams: AhqRuntimeParams;
-  private readonly executable: string;
+  private readonly executable: string | undefined;
   private readonly extraArgs: string[];
+  private readonly resolveLaunch: ResolveClaudeLaunchFn;
 
+  /**
+   * `executable` undefined (production) means "resolve claude at build()
+   * time" — the resolver turns the bare command into an absolute path (plus
+   * a legacy npm-shim args prefix when needed) that pty.spawn can run on
+   * every platform (AHQ-211 D4). Naming an executable explicitly (the
+   * fake-claude test-fixture seam) bypasses resolution: it is spawned
+   * exactly as given.
+   */
   constructor(
     ahqPackage: Workspace,
     currentUserWorkspace: Workspace,
-    ahqRuntimeParams: AhqRuntimeParams,
-    executable: string = DEFAULT_CLAUDE_EXECUTABLE,
-    extraArgs: string[] = []
+    executable?: string,
+    extraArgs: string[] = [],
+    resolveLaunch: ResolveClaudeLaunchFn = resolveClaudeLaunch
   ) {
     this.ahqPackage = ahqPackage;
     this.currentUserWorkspace = currentUserWorkspace;
-    this.ahqRuntimeParams = ahqRuntimeParams;
     this.executable = executable;
     this.extraArgs = extraArgs;
+    this.resolveLaunch = resolveLaunch;
   }
 
   build(aiToolCommand: string, marshallingId: string): CLICommand {
-    const args = this.buildArgsList(aiToolCommand, marshallingId);
+    // Resolved per build() call, never at construction: resolution walks the
+    // filesystem and must only run (and only fail) when a launch is happening
+    const launch: ClaudeLaunch =
+      this.executable !== undefined
+        ? { executable: this.executable, argsPrefix: [] }
+        : this.resolveLaunch();
+    const args = [...launch.argsPrefix, ...this.buildArgsList(aiToolCommand, marshallingId)];
 
-    return new DefaultCLICommand(this.executable, args);
+    return new DefaultCLICommand(launch.executable, args);
   }
 
   private buildArgsList(aiToolCommand: string, marshallingId: string): string[] {
@@ -86,11 +103,13 @@ export class ClaudeCommandBuilder implements MarshalledIOCLICommandBuilder {
       ...this.extraArgs,
       ...this.getClaudeCliPluginDirArgs(),
       `--allowedTools=${this.buildAllowedToolsListString()}`,
-      // Claude expects the AI tool command plus its arguments as the final
-      // positional argument: the marshalling session ID, then the build-mode
-      // and ahq-package-root the AI relays VERBATIM across the skill hop
-      // without interpreting them (AHQ-197) — pure argument plumbing.
-      `${aiToolCommand} ${marshallingId} ${this.ahqRuntimeParams.getBuildMode().getValue()} ${this.ahqRuntimeParams.getAhqPackageRoot().getPath()}`,
+      // Claude expects the AI tool command plus its argument as the final
+      // positional argument. The marshalling session ID (the io-directory) is
+      // the ONLY value that crosses the hop (AHQ-210/AHQ-211 D1 deleted the
+      // AHQ-197 build-mode/package-root relay), and it is double-quoted
+      // because the AI re-splits this prompt on spaces and Windows paths
+      // routinely contain them (D5).
+      `${aiToolCommand} "${marshallingId}"`,
     ];
   }
 

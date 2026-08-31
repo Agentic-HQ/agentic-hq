@@ -15,12 +15,16 @@
  *    GENERATED one (no pack-time overrides), only intended files ship (no
  *    io-files/test-plugin/dev-config leak class, no per-workflow install
  *    files inside any ts-workflow/), no nested package.json shadows Node
- *    package self-reference, shipped scripts are executable
+ *    package self-reference, no shell scripts ship at all (since AHQ-211
+ *    Phase 5 replaced the last one with a Node script)
  * 3. Run the INSTALLED bin's `agentic-hq list` from a clean temp workspace
  * 4. Run a full math workflow (3 real Claude steps: x2, +3, /5) and a
  *    string-reversal (1 real Claude step) from clean temp workspaces; assert
  *    the outputs, the io-files in the USER workspace, and that nothing was
  *    written inside the installed package
+ *
+ * Windows: this suite is SKIPPED — its setup packs the release tree, which
+ * the prepack guard refuses on win32 (publish-from-Mac policy, AHQ-211).
  *
  * See: https://agentic-hq.atlassian.net/browse/AHQ-196
  * See: https://agentic-hq.atlassian.net/browse/AHQ-208
@@ -29,24 +33,27 @@
 import { execSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { hashTree } from '../../helpers/file-tree-helper-functions.js';
-import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
+import { getLogFilePath, runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 import {
   ALLOW_SCRIPTS_FLAG,
   buildPackAndInstallTarball,
 } from '../helpers/tarball-install-helper-functions.js';
 
-const SETUP_TIMEOUT_MS = 600_000; // build + pack + npm registry install
+// 900s, not 600s: Windows needs headroom for build + pack + npm registry
+// install (Defender real-time scanning slows file-heavy steps — AHQ-211)
+const SETUP_TIMEOUT_MS = 900_000;
 const FAST_TEST_TIMEOUT_MS = 60_000; // no Claude invocation
 const HOISTED_INSTALL_TIMEOUT_MS = 120_000; // one extra npm install of the tarball
 const MATH_RUN_TIMEOUT_MS = 1000_000; // 3 real Claude steps: claude can be really slow
 const REVERSAL_RUN_TIMEOUT_MS = 600_000; // 1 real Claude step
 const MATH_LOG_FILE_LABEL = 'prebuilt-tarball-math-workflow';
-const MATH_LOG_FILE_PATH = `/tmp/e2e-${MATH_LOG_FILE_LABEL}.log`;
+const MATH_LOG_FILE_PATH = getLogFilePath(MATH_LOG_FILE_LABEL);
 const REVERSAL_LOG_FILE_LABEL = 'prebuilt-tarball-string-reversal';
 
 // Test data constants (11 x2=22, +3=25, /5=5)
@@ -55,8 +62,9 @@ const EXPECTED_OUTPUT_NUMBER = 5;
 const TEST_INPUT_STRING = 'tarball install test';
 const EXPECTED_REVERSED_STRING = 'tset llatsni llabrat';
 
-// Paths
-const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
+// Paths — under os.tmpdir(), never a hardcoded /tmp: /tmp does not exist on
+// Windows, where the literal path silently created C:\tmp instead (AHQ-211)
+const TEMP_WORKSPACES_BASE = path.join(os.tmpdir(), 'agentic-hq-test-workspaces');
 const IO_FILES_DIR_PREFIX = 'io-files-';
 const COMMAND_INPUT_FILENAME = 'command-input.json';
 const COMMAND_OUTPUT_FILENAME = 'command-output.json';
@@ -186,7 +194,13 @@ function createCleanWorkspace(): string {
   return workspace;
 }
 
-describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
+// Skipped on Windows BY POLICY, not as a gap: the setup packs the release
+// tree, which the prepack guard refuses on win32 (NTFS has no exec bits —
+// publish from Mac now, from CI later, never from Windows; AHQ-211). Without
+// the skip this suite would build for minutes and then die at the guard.
+const describeSkippedOnWindows = describe.skipIf(process.platform === 'win32');
+
+describeSkippedOnWindows('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   const repoRoot = process.cwd();
   // temp/AHQ-208 is this ticket's gitignored scratch tree for tarball installs
   const runDir = path.join(
@@ -195,25 +209,20 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
     'AHQ-208',
     `e2e-tarball-${Date.now()}_${randomUUID()}`
   );
-  const installedPackageRoot = path.join(
-    runDir,
-    'install-prefix',
-    'lib',
-    'node_modules',
-    'agentic-hq'
-  );
-  const installedBinPath = path.join(runDir, 'install-prefix', 'bin', 'agentic-hq');
-
   let rootManifest: PackageManifest;
   let tarballManifest: PackageManifest;
   let tarballFileList: string[];
   let installedPackageHashes: Record<string, string>;
   let tarballPath: string;
+  let installedPackageRoot: string;
+  let installedBinPath: string;
 
   beforeAll(() => {
     // Build → pack FROM release/ → npm install into an isolated prefix
-    // (shared with the user-workspace fixture e2e)
-    ({ tarballPath } = buildPackAndInstallTarball(runDir));
+    // (shared with the user-workspace fixture e2e). The helper owns the
+    // platform-specific `npm -g --prefix` layout (POSIX lib/node_modules +
+    // bin/ vs win32 node_modules + .cmd shim — AHQ-211)
+    ({ tarballPath, installedPackageRoot, installedBinPath } = buildPackAndInstallTarball(runDir));
 
     // The source manifest the generated one is derived from — the shared
     // fields must match it, never be hand-maintained copies that could drift
@@ -239,7 +248,7 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   }, SETUP_TIMEOUT_MS);
 
   it(
-    'should ship the prebuilt artifact shape: generated manifest, only intended files, no shadowing manifests, executable plugin scripts',
+    'should ship the prebuilt artifact shape: generated manifest, only intended files, no shadowing manifests, no shell scripts',
     () => {
       // The tarball carries the GENERATED release manifest: prebuilt bin and
       // compiled-JS exports written in directly (no pack-time override
@@ -279,15 +288,16 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
       expect(tarballManifest.packageManager).toBeUndefined();
       expect(tarballManifest.engines?.pnpm).toBeUndefined();
 
-      // The generated manifest carries the exec-bit mechanism: exact shipped
-      // shell-script paths enumerated from the staged tree (pnpm-specific
-      // publishConfig.executableFiles — globs are silently ignored, AHQ-196)
-      const executableFiles = tarballManifest.publishConfig?.executableFiles ?? [];
-      expect(executableFiles.length).toBeGreaterThan(0);
-      for (const executableFile of executableFiles) {
-        expect(executableFile).toMatch(/^\.agentic-hq\/plugins\/.+\.sh$/);
-        expect(tarballFileList).toContain(executableFile);
-      }
+      // The generated manifest still carries the exec-bit mechanism
+      // (publishConfig.executableFiles enumerated from the staged tree —
+      // AHQ-196), but since AHQ-211 Phase 5 replaced the last shipped shell
+      // script with a Node kill script the enumerated list is EMPTY and no
+      // .sh ships at all. A .sh reappearing here means a shell script
+      // sneaked into the shipped set — it must either be ported to Node or
+      // deliberately re-added to this publish safety net. (Removing the
+      // now-idle machinery entirely is a Phase 7 follow-up candidate.)
+      expect(tarballManifest.publishConfig?.executableFiles).toEqual([]);
+      expect(tarballFileList.filter((file) => file.endsWith('.sh'))).toEqual([]);
 
       // Leak-class boundary: the tarball's top level is exactly the staged
       // release tree — no io-files, no test plugin, no dev configs, no
@@ -385,19 +395,14 @@ describe('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
         }
       }
 
-      // Every shipped plugin shell script must be executable: skills invoke them
-      // directly at runtime (e.g. self-termination's kill script), and the packer
-      // records non-bin files without their execute bit — the package's install
-      // step must restore it
+      // No shell script reaches the installed tree either (the runtime-invoked
+      // scripts are all Node since AHQ-211 Phase 5 — nothing needs an exec
+      // bit, which is also what makes the install work on Windows/NTFS)
       const pluginsRoot = path.join(installedPackageRoot, '.agentic-hq', 'plugins');
-      const shippedShellScripts = listFilesRecursively(pluginsRoot).filter((file) =>
+      const installedShellScripts = listFilesRecursively(pluginsRoot).filter((file) =>
         file.endsWith('.sh')
       );
-      expect(shippedShellScripts.length).toBeGreaterThan(0);
-      for (const script of shippedShellScripts) {
-        const mode = fs.statSync(path.join(pluginsRoot, script)).mode;
-        expect(mode & 0o100, `${script} must have the owner-execute bit`).toBeTruthy();
-      }
+      expect(installedShellScripts).toEqual([]);
     },
     FAST_TEST_TIMEOUT_MS
   );

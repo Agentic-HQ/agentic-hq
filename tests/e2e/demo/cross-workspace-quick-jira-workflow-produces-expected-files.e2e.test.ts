@@ -3,7 +3,7 @@
  *
  * Verifies that the quick Jira TDD workflow works from a SEPARATE workspace:
  * 1. Precondition: `agentic-hq-dev` is already on PATH (installed via README `npm link`)
- * 2. Setup: Create a temp workspace at /tmp/agentic-hq-test-workspaces/test-ws-{uuid}/
+ * 2. Setup: Create a temp workspace at <os.tmpdir()>/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Setup: Create a test Jira via MarshalledCLITool
  * 4. Run: agentic-hq-dev quick-jira -- --jira-id={testJiraId}
  * 5. Assert: Workflow output files exist (01 summaries + per-test-type RED/GREEN/REFACTOR summaries)
@@ -23,16 +23,17 @@
 
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
 import { RepoCheckoutClaudeCodeTool } from '../../helpers/repo-checkout-claude-code-tool.js';
-import { runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
+import { getLogFilePath, runCliAndLogOutput } from '../helpers/cli-test-helper-functions.js';
 
 const TEST_TIMEOUT_MS = 3_600_000; // 60 minutes: 5-command orchestration with loop + install overhead + API latency
 const LOG_FILE_LABEL = 'cross-workspace-quick-jira-workflow';
-const LOG_FILE_PATH = `/tmp/e2e-${LOG_FILE_LABEL}.log`;
+const LOG_FILE_PATH = getLogFilePath(LOG_FILE_LABEL);
 
 const CREATE_TEST_JIRA_COMMAND =
   '/agentic-hq-commands:used-in-tests:jira-helper-commands:create-test-jira';
@@ -52,8 +53,9 @@ const JIRA_KEY_PATTERN = /^TEST-\d+$/;
 const EXPECTED_JIRA_STATUS = 'Done';
 const EXPECTED_TEST_TYPES = ['unit', 'e2e'];
 
-// Paths
-const TEMP_WORKSPACES_BASE = '/tmp/agentic-hq-test-workspaces';
+// Paths — under os.tmpdir(), never a hardcoded /tmp: /tmp does not exist on
+// Windows, where the literal path silently created C:\tmp instead (AHQ-211)
+const TEMP_WORKSPACES_BASE = path.join(os.tmpdir(), 'agentic-hq-test-workspaces');
 
 /** Asserts that all expected workflow output files exist for a given project root and Jira ID. */
 function assertWorkflowOutputFilesExist(projectRoot: string, testJiraId: string): void {
@@ -83,9 +85,13 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq-dev
       // links it there via `npm link` (setting-up-agentic-hq-for-development.md step 6) — putting it on PATH is the
       // installer's job, not the test's, so we assert it rather than running `npm link`
       // here. A failure means the documented install step wasn't completed on this machine.
+      // On win32 npm link writes shims (`agentic-hq-dev.cmd` is the one
+      // cmd.exe/execSync resolves) rather than a plain executable (AHQ-211)
       const pathDirs = (process.env.PATH ?? '').split(path.delimiter);
-      const agenticHqDevOnPath = pathDirs.some((dir) =>
-        fs.existsSync(path.join(dir, 'agentic-hq-dev'))
+      const agenticHqDevOnPath = pathDirs.some(
+        (dir) =>
+          fs.existsSync(path.join(dir, 'agentic-hq-dev')) ||
+          fs.existsSync(path.join(dir, 'agentic-hq-dev.cmd'))
       );
       expect(
         agenticHqDevOnPath,
@@ -159,10 +165,10 @@ describe('Cross-Workspace Quick Jira Workflow via globally-linked agentic-hq-dev
       const jiraStatus = await tool.execute(GET_JIRA_STATUS_COMMAND, testJiraId);
       expect(jiraStatus).toBe(EXPECTED_JIRA_STATUS);
 
-      // Log — temp workspace won't be cleaned (auto-cleaned by OS from /tmp)
+      // Log — temp workspace won't be cleaned (it lives under the OS temp dir)
       process.stdout.write(
         `\nTemp workspace created at: ${tempWorkspace}\n` +
-          'Not cleaning up — /tmp is auto-cleaned by the OS (on Mac: reboot or files older than 3 days).\n'
+          'Not cleaning up — it is under the OS temp dir and safe to delete any time.\n'
       );
     },
     TEST_TIMEOUT_MS

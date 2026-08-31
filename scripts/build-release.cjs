@@ -60,28 +60,10 @@ const TS_WORKFLOW_DIR_NAME = 'ts-workflow';
 const STRIPPED_TS_WORKFLOW_FILES = [
   'package.json',
   'pnpm-lock.yaml',
-  '.npmrc',
   'pnpm-workspace.yaml',
   '.gitignore',
 ];
 
-// ---------------------------------------------------------------------------
-// 1. Clean — release/ and dist/, so both builds start from nothing
-// ---------------------------------------------------------------------------
-fs.rmSync(releaseDir, { recursive: true, force: true });
-fs.rmSync(distDir, { recursive: true, force: true });
-
-// ---------------------------------------------------------------------------
-// 2. Framework Build (1) → dist/
-// ---------------------------------------------------------------------------
-execFileSync(path.join(repoRoot, 'node_modules', '.bin', 'tsc'), ['-p', 'tsconfig.build.json'], {
-  cwd: repoRoot,
-  stdio: 'inherit',
-});
-
-// ---------------------------------------------------------------------------
-// 3. Workflow Build (2) for each shipped migrated workflow
-// ---------------------------------------------------------------------------
 const pluginsRoot = path.join(repoRoot, '.agentic-hq', 'plugins');
 
 /** Every shipped skill's ts-workflow dir that the Workflow Build must compile. */
@@ -101,90 +83,42 @@ function listShippedWorkflowDirs() {
   return workflowDirs;
 }
 
-for (const workflowDir of listShippedWorkflowDirs()) {
-  execFileSync(
-    process.execPath,
-    [
-      path.join(__dirname, 'build-workflow.cjs'),
-      `--workflow-dir=${workflowDir}`,
-      `--ahq-package-root=${repoRoot}`,
-    ],
-    { stdio: 'inherit' }
-  );
+/** Normalize a relative path to POSIX separators. path.relative produces
+ * backslashed paths on Windows; comparing those against the POSIX-style
+ * constants above matched nothing, so the draft command dirs silently
+ * shipped, and executableFiles entries came out backslashed. A Windows build
+ * must stage byte-identically to a Linux/macOS one (AHQ-211). */
+function toPosixRelativePath(relativePath) {
+  return relativePath.split(path.sep).join('/');
 }
 
-// ---------------------------------------------------------------------------
-// 4. Stage release/
-// ---------------------------------------------------------------------------
-fs.mkdirSync(releaseDir, { recursive: true });
-
-// The Framework Build (1) output, minus tsc's incremental cache (of no use to
-// a consumer — like shipping an .eslintcache). Source maps DO ship: with
-// inlineSources they let an installed package show original TS lines although
-// src/ does not ship.
-fs.cpSync(distDir, path.join(releaseDir, 'dist'), {
-  recursive: true,
-  filter: (source) => path.basename(source) !== '.tsbuildinfo',
-});
-
-// The prebuilt bin wrapper only — the dev wrapper (agentic-hq.cjs, installed
-// as agentic-hq-dev, which runs the Framework Build) is deliberately not
-// shipped
-fs.mkdirSync(path.join(releaseDir, 'bin'));
-fs.copyFileSync(
-  path.join(repoRoot, 'bin', 'agentic-hq-prebuilt.cjs'),
-  path.join(releaseDir, 'bin', 'agentic-hq-prebuilt.cjs')
-);
-
-// The workflow runner + the Workflow Build it delegates to — the rest of
-// scripts/ is dev-machine tooling that must not ship
-fs.mkdirSync(path.join(releaseDir, 'scripts'));
-for (const script of ['run-workflow.cjs', 'build-workflow.cjs']) {
-  fs.copyFileSync(path.join(__dirname, script), path.join(releaseDir, 'scripts', script));
-}
-
-/** True iff the source path is one of the per-workflow install files inside a ts-workflow dir. */
-function isStrippedTsWorkflowFile(relativePath) {
-  const segments = relativePath.split(path.sep);
+/** True iff the POSIX-relative path is one of the per-workflow install files inside a ts-workflow dir. */
+function isStrippedTsWorkflowFile(posixRelativePath) {
+  const segments = posixRelativePath.split('/');
   return (
     segments.slice(0, -1).includes(TS_WORKFLOW_DIR_NAME) &&
     STRIPPED_TS_WORKFLOW_FILES.includes(segments[segments.length - 1])
   );
 }
 
-// The shipped plugins, verbatim minus any ts-workflow node_modules, minus the
-// per-workflow install files, and minus the skill-less draft command dirs
-for (const plugin of SHIPPED_PLUGINS) {
-  fs.cpSync(
-    path.join(pluginsRoot, plugin),
-    path.join(releaseDir, '.agentic-hq', 'plugins', plugin),
-    {
-      recursive: true,
-      filter: (source) => {
-        if (path.basename(source) === 'node_modules') return false;
-        const rel = path.relative(pluginsRoot, source);
-        if (isStrippedTsWorkflowFile(rel)) return false;
-        return !EXCLUDED_DRAFT_COMMAND_DIRS.some(
-          (draftDir) => rel === draftDir || rel.startsWith(draftDir + path.sep)
-        );
-      },
-    }
+/** The plugin-staging filter, over a path relative to the plugins root:
+ * drops node_modules trees, the per-workflow install files and the
+ * skill-less draft command dirs; everything else ships verbatim. */
+function shouldStagePluginPath(relativePath) {
+  const posixPath = toPosixRelativePath(relativePath);
+  const segments = posixPath.split('/');
+  if (segments[segments.length - 1] === 'node_modules') return false;
+  if (isStrippedTsWorkflowFile(posixPath)) return false;
+  return !EXCLUDED_DRAFT_COMMAND_DIRS.some(
+    (draftDir) => posixPath === draftDir || posixPath.startsWith(draftDir + '/')
   );
 }
 
-// Packers force-include README and LICENSE from the pack root — without the
-// copy the tarball would lose them (pnpm walks up for LICENSE but not README)
-fs.copyFileSync(path.join(repoRoot, 'README.md'), path.join(releaseDir, 'README.md'));
-fs.copyFileSync(path.join(repoRoot, 'LICENSE'), path.join(releaseDir, 'LICENSE'));
-
-// ---------------------------------------------------------------------------
-// 5. Generate release/package.json
-// ---------------------------------------------------------------------------
-
-/** Every staged shipped shell script, as a sorted exact relative path list —
- * pnpm's publishConfig.executableFiles ignores globs silently, and enumerating
- * from the staged tree each build means the list cannot go stale. */
-function listStagedShellScripts() {
+/** Every staged shipped shell script, as a sorted exact POSIX-relative path
+ * list — pnpm's publishConfig.executableFiles ignores globs silently, and
+ * enumerating from the staged tree each build means the list cannot go
+ * stale. */
+function listStagedShellScripts(stagedReleaseDir) {
   const scripts = [];
   const walk = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -192,69 +126,169 @@ function listStagedShellScripts() {
       if (entry.isDirectory()) {
         walk(entryPath);
       } else if (entry.name.endsWith('.sh')) {
-        scripts.push(path.relative(releaseDir, entryPath));
+        scripts.push(toPosixRelativePath(path.relative(stagedReleaseDir, entryPath)));
       }
     }
   };
-  walk(path.join(releaseDir, '.agentic-hq', 'plugins'));
+  walk(path.join(stagedReleaseDir, '.agentic-hq', 'plugins'));
   return scripts.sort();
 }
 
-const rootManifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8'));
+function buildRelease() {
+  // -------------------------------------------------------------------------
+  // 1. Clean — release/ and dist/, so both builds start from nothing
+  // -------------------------------------------------------------------------
+  fs.rmSync(releaseDir, { recursive: true, force: true });
+  fs.rmSync(distDir, { recursive: true, force: true });
 
-const releaseManifest = {
-  name: rootManifest.name,
-  version: rootManifest.version,
-  description: rootManifest.description,
-  type: rootManifest.type,
-  // No `private` field (AHQ-198): the generated release manifest is the ONLY
-  // publishable manifest — the root keeps private: true permanently as the
-  // structural wrong-tree publish block
-  bin: { 'agentic-hq': 'bin/agentic-hq-prebuilt.cjs' },
-  // The installed package resolves types from the shipped .d.ts (the root
-  // manifest's types condition points at .ts source instead, so a clone's
-  // Workflow Build type-checks framework source — AHQ-208 Q6(c))
-  exports: {
-    './tools/claude-code': {
-      types: './dist/src/tools/marshalled-io-tools/claude-code/index.d.ts',
-      default: './dist/src/tools/marshalled-io-tools/claude-code/index.js',
+  // -------------------------------------------------------------------------
+  // 2. Framework Build (1) → dist/
+  // -------------------------------------------------------------------------
+  // Spawned as `node <tsc JS entry>`, not via the node_modules/.bin shim: the
+  // extensionless .bin/tsc is a POSIX sh script Windows cannot start, and
+  // Node >=20.12 refuses .cmd spawns without a shell (EINVAL, CVE-2024-27980).
+  // Same pattern everywhere, no shell involved (AHQ-211 D4).
+  execFileSync(
+    process.execPath,
+    [path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc'), '-p', 'tsconfig.build.json'],
+    { cwd: repoRoot, stdio: 'inherit' }
+  );
+
+  // -------------------------------------------------------------------------
+  // 3. Workflow Build (2) for each shipped migrated workflow
+  // -------------------------------------------------------------------------
+  for (const workflowDir of listShippedWorkflowDirs()) {
+    execFileSync(
+      process.execPath,
+      [
+        path.join(__dirname, 'build-workflow.cjs'),
+        `--workflow-dir=${workflowDir}`,
+        `--ahq-package-root=${repoRoot}`,
+      ],
+      { stdio: 'inherit' }
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // 4. Stage release/
+  // -------------------------------------------------------------------------
+  fs.mkdirSync(releaseDir, { recursive: true });
+
+  // The Framework Build (1) output, minus tsc's incremental cache (of no use
+  // to a consumer — like shipping an .eslintcache). Source maps DO ship: with
+  // inlineSources they let an installed package show original TS lines
+  // although src/ does not ship.
+  fs.cpSync(distDir, path.join(releaseDir, 'dist'), {
+    recursive: true,
+    filter: (source) => path.basename(source) !== '.tsbuildinfo',
+  });
+
+  // The prebuilt bin wrapper only — the dev wrapper (agentic-hq.cjs,
+  // installed as agentic-hq-dev, which runs the Framework Build) is
+  // deliberately not shipped
+  fs.mkdirSync(path.join(releaseDir, 'bin'));
+  fs.copyFileSync(
+    path.join(repoRoot, 'bin', 'agentic-hq-prebuilt.cjs'),
+    path.join(releaseDir, 'bin', 'agentic-hq-prebuilt.cjs')
+  );
+
+  // The workflow runner + the Workflow Build it delegates to, plus the two
+  // lifecycle scripts the generated manifest invokes (postinstall + prepack
+  // guard, AHQ-211) — the rest of scripts/ is dev-machine tooling that must
+  // not ship
+  fs.mkdirSync(path.join(releaseDir, 'scripts'));
+  for (const script of [
+    'run-workflow.cjs',
+    'build-workflow.cjs',
+    'postinstall.cjs',
+    'prepack-guard.cjs',
+  ]) {
+    fs.copyFileSync(path.join(__dirname, script), path.join(releaseDir, 'scripts', script));
+  }
+
+  // The shipped plugins, filtered through shouldStagePluginPath above
+  for (const plugin of SHIPPED_PLUGINS) {
+    fs.cpSync(
+      path.join(pluginsRoot, plugin),
+      path.join(releaseDir, '.agentic-hq', 'plugins', plugin),
+      {
+        recursive: true,
+        filter: (source) => shouldStagePluginPath(path.relative(pluginsRoot, source)),
+      }
+    );
+  }
+
+  // Packers force-include README and LICENSE from the pack root — without the
+  // copy the tarball would lose them (pnpm walks up for LICENSE but not
+  // README)
+  fs.copyFileSync(path.join(repoRoot, 'README.md'), path.join(releaseDir, 'README.md'));
+  fs.copyFileSync(path.join(repoRoot, 'LICENSE'), path.join(releaseDir, 'LICENSE'));
+
+  // -------------------------------------------------------------------------
+  // 5. Generate release/package.json
+  // -------------------------------------------------------------------------
+  generateReleaseManifest();
+
+  process.stdout.write(`build-release: staged ${releaseDir}\n`);
+}
+
+function generateReleaseManifest() {
+  const rootManifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8'));
+
+  const releaseManifest = {
+    name: rootManifest.name,
+    version: rootManifest.version,
+    description: rootManifest.description,
+    type: rootManifest.type,
+    // No `private` field (AHQ-198): the generated release manifest is the ONLY
+    // publishable manifest — the root keeps private: true permanently as the
+    // structural wrong-tree publish block
+    bin: { 'agentic-hq': 'bin/agentic-hq-prebuilt.cjs' },
+    // The installed package resolves types from the shipped .d.ts (the root
+    // manifest's types condition points at .ts source instead, so a clone's
+    // Workflow Build type-checks framework source — AHQ-208 Q6(c))
+    exports: {
+      './tools/claude-code': {
+        types: './dist/src/tools/marshalled-io-tools/claude-code/index.d.ts',
+        default: './dist/src/tools/marshalled-io-tools/claude-code/index.js',
+      },
     },
-  },
-  scripts: {
-    // Wrong-packer guard (AHQ-198): only pnpm applies
-    // publishConfig.executableFiles, so an npm-packed tarball would ship the
-    // plugin .sh files non-executable (exit 126 at runtime — AHQ-196).
-    // prepack runs on pack/publish only, never on install — and a tarball
-    // publish runs no lifecycle scripts at all, so uploading the pnpm-packed
-    // tarball with npm stays unaffected.
-    prepack:
-      "node -e \"const ua=process.env.npm_config_user_agent||''; " +
-      "if(!ua.startsWith('pnpm/')){console.error('ERROR: agentic-hq must be packed/published " +
-      'with pnpm — npm silently drops publishConfig.executableFiles, so shipped plugin scripts ' +
-      'would lose their execute bits. Use: pnpm pack / pnpm publish from release/.\');process.exit(1)}"',
-    // node-pty exec-bit repair only (both pnpm and npm extract spawn-helper
-    // without its execute bit on macOS — https://github.com/pnpm/pnpm/issues/7366
-    // and AHQ-198's npx crash). Two paths because installers lay node-pty out
-    // differently: nested inside this package (npm -g), or hoisted to a
-    // sibling (npx / project-local installs, where cwd is
-    // <root>/node_modules/agentic-hq). Shipped plugin .sh files need no chmod
-    // here: their exec bits are recorded in the tarball via
-    // publishConfig.executableFiles below.
-    postinstall:
-      'chmod +x node_modules/node-pty/prebuilds/darwin-*/spawn-helper ../node-pty/prebuilds/darwin-*/spawn-helper 2>/dev/null || true',
-  },
-  dependencies: rootManifest.dependencies,
-  // engines.node only — engines.pnpm is a contributor constraint; installs of
-  // the shipped package use plain npm
-  engines: { node: rootManifest.engines.node },
-  publishConfig: {
-    executableFiles: listStagedShellScripts(),
-  },
-};
+    scripts: {
+      // Release-mode guard (AHQ-198, AHQ-211): refuses win32 packing (NTFS has
+      // no exec bits) and any packer but pnpm (only pnpm applies
+      // publishConfig.executableFiles — an npm-packed tarball would ship the
+      // plugin .sh files non-executable, exit 126 at runtime — AHQ-196).
+      // prepack runs on pack/publish only, never on install — and a tarball
+      // publish runs no lifecycle scripts at all, so uploading the pnpm-packed
+      // tarball with npm stays unaffected. See scripts/prepack-guard.cjs.
+      prepack: 'node scripts/prepack-guard.cjs release',
+      // node-pty spawn-helper exec-bit repair only, as a Node script so
+      // installs work on Windows too (AHQ-211). darwin-only no-op elsewhere;
+      // see scripts/postinstall.cjs (staged above) for the full story
+      // (AHQ-198). Shipped plugin .sh files need no chmod here: their exec
+      // bits are recorded in the tarball via publishConfig.executableFiles
+      // below.
+      postinstall: 'node scripts/postinstall.cjs',
+    },
+    dependencies: rootManifest.dependencies,
+    // engines.node only — engines.pnpm is a contributor constraint; installs
+    // of the shipped package use plain npm
+    engines: { node: rootManifest.engines.node },
+    publishConfig: {
+      executableFiles: listStagedShellScripts(releaseDir),
+    },
+  };
 
-fs.writeFileSync(
-  path.join(releaseDir, 'package.json'),
-  JSON.stringify(releaseManifest, null, 2) + '\n'
-);
+  fs.writeFileSync(
+    path.join(releaseDir, 'package.json'),
+    JSON.stringify(releaseManifest, null, 2) + '\n'
+  );
+}
 
-process.stdout.write(`build-release: staged ${releaseDir}\n`);
+if (require.main === module) {
+  buildRelease();
+}
+
+// Exported for tests (same pattern as postinstall.cjs and build-workflow.cjs);
+// the CLI entry above is the only production caller.
+module.exports = { shouldStagePluginPath, listStagedShellScripts };

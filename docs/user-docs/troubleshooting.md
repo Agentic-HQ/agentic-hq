@@ -27,8 +27,10 @@ This section is for **Normal Users** installing the tool from npm and following 
 - **Cause:** Your Node.js version doesn't match the package's `engines`
   constraint (`^22.0.0 || ^24.0.0` — Node 22 or 24 LTS).
 - **Fix:** Install Node 24 LTS (recommended) or Node 22 LTS. Confirm with
-  `node --version`. If you use a version manager (nvm / fnm / asdf), switch
-  to the v22 or v24 line.
+  `node --version`. If you use a version manager (nvm / nvm-windows / fnm /
+  asdf), switch to the v22 or v24 line. (On nvm-windows, remember a version
+  switch drops global installs — see the
+  [Windows entry below](#windows-agentic-hq-stops-being-recognized-after-a-node-version-switch).)
 
 #### `EACCES` / permission errors
 
@@ -99,17 +101,37 @@ common now.
   with `sw_vers --productVersion`; if it is below 13.5, upgrade macOS or
   use a machine that meets the floor.
 
-### On Windows: install fails or behaves unexpectedly
+### Windows: `npm.ps1 cannot be loaded` (or `pnpm.ps1`) in PowerShell
 
-- **Cause:** Windows is unsupported. Agentic HQ runs on macOS 13.5+ (tested
-  on 15.7.5) and Linux (tested on Ubuntu 24.04 LTS); native Windows path
-  handling is likely to
-  break during install or at runtime.
-- **Fix:** Run Agentic HQ on a supported OS. The tested route for Windows
-  users is free **VMware + Ubuntu 24.04 LTS**, which works out of the box.
-  **WSL** is untested but may work if paths behave the same as native Linux
-  — if you try it, please report back on the
-  [Discord server](https://discord.gg/fnR7SJt2d7).
+- **Cause:** Some Node install routes put `.ps1` shims on your `PATH`, and
+  PowerShell's default `Restricted` execution policy blocks all scripts.
+  This only affects commands **you** type in PowerShell — Agentic HQ's own
+  subprocesses never go through PowerShell.
+- **Fix (recommended, one-time):**
+  ```powershell
+  Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
+  — the fix most Windows dev guides use, and the one the README's
+  [Windows notes](../../README.md#windows-notes) walk you through. It is a
+  Windows security setting, so it's your call: `RemoteSigned` lets locally
+  created scripts (like npm's shims) run, while downloaded scripts must
+  still be signed.
+- **Fallback if you'd rather not change the policy:** still in PowerShell,
+  append `.cmd` to the blocked command (`npm.cmd` / `npx.cmd`) — the `.cmd`
+  shims sit alongside the `.ps1` ones and are never blocked.
+
+### Windows: `agentic-hq` stops being recognized after a Node version switch
+
+- **Symptom:** `'agentic-hq' is not recognized as the name of a cmdlet…`
+  even though the install previously worked.
+- **Cause:** nvm-windows keeps a **separate set of global packages per Node
+  version**, so switching or upgrading Node silently drops everything you
+  installed with `npm install -g` — including `agentic-hq`. (nvm-windows
+  never switches by itself; this happens after an `nvm install`/`nvm use`.)
+- **Fix:** re-run the install under the new Node version:
+  ```powershell
+  npm install -g --allow-scripts=agentic-hq,node-pty agentic-hq
+  ```
 
 ### `agentic-hq: command not found`
 
@@ -122,7 +144,9 @@ common now.
   ```bash
   npm prefix -g   # the global bin dir is <that path>/bin
   ```
-  Make sure `<npm prefix -g>/bin` is on your `PATH`.
+  Make sure `<npm prefix -g>/bin` is on your `PATH`. (On Windows the shims
+  sit **directly in** the prefix directory, not under `bin\` — that
+  directory itself must be on `PATH`.)
 
 ### `claude: command not found`
 
@@ -170,6 +194,47 @@ This section is for anyone **running workflows** with the npm-installed `agentic
   `quick-jira` and `full-jira` workflows need it.
 - **Fix:** Run the install script as described in
   [setting-up-jira-mcp-server.md](workflow-descriptions/setting-up-jira-mcp-server.md).
+  Note the Jira/Confluence workflows and their MCP setup are currently
+  **macOS/Linux only** (the install script is bash) — on native Windows,
+  raise a [GitHub issue](https://github.com/Agentic-HQ/agentic-hq/issues)
+  if you need them.
+
+### Windows: workflow build fails creating the framework link (`EPERM` / `EBUSY` / junction errors)
+
+- **Cause:** Agentic HQ connects each workflow to the framework with an NTFS
+  **directory junction**, which only works on a **local NTFS volume**.
+  Junction creation fails on network drives (UNC paths like `\\server\…`)
+  and FAT32/exFAT volumes (USB sticks, some SD cards); OneDrive- or
+  Dropbox-synced folders can also throw **transient** `EPERM`/`EBUSY`
+  errors while the sync client holds files open.
+- **Fix:** Run workflows from a workspace on a local NTFS drive (e.g.
+  somewhere under `C:\Users\<you>\`), outside any cloud-synced folder. If a
+  synced folder is unavoidable and the error is transient, pausing sync and
+  re-running usually clears it. Note junctions need **no** Developer Mode
+  and **no** admin rights — if you were told to enable Developer Mode for
+  symlinks, that doesn't apply here.
+
+### Windows: first workflow run (or install) is very slow
+
+- **Cause:** Windows Defender's real-time scanning inspects every file the
+  install and first workflow build create — thousands of small files.
+- **Fix:** Nothing is wrong — later runs are much faster because the
+  builds are cached. If it bothers you, an antivirus exclusion for your
+  workspace folder speeds things up (standard developer practice, at your
+  discretion).
+
+### Windows: a workflow's Claude session can't run `bash` commands
+
+- **Cause:** On Windows, Claude Code only offers its Bash tool when it can
+  find Git Bash; without Git installed, Claude works in PowerShell mode.
+  All workflows shipped with Agentic HQ work in both modes — but a workflow
+  you wrote (or copied) whose instructions genuinely need `bash`/`git` will
+  fail without it. Separately, if Git IS installed somewhere non-standard,
+  Claude Code may fail to find it.
+- **Fix:** Install [Git for Windows](https://git-scm.com/download/win) if
+  the workflow needs it. For a non-standard Git location, point Claude Code
+  at it via the `CLAUDE_CODE_GIT_BASH_PATH` environment variable (settable
+  in Claude Code's `settings.json` under `env`).
 
 ---
 
@@ -226,19 +291,27 @@ the ([setting-up-agentic-hq-for-development.md](../dev/setting-up-agentic-hq-for
   ```bash
   npm prefix -g   # the global bin dir is <that path>/bin
   ```
-  Make sure `<npm prefix -g>/bin` is on your `PATH`.
+  Make sure `<npm prefix -g>/bin` is on your `PATH`. (On Windows the shims —
+  `agentic-hq-dev.cmd` etc. — sit **directly in** the prefix directory, not
+  under `bin\`; that directory itself must be on `PATH`, which nvm-windows
+  sets up automatically.)
 
-#### `npm link` prints `Unknown project config "frozen-lockfile"` and/or an `allow-scripts` warning (Linux)
+#### Windows: `agentic-hq-dev` stops being recognized after a Node version switch
 
-- **Cause:** Two benign warnings from running `npm` in a pnpm repo:
-  - *`Unknown project config "frozen-lockfile"`* — `frozen-lockfile` is a
-    **pnpm** key in the shared `.npmrc`; npm doesn't recognise it and warns.
-    pnpm still enforces it; npm ignores it.
-  - *`allow-scripts … postinstall: chmod +x … node-pty/prebuilds/darwin-*/…`*
-    — npm's supply-chain gate deferring the project's `postinstall`. That
-    script only marks the **macOS** node-pty prebuild executable; on Linux the
-    `darwin-*` glob matches nothing, so it's a no-op. No need to approve it.
-- **Fix:** None needed — ignore both. `npm link` still succeeds ("added 1
+- **Cause:** nvm-windows keeps separate global packages per Node version, so
+  an `nvm install`/`nvm use` drops the `npm link` you made under the old
+  version (same mechanism as the
+  [user-side entry](#windows-agentic-hq-stops-being-recognized-after-a-node-version-switch)).
+- **Fix:** re-run `npm link` from the repo root under the new Node version.
+
+#### `npm link` prints an `allow-scripts` warning (Linux/Windows)
+
+- **Cause:** A benign warning from running `npm` in a pnpm repo:
+  *`allow-scripts … postinstall: node scripts/postinstall.cjs`* is npm's
+  supply-chain gate deferring the project's `postinstall`. That script only
+  marks the **macOS** node-pty prebuild executable; on Linux and Windows it
+  is a no-op. No need to approve it.
+- **Fix:** None needed — ignore it. `npm link` still succeeds ("added 1
   package") and `agentic-hq-dev` is on your `PATH`.
 
 #### `npm link` prints a `packageManager` / pnpm warning
@@ -289,7 +362,8 @@ does.
   npm-installed framework and its shipped workflows — edits made in your
   clone have zero effect when run through it.
 - **Fix:** Always use `agentic-hq-dev` to run your workspace code. Check
-  which binary you invoked (`which agentic-hq` / `which agentic-hq-dev`).
+  which binary you invoked (`which agentic-hq` / `which agentic-hq-dev`;
+  on Windows PowerShell: `Get-Command agentic-hq-dev`).
   See also the dual-install NOTE in
   [setting-up-agentic-hq-for-development.md](../dev/setting-up-agentic-hq-for-development.md).
 

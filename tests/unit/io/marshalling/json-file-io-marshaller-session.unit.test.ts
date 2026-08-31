@@ -2,19 +2,29 @@
  * JsonFileIOMarshallerSession unit tests.
  *
  * Tests the per-execution session that generates a unique marshalling ID,
- * writes command-input.json, and reads command-output.json.
+ * writes command-input.json, and reads command-output.json — either as a
+ * command step's output string (readCommandOutput) or as the workflow-launch
+ * handshake (readSkillOutput, AHQ-210/AHQ-211 D1).
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
 import { BuildMode } from '../../../../src/interfaces/build-mode.js';
 import { JsonFileIOMarshallerSessionFactory } from '../../../../src/io/marshalling/json-file-io-marshaller-session-factory.js';
 import { JsonFileIOMarshallerSession } from '../../../../src/io/marshalling/json-file-io-marshaller-session.js';
 import type { Workspace } from '../../../../src/workflow-discovery/interfaces/workspace.js';
 
-const TEST_TEMP_DIR = '/tmp/test-io-marshaller';
+// A real, freshly-created directory under the OS temp dir (the mkdtemp
+// pattern from tests/unit/workflow-discovery/test-fixtures/tmpdir-fixture.ts)
+// — a hardcoded '/tmp' path is meaningless on Windows (AHQ-211)
+const TEST_TEMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ahq-io-marshaller-test-'));
+
+afterAll(() => {
+  fs.rmSync(TEST_TEMP_DIR, { recursive: true, force: true });
+});
 
 const mockWorkspace: Workspace = {
   getDisplayName: () => 'Mock',
@@ -95,7 +105,7 @@ describe('JsonFileIOMarshallerSession', () => {
     });
   });
 
-  describe('readOutput', () => {
+  describe('readCommandOutput', () => {
     it('should read command-output.json and return the output string', () => {
       const session = new JsonFileIOMarshallerSession(TEST_TEMP_DIR);
       const id = session.getMarshallingId();
@@ -108,7 +118,7 @@ describe('JsonFileIOMarshallerSession', () => {
         JSON.stringify({ 'command-output-string': 'reversed output' }, null, 2)
       );
 
-      const output = session.readOutput();
+      const output = session.readCommandOutput();
       expect(output).toBe('reversed output');
     });
 
@@ -120,7 +130,50 @@ describe('JsonFileIOMarshallerSession', () => {
       // Create dir but no output file
       fs.mkdirSync(id, { recursive: true });
 
-      expect(() => session.readOutput()).toThrow('Output file not found');
+      expect(() => session.readCommandOutput()).toThrow('Output file not found');
+    });
+  });
+
+  describe('readSkillOutput', () => {
+    it('should read the skill-base-dir handshake from command-output.json', () => {
+      const session = new JsonFileIOMarshallerSession(TEST_TEMP_DIR);
+      const id = session.getMarshallingId();
+      createdDirs.push(id);
+
+      // Simulate what the workflow SKILL.md writes (AHQ-210 launch handshake)
+      fs.mkdirSync(id, { recursive: true });
+      fs.writeFileSync(
+        path.join(id, 'command-output.json'),
+        JSON.stringify({ 'skill-base-dir': '/plugins/demos/skills/math-workflow' }, null, 2)
+      );
+
+      const output = session.readSkillOutput();
+      expect(output).toEqual({ skillBaseDir: '/plugins/demos/skills/math-workflow' });
+    });
+
+    it('should throw if output file does not exist', () => {
+      const session = new JsonFileIOMarshallerSession(TEST_TEMP_DIR);
+      const id = session.getMarshallingId();
+      createdDirs.push(id);
+
+      fs.mkdirSync(id, { recursive: true });
+
+      expect(() => session.readSkillOutput()).toThrow('Output file not found');
+    });
+
+    it('should fail fast when the skill-base-dir key is missing or not a string', () => {
+      const session = new JsonFileIOMarshallerSession(TEST_TEMP_DIR);
+      const id = session.getMarshallingId();
+      createdDirs.push(id);
+
+      // A command-step output landed where a launch handshake was expected
+      fs.mkdirSync(id, { recursive: true });
+      fs.writeFileSync(
+        path.join(id, 'command-output.json'),
+        JSON.stringify({ 'command-output-string': 'not a handshake' }, null, 2)
+      );
+
+      expect(() => session.readSkillOutput()).toThrow('skill-base-dir');
     });
   });
 });

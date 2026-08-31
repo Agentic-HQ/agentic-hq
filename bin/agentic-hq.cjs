@@ -21,17 +21,28 @@ const url = require('url');
 
 const packageRoot = path.join(__dirname, '..');
 
-// Framework Build (1) — owned by this wrapper; a type error stops here
+// Framework Build (1) — owned by this wrapper; a type error stops here.
+// tsc is spawned as the running node binary + typescript's JS entry, never
+// the node_modules/.bin shim: the shim is a shell script (POSIX) or .cmd
+// file (Windows), and neither is directly spawnable cross-platform — Node
+// ≥20.12 refuses .cmd spawns without shell:true (EINVAL, CVE-2024-27980)
+// (AHQ-211, D4).
 try {
   execFileSync(
-    path.join(packageRoot, 'node_modules', '.bin', 'tsc'),
-    ['-p', 'tsconfig.build.json'],
+    process.execPath,
+    [
+      path.join(packageRoot, 'node_modules', 'typescript', 'bin', 'tsc'),
+      '-p',
+      'tsconfig.build.json',
+    ],
     { cwd: packageRoot, stdio: 'inherit' }
   );
 } catch (error) {
-  // No exit status means tsc never ran (e.g. ENOENT because
-  // node_modules/.bin/tsc is missing — run `pnpm install` first), so nothing
-  // was printed yet: rethrow loudly instead of exiting silently.
+  // No exit status means node itself never spawned (exotic — process.execPath
+  // always exists), so nothing was printed yet: rethrow loudly instead of
+  // exiting silently. A missing typescript install (run `pnpm install` first)
+  // surfaces as node's "Cannot find module …typescript/bin/tsc" on stderr
+  // with status 1 and propagates below like any compile failure.
   if (error.status == null) {
     throw error;
   }

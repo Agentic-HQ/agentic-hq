@@ -40,13 +40,29 @@ macOS only:
 - macOS **13.5 or newer** is required (`node-pty`'s prebuilt native binaries
   need it; the maintainer develops on 15.7.5).
 
+Windows only (tested on Windows 11):
+
+- Install Git with the standard [Git for Windows](https://git-scm.com/install/) installer, which
+  includes **Git Bash** — the repo's internal Claude Code git skills (`/git:*`) run `.sh` scripts
+  that need it. Minimal Git distributions (e.g. MinGit) omit Git Bash — avoid them.
+- PowerShell is the supported shell. Its default policy blocks the `.ps1`
+  shims npm/corepack put on `PATH` (`…ps1 cannot be loaded`) — run
+  `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` once (the
+  recommended one-time setup; `.cmd` variants like `pnpm.cmd` are the
+  fallback if you can't change the policy) — see
+  [Setup Troubleshooting](../user-docs/troubleshooting.md#windows-npmps1-cannot-be-loaded-or-pnpmps1-in-powershell).
+
 ### 2. Install Node.js 24 LTS
 
 Go to https://nodejs.org/en/download and follow the default path to install
-nvm. If you already have Node.js, please confirm it is version 22 or 24 (the
-only supported lines — other versions, including 23 and 25+, are unsupported).
-The repo has a root `.nvmrc` pinned to Node 24, so `nvm use` selects the right
-version automatically. After installation confirm success by running:
+nvm (on Windows, [nvm-windows](https://github.com/coreybutler/nvm-windows) is
+what AHQ is tested with). If you already have Node.js, please confirm it is
+version 22 or 24 (the only supported lines — other versions, including 23 and
+25+, are unsupported). The repo has a root `.nvmrc` pinned to Node 24, so
+`nvm use` selects the right version automatically. (nvm-windows keeps
+**separate global packages per Node version** — after any later version
+switch, redo step 4's `corepack enable` and step 6's `npm link`.) After
+installation confirm success by running:
 
 ```bash
 node -v
@@ -74,6 +90,15 @@ so you must re-run `corepack enable` if you switch to a different Node version.
 pnpm install
 ```
 
+> [!NOTE]
+> **Keeping your clone current:** `pnpm install` is not one-off.
+> `node_modules/` is local to your machine and git never touches it, so after
+> a `git pull` or branch switch that changed `pnpm-lock.yaml`, re-run
+> `pnpm install`. It's near-instant when nothing changed, and skipping it
+> when something *did* change is a classic source of confusing failures.
+> (This repo's `pnpm-workspace.yaml` sets `frozenLockfile: true`, pinning
+> installs to the lockfile, so the plain command is always safe to re-run.)
+
 ### 6. Install the `agentic-hq-dev` CLI onto your `PATH`
 
 This lets you run workflows from any directory:
@@ -87,7 +112,7 @@ from source on every run); an npm install of the published package gives you
 **`agentic-hq`** instead.
 
 > [!NOTE]
-> **Linux users:** `npm link` prints two warnings — an *"Unknown project config `frozen-lockfile`"* and an *allow-scripts* note about a `darwin-*` `postinstall`. Both are expected and safe to ignore (the config is a pnpm key npm doesn't read; the postinstall is a macOS-only step that no-ops on Linux).
+> **Linux and Windows users:** `npm link` prints an *allow-scripts* warning about the project's `postinstall`. It's expected and safe to ignore — that script only marks the macOS node-pty prebuild executable, and no-ops everywhere else. (On Windows, remember a later nvm-windows version switch silently drops this link — just re-run `npm link`.)
 
 Verify it's on your `PATH`:
 

@@ -11,7 +11,10 @@ import * as path from 'node:path';
 
 import { runCliAndLogOutput } from './cli-test-helper-functions.js';
 
-const SETUP_TIMEOUT_MS = 600_000; // build + pack + npm registry-style install
+// Per-step ceiling for build / pack / npm registry-style install. 900s, not
+// 600s: Windows needs headroom (Defender real-time scanning slows every
+// file-heavy step — AHQ-211)
+const SETUP_TIMEOUT_MS = 900_000;
 
 /**
  * The install-script allowlist the README tells users to install with (AHQ-207).
@@ -29,8 +32,21 @@ export interface TarballInstall {
 }
 
 /** Build release/, pack it into runDir, npm-install the tarball under
- *  `<runDir>/install-prefix`, and return where everything landed. */
+ *  `<runDir>/install-prefix`, and return where everything landed.
+ *
+ *  POSIX-only: packing is refused on Windows (NTFS has no exec bits —
+ *  publish from Mac now, from CI later, never from Windows; see
+ *  scripts/prepack-guard.cjs and AHQ-211). Failing fast here beats the
+ *  alternative — minutes of `pnpm build` followed by the guard's refusal
+ *  buried in a log file. Callers skip themselves on win32. */
 export function buildPackAndInstallTarball(runDir: string): TarballInstall {
+  if (process.platform === 'win32') {
+    throw new Error(
+      'buildPackAndInstallTarball is POSIX-only: packing the release tree is refused on ' +
+        'Windows (see scripts/prepack-guard.cjs — publish from Mac now, from CI later). ' +
+        'Tests that pack must describe.skipIf(process.platform === "win32").'
+    );
+  }
   const repoRoot = process.cwd();
   fs.mkdirSync(runDir, { recursive: true });
 
@@ -67,6 +83,9 @@ export function buildPackAndInstallTarball(runDir: string): TarballInstall {
     repoRoot
   );
 
+  // The POSIX `npm install -g --prefix` layout — safe to assume flatly
+  // because the win32 guard above already refused (win32 lays the install
+  // out differently: <prefix>\node_modules\<pkg> + .cmd shims in the prefix)
   return {
     tarballPath,
     installedPackageRoot: path.join(installPrefix, 'lib', 'node_modules', 'agentic-hq'),

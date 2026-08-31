@@ -1,5 +1,10 @@
 # Setting Up the Sooperset Atlassian MCP Server (Jira + Confluence)
 
+> **Platform support: macOS/Linux only for now** (tested on macOS — the install
+> script below is a bash script). The Jira/Confluence workflows and this MCP
+> setup are not currently supported on native Windows. If you need them on
+> Windows, please raise a [GitHub issue](https://github.com/Agentic-HQ/agentic-hq/issues).
+
 ## Table of Contents
 
 - [Why this is needed](#why-this-is-needed)

@@ -35,11 +35,11 @@ flowchart TB
     end
 
     subgraph Resolve["Skill resolution (one Claude call)"]
-        Skill["SKILL.md returns the shared runner command:<br/>run-workflow.cjs --build-mode --ahq-package-root<br/>--workflow-dir --workflow-js"]
+        Skill["SKILL.md reports skill-base-dir;<br/>engine builds the runner argv natively:<br/>run-workflow.cjs --build-mode --ahq-package-root<br/>--workflow-dir --workflow-js"]
     end
 
     subgraph Runner["Shared workflow runner (scripts/run-workflow.cjs)"]
-        Build2["build-first → Workflow Build (2):<br/>pnpm install → symlink node_modules/agentic-hq → tsc<br/>(prebuilt → skipped)"]
+        Build2["build-first → Workflow Build (2):<br/>pnpm install → link node_modules/agentic-hq → tsc<br/>(prebuilt → skipped)"]
         Run["node ts-workflow/dist/math-workflow-cli.js<br/>--build-mode --ahq-package-root --input-number=11"]
     end
 
@@ -107,14 +107,14 @@ math-workflow:
 └── skills/
     └── math-workflow/
         ├── ahq-workflow.json    ← workflow metadata (shortId, description, ...)
-        ├── SKILL.md             ← entry point that returns the shared-runner command
+        ├── SKILL.md             ← entry point that reports the skill's install dir (AHQ-210)
         └── ts-workflow/         ← the workflow's TS sub-project (standard file set, see "Builds" below)
             ├── src/math-workflow-cli.ts   ← chains the three commands
             ├── package.json     ← commander + dev typescript/@types/node; NO agentic-hq dependency
             ├── tsconfig.json    ← emits src → dist
             ├── .npmrc, pnpm-workspace.yaml, pnpm-lock.yaml, .gitignore
             ├── dist/            ← Workflow Build (2) output (generated, gitignored)
-            └── node_modules/    ← incl. the agentic-hq symlink (generated, gitignored)
+            └── node_modules/    ← incl. the agentic-hq link (generated, gitignored)
 ```
 
 Two files are worth reading directly to see the shape of a plugin:
@@ -193,7 +193,22 @@ by using [`node-pty`](https://github.com/microsoft/node-pty) to spawn the CLI
 inside a **pseudo-terminal** (PTY) — a virtual terminal device that looks
 like a real one to any program asking. Claude's `isatty()` check returns
 *yes*, the CLI streams its full output as normal, and AHQ captures it from
-the other end of the PTY.
+the other end of the PTY. (node-pty ships prebuilt binaries for macOS and
+Windows — where the PTY is ConPTY — and compiles from source on Linux.)
+
+**How each session ends: self-termination** (AHQ-211 Phase 5). An
+interactive Claude session doesn't exit when its work is done — it sits
+waiting for the next prompt. So every AHQ command's instructions end by
+telling Claude to run the core plugin's `self-termination` skill:
+`node "<…/skills/self-termination/scripts/kill-current-cli-process-node.cjs>"`.
+Claude Code (≥ v2.1.214) stamps its own PID into every process it spawns as
+the `CLAUDE_PID` environment variable; the script validates it and kills
+that process — SIGINT on POSIX, SIGTERM on Windows. The session terminates
+itself from the inside, the PTY child exits, and the wrapper simply observes
+the exit — no signal injection or platform-specific teardown on the AHQ
+side. Being a Node script, it behaves identically on all three OSes (it
+replaced an earlier `.sh` version — which was also the last shipped shell
+script, which is why nothing in the published package needs execute bits).
 
 ---
 
@@ -223,11 +238,14 @@ wherever it lives — `scripts/build-workflow.cjs --workflow-dir=<…/ts-workflo
 
 1. `pnpm install` in the workflow dir (`typescript`, `@types/node`,
    `commander` — frozen lockfile; a no-op after the first run);
-2. ensure `node_modules/agentic-hq → <ahq-package-root>` — a symlink made from
-   the explicit parameter, never from an env var or a depth-relative `link:`
-   (always after the install, which would otherwise prune it);
+2. ensure `node_modules/agentic-hq → <ahq-package-root>` — a directory link
+   made from the explicit parameter, never from an env var or a depth-relative
+   `link:` (always after the install, which would otherwise prune it). On
+   POSIX it is a plain dir symlink; on Windows an NTFS **junction**, which
+   needs no privileges — dir symlinks are EPERM there without Developer
+   Mode/admin (AHQ-211);
 3. `tsc -p tsconfig.json` → `dist/<name>-cli.js`, type-checked against the
-   framework through that symlink. A type error stops here, loudly.
+   framework through that link. A type error stops here, loudly.
 
 Everything it writes stays inside the workflow's `ts-workflow/`; nothing is
 ever written into the AHQ package. It is run by the shared runner when
@@ -253,40 +271,46 @@ it discovered the workflow under** — where it lives *is* its mode:
 | your local workspace (`<cwd>/.agentic-hq/plugins/…`) | `build-first` — a workspace holds source |
 | the AHQ package (`<ahq-package-root>/.agentic-hq/plugins/…`) | the binary's mode: `build-first` under `agentic-hq-dev`, `prebuilt` under the npm-installed `agentic-hq` |
 
-It is relayed verbatim across the Claude/skill hop (`$1`), forwarded to the
-workflow program, and acted on by exactly one piece of code — the shared
-runner. No literal mode appears in any `SKILL.md`; no environment variables are
-involved. (In code: `Workspace.getBuildMode()`, carried on each discovered
-`AhqWorkflow`, modelled by the `BuildMode` value object.)
+It never crosses the Claude/skill hop (AHQ-210 deleted that relay): the
+engine puts it directly on the shared runner's command line, the runner
+forwards it to the workflow program, and it is acted on by exactly one piece
+of code — the shared runner. No literal mode appears in any `SKILL.md`; no
+environment variables are involved. (In code: `Workspace.getBuildMode()`,
+carried on each discovered `AhqWorkflow`, modelled by the `BuildMode` value
+object.)
 
 ### The shared workflow runner (`scripts/run-workflow.cjs`)
 
-Every workflow's `SKILL.md` is **byte-identical**: it takes `skill-id` from the
-final path segment of the `skill-base-dir` Claude Code hands every skill (the
-skill directory name, which is the `skillId` in `ahq-workflow.json`), names the
-program by the standard convention `workflow-program-name = {skill-id}-cli`
-(`src/<skill-id>-cli.ts`, compiled to `dist/<skill-id>-cli.js`), and returns the
-same command:
+Every workflow's `SKILL.md` is **byte-identical**: it reports back exactly one
+fact — the `skill-base-dir` Claude Code hands every skill, i.e. where the
+skill is installed (its directory name is the `skillId` in
+`ahq-workflow.json`). The engine does the rest natively (AHQ-210): it
+sanity-checks the reported directory (exists + contains `ts-workflow/`),
+derives `skill-id` from its final path segment, names the program by the
+standard convention `src/<skill-id>-cli.ts` → `dist/<skill-id>-cli.js`, and
+spawns the shared runner directly as an argv array — no command string ever
+exists and no shell is involved on any platform:
 
 ```
-node "{ahq-package-root}/scripts/run-workflow.cjs" --ahq-package-root="{ahq-package-root}" --build-mode={build-mode} \
-     --workflow-dir="{skill-base-dir}/ts-workflow" --workflow-js=dist/{workflow-program-name}.js
+<node> <ahq-package-root>/scripts/run-workflow.cjs --ahq-package-root=<root> --build-mode=<mode> \
+       --workflow-dir=<skill-base-dir>/ts-workflow --workflow-js=dist/<skill-id>-cli.js
 ```
 
-`--ahq-package-root` and `--build-mode` are the two chain variables, relayed
-verbatim and forwarded on to the workflow program; `--workflow-dir` (from the
-skill's own directory) and `--workflow-js` (relative to it) are runner-local.
-All four are required, with loud errors and no defaults. `build-first` → run
-the Workflow Build on `--workflow-dir`, then run; `prebuilt` → run. The runner
-never builds the framework and never executes from the staged release tree.
+`--ahq-package-root` and `--build-mode` come straight from the engine's own
+runtime params and are forwarded on to the workflow program; `--workflow-dir`
+(from the reported skill dir) and `--workflow-js` (relative to it) are
+runner-local. All four are required, with loud errors and no defaults.
+`build-first` → run the Workflow Build on `--workflow-dir`, then run;
+`prebuilt` → run. The runner never builds the framework and never executes
+from the staged release tree.
 
 ### How the compiled workflow finds the framework
 
 The compiled workflow JS says `import … from 'agentic-hq/tools/claude-code'`.
-After a Workflow Build, `node_modules/agentic-hq` is the symlink to the AHQ
-package root, whose `package.json` `exports` points at `dist/…/index.js`
-(Node follows the symlink to the real path, so the framework's own
-dependencies load from the package's `node_modules`). In a prebuilt npm
+After a Workflow Build, `node_modules/agentic-hq` is the link (symlink, or
+junction on Windows) to the AHQ package root, whose `package.json` `exports`
+points at `dist/…/index.js` (Node resolves the link to the real path, so the
+framework's own dependencies load from the package's `node_modules`). In a prebuilt npm
 install, where a bundled workflow's `ts-workflow/` ships with no `node_modules`
 and no `package.json`, the import resolves by **Node package self-reference**
 against the package's own manifest — which is why the release strips the
@@ -296,8 +320,8 @@ per-workflow install files.
 
 | | Workflow **bundled** in the AHQ package | Workflow in **your workspace** |
 | --- | --- | --- |
-| **npm-installed** `agentic-hq` | `prebuilt`: nothing built; runs the shipped `ts-workflow/dist/` | `build-first`: Workflow Build (2) in your workflow dir; symlink → the install |
-| **cloned** `agentic-hq-dev` | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in the repo's own skill dir | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in your workflow dir; symlink → the clone |
+| **npm-installed** `agentic-hq` | `prebuilt`: nothing built; runs the shipped `ts-workflow/dist/` | `build-first`: Workflow Build (2) in your workflow dir; link → the install |
+| **cloned** `agentic-hq-dev` | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in the repo's own skill dir | `build-first`: Framework Build (1) by the binary; Workflow Build (2) in your workflow dir; link → the clone |
 
 Each combination is worked through hop by hop — directories, the values of all
 four runner options, what is built where, and how the framework is resolved —
@@ -402,18 +426,21 @@ End-to-end trace of `agentic-hq-dev math -- --input-number=11` from the clone:
    `builder.build("/agentic-hq-demos-plugin:math-workflow", BuildMode.BUILD_FIRST, ["--input-number=11"])`
    — `build-first` because math-workflow was discovered under the AHQ package
    and this binary's mode is `build-first`.
-2. **Skill resolution (two-call pattern)** — The builder calls
-   `tool.execute("/agentic-hq-demos-plugin:math-workflow", ...)`, a Claude
-   session whose command line ends `<io-dir> build-first <repo>`. Claude reads
+2. **Skill resolution (launch handshake)** — The builder calls
+   `tool.executeSkillLaunch("/agentic-hq-demos-plugin:math-workflow")`, a
+   Claude session whose command line ends with the double-quoted io-directory
+   (the only value that crosses the hop). Claude reads
    [`SKILL.md`](../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/SKILL.md),
-   which relays those two values verbatim into a `command-output.json` holding
-   the **shared runner command**:
-   `node "<repo>/scripts/run-workflow.cjs" --ahq-package-root="<repo>" --build-mode=build-first --workflow-dir="<skill>/ts-workflow" --workflow-js=dist/math-workflow-cli.js`.
-3. **Run the TS workflow** — That command is executed via the same PTY
-   wrapper, with the original `--input-number=11` appended. The runner sees
-   `build-first`, runs the Workflow Build (2) in `<skill>/ts-workflow/`
-   (install → symlink `node_modules/agentic-hq → <repo>` → `tsc` →
-   `dist/math-workflow-cli.js`), then runs
+   which writes a `command-output.json` holding the one fact only that hop
+   knows: `{"skill-base-dir": "<skill>"}` (AHQ-210).
+3. **Run the TS workflow** — The engine sanity-checks `<skill>`, derives
+   `skill-id` from its directory name, and spawns the shared runner directly
+   as an argv array via the same PTY wrapper, with the original
+   `--input-number=11` appended:
+   `node <repo>/scripts/run-workflow.cjs --ahq-package-root=<repo> --build-mode=build-first --workflow-dir=<skill>/ts-workflow --workflow-js=dist/math-workflow-cli.js --input-number=11`.
+   The runner sees `build-first`, runs the Workflow Build (2) in
+   `<skill>/ts-workflow/` (install → link `node_modules/agentic-hq → <repo>` →
+   `tsc` → `dist/math-workflow-cli.js`), then runs
    `node dist/math-workflow-cli.js --build-mode=build-first --ahq-package-root=<repo> --input-number=11`.
 4. **Three chained Claude calls** — Inside
    [`math-workflow-cli.ts`](../../.agentic-hq/plugins/agentic-hq-demos-plugin/skills/math-workflow/ts-workflow/src/math-workflow-cli.ts),
@@ -440,8 +467,8 @@ End-to-end trace of `agentic-hq-dev math -- --input-number=11` from the clone:
    which reads the input, does the math, and writes
    `command-output.json`; the wrapper reads that file and returns the value
    as a string. Each of those Claude sessions is launched with the same
-   `<io-dir> build-first <repo>` relay on its command line (commands ignore
-   it; they read `command-input.json`).
+   double-quoted `"<io-dir>"` on its command line — the only value any hop
+   receives (AHQ-210/AHQ-211).
 
 5. **Result** — `Output number: 5`.
 
