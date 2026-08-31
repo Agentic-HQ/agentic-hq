@@ -14,7 +14,7 @@
  *    package untouched
  *
  * Setup:
- * 1. buildPackAndInstallTarball → an isolated npm install under temp/AHQ-208
+ * 1. buildPackAndInstallTarball → an isolated npm install under temp/test-scratch
  * 2. Create a temp workspace at <os.tmpdir()>/agentic-hq-test-workspaces/test-ws-{uuid}/
  * 3. Copy the string-reversal-copy-for-test fixture plugin into it verbatim
  *    (the fixture is fully self-contained — no placeholder patching)
@@ -94,7 +94,7 @@ describeSkippedOnWindows(
       const runDir = path.join(
         REPO_ROOT,
         'temp',
-        'AHQ-208',
+        'test-scratch',
         `e2e-user-workspace-${Date.now()}_${randomUUID()}`
       );
       ({ installedPackageRoot, installedBinPath } = buildPackAndInstallTarball(runDir));

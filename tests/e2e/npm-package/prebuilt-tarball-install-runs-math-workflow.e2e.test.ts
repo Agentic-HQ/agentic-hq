@@ -10,7 +10,7 @@
  * cloned repo out of the picture:
  * 1. Setup: buildPackAndInstallTarball — `pnpm build` (Framework Build (1) +
  *    Workflow Build (2) per shipped migrated workflow, staged into release/)
- *    → `pnpm pack` FROM release/ → `npm install -g --prefix <temp/AHQ-208/…>`
+ *    → `pnpm pack` FROM release/ → `npm install -g --prefix <temp/test-scratch/…>`
  * 2. Assert the artifact shape is right: the tarball's manifest is the single
  *    GENERATED one (no pack-time overrides), only intended files ship (no
  *    io-files/test-plugin/dev-config leak class, no per-workflow install
@@ -202,11 +202,11 @@ const describeSkippedOnWindows = describe.skipIf(process.platform === 'win32');
 
 describeSkippedOnWindows('Prebuilt npm tarball install runs math workflow (AHQ-196)', () => {
   const repoRoot = process.cwd();
-  // temp/AHQ-208 is this ticket's gitignored scratch tree for tarball installs
+  // temp/test-scratch is the tests' gitignored scratch tree for tarball installs
   const runDir = path.join(
     repoRoot,
     'temp',
-    'AHQ-208',
+    'test-scratch',
     `e2e-tarball-${Date.now()}_${randomUUID()}`
   );
   let rootManifest: PackageManifest;
@@ -341,10 +341,15 @@ describeSkippedOnWindows('Prebuilt npm tarball install runs math workflow (AHQ-1
           `draft command dir ${draftDirPrefix} must not ship`
         ).toEqual([]);
       }
-      // Exactly the runner and the Workflow Build it delegates to ship from
-      // scripts/ (AHQ-208) — the rest of scripts/ is dev-machine tooling
+      // Exactly the four scripts the release stages ship (AHQ-208, AHQ-198,
+      // AHQ-211): the runner + the Workflow Build it delegates to, plus the two
+      // lifecycle scripts the generated manifest invokes (postinstall =
+      // node-pty exec-bit repair, prepack = wrong-packer guard) — the rest of
+      // scripts/ is dev-machine tooling
       expect(tarballFileList.filter((file) => file.startsWith('scripts/'))).toEqual([
         'scripts/build-workflow.cjs',
+        'scripts/postinstall.cjs',
+        'scripts/prepack-guard.cjs',
         'scripts/run-workflow.cjs',
       ]);
       for (const file of tarballFileList) {
@@ -581,7 +586,7 @@ describeSkippedOnWindows('Prebuilt npm tarball install runs math workflow (AHQ-1
       process.stdout.write(
         `\nTemp workspace created at: ${workspace}\n` +
           `Tarball install kept at: ${runDir}\n` +
-          "Not cleaning up — temp/AHQ-208 is this ticket's gitignored scratch tree.\n"
+          "Not cleaning up — temp/test-scratch is the tests' gitignored scratch tree.\n"
       );
     },
     MATH_RUN_TIMEOUT_MS

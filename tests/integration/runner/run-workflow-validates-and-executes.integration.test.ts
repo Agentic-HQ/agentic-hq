@@ -95,7 +95,7 @@ describe('run-workflow.cjs validates and executes (AHQ-197, AHQ-208)', () => {
     testRunDir = path.join(
       repoRoot,
       'temp',
-      'AHQ-208',
+      'test-scratch',
       `runner-integration-${Date.now()}_${randomUUID()}`
     );
 
