@@ -146,6 +146,22 @@ End-to-end tests that exercise complete workflows as a user would.
 
 **WARNING**: These are slow — the longest single e2e test takes approx 10 minutes. Expect `pnpm test:e2e` to take significantly longer.
 
+**One-time setup per machine — trust the e2e workspace base (AHQ-213):**
+
+```bash
+pnpm setup:trust-tmp-dir
+```
+
+E2e (and some integration) tests spawn real Claude Code sessions inside
+`<os.tmpdir()>/agentic-hq-test-workspaces`. Claude Code must already trust that
+folder — the sessions run under a PTY where nobody can answer the trust prompt, so
+an untrusted base makes tests **hang until they time out** with no visible error.
+`pnpm setup:trust-tmp-dir` creates the dir (same path resolution the tests use, on every
+OS), prints where it lives on your OS, and opens Claude Code inside it — select
+**"Yes, I trust this folder"**, then `/exit`. Trusting the base covers the
+per-test subfolders, and it survives OS temp-dir cleanups (trust is keyed on the
+path).
+
 ```bash
 # Run ALL e2e tests
 pnpm test:e2e

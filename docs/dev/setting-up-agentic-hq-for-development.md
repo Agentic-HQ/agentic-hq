@@ -154,6 +154,33 @@ also auto-approves a curated set of Claude Code tools so it can run unattended
 the full list of permissions in
 [WARNING-re-auto-approved-claude-permissions.md](../user-docs/WARNING-re-auto-approved-claude-permissions.md).
 
+### 9. Trust the e2e test workspace dir (one-time, before running any e2e test)
+
+E2e (and some integration) tests spawn real Claude Code sessions inside
+throwaway workspaces under `<os.tmpdir()>/agentic-hq-test-workspaces`. Claude
+Code must already trust that folder — the test sessions run under a PTY where
+nobody can answer the trust prompt, so an untrusted folder makes those tests
+**hang until they time out** with no visible error. Same command on every OS:
+
+```bash
+pnpm setup:trust-tmp-dir
+```
+
+It prints the folder's full path (and where that is on your OS), then opens
+Claude Code inside it — select **"Yes, I trust this folder"**, then exit with
+`/exit`. Once per machine per user.
+
+After Claude exits, the script tells you how to confirm the trust took — by
+running the quickest Claude-spawning e2e test (a single-step string reversal
+from a workspace under that folder, ~1 min):
+
+```bash
+pnpm test:e2e:cross-workspace-string-reversal
+```
+
+If it passes, all e2e tests can run on this machine; if it hangs for minutes
+and times out, the folder is still untrusted — run `pnpm setup:trust-tmp-dir` again.
+
 If any step above fails, see
 [Contributor Troubleshooting](../user-docs/troubleshooting.md#contributor-troubleshooting).
 
