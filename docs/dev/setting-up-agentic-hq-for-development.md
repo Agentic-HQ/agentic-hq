@@ -42,6 +42,9 @@ macOS only:
 
 Windows only (tested on Windows 11):
 
+- Install Git with the standard [Git for Windows](https://git-scm.com/install/) installer, which
+  includes **Git Bash** — the repo's internal Claude Code git skills (`/git:*`) run `.sh` scripts
+  that need it. Minimal Git distributions (e.g. MinGit) omit Git Bash — avoid them.
 - PowerShell is the supported shell. Its default policy blocks the `.ps1`
   shims npm/corepack put on `PATH` (`…ps1 cannot be loaded`) — run
   `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` once (the

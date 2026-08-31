@@ -395,25 +395,114 @@ Windows AND a POSIX machine, and `pnpm validate` green on both.**
    install Claude Code + Node only and run `agentic-hq list` + the string-reversal demo. This proves the
    normal-user story AND Claude's PowerShell-tool mode (without Git Bash, Claude has no Bash tool) — currently
    untested end-to-end, since this dev machine has Git Bash.
+   **RESEQUENCED to post-publish 2026-08-30 (Steve's decision):** no clean machine available (dev box is
+   Windows 11 Home — no Windows Sandbox) — the dev machine itself will be wiped and revalidated AFTER
+   merge + publish, against the REAL registry package. Full instructions in
+   [Post-publish validation on the dev machine](#post-publish-validation-on-the-dev-machine-phase-6-item-4-resequenced-2026-08-30) below.
 
 **Exit:** CI green on ubuntu + windows; docs reviewed by Steve; DRAFT Confluence page can be finalized from the
-README section.
+README section. (Item 4 exits post-publish — see the resequencing note above.)
 
 ### Phase 7 — Deferred / out of scope for AHQ-211 (propose follow-up tickets)
 
-- Dev git-scripts (`src/scripts/git-scripts/**`: four `.sh` + the `cmd.exe`-unsafe `gh`/`git` exec strings in
-  `perform-squash-merge-on-branch.ts`) — port to Node or mark POSIX-only. Dev-only; doesn't block user-facing support.
+- Dev git-scripts (`src/scripts/git-scripts/**`) — **DOWNGRADED 2026-08-31 (Steve's evidence):** no port needed.
+  The `.sh` scripts run under Claude's Bash tool, which exists on Windows via Git Bash — included in the standard
+  Git for Windows install the contributor docs already require — and Steve has run `/git:03` on Windows many
+  times successfully (the earlier "`cmd.exe`-unsafe exec strings" concern was static analysis; empirically the
+  exercised paths work). All that remained was one doc line — DONE 2026-08-31: Windows prerequisites in
+  `setting-up-agentic-hq-for-development.md` now say to use the standard Git for Windows installer because
+  the git skills need Git Bash (minimal installs like MinGit omit it). No follow-up ticket.
 - `scripts/mcp-scripts/install-or-update-sooperset-mcp-atlassian.sh` — PowerShell twin or Node port.
 - `steve-test-plugin` shebang-less scripts; utilities-plugin Jira-extractor `/tmp`+`jq` instructions.
 - WSL smoke-test + short doc section (nearly free after the `.gitattributes` fix).
 - Marketplace-installed workflow validation: D1 deliberately preserves the capability (the skill hop still reports
   where an installed skill lives), but running a workflow from a marketplace-installed plugin has never been tested
-  on any platform — needs its own ticket.
+  on any platform. **NO TICKET — decision 2026-08-31 (Steve):** the SKILL.md already documents exactly this
+  (probably won't work), and that caveat is where it stays; revisit only if there is user demand.
 - `--allowedTools`/`--plugin-dir` values containing spaces (from Phase 4's D5 narrowing): the CLI docs are silent
   on quote-stripping inside these flags and the PTY spawn passes raw argv, so embedded quotes were NOT shipped —
   they would plausibly break the permission allowlist / plugin loading on every platform. The docs-blessed
   space-safe form (one rule per argv element) carries a positional-swallowing risk that needs a real-Claude probe
   before adopting. Until then, paths with spaces in those flags remain a pre-existing, unchanged limitation.
+  **PROBED 2026-08-31 (Windows, real Claude) — PASS for the user-workspace case.** New e2e
+  `tests/e2e/demo/user-workspace-on-path-with-spaces-string-reversal.e2e.test.ts`
+  (`pnpm test:e2e:user-workspace-path-with-spaces`; Windows-runnable — no tarball) puts the fixture plugin in a
+  workspace named `test ws with spaces <uuid>`: `--plugin-dir=<spaced path>` (on BOTH Claude spawns — skill hop
+  and workflow step), spaced CWD, spaced marshalling-ID positional, and the in-workspace Workflow Build (pnpm
+  install + framework junction + tsc) all worked — 2/2 passed in 116s. **Still unprobed = the narrowed ticket:**
+  the AHQ *install root* containing spaces, which lands as `Read(<root>\.agentic-hq)` inside the
+  SPACE-SEPARATED `--allowedTools` string (plus a `--plugin-dir` per shipped plugin). Realistic on Windows: a
+  user profile with a space (`C:\Users\John Smith`) + the standard npm prefix `%APPDATA%\npm`. Probe = install
+  the package under a spaced path and run the same test (it's the reusable harness); also run it once on Mac.
+  One-time precondition discovered: the e2e temp base `<os.tmpdir()>\agentic-hq-test-workspaces` must be
+  trusted in Claude Code once per machine (nobody can answer the trust prompt under the PTY) — done on the
+  Windows dev box 2026-08-31.
+
+### Post-publish validation on the dev machine (Phase 6 item 4, resequenced 2026-08-30)
+
+**Why resequenced:** the gate needs pristine client-Windows defaults, and the only candidates were Windows
+Sandbox (unavailable — the dev machine is Windows 11 Home), a VM (extra setup), or the dev machine itself.
+Decision (Steve, 2026-08-30): wipe and revalidate the dev machine — but only AFTER merge + publish, because
+(a) the cleanup removes Git/Node/Claude, which would kill the dev tooling and the working session mid-ticket,
+and (b) done post-publish, Round 1 installs the REAL published `agentic-hq` package from the npm registry,
+exactly as an end user would — stronger evidence than a tarball stand-in. Accepted risk: item 4's unique
+coverage (no-Git PowerShell-tool mode + Restricted-policy defaults) lands after merge; everything else
+Windows-related is already covered by CI plus the Phase 5/6 gates. This also folds in the still-pending
+"switch Claude Code to Anthropic's native PowerShell installer" test. Run BOTH rounds after publish and
+BEFORE announcing Windows support.
+
+#### Round 1 — clean, then follow the README Quick Start as a brand-new user
+
+Goal: the published-package normal-user story on pristine defaults — **no Git** (Claude Code gets no Bash
+tool → PowerShell tool mode), **Restricted** execution policy, no Node, no caches.
+
+Clean (prefer RENAMING config dirs over deleting — keeps this reversible):
+
+1. **Claude Code** — uninstall via Settings → Apps (or `winget uninstall` if it was winget-installed; if the
+   native installer was ever used, also check `%USERPROFILE%\.local\bin\claude*`). Then rename
+   `%USERPROFILE%\.claude` → `.claude.backup` and `%USERPROFILE%\.claude.json` → `.claude.json.backup`
+   (sessions/memory/settings — restorable at the end).
+2. **nvm-windows + all Node/npm state** — uninstall "NVM for Windows" via Settings → Apps, then remove
+   leftovers: `%APPDATA%\nvm`, `C:\nvm4w` (this also takes the global npm packages and the old
+   `agentic-hq-dev` link with it), `%APPDATA%\npm` if present, and the npm cache `%LocalAppData%\npm-cache`.
+3. **Git for Windows and `gh`** — uninstall both via Settings → Apps. If the `CLAUDE_CODE_GIT_BASH_PATH`
+   user env var exists, remove it.
+4. **Execution policy back to factory default** — `Set-ExecutionPolicy Undefined -Scope CurrentUser`, then
+   confirm `Get-ExecutionPolicy -List` shows Undefined in every scope (effective policy on client Windows
+   is then Restricted — the true out-of-box state).
+5. **PATH sweep** — in the env-vars dialog, remove any stale user-PATH entries the uninstalls left behind
+   (nvm, npm, Git).
+6. Reboot; open a fresh PowerShell window; sanity-check `node`, `npm`, `git`, `claude` all report
+   "not recognized".
+
+Validate — follow the README Quick Start **exactly as written, top to bottom**, as a new user would:
+prerequisites (Claude Code via the native PowerShell installer linked from the quickstart), step 1 Windows
+bullet (nvm-windows → `nvm install 24` → `nvm use 24`), step 2 **only if the symptom appears** — RECORD
+whether `npm.ps1 cannot be loaded` actually shows up before applying the fix (on true defaults it should;
+this is the whole point of the symptom-conditioned wording), step 3 `npm install -g
+--allow-scripts=agentic-hq,node-pty agentic-hq` (the real registry package) + `agentic-hq list`, step 4 the
+string-reversal demo from a fresh folder (trust prompt → Yes).
+
+Record for each step: was the doc sufficient as written? Did anything undocumented bite (SmartScreen,
+Defender delays, nvm quirks, unexpected prompts)? Did the reversal output appear? File doc fixes for
+anything that did.
+
+#### Round 2 — clean again, then follow the Windows contributor setup
+
+Goal: prove `docs/dev/setting-up-agentic-hq-for-development.md`'s Windows path end-to-end. Bonus: finishing
+this round IS rebuilding the dev machine — the end state is a working dev setup again.
+
+1. Clean again per Round 1 steps 1–6, with two differences: skip the `.claude` renames (the backups from
+   Round 1 already exist — just delete the fresh ones Round 1's run created), and note that Git/`gh` get
+   REINSTALLED this round as part of the contributor prerequisites.
+2. Follow the contributor setup doc **top to bottom** as a new Windows contributor: prerequisites (including
+   Git + `gh` — the opposite of Round 1), a FRESH clone to a new path (don't reuse the old working copy —
+   it still exists untouched as a safety net), `corepack enable`, `pnpm install`, `npm link`,
+   `agentic-hq-dev list`, `pnpm validate`, and the step-8 smoke workflow if desired.
+3. Record doc gaps the same way as Round 1.
+4. Wrap-up: restore `%USERPROFILE%\.claude.backup` / `.claude.json.backup` if the old sessions/memory are
+   wanted (or keep the fresh config and delete the backups once nothing is missed); retire the old working
+   copy whenever convenient.
 
 ## Risks & mitigations
 
@@ -535,11 +624,16 @@ evidence), so each phase commit carries its own log entry.
       `test:integration:real-claude-self-termination-skill` PASS (1 passed, 24.2 s); Windows validate
       241+3 (Phase 5 section).)*
 - [ ] 💾 Compact — before the breadth work.
-- [ ] **Phase 6** — e2e helper portability, `windows-latest` CI job, README/CONTRIBUTING/troubleshooting docs →
-      commits.
-- [ ] 🧑‍💻 **Phase 6 gates** (slimmed 2026-08-29 — token budget): `test:e2e:agentic-hq-cli-string-reversal`
-      on Windows only (full suite → deferred task below); **Git-free validation** (Windows Sandbox / clean
-      VM with only Claude + Node: `agentic-hq list` + string-reversal); docs review.
+- [x] **Phase 6** — e2e helper portability, `windows-latest` CI job, README/CONTRIBUTING/troubleshooting docs →
+      commits. *(Items 1–3 all DONE 2026-08-29; first real `validate-windows` CI run went green same day —
+      run 33264887964, triggered via a temporary draft PR (#5, since closed), all 15 steps executed: 43 unit
+      test files + all four integration suites passed, npm-link policy NOTE echoed as designed.)*
+- [x] 🧑‍💻 **Phase 6 gates** (slimmed 2026-08-29 — token budget): `test:e2e:agentic-hq-cli-string-reversal`
+      on Windows only (full suite → deferred task below) *(PASS 2026-08-29: 1 passed in 63s, real Claude
+      session, incl. fresh frozen ts-workflow install)*; docs review *(PASS 2026-08-29 — Steve's review
+      edits landed in commit c916e02)*; **Git-free validation** RESEQUENCED to post-publish 2026-08-30
+      (no clean machine available — dev box is Win11 Home, no Sandbox): moved to its own bullet below,
+      full instructions in the "Post-publish validation on the dev machine" section above.
 - [ ] 🧑‍💻 **DEFERRED: full e2e suite on Windows** (`pnpm test:e2e`) — after Steve's usage reset (or before,
       if there's spare capacity to soak up), and **with the spawned sessions temporarily on Sonnet** to cut
       token burn: set `$env:ANTHROPIC_MODEL = 'sonnet'` in the PowerShell session running the tests (the
@@ -551,6 +645,17 @@ evidence), so each phase commit carries its own log entry.
       therefore needs a MAC `pnpm test:e2e` (or at least the prebuilt-tarball test, which Phase 6 already
       fixed two known-stale assertions in) — fold that into the next Mac e2e/pre-publish run. Not a merge
       blocker: PR/merge can proceed on the slimmed Phase 6 gate.
-- [ ] **Phase 7** — raise follow-up tickets (git-scripts port, mcp-installer script, marketplace-installed
-      workflow validation, WSL smoke test, allowedTools/plugin-dir space-path real-Claude probe).
+- [ ] **Phase 7** — raise follow-up tickets. Final slate (2026-08-31): allowedTools/plugin-dir space-path
+      real-Claude probe (NARROWED 2026-08-31 — user-workspace case PASSED on Windows via the new
+      `test:e2e:user-workspace-path-with-spaces` e2e; remaining = AHQ install root with spaces → `Read` rule
+      inside the space-separated `--allowedTools`, plus one Mac run); POSIX-isms cleanup (mcp-installer script + Jira-extractor `/tmp`/`jq` +
+      steve-test-plugin scripts); WSL smoke test; executableFiles machinery remove-or-bless. Dropped from
+      the slate: git-scripts port (downgraded — doc line DONE, see Phase 7 section) and marketplace-installed
+      workflow validation (no ticket — SKILL.md caveat stands, revisit on demand).
 - [ ] PR review → squash-merge to main (`/git:03`); next publish (from Mac) delivers the npm/npx routes.
+- [ ] 🧑‍💻 **POST-PUBLISH: item 4 validation on the dev machine** (resequenced 2026-08-30) — Round 1:
+      wipe (Claude/Node/nvm/Git/gh, policy to default) then README Quick Start as a brand-new user against
+      the real registry package (proves no-Git PowerShell-tool mode + Restricted-policy story); Round 2:
+      wipe again, then the Windows contributor setup doc end-to-end (endpoint = dev machine rebuilt). Both
+      BEFORE announcing Windows support. Full instructions: "Post-publish validation on the dev machine"
+      section above.
