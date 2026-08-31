@@ -1,6 +1,6 @@
 {
   "name": "agentic-hq",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Agentic HQ - Orchestrating agentic software development teams",
   "type": "module",
   "private": true,
