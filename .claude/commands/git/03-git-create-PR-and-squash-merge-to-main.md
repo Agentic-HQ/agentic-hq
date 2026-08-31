@@ -354,20 +354,29 @@ Enter 1, 2 or 3:
 
 ## Step 9: Execute Squash Merge and Archive
 
-Once the user has approved the commit message, run the TypeScript script:
+Once the user has approved the commit message, first write the approved
+commit body to a file in the temp analysis directory (from Step 2) using the
+Write tool:
+
+```
+[temp-directory]/approved-commit-body.txt
+```
+
+Then run the TypeScript script, passing the file's path:
 
 ```bash
 npx tsx src/scripts/git-scripts/branching/03-squash-merge-branch/perform-squash-merge-on-branch.ts \
   --branch-name "[current-branch-name]" \
-  --commit-body "$(cat <<'EOF'
-[full-commit-body-here]
-EOF
-)"
+  --commit-body-file "[temp-directory]/approved-commit-body.txt"
 ```
 
 **Important:**
-- Use heredoc format with `cat <<'EOF'` for the commit body
-- The single quotes around 'EOF' prevent variable expansion
+- ALWAYS pass the body via `--commit-body-file`, NEVER inline via
+  `--commit-body "$(cat <<'EOF' …)"`. On Windows an inline multi-line
+  argument is truncated at the first newline before the script even starts
+  (npm's exec machinery relaunches through cmd.exe) — AHQ-211's squash
+  commit landed on main with a one-line body this way (AHQ-212).
+- The file must contain the full approved body including the trailer lines.
 
 Show the full output to the user as the script runs.
 
@@ -421,7 +430,8 @@ Show the path to the temp analysis directory in case they want to review it late
 
 **ALWAYS:**
 - Show script outputs to the user so they can see what's happening
-- Use heredoc format for multi-line PR bodies and commit messages
+- Use heredoc format for the multi-line PR body (Step 6); pass the commit
+  body via `--commit-body-file`, never as an inline argument (Step 9)
 - Present choices as plain-text numbered menus and wait for the user's typed
   reply (NEVER the AskUserQuestion tool — its dialog hides the content being
   approved; see Step 4)
