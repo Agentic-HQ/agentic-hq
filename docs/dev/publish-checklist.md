@@ -38,7 +38,24 @@ command, what you should see, and what to do in each case.
 **You are on the Mac.** Publishing from Windows is never supported (see the first
 "Why" bullet above — the prepack guard will refuse anyway, but don't get that far).
 
-**1a. pnpm version matches the pin.**
+**1a. The version is BUMPED — never publish the version that is already out.**
+
+The registry is immutable and `npm publish` only rejects a version collision at
+the very end of §4, after the whole build/pack/inspect walk and the auth
+ceremony (learned 2026-08-31: the 0.3.0 publish got exactly that far on an
+unbumped 0.2.0 tree). Decide the new version (patch for fixes, minor for
+features), set it in the root `package.json`'s `version`, commit — then prove
+it against the live registry:
+
+```
+pnpm publish:preflight-checks
+```
+
+- **Expected:** `OK: <version> is not on the registry (latest published: <prev>)`.
+- **If it fails with "ALREADY on the registry":** the version was not bumped (or
+  not committed) — fix that first. Do not proceed.
+
+**1b. pnpm version matches the pin.**
 
 ```
 pnpm --version
@@ -50,7 +67,7 @@ pnpm --version
   **major** bump is a publish-pipeline change, not a routine upgrade — re-verify the
   pipeline (the publish-guards test and the tarball e2e) before publishing with it.
 
-**1b. Logged in to npm as the package owner.**
+**1c. Logged in to npm as the package owner.**
 
 ```
 npm whoami
@@ -64,7 +81,7 @@ npm whoami
   confirm it prints `halso`. (This account's 2FA is `auth-and-writes` via
   passkey/security key — there are no OTP codes anywhere in this flow.)
 
-**1c. Clean git tree on the intended branch.**
+**1d. Clean git tree on the intended branch.**
 
 ```
 git status
@@ -73,7 +90,7 @@ git status
 - **Expected:** `nothing to commit, working tree clean`, on the branch you mean to
   publish from.
 
-**1d. All safety nets green.** Run each; every one must pass — no exceptions:
+**1e. All safety nets green.** Run each; every one must pass — no exceptions:
 
 ```
 pnpm validate
