@@ -42,7 +42,7 @@ Linux only:
    node -v
    ```
 
-2. **Windows only — if PowerShell blocks `npm` (`npm.ps1 cannot be loaded`), run the following once to allow PowerShell scripts:**
+2. **Windows only — if in the next section PowerShell blocks `npm` (`npm.ps1 cannot be loaded`), run the following once to allow PowerShell scripts:**
 
    ```powershell
    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
