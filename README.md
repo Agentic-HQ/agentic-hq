@@ -17,7 +17,7 @@ To try it out follow the Quick Start to get installed, then add a feature to an 
 Supported and tested:
 - **macOS** - requires macOS 13.5 or newer (AHQ was developed and tested on 15.7.5).
 - **Linux** - tested on Ubuntu 24.04 LTS
-- **Windows** - native Windows, tested on Windows 11. Runs from PowerShell. See [Windows notes](#windows-notes) below.
+- **Windows** - native Windows, tested on Windows 11. Runs from PowerShell.
 
 ### Prerequisites
 
