@@ -7,7 +7,7 @@ disable-model-invocation: false
 ## Step 0 - Set Variables
 
 Set:
-skill-base-dir = the skill base directory you were provided with when you ran this skill.
+skill-base-dir = the skill base directory you were provided with when you ran this skill, written with FORWARD slashes (e.g. C:/Users/... on Windows) so it needs no escaping when it goes into JSON.
 conversation-file = {skill-base-dir}/conversation-files/conversation-about-call-stack-being-fragile.md
 
 Tell the user:

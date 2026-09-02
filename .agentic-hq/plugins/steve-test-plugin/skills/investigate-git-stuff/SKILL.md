@@ -5,7 +5,7 @@ disable-model-invocation: true
 
 ## Variables
 Set:
-skill-base-dir = the skill base directory you were provided with when you ran this skill.
+skill-base-dir = the skill base directory you were provided with when you ran this skill, written with FORWARD slashes (e.g. C:/Users/... on Windows) so it needs no escaping when it goes into JSON.
 git-last-log-time-script-path = {skill-base-dir}/scripts/git-last-log-item.sh
 show-git-status-script-path = {skill-base-dir}/../../plugin-scripts/git-scripts/show-git-status.sh
 

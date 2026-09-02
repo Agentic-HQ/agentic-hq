@@ -6,7 +6,7 @@ disable-model-invocation: true
 ## Variables
 
 Set:
-skill-base-dir = the skill base directory you were provided with when you ran this skill.
+skill-base-dir = the skill base directory you were provided with when you ran this skill, written with FORWARD slashes (e.g. C:/Users/... on Windows) so it needs no escaping when it goes into JSON.
 command-input-output-files-directory = $0
 
 List the variable names and values for the user, and explain where they came from.

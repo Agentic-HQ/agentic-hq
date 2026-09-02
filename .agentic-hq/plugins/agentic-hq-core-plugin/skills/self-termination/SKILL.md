@@ -5,7 +5,7 @@ disable-model-invocation: false
 
 ## Variables
 Set:
-skill-base-dir = the skill base directory you were provided with when you ran this skill.
+skill-base-dir = the skill base directory you were provided with when you ran this skill, written with FORWARD slashes (e.g. C:/Users/... on Windows) so it needs no escaping when it goes into JSON.
 kill-current-process-script-path = {skill-base-dir}/scripts/kill-current-cli-process-node.cjs
 
 ## Self-Terminate
