@@ -68,7 +68,25 @@ Linux only:
 
    (Prefer to try first without installing? `npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq list` runs it directly without installing it. `npx` needs the same flag, for the same reason.)
 
-4. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
+4. **Trust your workspace folder in Claude Code:** change directory into an existing or new workspace directory (e.g. `~/dev/claude/test-workspace`), run `claude` there, accept the Claude Code **"Do you trust the files in this folder?"** prompt, then `/exit` before moving on to the next step.
+
+   ```bash
+   # macOS/Linux
+   mkdir -p ~/dev/claude/test-workspace
+   cd ~/dev/claude/test-workspace
+   claude
+   ```
+
+   ```powershell
+   # The same on Windows (PowerShell)
+   mkdir $HOME\dev\claude\test-workspace
+   cd $HOME\dev\claude\test-workspace
+   claude
+   ```
+
+   Claude Code asks this the first time it is run in a folder, and a workflow can't answer it for you. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Run The add-feature Workflow](#run-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
+
+5. **Run simplest workflow** run the string-reversal demo workflow — a single-step (~20 second) workflow that just asks Claude to reverse a string and validates Claude Code is wired up correctly:
 
    ```bash
    agentic-hq reversal -- --string-to-reverse="wow this is amazing"
@@ -79,8 +97,6 @@ Linux only:
    ```bash
    npx --yes --allow-scripts=agentic-hq,node-pty agentic-hq reversal -- --string-to-reverse="wow this is amazing"
    ```
-
-   NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do you trust the files in this folder?"** — choose **Yes**. Running a workflow also auto-approves a curated set of Claude Code tools so it can run unattended (the approval is per-run — your Claude Code settings are never modified) — see the caution in [Run The add-feature Workflow](#run-the-add-feature-workflow) below and the full list of permissions in [WARNING-re-auto-approved-claude-permissions.md](docs/user-docs/WARNING-re-auto-approved-claude-permissions.md).
 
 If any step above fails, see [Setup Troubleshooting](docs/user-docs/troubleshooting.md#setup-troubleshooting).
 
