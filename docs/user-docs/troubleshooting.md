@@ -236,6 +236,22 @@ This section is for anyone **running workflows** with the npm-installed `agentic
   at it via the `CLAUDE_CODE_GIT_BASH_PATH` environment variable (settable
   in Claude Code's `settings.json` under `env`).
 
+### Windows: `error: unknown option '--...'` when passing arguments in PowerShell
+
+- **Cause:** PowerShell **deletes** a bare `--` before the command ever sees
+  it. `--` is PowerShell's own "end of named parameters" token, and because
+  npm installs a `.ps1` shim for every CLI (PowerShell prefers `.ps1` over
+  `.cmd`), `agentic-hq` runs as a *PowerShell* command rather than a native
+  one — so PowerShell's parameter binder applies. `agentic-hq reversal --
+  --string-to-reverse="hello"` therefore arrives as `reversal
+  --string-to-reverse="hello"`. Versions before this was fixed rejected the
+  argument outright.
+- **Fix:** Update to a current version — Agentic HQ now accepts workflow
+  arguments **with or without** the `--`, so the documented commands work
+  as written in PowerShell, cmd.exe, bash and zsh alike. On an older
+  version, either drop the `--` or quote it (`'--'`), which stops PowerShell
+  treating it as its own token.
+
 ---
 
 ## Contributor Troubleshooting

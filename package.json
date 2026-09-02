@@ -62,6 +62,8 @@
     "test:e2e:agentic-hq-cli-string-reversal": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/agentic-hq-cli-string-reversal.e2e.test.ts",
     "test:e2e:cross-workspace-string-reversal": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-string-reversal.e2e.test.ts",
     "test:e2e:user-workspace-path-with-spaces": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/user-workspace-on-path-with-spaces-string-reversal.e2e.test.ts",
+    "// test:e2e:windows-powershell-shim-string-reversal": "AHQ-214 regression guard. Windows-only (skips itself elsewhere): the only e2e test that reaches the CLI through a PowerShell .ps1 shim, where PowerShell's parameter binder eats the `--` separator. Every other CLI e2e test goes through cmd.exe, which passes `--` straight through.",
+    "test:e2e:windows-powershell-shim-string-reversal": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/windows-powershell-shim-string-reversal.e2e.test.ts",
     "test:e2e:cross-workspace-demo-math-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-demo-math-workflow-gives-expected-output-number.e2e.test.ts",
     "test:e2e:cross-workspace-quick-jira-workflow": "vitest run --config vitest.e2e.config.ts tests/e2e/demo/cross-workspace-quick-jira-workflow-produces-expected-files.e2e.test.ts",
     "// test:e2e:prebuilt-tarball-math-workflow": "No `pnpm build` prefix needed — the test's beforeAll runs the build itself",

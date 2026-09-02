@@ -20,6 +20,18 @@ import type { WorkflowRegistry } from '../workflow-discovery/interfaces/workflow
  * first registration wins and is never replaced (AHQ-205); what to do
  * about the rejected one is the caller's decision.
  *
+ * A workflow's own options reach it with OR without the `--`
+ * separator (allowUnknownOption, AHQ-214): PowerShell's parameter
+ * binder consumes a bare `--` before Node ever sees it, because npm
+ * generates a .ps1 shim for every bin and PowerShell prefers .ps1
+ * over .cmd — so a PATH-installed CLI is a PowerShell command, not a
+ * native one, and `agentic-hq reversal -- --opt=x` arrives here as
+ * `reversal --opt=x`. `--` stays supported and documented; it is just
+ * no longer the only thing standing between a workflow and its
+ * arguments. Nothing is ambiguous either way while workflow
+ * subcommands declare no options of their own — revisit if they ever
+ * do.
+ *
  * SRP Knows About: The Commander API for creating and enumerating
  * subcommands, the builder.build() call signature, and the
  * AhqWorkflow contract.
@@ -56,6 +68,7 @@ export class WorkflowRegistryImpl implements WorkflowRegistry {
       .description(description)
       .passThroughOptions()
       .allowExcessArguments(true)
+      .allowUnknownOption(true)
       .action(async (_options: unknown, cmd: Command) => {
         const command = await this.builder.build(fullCommand, workflow.getBuildMode(), cmd.args);
         await command.execute();

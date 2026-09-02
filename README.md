@@ -150,6 +150,9 @@ agentic-hq <short-name> -- [passthrough args]
 ```
 
 - Everything after `--` is passed through to the workflow as arguments
+- The `--` itself is optional — Agentic HQ accepts the arguments with or without it. (PowerShell
+  silently drops a bare `--` before the CLI ever sees it; that is harmless, because the arguments
+  are forwarded either way.)
 
 ### Example
 

@@ -147,6 +147,10 @@ correctly:
 agentic-hq-dev reversal -- --string-to-reverse="wow this is amazing"
 ```
 
+The `--` separator is optional (`agentic-hq-dev reversal
+--string-to-reverse="wow this is amazing"` does the same thing) — worth knowing
+on Windows, where PowerShell silently drops a bare `--` before the CLI sees it.
+
 NOTE: The first time you run a workflow in a folder, Claude Code asks **"Do
 you trust the files in this folder?"** — choose **Yes**. Running a workflow
 also auto-approves a curated set of Claude Code tools so it can run unattended

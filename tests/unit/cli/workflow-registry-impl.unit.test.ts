@@ -76,6 +76,53 @@ describe('WorkflowRegistryImpl', () => {
     ]);
   });
 
+  // AHQ-214: PowerShell's parameter binder CONSUMES a bare `--` before Node ever sees it, so a
+  // PATH-installed CLI (npm generates a .ps1 shim for every bin, and PowerShell prefers .ps1 over
+  // .cmd — making it a PowerShell command, not a native one) receives the workflow's own options
+  // with no separator in front of them. They must still reach the workflow.
+  it('should pass a workflow option through when the -- separator is absent (--option=value form)', async () => {
+    const program = new Command();
+    program.enablePositionalOptions();
+    const mockBuilder: WorkflowCommandBuilder = {
+      build: vi.fn().mockResolvedValue({ execute: vi.fn() }),
+    };
+    const registry: WorkflowRegistry = new WorkflowRegistryImpl(program, mockBuilder);
+
+    registry.register(createStubWorkflow('reversal', 'Reverses a string', '/demos:reversal'));
+
+    await program.parseAsync(['node', 'agentic-hq', 'reversal', '--string-to-reverse=hello']);
+
+    expect(mockBuilder.build).toHaveBeenCalledWith('/demos:reversal', BuildMode.BUILD_FIRST, [
+      '--string-to-reverse=hello',
+    ]);
+  });
+
+  // The space-separated form of the same thing — its value is a separate argv token, so this also
+  // pins that the option and its value stay together and in order (AHQ-214).
+  it('should pass a workflow option and its value through when the -- separator is absent (--option value form)', async () => {
+    const program = new Command();
+    program.enablePositionalOptions();
+    const mockBuilder: WorkflowCommandBuilder = {
+      build: vi.fn().mockResolvedValue({ execute: vi.fn() }),
+    };
+    const registry: WorkflowRegistry = new WorkflowRegistryImpl(program, mockBuilder);
+
+    registry.register(createStubWorkflow('reversal', 'Reverses a string', '/demos:reversal'));
+
+    await program.parseAsync([
+      'node',
+      'agentic-hq',
+      'reversal',
+      '--string-to-reverse',
+      'hello there',
+    ]);
+
+    expect(mockBuilder.build).toHaveBeenCalledWith('/demos:reversal', BuildMode.BUILD_FIRST, [
+      '--string-to-reverse',
+      'hello there',
+    ]);
+  });
+
   // AHQ-205: a short name that is already a subcommand is rejected with a named error — the
   // first registration wins and is never replaced (Commander itself would otherwise throw a
   // generic `cannot add command 'x' as already have command 'x'`).
